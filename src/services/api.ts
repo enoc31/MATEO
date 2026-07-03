@@ -1,0 +1,508 @@
+import { supabase } from '../supabaseClient';
+
+// Interfaces del Dominio
+export interface Project {
+  id: string;
+  nombre: string;
+  descripcion: string;
+  activo: boolean;
+  fecha_inicio: string;
+  fecha_fin: string;
+}
+
+export interface ExpenseCategory {
+  id: string;
+  nombre: string;
+  descripcion: string;
+}
+
+export interface Budget {
+  id: string;
+  proyecto_id: string;
+  categoria_id: string;
+  monto_asignado: number;
+  monto_ejecutado: number;
+  periodo: string;
+}
+
+export interface BankTransaction {
+  id: string;
+  fecha: string;
+  referencia: string;
+  descripcion: string;
+  monto: number; // Positivo = Ingreso, Negativo = Egreso
+  estado: 'pendiente' | 'conciliado';
+}
+
+export interface Donation {
+  id: string;
+  proyecto_id: string | null;
+  transaccion_id: string | null;
+  donante: string;
+  monto: number;
+  descripcion: string;
+  fecha: string;
+}
+
+export interface ExpenseReceipt {
+  id: string;
+  proyecto_id: string;
+  categoria_id: string;
+  transaccion_id: string | null;
+  solicitante_id: string;
+  solicitante_nombre?: string;
+  monto: number;
+  descripcion: string;
+  fecha_gasto: string;
+  url_comprobante: string | null;
+  estado: 'pendiente_soporte' | 'pendiente_revision' | 'aprobado' | 'rechazado';
+  comentarios_auditoria: string | null;
+  auditado_por?: string;
+  auditado_at?: string;
+}
+
+// Determinar si Supabase está configurado correctamente
+const isSupabaseConfigured = () => {
+  const url = import.meta.env.VITE_SUPABASE_URL;
+  const key = import.meta.env.VITE_SUPABASE_ANON_KEY;
+  return url && url !== 'https://placeholder-url.supabase.co' && key && key !== 'placeholder-anon-key';
+};
+
+export const isSimulationMode = !isSupabaseConfigured();
+
+// =========================================================================
+// MOCK DATA PARA MODO SIMULACIÓN (INSPIRADO EN CNBV)
+// =========================================================================
+const INITIAL_PROJECTS: Project[] = [
+  {
+    id: 'proj-1',
+    nombre: 'Proyecto Alimentación Infantil Zulia',
+    descripcion: 'Programa de comedores comunitarios para niños en comunidades vulnerables de Maracaibo y San Francisco.',
+    activo: true,
+    fecha_inicio: '2026-01-01',
+    fecha_fin: '2026-12-31'
+  },
+  {
+    id: 'proj-2',
+    nombre: 'Operación Ayuda Médica Apure',
+    descripcion: 'Distribución de insumos médicos básicos, medicinas de control y jornadas médicas gratuitas en zonas fronterizas.',
+    activo: true,
+    fecha_inicio: '2026-02-15',
+    fecha_fin: '2026-08-31'
+  },
+  {
+    id: 'proj-3',
+    nombre: 'Logística y Refugios Táchira',
+    descripcion: 'Apoyo con albergues temporales, mantas, agua potable y enseres para familias damnificadas por lluvias.',
+    activo: true,
+    fecha_inicio: '2026-03-01',
+    fecha_fin: '2026-09-30'
+  }
+];
+
+const INITIAL_CATEGORIES: ExpenseCategory[] = [
+  { id: 'cat-1', nombre: 'Alimentación e Hidratación', descripcion: 'Compra de comida, agua potable y fórmulas.' },
+  { id: 'cat-2', nombre: 'Medicamentos e Insumos Médicos', descripcion: 'Medicinas de primera necesidad, gasas, jeringas.' },
+  { id: 'cat-3', nombre: 'Transporte y Combustible', descripcion: 'Fletes, combustible para camiones de ayuda y transporte de personal.' },
+  { id: 'cat-4', nombre: 'Logística y Albergue', descripcion: 'Colchones, cobijas, alquiler de locales temporales.' },
+  { id: 'cat-5', nombre: 'Gastos Operacionales', descripcion: 'Papelería, comunicación satelital y conectividad de campo.' }
+];
+
+const INITIAL_BUDGETS: Budget[] = [
+  // Proyecto 1
+  { id: 'b-1', proyecto_id: 'proj-1', categoria_id: 'cat-1', monto_asignado: 15000.00, monto_ejecutado: 4850.00, periodo: '2026-ANUAL' },
+  { id: 'b-2', proyecto_id: 'proj-1', categoria_id: 'cat-3', monto_asignado: 3000.00, monto_ejecutado: 1200.00, periodo: '2026-ANUAL' },
+  { id: 'b-3', proyecto_id: 'proj-1', categoria_id: 'cat-5', monto_asignado: 1000.00, monto_ejecutado: 350.00, periodo: '2026-ANUAL' },
+  // Proyecto 2
+  { id: 'b-4', proyecto_id: 'proj-2', categoria_id: 'cat-2', monto_asignado: 25000.00, monto_ejecutado: 12500.00, periodo: '2026-ANUAL' },
+  { id: 'b-5', proyecto_id: 'proj-2', categoria_id: 'cat-3', monto_asignado: 4000.00, monto_ejecutado: 890.00, periodo: '2026-ANUAL' },
+  // Proyecto 3
+  { id: 'b-6', proyecto_id: 'proj-3', categoria_id: 'cat-4', monto_asignado: 10000.00, monto_ejecutado: 6200.00, periodo: '2026-ANUAL' }
+];
+
+const INITIAL_BANK_TRANSACTIONS: BankTransaction[] = [
+  { id: 'tx-1', fecha: '2026-06-01', referencia: 'REF-82910', descripcion: 'TRANSFERENCIA RECIBIDA DONANTE ALIANZA BAUTISTA', monto: 35000.00, estado: 'pendiente' },
+  { id: 'tx-2', fecha: '2026-06-02', referencia: 'REF-33412', descripcion: 'DONACION OFRENDA TEMPLO METROPOLITANO CARACAS', monto: 12000.00, estado: 'pendiente' },
+  { id: 'tx-3', fecha: '2026-06-05', referencia: 'PAGO-88122', descripcion: 'COMPRA DROGUERIA FARMA-SALUD SUMINISTROS', monto: -12500.00, estado: 'pendiente' },
+  { id: 'tx-4', fecha: '2026-06-10', referencia: 'REF-92011', descripcion: 'PAGO ALIMENTOS POLAR COMEDOR MARACAIBO', monto: -4850.00, estado: 'pendiente' },
+  { id: 'tx-5', fecha: '2026-06-12', referencia: 'PAGO-00129', descripcion: 'COMPRA COLCHONES REFUGIO SAN CRISTOBAL', monto: -6200.00, estado: 'pendiente' },
+  { id: 'tx-6', fecha: '2026-06-15', referencia: 'RET-33100', descripcion: 'PAGO RECTIFICACION FLETE CAMIONES VALENCIA', monto: -1200.00, estado: 'pendiente' },
+  { id: 'tx-7', fecha: '2026-06-18', referencia: 'PAGO-55291', descripcion: 'FACTURA ESTACION SERVICIO EL PACIFICO COMB', monto: -890.00, estado: 'pendiente' },
+  { id: 'tx-8', fecha: '2026-06-20', referencia: 'REF-11928', descripcion: 'TRANSFERENCIA RECIBIDA IGLESIA LAS ACACIAS', monto: 5000.00, estado: 'pendiente' },
+  { id: 'tx-9', fecha: '2026-06-22', referencia: 'PAGO-38190', descripcion: 'COMPRA MATERIAL SANITARIO FARMACIA SOCIAL', monto: -820.00, estado: 'pendiente' }
+];
+
+const INITIAL_EXPENSES: ExpenseReceipt[] = [
+  {
+    id: 'exp-1',
+    proyecto_id: 'proj-1',
+    categoria_id: 'cat-1',
+    transaccion_id: null,
+    solicitante_id: 'coord-1',
+    solicitante_nombre: 'José Rodríguez (Coordinador Zulia)',
+    monto: 4850.00,
+    descripcion: 'Compra de víveres, arroz, granos y harina para el comedor infantil Maracaibo Oeste.',
+    fecha_gasto: '2026-06-08',
+    url_comprobante: 'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?q=80&w=600',
+    estado: 'pendiente_revision',
+    comentarios_auditoria: null
+  },
+  {
+    id: 'exp-2',
+    proyecto_id: 'proj-2',
+    categoria_id: 'cat-2',
+    transaccion_id: null,
+    solicitante_id: 'coord-2',
+    solicitante_nombre: 'Hna. María Gómez (Coordinadora Médica)',
+    monto: 12500.00,
+    descripcion: 'Compra de antibióticos y analgésicos para las jornadas de salud en el Alto Apure.',
+    fecha_gasto: '2026-06-04',
+    url_comprobante: 'https://images.unsplash.com/photo-1576091160550-2173dba999ef?q=80&w=600',
+    estado: 'pendiente_revision',
+    comentarios_auditoria: null
+  },
+  {
+    id: 'exp-3',
+    proyecto_id: 'proj-3',
+    categoria_id: 'cat-4',
+    transaccion_id: 'tx-5', // Pre-conciliado en el mock
+    solicitante_id: 'coord-3',
+    solicitante_nombre: 'Carlos Silva (Logística Táchira)',
+    monto: 6200.00,
+    descripcion: 'Adquisición de 40 colchonetas y mantas térmicas para el Refugio Bautista San Cristóbal.',
+    fecha_gasto: '2026-06-11',
+    url_comprobante: 'https://images.unsplash.com/photo-1595246140625-573b715d11dc?q=80&w=600',
+    estado: 'aprobado',
+    comentarios_auditoria: 'Soporte y factura fiscal adjuntos. Conciliación automática correcta.'
+  },
+  {
+    id: 'exp-4',
+    proyecto_id: 'proj-1',
+    categoria_id: 'cat-3',
+    transaccion_id: 'tx-6',
+    solicitante_id: 'coord-1',
+    solicitante_nombre: 'José Rodríguez (Coordinador Zulia)',
+    monto: 1200.00,
+    descripcion: 'Pago de flete camión con comida desde el Centro Bautista en Caracas a Maracaibo.',
+    fecha_gasto: '2026-06-14',
+    url_comprobante: 'https://images.unsplash.com/photo-1601584115197-04ecc0da31d7?q=80&w=600',
+    estado: 'aprobado',
+    comentarios_auditoria: 'Recibo de flete verificado.'
+  }
+];
+
+const INITIAL_DONATIONS: Donation[] = [
+  {
+    id: 'don-1',
+    proyecto_id: 'proj-1',
+    transaccion_id: null,
+    donante: 'Alianza Bautista Internacional',
+    monto: 35000.00,
+    descripcion: 'Fondo internacional etiquetado para Zulia.',
+    fecha: '2026-06-01'
+  }
+];
+
+// Helper para inicializar LocalStorage en modo simulación
+const initLocalStorage = () => {
+  if (!localStorage.getItem('cnbv_projects')) {
+    localStorage.setItem('cnbv_projects', JSON.stringify(INITIAL_PROJECTS));
+  }
+  if (!localStorage.getItem('cnbv_categories')) {
+    localStorage.setItem('cnbv_categories', JSON.stringify(INITIAL_CATEGORIES));
+  }
+  if (!localStorage.getItem('cnbv_budgets')) {
+    localStorage.setItem('cnbv_budgets', JSON.stringify(INITIAL_BUDGETS));
+  }
+  if (!localStorage.getItem('cnbv_bank_transactions')) {
+    localStorage.setItem('cnbv_bank_transactions', JSON.stringify(INITIAL_BANK_TRANSACTIONS));
+  }
+  if (!localStorage.getItem('cnbv_expenses')) {
+    localStorage.setItem('cnbv_expenses', JSON.stringify(INITIAL_EXPENSES));
+  }
+  if (!localStorage.getItem('cnbv_donations')) {
+    localStorage.setItem('cnbv_donations', JSON.stringify(INITIAL_DONATIONS));
+  }
+};
+
+if (isSimulationMode) {
+  initLocalStorage();
+}
+
+// =========================================================================
+// SERVICIOS / MÉTODOS DE LA API (SUPABASE O LOCALSTORAGE)
+// =========================================================================
+export const api = {
+  // --- PROYECTOS ---
+  getProjects: async (): Promise<Project[]> => {
+    if (!isSimulationMode) {
+      const { data, error } = await supabase.from('proyectos').select('*').order('nombre');
+      if (error) throw error;
+      return data as Project[];
+    } else {
+      return JSON.parse(localStorage.getItem('cnbv_projects') || '[]');
+    }
+  },
+
+  createProject: async (project: Omit<Project, 'id'>): Promise<Project> => {
+    if (!isSimulationMode) {
+      const { data, error } = await supabase.from('proyectos').insert([project]).select().single();
+      if (error) throw error;
+      return data as Project;
+    } else {
+      const projects = JSON.parse(localStorage.getItem('cnbv_projects') || '[]');
+      const newProject = { ...project, id: `proj-${Date.now()}` };
+      projects.push(newProject);
+      localStorage.setItem('cnbv_projects', JSON.stringify(projects));
+      return newProject;
+    }
+  },
+
+  // --- CATEGORÍAS ---
+  getCategories: async (): Promise<ExpenseCategory[]> => {
+    if (!isSimulationMode) {
+      const { data, error } = await supabase.from('categorias_gasto').select('*').order('nombre');
+      if (error) throw error;
+      return data as ExpenseCategory[];
+    } else {
+      return JSON.parse(localStorage.getItem('cnbv_categories') || '[]');
+    }
+  },
+
+  // --- PRESUPUESTOS ---
+  getBudgets: async (): Promise<Budget[]> => {
+    if (!isSimulationMode) {
+      const { data, error } = await supabase.from('presupuestos').select('*');
+      if (error) throw error;
+      return data as Budget[];
+    } else {
+      return JSON.parse(localStorage.getItem('cnbv_budgets') || '[]');
+    }
+  },
+
+  // --- TRANSACCIONES BANCARIAS ---
+  getBankTransactions: async (): Promise<BankTransaction[]> => {
+    if (!isSimulationMode) {
+      const { data, error } = await supabase.from('transacciones_bancarias').select('*').order('fecha', { ascending: false });
+      if (error) throw error;
+      return data as BankTransaction[];
+    } else {
+      return JSON.parse(localStorage.getItem('cnbv_bank_transactions') || '[]');
+    }
+  },
+
+  importBankTransactions: async (txs: Omit<BankTransaction, 'id' | 'estado'>[]): Promise<BankTransaction[]> => {
+    if (!isSimulationMode) {
+      const { data, error } = await supabase.from('transacciones_bancarias').insert(
+        txs.map(tx => ({ ...tx, estado: 'pendiente' }))
+      ).select();
+      if (error) throw error;
+      return data as BankTransaction[];
+    } else {
+      const current = JSON.parse(localStorage.getItem('cnbv_bank_transactions') || '[]');
+      const newTxs = txs.map(tx => ({
+        ...tx,
+        id: `tx-${Math.random().toString(36).substr(2, 9)}`,
+        estado: 'pendiente' as const
+      }));
+      const updated = [...newTxs, ...current];
+      localStorage.setItem('cnbv_bank_transactions', JSON.stringify(updated));
+      return newTxs;
+    }
+  },
+
+  // --- EGRESOS / COMPROBANTES DE GASTO ---
+  getExpenses: async (): Promise<ExpenseReceipt[]> => {
+    if (!isSimulationMode) {
+      const { data, error } = await supabase.from('comprobantes_gasto').select('*').order('fecha_gasto', { ascending: false });
+      if (error) throw error;
+      return data as ExpenseReceipt[];
+    } else {
+      return JSON.parse(localStorage.getItem('cnbv_expenses') || '[]');
+    }
+  },
+
+  createExpense: async (expense: Omit<ExpenseReceipt, 'id' | 'estado' | 'comentarios_auditoria' | 'transaccion_id'>, file?: File): Promise<ExpenseReceipt> => {
+    let fileUrl: string | null = null;
+
+    if (file) {
+      if (!isSimulationMode) {
+        // Subida real a Supabase Storage
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${Date.now()}.${fileExt}`;
+        const { error: uploadError } = await supabase.storage
+          .from('comprobantes')
+          .upload(fileName, file);
+
+        if (uploadError) throw uploadError;
+
+        const { data: { publicUrl } } = supabase.storage
+          .from('comprobantes')
+          .getPublicUrl(fileName);
+        fileUrl = publicUrl;
+      } else {
+        // En simulación convertimos a Base64 local o simulamos una URL
+        fileUrl = URL.createObjectURL(file);
+      }
+    }
+
+    const newExpense: Omit<ExpenseReceipt, 'id'> = {
+      ...expense,
+      transaccion_id: null,
+      estado: 'pendiente_revision',
+      comentarios_auditoria: null,
+      url_comprobante: fileUrl || expense.url_comprobante
+    };
+
+    if (!isSimulationMode) {
+      const { data, error } = await supabase.from('comprobantes_gasto').insert([newExpense]).select().single();
+      if (error) throw error;
+      return data as ExpenseReceipt;
+    } else {
+      const expenses = JSON.parse(localStorage.getItem('cnbv_expenses') || '[]');
+      const created = {
+        ...newExpense,
+        id: `exp-${Date.now()}`,
+        solicitante_nombre: expense.solicitante_nombre || 'Coordinador de Campo'
+      };
+      expenses.unshift(created);
+      localStorage.setItem('cnbv_expenses', JSON.stringify(expenses));
+      return created;
+    }
+  },
+
+  updateExpenseStatus: async (expenseId: string, estado: ExpenseReceipt['estado'], comentarios: string | null, auditorId: string): Promise<ExpenseReceipt> => {
+    if (!isSimulationMode) {
+      const { data, error } = await supabase
+        .from('comprobantes_gasto')
+        .update({
+          estado,
+          comentarios_auditoria: comentarios,
+          auditado_por: auditorId,
+          auditado_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', expenseId)
+        .select()
+        .single();
+      if (error) throw error;
+      return data as ExpenseReceipt;
+    } else {
+      const expenses = JSON.parse(localStorage.getItem('cnbv_expenses') || '[]');
+      const index = expenses.findIndex((e: ExpenseReceipt) => e.id === expenseId);
+      if (index === -1) throw new Error('Expense not found');
+
+      const updated = {
+        ...expenses[index],
+        estado,
+        comentarios_auditoria: comentarios,
+        auditado_por: auditorId,
+        auditado_at: new Date().toISOString()
+      };
+
+      // Si se aprueba el gasto en modo simulación, actualizar la ejecución presupuestaria
+      if (estado === 'aprobado' && expenses[index].estado !== 'aprobado') {
+        const budgets = JSON.parse(localStorage.getItem('cnbv_budgets') || '[]');
+        const bIndex = budgets.findIndex((b: Budget) => b.proyecto_id === updated.proyecto_id && b.categoria_id === updated.categoria_id);
+        if (bIndex !== -1) {
+          budgets[bIndex].monto_ejecutado += updated.monto;
+          localStorage.setItem('cnbv_budgets', JSON.stringify(budgets));
+        }
+      } else if (estado !== 'aprobado' && expenses[index].estado === 'aprobado') {
+        const budgets = JSON.parse(localStorage.getItem('cnbv_budgets') || '[]');
+        const bIndex = budgets.findIndex((b: Budget) => b.proyecto_id === updated.proyecto_id && b.categoria_id === updated.categoria_id);
+        if (bIndex !== -1) {
+          budgets[bIndex].monto_ejecutado = Math.max(0, budgets[bIndex].monto_ejecutado - updated.monto);
+          localStorage.setItem('cnbv_budgets', JSON.stringify(budgets));
+        }
+      }
+
+      expenses[index] = updated;
+      localStorage.setItem('cnbv_expenses', JSON.stringify(expenses));
+      return updated;
+    }
+  },
+
+  // --- CONCILIACIÓN BANCARIA ---
+  reconcileExpense: async (expenseId: string, transactionId: string): Promise<{ expense: ExpenseReceipt; transaction: BankTransaction }> => {
+    if (!isSimulationMode) {
+      // 1. Vincular el gasto con la transacción
+      const { data: expenseData, error: expError } = await supabase
+        .from('comprobantes_gasto')
+        .update({ transaccion_id: transactionId, updated_at: new Date().toISOString() })
+        .eq('id', expenseId)
+        .select()
+        .single();
+      if (expError) throw expError;
+
+      // 2. Marcar la transacción bancaria como conciliada
+      const { data: txData, error: txError } = await supabase
+        .from('transacciones_bancarias')
+        .update({ estado: 'conciliado' })
+        .eq('id', transactionId)
+        .select()
+        .single();
+      if (txError) throw txError;
+
+      return {
+        expense: expenseData as ExpenseReceipt,
+        transaction: txData as BankTransaction
+      };
+    } else {
+      const expenses = JSON.parse(localStorage.getItem('cnbv_expenses') || '[]');
+      const transactions = JSON.parse(localStorage.getItem('cnbv_bank_transactions') || '[]');
+
+      const expIndex = expenses.findIndex((e: ExpenseReceipt) => e.id === expenseId);
+      const txIndex = transactions.findIndex((t: BankTransaction) => t.id === transactionId);
+
+      if (expIndex === -1 || txIndex === -1) throw new Error('Expense or Transaction not found');
+
+      expenses[expIndex].transaccion_id = transactionId;
+      transactions[txIndex].estado = 'conciliado';
+
+      localStorage.setItem('cnbv_expenses', JSON.stringify(expenses));
+      localStorage.setItem('cnbv_bank_transactions', JSON.stringify(transactions));
+
+      return {
+        expense: expenses[expIndex],
+        transaction: transactions[txIndex]
+      };
+    }
+  },
+
+  // --- DONACIONES ---
+  getDonations: async (): Promise<Donation[]> => {
+    if (!isSimulationMode) {
+      const { data, error } = await supabase.from('donaciones').select('*').order('fecha', { ascending: false });
+      if (error) throw error;
+      return data as Donation[];
+    } else {
+      return JSON.parse(localStorage.getItem('cnbv_donations') || '[]');
+    }
+  },
+
+  createDonation: async (donation: Omit<Donation, 'id'>): Promise<Donation> => {
+    if (!isSimulationMode) {
+      const { data, error } = await supabase.from('donaciones').insert([donation]).select().single();
+      if (error) throw error;
+      return data as Donation;
+    } else {
+      const donations = JSON.parse(localStorage.getItem('cnbv_donations') || '[]');
+      const created = { ...donation, id: `don-${Date.now()}` };
+      donations.unshift(created);
+      localStorage.setItem('cnbv_donations', JSON.stringify(donations));
+
+      // Si viene ligada a una transacción bancaria, marcarla como conciliada en simulación
+      if (donation.transaccion_id) {
+        const transactions = JSON.parse(localStorage.getItem('cnbv_bank_transactions') || '[]');
+        const txIndex = transactions.findIndex((t: BankTransaction) => t.id === donation.transaccion_id);
+        if (txIndex !== -1) {
+          transactions[txIndex].estado = 'conciliado';
+          localStorage.setItem('cnbv_bank_transactions', JSON.stringify(transactions));
+        }
+      }
+
+      return created;
+    }
+  }
+};
