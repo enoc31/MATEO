@@ -25,7 +25,7 @@ CREATE POLICY "Donantes: escritura solo para admin y director"
     ON public.donantes FOR INSERT TO authenticated
     WITH CHECK (
         EXISTS (
-            SELECT 1 FROM public.usuarios
+            SELECT 1 FROM public.usuarios_perfiles
             WHERE id = auth.uid()
             AND rol IN ('administrador', 'director')
         )
