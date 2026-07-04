@@ -10,6 +10,7 @@ import { MobileEntry } from './features/mobile-entry/MobileEntry';
 import { UserManagement } from './features/users/UserManagement';
 import { RequisitionsManager } from './features/requisitions/RequisitionsManager';
 import { IncomesManager } from './features/incomes/IncomesManager';
+import { IncomeRegistrationForm } from './features/incomes/IncomeRegistrationForm';
 import { TasasManager } from './features/tasas/TasasManager';
 
 const MainAppContent: React.FC = () => {
@@ -19,7 +20,11 @@ const MainAppContent: React.FC = () => {
   // Configurar la pestaña por defecto basada en el rol del usuario
   useEffect(() => {
     if (profile) {
-      if (['coordinador', 'auxiliar_campo'].includes(profile.rol)) {
+      const params = new URLSearchParams(window.location.search);
+      const page = params.get('page');
+      if (page) {
+        setActiveTab(page);
+      } else if (['coordinador', 'auxiliar_campo'].includes(profile.rol)) {
         setActiveTab('field-entry');
       } else {
         setActiveTab('dashboard');
@@ -90,6 +95,10 @@ const MainAppContent: React.FC = () => {
         return <div>Página no encontrada</div>;
     }
   };
+
+  if (activeTab === 'nuevo-ingreso') {
+    return <IncomeRegistrationForm />;
+  }
 
   return (
     <Layout activeTab={activeTab} setActiveTab={setActiveTab}>

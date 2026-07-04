@@ -18,34 +18,17 @@ const FLAG_MAP: Record<string, string> = {
 export const IncomesManager: React.FC = () => {
   const { profile } = useAuth();
   const [loading, setLoading] = useState(true);
-  const [submitting, setSubmitting] = useState(false);
+  const [importingFile, setImportingFile] = useState(false);
 
   // Data
   const [projects, setProjects] = useState<Project[]>([]);
   const [donantes, setDonantes] = useState<Donante[]>([]);
   const [donations, setDonations] = useState<Donation[]>([]);
-  const [bankTxs, setBankTxs] = useState<BankTransaction[]>([]);
   const [tasas, setTasas] = useState<TasaBCV[]>([]);
   const [latestRate, setLatestRate] = useState<number | null>(null);
 
-  // Form state
-  const [showForm, setShowForm] = useState(false);
-  const [proyectoId, setProyectoId] = useState('');
-  const [donanteId, setDonanteId] = useState('');
-  const [montoOriginal, setMontoOriginal] = useState('');
-  const [moneda, setMoneda] = useState<'USD' | 'VES'>('USD');
-  const [medioPago, setMedioPago] = useState<'efectivo' | 'transferencia'>('transferencia');
-  const [tasaBcv, setTasaBcv] = useState<number | null>(null);
-  const [tasaManualEditable, setTasaManualEditable] = useState(false);
-  const [descripcion, setDescripcion] = useState('');
-  const [fecha, setFecha] = useState(new Date().toISOString().split('T')[0]);
-  const [transaccionId, setTransaccionId] = useState('');
-  const [selectedTxIds, setSelectedTxIds] = useState<string[]>([]);
-  const [tipoRegistro, setTipoRegistro] = useState<'manual' | 'bancario'>('manual');
-
   // Import CSV state
   const [showImportModal, setShowImportModal] = useState(false);
-  const [importingFile, setImportingFile] = useState(false);
   const [importMoneda, setImportMoneda] = useState<'USD' | 'VES'>('USD');
   const [csvTxs, setCsvTxs] = useState<Omit<BankTransaction, 'id' | 'estado'>[]>([]);
   const [importFileName, setImportFileName] = useState('');
@@ -57,17 +40,15 @@ export const IncomesManager: React.FC = () => {
   const loadData = async () => {
     setLoading(true);
     try {
-      const [projList, donList, donationList, txList, ratesList] = await Promise.all([
+      const [projList, donList, donationList, ratesList] = await Promise.all([
         api.getProjects(),
         api.getDonantes(),
         api.getDonations(),
-        api.getBankTransactions(),
         api.getTasasBCV()
       ]);
       setProjects(projList.filter(p => p.activo));
       setDonantes(donList);
       setDonations(donationList);
-      setBankTxs(txList.filter(t => t.monto > 0 && t.estado === 'pendiente'));
       setTasas(ratesList);
       
       const latest = ratesList[0];
@@ -81,31 +62,14 @@ export const IncomesManager: React.FC = () => {
 
   useEffect(() => { loadData(); }, []);
 
-  // Buscar tasa BCV al cambiar fecha o moneda en el formulario manual
+  // Recargar datos cuando el usuario vuelve a enfocar esta pestaña (ej: tras cerrar la pestaña de registro)
   useEffect(() => {
-    const fetchTasa = async () => {
-      if (moneda === 'VES' && fecha) {
-        try {
-          const rateObj = await api.getTasaByDate(fecha);
-          if (rateObj) {
-            setTasaBcv(rateObj.tasa);
-            setTasaManualEditable(false);
-          } else {
-            setTasaBcv(null);
-            setTasaManualEditable(true);
-          }
-        } catch (err) {
-          console.error('Error al consultar tasa:', err);
-          setTasaBcv(null);
-          setTasaManualEditable(true);
-        }
-      } else {
-        setTasaBcv(null);
-        setTasaManualEditable(false);
-      }
+    const handleFocus = () => {
+      loadData();
     };
-    fetchTasa();
-  }, [fecha, moneda]);
+    window.addEventListener('focus', handleFocus);
+    return () => window.removeEventListener('focus', handleFocus);
+  }, []);
 
   // Helper local para buscar tasa
   const getRateForDateLocal = (dateStr: string) => {
@@ -114,112 +78,6 @@ export const IncomesManager: React.FC = () => {
     if (exacta) return exacta.tasa;
     const anteriores = tasas.filter(t => t.fecha < dateStr).sort((a, b) => b.fecha.localeCompare(a.fecha));
     return anteriores[0]?.tasa || latestRate;
-  };
-
-  const handleToggleTx = (txId: string) => {
-    setSelectedTxIds(prev => {
-      const next = prev.includes(txId) ? prev.filter(id => id !== txId) : [...prev, txId];
-      if (next.length > 0) {
-        const selectedTxs = bankTxs.filter(t => next.includes(t.id));
-        const totalAmount = selectedTxs.reduce((s, t) => s + t.monto, 0);
-        setMontoOriginal(totalAmount.toFixed(2));
-        
-        const combinedDesc = selectedTxs.map(t => {
-          const ref = t.referencia ? ` [Ref: ${t.referencia.trim()}]` : '';
-          return `${t.fecha}${ref}: ${t.descripcion.trim()}`;
-        }).join('\n');
-        setDescripcion(combinedDesc);
-        
-        const dates = selectedTxs.map(t => t.fecha).sort();
-        setFecha(dates[dates.length - 1]);
-        
-        const hasVes = selectedTxs.some(t => {
-          const coin = t.csv_metadata?.moneda;
-          if (coin === 'VES') return true;
-          const desc = t.descripcion.toLowerCase();
-          return desc.includes('ves') || desc.includes('bs') || t.monto > 1000;
-        });
-        setMoneda(hasVes ? 'VES' : 'USD');
-        setTransaccionId(next[0]);
-      } else {
-        setMontoOriginal('');
-        setDescripcion('');
-        setFecha(new Date().toISOString().split('T')[0]);
-        setTransaccionId('');
-        setMoneda('USD');
-      }
-      return next;
-    });
-  };
-
-
-
-  const resetForm = () => {
-    setProyectoId(''); setDonanteId(''); setMontoOriginal(''); setDescripcion('');
-    setFecha(new Date().toISOString().split('T')[0]);
-    setTransaccionId(''); setSelectedTxIds([]); setTipoRegistro('manual');
-    setMoneda('USD'); setMedioPago('transferencia'); setTasaBcv(null); setTasaManualEditable(false);
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (tipoRegistro === 'bancario' && selectedTxIds.length === 0) {
-      alert('Por favor, seleccione al menos una transacción bancaria.'); return;
-    }
-    if (!proyectoId || !donanteId || !montoOriginal || !descripcion) {
-      alert('Complete todos los campos obligatorios.'); return;
-    }
-    const numMontoOriginal = parseFloat(montoOriginal);
-    if (isNaN(numMontoOriginal) || numMontoOriginal <= 0) {
-      alert('El monto debe ser mayor a 0.'); return;
-    }
-
-    let calculatedMontoUsd = numMontoOriginal;
-    let calculatedMontoVes = null;
-    let finalTasaBcv = null;
-
-    if (moneda === 'VES') {
-      if (!tasaBcv || tasaBcv <= 0) {
-        alert('Debe especificar una tasa BCV válida.');
-        return;
-      }
-      finalTasaBcv = tasaBcv;
-      calculatedMontoUsd = parseFloat((numMontoOriginal / tasaBcv).toFixed(2));
-      calculatedMontoVes = numMontoOriginal;
-    } else {
-      const activeRate = tasaBcv || latestRate;
-      if (activeRate) {
-        calculatedMontoVes = parseFloat((numMontoOriginal * activeRate).toFixed(2));
-      }
-    }
-
-    setSubmitting(true);
-    try {
-      const donante = donantes.find(d => d.id === donanteId);
-      await api.createDonation({
-        proyecto_id: proyectoId,
-        transaccion_id: transaccionId || null,
-        donante: donante?.nombre || 'Donante Desconocido',
-        monto: calculatedMontoUsd,
-        descripcion: descripcion.trim(),
-        fecha,
-        moneda,
-        medio_pago: medioPago,
-        monto_original: numMontoOriginal,
-        tasa_bcv: finalTasaBcv,
-        monto_usd: calculatedMontoUsd,
-        monto_ves: calculatedMontoVes,
-        vinculo_transaccion_ids: selectedTxIds.length > 0 ? selectedTxIds : undefined
-      });
-      alert('✅ Ingreso registrado correctamente.');
-      resetForm();
-      setShowForm(false);
-      await loadData();
-    } catch (err: any) {
-      alert('Error al registrar el ingreso: ' + (err.message || ''));
-    } finally {
-      setSubmitting(false);
-    }
   };
 
   // Procesar archivo CSV del banco
@@ -384,7 +242,7 @@ export const IncomesManager: React.FC = () => {
             </button>
             <button
               className="btn btn-primary"
-              onClick={() => setShowForm(true)}
+              onClick={() => window.open('/?page=nuevo-ingreso', '_blank')}
               style={{ fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.5rem' }}
             >
               ＋ Registrar Ingreso
@@ -532,294 +390,6 @@ export const IncomesManager: React.FC = () => {
           </div>
         )}
       </div>
-
-      {/* ── FORMULARIO REGISTRO INGRESO ──────────────────────────── */}
-      {showForm && (
-        <div style={{
-          position: 'fixed', top: 0, left: 0, width: '100%', height: '100%',
-          backgroundColor: 'rgba(15,23,42,0.75)', backdropFilter: 'blur(8px)',
-          display: 'flex', justifyContent: 'center', alignItems: 'center',
-          zIndex: 1200, padding: '1.5rem', overflowY: 'auto'
-        }}>
-          <div className="card" style={{
-            width: '100%', maxWidth: '560px', padding: '2rem',
-            boxShadow: '0 25px 50px -12px rgba(0,0,0,0.4)',
-            backgroundColor: 'var(--card-bg, #ffffff)',
-            maxHeight: '90vh', overflowY: 'auto'
-          }}>
-
-            {/* Header modal */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.5rem', borderBottom: '1px solid var(--border-color)', paddingBottom: '1rem' }}>
-              <div>
-                <h3 style={{ color: 'var(--primary)', fontWeight: 800, margin: 0 }}>💰 Nuevo Ingreso</h3>
-                <p style={{ margin: '0.25rem 0 0', fontSize: '0.78rem', opacity: 0.6 }}>Registrar un aporte o donación confirmada</p>
-              </div>
-              <button onClick={() => { setShowForm(false); resetForm(); }} style={{ background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer', opacity: 0.5 }}>×</button>
-            </div>
-
-            {/* Tipo de registro */}
-            <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1.25rem' }}>
-              {(['manual', 'bancario'] as const).map(t => (
-                <button
-                  key={t}
-                  type="button"
-                  onClick={() => { setTipoRegistro(t); setTransaccionId(''); setMontoOriginal(''); setDescripcion(''); }}
-                  style={{
-                    flex: 1, padding: '0.6rem', borderRadius: '8px', fontWeight: 600,
-                    fontSize: '0.8rem', border: '2px solid', cursor: 'pointer', transition: 'all 0.2s',
-                    borderColor: tipoRegistro === t ? 'var(--primary)' : 'var(--border-color)',
-                    backgroundColor: tipoRegistro === t ? 'var(--primary)' : 'transparent',
-                    color: tipoRegistro === t ? '#fff' : 'var(--neutral-dark)'
-                  }}
-                >
-                  {t === 'manual' ? '✏️ Ingreso Manual' : '🏦 Desde Extracto Bancario'}
-                </button>
-              ))}
-            </div>
-
-            <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-
-              {/* Vincular a transacción bancaria */}
-              {tipoRegistro === 'bancario' && (
-                <div className="form-group" style={{ marginBottom: 0 }}>
-                  <label className="form-label" style={{ fontWeight: 600 }}>Seleccione una o más Transacciones Bancarias *</label>
-                  {bankTxs.length === 0 ? (
-                    <div style={{ padding: '0.75rem', borderRadius: '6px', backgroundColor: 'rgba(190,87,75,0.06)', border: '1px solid rgba(190,87,75,0.2)', fontSize: '0.82rem', color: 'var(--danger)' }}>
-                      No hay transacciones de ingreso pendientes de conciliar.
-                    </div>
-                  ) : (
-                    <div style={{
-                      maxHeight: '160px', overflowY: 'auto', border: '1px solid var(--border-color)',
-                      borderRadius: '6px', padding: '0.5rem', display: 'flex', flexDirection: 'column', gap: '0.5rem',
-                      backgroundColor: '#fff'
-                    }}>
-                      {bankTxs.map(tx => {
-                        const isChecked = selectedTxIds.includes(tx.id);
-                        const isTxVes = tx.csv_metadata?.moneda === 'VES' || 
-                          tx.descripcion.toLowerCase().includes('ves') || 
-                          tx.descripcion.toLowerCase().includes('bs') || 
-                          tx.monto > 1000;
-                        return (
-                          <label key={tx.id} style={{
-                            display: 'flex', alignItems: 'flex-start', gap: '0.5rem', padding: '0.4rem',
-                            borderRadius: '4px', backgroundColor: isChecked ? 'rgba(47,90,174,0.05)' : 'transparent',
-                            cursor: 'pointer', fontSize: '0.78rem', border: '1px solid',
-                            borderColor: isChecked ? 'var(--primary)' : 'rgba(0,0,0,0.08)', transition: 'all 0.15s',
-                            userSelect: 'none'
-                          }}>
-                            <input
-                              type="checkbox"
-                              checked={isChecked}
-                              onChange={() => handleToggleTx(tx.id)}
-                              style={{ marginTop: '0.15rem' }}
-                            />
-                            <div style={{ flex: 1 }}>
-                              <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 700 }}>
-                                <span>{tx.fecha} — Ref: {tx.referencia}</span>
-                                <span style={{ color: 'var(--success)' }}>
-                                  {isTxVes ? formatVesCurrency(tx.monto) : formatCurrency(tx.monto)}
-                                </span>
-                              </div>
-                              <div style={{ opacity: 0.7, fontSize: '0.72rem', marginTop: '0.1rem' }}>{tx.descripcion}</div>
-                            </div>
-                          </label>
-                        );
-                      })}
-                    </div>
-                  )}
-                  {selectedTxIds.length > 0 && (
-                    <div style={{ fontSize: '0.72rem', opacity: 0.6, marginTop: '0.25rem', textAlign: 'right' }}>
-                      Seleccionados: <strong>{selectedTxIds.length}</strong> movimientos (Monto sumado automáticamente)
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {/* Proyecto */}
-              <div className="form-group" style={{ marginBottom: 0 }}>
-                <label className="form-label" style={{ fontWeight: 600 }}>Proyecto Receptor *</label>
-                <select className="form-input" value={proyectoId} onChange={e => setProyectoId(e.target.value)} required disabled={submitting}>
-                  <option value="">Selecciona el proyecto...</option>
-                  {projects.map(p => <option key={p.id} value={p.id}>{p.nombre}</option>)}
-                </select>
-              </div>
-
-              {/* Donante */}
-              <div className="form-group" style={{ marginBottom: 0 }}>
-                <label className="form-label" style={{ fontWeight: 600 }}>Donante / Fuente *</label>
-                <select className="form-input" value={donanteId} onChange={e => setDonanteId(e.target.value)} required disabled={submitting}>
-                  <option value="">Selecciona el donante...</option>
-                  <optgroup label="🇻🇪 Nacionales">
-                    {donantes.filter(d => d.tipo === 'nacional').map(d => (
-                      <option key={d.id} value={d.id}>{FLAG_MAP[d.pais || ''] || '🤝'} {d.nombre}</option>
-                    ))}
-                  </optgroup>
-                  <optgroup label="✈️ Extranjeros">
-                    {donantes.filter(d => d.tipo === 'extranjero').map(d => (
-                      <option key={d.id} value={d.id}>{FLAG_MAP[d.pais || ''] || '🤝'} {d.nombre}</option>
-                    ))}
-                  </optgroup>
-                </select>
-              </div>
-
-              {/* Moneda y Medio de Pago */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
-                <div className="form-group" style={{ marginBottom: 0 }}>
-                  <label className="form-label" style={{ fontWeight: 600 }}>Moneda *</label>
-                  <div style={{ display: 'flex', gap: '0.25rem' }}>
-                    {(['USD', 'VES'] as const).map(m => (
-                      <button
-                        key={m}
-                        type="button"
-                        onClick={() => setMoneda(m)}
-                        style={{
-                          flex: 1, padding: '0.5rem', borderRadius: '6px', fontWeight: 600,
-                          fontSize: '0.8rem', border: '1.5px solid', cursor: 'pointer', transition: 'all 0.2s',
-                          borderColor: moneda === m ? 'var(--primary)' : 'var(--border-color)',
-                          backgroundColor: moneda === m ? 'var(--primary)' : 'transparent',
-                          color: moneda === m ? '#fff' : 'var(--neutral-dark)'
-                        }}
-                      >
-                        {m === 'USD' ? '💵 USD' : '🇻🇪 VES'}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-                
-                <div className="form-group" style={{ marginBottom: 0 }}>
-                  <label className="form-label" style={{ fontWeight: 600 }}>Medio de Pago *</label>
-                  <div style={{ display: 'flex', gap: '0.25rem' }}>
-                    {(['transferencia', 'efectivo'] as const).map(mp => (
-                      <button
-                        key={mp}
-                        type="button"
-                        onClick={() => setMedioPago(mp)}
-                        style={{
-                          flex: 1, padding: '0.5rem', borderRadius: '6px', fontWeight: 600,
-                          fontSize: '0.8rem', border: '1.5px solid', cursor: 'pointer', transition: 'all 0.2s',
-                          borderColor: medioPago === mp ? 'var(--primary)' : 'var(--border-color)',
-                          backgroundColor: medioPago === mp ? 'var(--primary)' : 'transparent',
-                          color: medioPago === mp ? '#fff' : 'var(--neutral-dark)'
-                        }}
-                      >
-                        {mp === 'transferencia' ? '🏦 Banco' : '💵 Efectivo'}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-              {/* Fecha y Monto */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
-                <div className="form-group" style={{ marginBottom: 0 }}>
-                  <label className="form-label" style={{ fontWeight: 600 }}>Fecha Recepción *</label>
-                  <input type="date" className="form-input" value={fecha} onChange={e => setFecha(e.target.value)} required disabled={submitting} />
-                </div>
-                <div className="form-group" style={{ marginBottom: 0 }}>
-                  <label className="form-label" style={{ fontWeight: 600 }}>Monto ({moneda}) *</label>
-                  <input
-                    type="number" step="0.01" min="0.01"
-                    className="form-input"
-                    value={montoOriginal}
-                    onChange={e => setMontoOriginal(e.target.value)}
-                    placeholder="0.00"
-                    required
-                    disabled={submitting || (tipoRegistro === 'bancario' && !!transaccionId)}
-                  />
-                </div>
-              </div>
-
-              {/* Tasa de cambio BCV si aplica */}
-              {moneda === 'VES' && (
-                <div style={{ backgroundColor: 'rgba(47,90,174,0.05)', padding: '1rem', borderRadius: 'var(--radius-md)', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span style={{ fontSize: '0.8rem', fontWeight: 600 }}>Tasa de Cambio BCV (Bs./USD) *</span>
-                    {!tasaManualEditable && (
-                      <button 
-                        type="button" 
-                        onClick={() => setTasaManualEditable(true)}
-                        style={{ border: 'none', background: 'none', color: 'var(--primary)', fontWeight: 700, fontSize: '0.75rem', cursor: 'pointer' }}
-                      >
-                        Ajustar Tasa
-                      </button>
-                    )}
-                  </div>
-                  {tasaBcv ? (
-                    <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-                      <input
-                        type="number" step="0.0001"
-                        className="form-input"
-                        value={tasaBcv}
-                        onChange={e => setTasaBcv(parseFloat(e.target.value) || null)}
-                        disabled={!tasaManualEditable || submitting}
-                        style={{ width: '130px', padding: '0.3rem 0.5rem', fontSize: '0.9rem', backgroundColor: tasaManualEditable ? '#fff' : 'rgba(0,0,0,0.03)' }}
-                        required
-                      />
-                      <span style={{ fontSize: '0.75rem', opacity: 0.6 }}>
-                        {!tasaManualEditable ? '🤖 Tasa oficial encontrada para esta fecha.' : '✏️ Tasa ajustada manualmente.'}
-                      </span>
-                    </div>
-                  ) : (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-                      <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-                        <input
-                          type="number" step="0.0001"
-                          className="form-input"
-                          placeholder="Ingrese tasa"
-                          onChange={e => setTasaBcv(parseFloat(e.target.value) || null)}
-                          disabled={submitting}
-                          style={{ width: '130px', padding: '0.3rem 0.5rem', fontSize: '0.9rem' }}
-                          required
-                        />
-                        <span style={{ fontSize: '0.75rem', color: 'var(--warning)', fontWeight: 600 }}>
-                          ⚠️ No se encontró tasa oficial en base de datos.
-                        </span>
-                      </div>
-                      <span style={{ fontSize: '0.7rem', opacity: 0.6 }}>
-                        Por favor, ingrese el valor de la tasa BCV manualmente para realizar la conversión.
-                      </span>
-                    </div>
-                  )}
-
-                  {/* Preview de conversión */}
-                  {montoOriginal && tasaBcv && tasaBcv > 0 && (
-                    <div style={{ borderTop: '1px solid rgba(0,0,0,0.1)', paddingTop: '0.5rem', marginTop: '0.25rem', display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem' }}>
-                      <span>Equivalente en USD:</span>
-                      <strong style={{ color: 'var(--success)' }}>
-                        {formatCurrency(parseFloat(montoOriginal) / tasaBcv)}
-                      </strong>
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {/* Descripción */}
-              <div className="form-group" style={{ marginBottom: 0 }}>
-                <label className="form-label" style={{ fontWeight: 600 }}>Descripción / Referencia *</label>
-                <textarea
-                  className="form-input" rows={3}
-                  placeholder="Ej: Primer desembolso Convenio 2026-A, cuota trimestral confirmada..."
-                  value={descripcion}
-                  onChange={e => setDescripcion(e.target.value)}
-                  required
-                  disabled={submitting}
-                  style={{ resize: 'vertical' }}
-                />
-              </div>
-
-              {/* Acciones */}
-              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', borderTop: '1px solid var(--border-color)', paddingTop: '1rem', marginTop: '0.5rem' }}>
-                <button type="button" className="btn btn-outline" onClick={() => { setShowForm(false); resetForm(); }} disabled={submitting}>
-                  Cancelar
-                </button>
-                <button type="submit" className="btn btn-primary" disabled={submitting}>
-                  {submitting ? 'Guardando...' : '✅ Registrar Ingreso'}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
 
       {/* ── MODAL IMPORTACIÓN CSV ───────────────────────────────── */}
       {showImportModal && (
