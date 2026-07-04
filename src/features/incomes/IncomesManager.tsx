@@ -854,14 +854,14 @@ export const IncomesManager: React.FC = () => {
                   <div style={{ maxHeight: '180px', overflowY: 'auto', fontSize: '0.78rem', border: '1px solid var(--border-color)', borderRadius: '6px', backgroundColor: '#fff' }}>
                     <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                       <thead>
-                        <tr style={{ backgroundColor: 'rgba(0,0,0,0.02)', borderBottom: '1px solid var(--border-color)', position: 'sticky', top: 0, zIndex: 10 }}>
-                          <th style={{ padding: '0.4rem 0.6rem', textAlign: 'left', fontWeight: 600 }}>Fecha</th>
-                          <th style={{ padding: '0.4rem 0.6rem', textAlign: 'left', fontWeight: 600 }}>Descripción</th>
-                          <th style={{ padding: '0.4rem 0.6rem', textAlign: 'right', fontWeight: 600 }}>Monto Original</th>
+                        <tr style={{ position: 'sticky', top: 0, zIndex: 10 }}>
+                          <th style={{ padding: '0.4rem 0.6rem', textAlign: 'left', fontWeight: 600, backgroundColor: '#f1f5f9', borderBottom: '1px solid var(--border-color)' }}>Fecha</th>
+                          <th style={{ padding: '0.4rem 0.6rem', textAlign: 'left', fontWeight: 600, backgroundColor: '#f1f5f9', borderBottom: '1px solid var(--border-color)' }}>Descripción</th>
+                          <th style={{ padding: '0.4rem 0.6rem', textAlign: 'right', fontWeight: 600, backgroundColor: '#f1f5f9', borderBottom: '1px solid var(--border-color)' }}>Monto Original</th>
                           {importMoneda === 'VES' && (
                             <>
-                              <th style={{ padding: '0.4rem 0.6rem', textAlign: 'right', fontWeight: 600 }}>Tasa BCV</th>
-                              <th style={{ padding: '0.4rem 0.6rem', textAlign: 'right', fontWeight: 600 }}>Equiv. USD</th>
+                              <th style={{ padding: '0.4rem 0.6rem', textAlign: 'right', fontWeight: 600, backgroundColor: '#f1f5f9', borderBottom: '1px solid var(--border-color)' }}>Tasa BCV</th>
+                              <th style={{ padding: '0.4rem 0.6rem', textAlign: 'right', fontWeight: 600, backgroundColor: '#f1f5f9', borderBottom: '1px solid var(--border-color)' }}>Equiv. USD</th>
                             </>
                           )}
                         </tr>
