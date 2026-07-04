@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { api, requisitionsApi } from '../../services/api';
-import type { Project, ExpenseCategory } from '../../services/api';
+import type { Project, ExpenseCategory, PartidaGasto } from '../../services/api';
 
 interface RequisitionFormProps {
   onClose: () => void;
@@ -14,12 +14,14 @@ export const RequisitionForm: React.FC<RequisitionFormProps> = ({ onClose, onSuc
   // Form states
   const [proyectoId, setProyectoId] = useState('');
   const [categoriaId, setCategoriaId] = useState('');
+  const [partidaId, setPartidaId] = useState('');
   const [montoSolicitado, setMontoSolicitado] = useState('');
   const [motivo, setMotivo] = useState('');
   
   // Lists
   const [projects, setProjects] = useState<Project[]>([]);
   const [categories, setCategories] = useState<ExpenseCategory[]>([]);
+  const [partidas, setPartidas] = useState<PartidaGasto[]>([]);
   
   // UI states
   const [loading, setLoading] = useState(false);
@@ -28,12 +30,14 @@ export const RequisitionForm: React.FC<RequisitionFormProps> = ({ onClose, onSuc
   useEffect(() => {
     const loadFormOptions = async () => {
       try {
-        const [projData, catData] = await Promise.all([
+        const [projData, catData, partData] = await Promise.all([
           api.getProjects(),
-          api.getCategories()
+          api.getCategories(),
+          api.getPartidas()
         ]);
         setProjects(projData.filter(p => p.activo));
         setCategories(catData);
+        setPartidas(partData);
       } catch (err) {
         console.error('Error loading form options:', err);
         setError('Error al cargar proyectos y categorías.');
@@ -45,7 +49,7 @@ export const RequisitionForm: React.FC<RequisitionFormProps> = ({ onClose, onSuc
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!profile) return;
-    if (!proyectoId || !categoriaId || !montoSolicitado || !motivo.trim()) {
+    if (!proyectoId || !partidaId || !montoSolicitado || !motivo.trim()) {
       setError('Por favor, rellene todos los campos obligatorios.');
       return;
     }
@@ -63,7 +67,7 @@ export const RequisitionForm: React.FC<RequisitionFormProps> = ({ onClose, onSuc
       await requisitionsApi.createRequisition({
         solicitante_id: profile.id,
         proyecto_id: proyectoId,
-        categoria_id: categoriaId,
+        partida_id: partidaId,
         monto_solicitado: numericAmount,
         motivo: motivo.trim()
       });
@@ -84,7 +88,9 @@ export const RequisitionForm: React.FC<RequisitionFormProps> = ({ onClose, onSuc
     }}>
       <div className="card animate-fade-in-up" style={{
         maxWidth: '550px', width: '100%', padding: '2rem',
-        borderRadius: 'var(--radius-lg)', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.15)'
+        borderRadius: 'var(--radius-lg)', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.15)',
+        backgroundColor: 'var(--card-bg, #ffffff)',
+        color: 'var(--neutral-dark, #1e293b)'
       }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
           <h3 style={{ color: 'var(--primary)', fontWeight: 800, margin: 0 }}>Nueva Solicitud de Fondos</h3>
@@ -107,6 +113,7 @@ export const RequisitionForm: React.FC<RequisitionFormProps> = ({ onClose, onSuc
         )}
 
         <form onSubmit={handleSubmit}>
+          {/* Proyecto */}
           <div className="form-group">
             <label className="form-label" htmlFor="req-proyecto">Proyecto de Destino *</label>
             <select
@@ -124,13 +131,14 @@ export const RequisitionForm: React.FC<RequisitionFormProps> = ({ onClose, onSuc
             </select>
           </div>
 
+          {/* Categoría */}
           <div className="form-group">
             <label className="form-label" htmlFor="req-categoria">Categoría del Gasto *</label>
             <select
               id="req-categoria"
               className="form-input"
               value={categoriaId}
-              onChange={e => setCategoriaId(e.target.value)}
+              onChange={e => { setCategoriaId(e.target.value); setPartidaId(''); }}
               required
               disabled={loading}
             >
@@ -141,6 +149,31 @@ export const RequisitionForm: React.FC<RequisitionFormProps> = ({ onClose, onSuc
             </select>
           </div>
 
+          {/* Partida Cascade Selector */}
+          {categoriaId && (
+            <div className="form-group">
+              <label className="form-label" htmlFor="req-partida">Partida de Gasto Específica *</label>
+              <select
+                id="req-partida"
+                className="form-input"
+                value={partidaId}
+                onChange={e => setPartidaId(e.target.value)}
+                required
+                disabled={loading}
+              >
+                <option value="">Selecciona la partida contable...</option>
+                {partidas
+                  .filter(p => p.categoria_id === categoriaId)
+                  .map(p => (
+                    <option key={p.id} value={p.id}>
+                      [{p.codigo}] {p.nombre}
+                    </option>
+                  ))}
+              </select>
+            </div>
+          )}
+
+          {/* Monto */}
           <div className="form-group">
             <label className="form-label" htmlFor="req-monto">Monto Estimado ($ USD) *</label>
             <input
@@ -157,6 +190,7 @@ export const RequisitionForm: React.FC<RequisitionFormProps> = ({ onClose, onSuc
             />
           </div>
 
+          {/* Justificación */}
           <div className="form-group" style={{ marginBottom: '2rem' }}>
             <label className="form-label" htmlFor="req-motivo">Justificación / Destino de Fondos *</label>
             <textarea
@@ -172,6 +206,7 @@ export const RequisitionForm: React.FC<RequisitionFormProps> = ({ onClose, onSuc
             />
           </div>
 
+          {/* Acciones */}
           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem' }}>
             <button 
               type="button" 

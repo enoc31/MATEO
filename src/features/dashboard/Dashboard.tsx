@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { api } from '../../services/api';
-import type { Project, ExpenseReceipt, BankTransaction, Donation, Budget } from '../../services/api';
+import type { Project, ExpenseReceipt, BankTransaction, Donation, Budget, ExpenseCategory, PartidaGasto } from '../../services/api';
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, Legend, PieChart, Pie, Cell } from 'recharts';
 
 export const Dashboard: React.FC = () => {
@@ -10,22 +10,28 @@ export const Dashboard: React.FC = () => {
   const [transactions, setTransactions] = useState<BankTransaction[]>([]);
   const [donations, setDonations] = useState<Donation[]>([]);
   const [budgets, setBudgets] = useState<Budget[]>([]);
+  const [categories, setCategories] = useState<ExpenseCategory[]>([]);
+  const [partidas, setPartidas] = useState<PartidaGasto[]>([]);
 
   useEffect(() => {
     const loadData = async () => {
       try {
-        const [projList, expList, txList, donList, bList] = await Promise.all([
+        const [projList, expList, txList, donList, bList, catList, partList] = await Promise.all([
           api.getProjects(),
           api.getExpenses(),
           api.getBankTransactions(),
           api.getDonations(),
-          api.getBudgets()
+          api.getBudgets(),
+          api.getCategories(),
+          api.getPartidas()
         ]);
         setProjects(projList);
         setExpenses(expList);
         setTransactions(txList);
         setDonations(donList);
         setBudgets(bList);
+        setCategories(catList);
+        setPartidas(partList);
       } catch (err) {
         console.error('Error loading dashboard data:', err);
       } finally {
@@ -63,17 +69,16 @@ export const Dashboard: React.FC = () => {
   // A. Egresos por Categoría
   const expensesByCategoryMap: { [key: string]: number } = {};
   approvedExpenses.forEach(exp => {
-    const catId = exp.categoria_id;
+    const partObj = partidas.find(p => p.id === exp.partida_id);
+    const catId = partObj ? partObj.categoria_id : 'otros';
     expensesByCategoryMap[catId] = (expensesByCategoryMap[catId] || 0) + exp.monto;
   });
 
   const CATEGORY_COLORS = ['#2f5aae', '#073a11', '#008fa6', '#be574b', '#e2af13', '#64748b'];
 
   const categoryData = Object.keys(expensesByCategoryMap).map((catId, index) => {
-    const catName = catId === 'cat-1' ? 'Alimentación' : 
-                   catId === 'cat-2' ? 'Medicinas' : 
-                   catId === 'cat-3' ? 'Transporte' : 
-                   catId === 'cat-4' ? 'Albergues' : 'Otros';
+    const catObj = categories.find(c => c.id === catId);
+    const catName = catObj ? catObj.nombre.split(' (')[0].replace(/^\d+\.\s+/, '') : 'Otros';
     return {
       name: catName,
       value: expensesByCategoryMap[catId],

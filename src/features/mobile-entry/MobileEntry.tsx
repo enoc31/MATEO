@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { api, requisitionsApi } from '../../services/api';
-import type { Project, ExpenseCategory, ExpenseReceipt, Requisition } from '../../services/api';
+import type { Project, ExpenseCategory, PartidaGasto, ExpenseReceipt, Requisition } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 
 // Helper icons for projects
@@ -15,11 +15,11 @@ const getProjectIcon = (name: string) => {
 // Helper icons for categories
 const getCategoryIcon = (name: string) => {
   const n = name.toLowerCase();
-  if (n.includes('aliment')) return '🍎';
-  if (n.includes('medica') || n.includes('insumo')) return '💊';
-  if (n.includes('transp') || n.includes('combust')) return '🚚';
-  if (n.includes('logis') || n.includes('alberg')) return '🏠';
-  if (n.includes('operacion') || n.includes('gasto')) return '⚙️';
+  if (n.includes('1.') || n.includes('direct') || n.includes('alim') || n.includes('nutri')) return '🍲';
+  if (n.includes('2.') || n.includes('transp') || n.includes('logis') || n.includes('almacen')) return '🚚';
+  if (n.includes('3.') || n.includes('person') || n.includes('recurs')) return '👥';
+  if (n.includes('4.') || n.includes('oficin') || n.includes('funcion') || n.includes('operat')) return '🏢';
+  if (n.includes('5.') || n.includes('visibil') || n.includes('monito') || n.includes('evalua')) return '📣';
   return '💵';
 };
 
@@ -34,6 +34,7 @@ export const MobileEntry: React.FC = () => {
   // Form states
   const [projectId, setProjectId] = useState('');
   const [categoryId, setCategoryId] = useState('');
+  const [partidaId, setPartidaId] = useState('');
   const [monto, setMonto] = useState('');
   const [descripcion, setDescripcion] = useState('');
   const [fechaGasto, setFechaGasto] = useState(new Date().toISOString().split('T')[0]);
@@ -41,6 +42,7 @@ export const MobileEntry: React.FC = () => {
   
   // Requisitions
   const [approvedRequisitions, setApprovedRequisitions] = useState<Requisition[]>([]);
+  const [partidas, setPartidas] = useState<PartidaGasto[]>([]);
   
   // Document 1: Factura o Recibo
   const [doc1File, setDoc1File] = useState<File | null>(null);
@@ -54,14 +56,16 @@ export const MobileEntry: React.FC = () => {
     if (!profile) return;
     setLoading(true);
     try {
-      const [projList, catList, expList, reqList] = await Promise.all([
+      const [projList, catList, partList, expList, reqList] = await Promise.all([
         api.getProjects(),
         api.getCategories(),
+        api.getPartidas(),
         api.getExpenses(),
         requisitionsApi.getRequisitions()
       ]);
       setProjects(projList.filter(p => p.activo));
       setCategories(catList);
+      setPartidas(partList);
       
       // Filter expenses created by this coordinator
       const myExpenses = expList.filter(e => e.solicitante_id === profile.id);
@@ -99,6 +103,7 @@ export const MobileEntry: React.FC = () => {
   const resetForm = () => {
     setProjectId('');
     setCategoryId('');
+    setPartidaId('');
     setMonto('');
     setDescripcion('');
     setFechaGasto(new Date().toISOString().split('T')[0]);
@@ -115,13 +120,21 @@ export const MobileEntry: React.FC = () => {
       const selected = approvedRequisitions.find(r => r.id === reqId);
       if (selected) {
         setProjectId(selected.proyecto_id);
-        setCategoryId(selected.categoria_id);
+        setPartidaId(selected.partida_id);
+        
+        // Find category from partida
+        const partObj = partidas.find(p => p.id === selected.partida_id);
+        if (partObj) {
+          setCategoryId(partObj.categoria_id);
+        }
+        
         setMonto(selected.monto_solicitado.toString());
         setDescripcion(selected.motivo);
       }
     } else {
       setProjectId('');
       setCategoryId('');
+      setPartidaId('');
       setMonto('');
       setDescripcion('');
     }
@@ -136,8 +149,8 @@ export const MobileEntry: React.FC = () => {
       alert('Por favor selecciona un Proyecto.');
       return;
     }
-    if (!categoryId) {
-      alert('Por favor selecciona una Categoría de gasto.');
+    if (!partidaId) {
+      alert('Por favor selecciona una Partida de gasto.');
       return;
     }
     if (!monto || parseFloat(monto) <= 0) {
@@ -153,7 +166,7 @@ export const MobileEntry: React.FC = () => {
     try {
       await api.createExpense({
         proyecto_id: projectId,
-        categoria_id: categoryId,
+        partida_id: partidaId,
         solicitante_id: profile.id,
         solicitante_nombre: profile.nombre_completo,
         solicitud_id: solicitudId || null,
@@ -306,7 +319,7 @@ export const MobileEntry: React.FC = () => {
                   <button
                     key={c.id}
                     type="button"
-                    onClick={() => setCategoryId(c.id)}
+                    onClick={() => { setCategoryId(c.id); setPartidaId(''); }}
                     disabled={submitting}
                     style={{
                       display: 'flex',
@@ -327,12 +340,37 @@ export const MobileEntry: React.FC = () => {
                       {getCategoryIcon(c.nombre)}
                     </span>
                     <span style={{ fontSize: '0.75rem', textAlign: 'center', color: 'var(--neutral-dark)' }}>
-                      {c.nombre}
+                      {c.nombre.split(' (')[0].replace(/^\d+\.\s+/, '')}
                     </span>
                   </button>
                 );
               })}
             </div>
+
+            {categoryId && (
+              <div style={{ marginTop: '1.25rem', display: 'flex', flexDirection: 'column' }}>
+                <label htmlFor="partida-select" style={{ fontSize: '0.75rem', fontWeight: 600, opacity: 0.8, marginBottom: '0.25rem' }}>
+                  Seleccionar Partida de Gasto UNDG *
+                </label>
+                <select
+                  id="partida-select"
+                  className="form-input form-select"
+                  value={partidaId}
+                  onChange={e => setPartidaId(e.target.value)}
+                  disabled={submitting}
+                  required
+                >
+                  <option value="">-- Eliga la partida contable --</option>
+                  {partidas
+                    .filter(p => p.categoria_id === categoryId)
+                    .map(p => (
+                      <option key={p.id} value={p.id}>
+                        [{p.codigo}] {p.nombre}
+                      </option>
+                    ))}
+                </select>
+              </div>
+            )}
           </div>
 
           {/* STEP 3: AMOUNT & DETAILS */}
@@ -625,7 +663,7 @@ export const MobileEntry: React.FC = () => {
                 
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '0.75rem', paddingTop: '0.75rem', borderTop: '1px solid var(--neutral-light)' }}>
                   <span style={{ fontSize: '0.75rem', color: 'var(--neutral-dark)', opacity: 0.75 }}>
-                    Categoría: {categories.find(c => c.id === exp.categoria_id)?.nombre || 'Ayuda'}
+                    Partida: {partidas.find(p => p.id === exp.partida_id)?.nombre || 'Ayuda'}
                   </span>
                   {getStatusBadge(exp.estado)}
                 </div>

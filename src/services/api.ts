@@ -9,6 +9,7 @@ export interface Project {
   activo: boolean;
   fecha_inicio: string;
   fecha_fin: string;
+  overhead_porcentaje?: number;
 }
 
 export interface ExpenseCategory {
@@ -17,10 +18,18 @@ export interface ExpenseCategory {
   descripcion: string;
 }
 
+export interface PartidaGasto {
+  id: string;
+  categoria_id: string;
+  codigo: string;
+  nombre: string;
+  descripcion: string;
+}
+
 export interface Budget {
   id: string;
   proyecto_id: string;
-  categoria_id: string;
+  partida_id: string;
   monto_asignado: number;
   monto_ejecutado: number;
   monto_comprometido: number;
@@ -49,7 +58,7 @@ export interface Donation {
 export interface ExpenseReceipt {
   id: string;
   proyecto_id: string;
-  categoria_id: string;
+  partida_id: string;
   transaccion_id: string | null;
   solicitante_id: string;
   solicitante_nombre?: string;
@@ -84,7 +93,8 @@ const INITIAL_PROJECTS: Project[] = [
     descripcion: 'Programa de comedores comunitarios para niños en comunidades vulnerables de Maracaibo y San Francisco.',
     activo: true,
     fecha_inicio: '2026-01-01',
-    fecha_fin: '2026-12-31'
+    fecha_fin: '2026-12-31',
+    overhead_porcentaje: 7.00
   },
   {
     id: 'proj-2',
@@ -92,7 +102,8 @@ const INITIAL_PROJECTS: Project[] = [
     descripcion: 'Distribución de insumos médicos básicos, medicinas de control y jornadas médicas gratuitas en zonas fronterizas.',
     activo: true,
     fecha_inicio: '2026-02-15',
-    fecha_fin: '2026-08-31'
+    fecha_fin: '2026-08-31',
+    overhead_porcentaje: 8.50
   },
   {
     id: 'proj-3',
@@ -100,28 +111,56 @@ const INITIAL_PROJECTS: Project[] = [
     descripcion: 'Apoyo con albergues temporales, mantas, agua potable y enseres para familias damnificadas por lluvias.',
     activo: true,
     fecha_inicio: '2026-03-01',
-    fecha_fin: '2026-09-30'
+    fecha_fin: '2026-09-30',
+    overhead_porcentaje: 10.00
   }
 ];
 
 const INITIAL_CATEGORIES: ExpenseCategory[] = [
-  { id: 'cat-1', nombre: 'Alimentación e Hidratación', descripcion: 'Compra de comida, agua potable y fórmulas.' },
-  { id: 'cat-2', nombre: 'Medicamentos e Insumos Médicos', descripcion: 'Medicinas de primera necesidad, gasas, jeringas.' },
-  { id: 'cat-3', nombre: 'Transporte y Combustible', descripcion: 'Fletes, combustible para camiones de ayuda y transporte de personal.' },
-  { id: 'cat-4', nombre: 'Logística y Albergue', descripcion: 'Colchones, cobijas, alquiler de locales temporales.' },
-  { id: 'cat-5', nombre: 'Gastos Operacionales', descripcion: 'Papelería, comunicación satelital y conectividad de campo.' }
+  { id: 'cat-1', nombre: '1. Costos Directos de Intervención (Bienes y Servicios)', descripcion: 'Compra y distribución de bienes de ayuda y atención humanitaria directa.' },
+  { id: 'cat-2', nombre: '2. Costos de Transporte, Logística y Almacenamiento', descripcion: 'Fletes, almacenamiento y movilización local de suministros de ayuda.' },
+  { id: 'cat-3', nombre: '3. Costos de Personal (Recursos Humanos)', descripcion: 'Salarios, honorarios y pólizas de seguros del personal asignado.' },
+  { id: 'cat-4', nombre: '4. Gastos de Oficina y Funcionamiento (Costos Indirectos y Operativos)', descripcion: 'Costos operativos de bases de campo, seguridad y gastos indirectos (overhead).' },
+  { id: 'cat-5', nombre: '5. Visibilidad, Monitoreo y Evaluación', descripcion: 'Reportes obligatorios, rendición de cuentas, auditorías y material de visibilidad de donantes.' }
+];
+
+const INITIAL_PARTIDAS: PartidaGasto[] = [
+  // Categoría 1
+  { id: 'part-11', categoria_id: 'cat-1', codigo: '1.1', nombre: 'Artículos No Alimentarios (NFI)', descripcion: 'Compra y distribución de kits de emergencia, lonas, carpas, mantas, utensilios.' },
+  { id: 'part-12', categoria_id: 'cat-1', codigo: '1.2', nombre: 'Agua, Saneamiento e Higiene (WASH)', descripcion: 'Letrinas de emergencia, pastillas potabilizadoras, camiones cisterna, kits de higiene.' },
+  { id: 'part-13', categoria_id: 'cat-1', codigo: '1.3', nombre: 'Asistencia Sanitaria de Urgencia', descripcion: 'Medicamentos esenciales, clínicas móviles, insumos de trauma, generadores de clínicas.' },
+  { id: 'part-14', categoria_id: 'cat-1', codigo: '1.4', nombre: 'Seguridad Alimentaria y Nutrición', descripcion: 'Alimentos de primera necesidad y suplementos nutricionales.' },
+  { id: 'part-15', categoria_id: 'cat-1', codigo: '1.5', nombre: 'Programas de Transferencias Monetarias (PTM)', descripcion: 'Dinero en efectivo o vales entregados directamente a beneficiarios.' },
+
+  // Categoría 2
+  { id: 'part-21', categoria_id: 'cat-2', codigo: '2.1', nombre: 'Transporte y Envíos', descripcion: 'Fletes terrestres, marítimos o aéreos para movilizar la ayuda.' },
+  { id: 'part-22', categoria_id: 'cat-2', codigo: '2.2', nombre: 'Almacenamiento', descripcion: 'Alquiler de bodegas, almacenes temporales y costos de estiba.' },
+  { id: 'part-23', categoria_id: 'cat-2', codigo: '2.3', nombre: 'Logística Local', descripcion: 'Combustible local, peajes, alquiler de vehículos 4x4 de operación.' },
+
+  // Categoría 3
+  { id: 'part-31', categoria_id: 'cat-3', codigo: '3.1', nombre: 'Personal Local e Internacional', descripcion: 'Salarios y dietas de coordinadores, médicos, ingenieros WASH y logistas.' },
+  { id: 'part-32', categoria_id: 'cat-3', codigo: '3.2', nombre: 'Seguridad Social y Seguros', descripcion: 'Pólizas de seguro médico y accidentes de riesgo especial para zonas de desastre.' },
+
+  // Categoría 4
+  { id: 'part-41', categoria_id: 'cat-4', codigo: '4.1', nombre: 'Costos de Oficina sobre el Terreno', descripcion: 'Alquiler de oficinas/bases, internet satelital, luz, agua y papelería contable.' },
+  { id: 'part-42', categoria_id: 'cat-4', codigo: '4.2', nombre: 'Gestión de Seguridad', descripcion: 'Equipamiento de comunicación (radios VHF), personal de vigilancia, kits de evacuación.' },
+  { id: 'part-43', categoria_id: 'cat-4', codigo: '4.3', nombre: 'Costos Indirectos (Overhead)', descripcion: 'Porcentaje destinado a gastos centrales de administración contable de la sede.' },
+
+  // Categoría 5
+  { id: 'part-51', categoria_id: 'cat-5', codigo: '5.1', nombre: 'Visibilidad', descripcion: 'Banners, chalecos identificadores de personal, y calcomanías para logos de donantes.' },
+  { id: 'part-52', categoria_id: 'cat-5', codigo: '5.2', nombre: 'Monitoreo, Evaluación y Rendición de Cuentas', descripcion: 'Viajes de control de hitos, auditorías del proyecto y elaboración de reportes.' }
 ];
 
 const INITIAL_BUDGETS: Budget[] = [
   // Proyecto 1
-  { id: 'b-1', proyecto_id: 'proj-1', categoria_id: 'cat-1', monto_asignado: 15000.00, monto_ejecutado: 4850.00, monto_comprometido: 0, periodo: '2026-ANUAL' },
-  { id: 'b-2', proyecto_id: 'proj-1', categoria_id: 'cat-3', monto_asignado: 3000.00, monto_ejecutado: 1200.00, monto_comprometido: 0, periodo: '2026-ANUAL' },
-  { id: 'b-3', proyecto_id: 'proj-1', categoria_id: 'cat-5', monto_asignado: 1000.00, monto_ejecutado: 350.00, monto_comprometido: 0, periodo: '2026-ANUAL' },
+  { id: 'b-1', proyecto_id: 'proj-1', partida_id: 'part-14', monto_asignado: 15000.00, monto_ejecutado: 4850.00, monto_comprometido: 0, periodo: '2026-ANUAL' },
+  { id: 'b-2', proyecto_id: 'proj-1', partida_id: 'part-23', monto_asignado: 3000.00, monto_ejecutado: 1200.00, monto_comprometido: 0, periodo: '2026-ANUAL' },
+  { id: 'b-3', proyecto_id: 'proj-1', partida_id: 'part-41', monto_asignado: 1000.00, monto_ejecutado: 350.00, monto_comprometido: 0, periodo: '2026-ANUAL' },
   // Proyecto 2
-  { id: 'b-4', proyecto_id: 'proj-2', categoria_id: 'cat-2', monto_asignado: 25000.00, monto_ejecutado: 12500.00, monto_comprometido: 0, periodo: '2026-ANUAL' },
-  { id: 'b-5', proyecto_id: 'proj-2', categoria_id: 'cat-3', monto_asignado: 4000.00, monto_ejecutado: 890.00, monto_comprometido: 0, periodo: '2026-ANUAL' },
+  { id: 'b-4', proyecto_id: 'proj-2', partida_id: 'part-13', monto_asignado: 25000.00, monto_ejecutado: 12500.00, monto_comprometido: 0, periodo: '2026-ANUAL' },
+  { id: 'b-5', proyecto_id: 'proj-2', partida_id: 'part-23', monto_asignado: 4000.00, monto_ejecutado: 890.00, monto_comprometido: 0, periodo: '2026-ANUAL' },
   // Proyecto 3
-  { id: 'b-6', proyecto_id: 'proj-3', categoria_id: 'cat-4', monto_asignado: 10000.00, monto_ejecutado: 6200.00, monto_comprometido: 0, periodo: '2026-ANUAL' }
+  { id: 'b-6', proyecto_id: 'proj-3', partida_id: 'part-22', monto_asignado: 10000.00, monto_ejecutado: 6200.00, monto_comprometido: 0, periodo: '2026-ANUAL' }
 ];
 
 const INITIAL_BANK_TRANSACTIONS: BankTransaction[] = [
@@ -140,7 +179,7 @@ const INITIAL_EXPENSES: ExpenseReceipt[] = [
   {
     id: 'exp-1',
     proyecto_id: 'proj-1',
-    categoria_id: 'cat-1',
+    partida_id: 'part-14',
     transaccion_id: null,
     solicitante_id: 'coord-1',
     solicitante_nombre: 'José Rodríguez (Coordinador Zulia)',
@@ -155,7 +194,7 @@ const INITIAL_EXPENSES: ExpenseReceipt[] = [
   {
     id: 'exp-2',
     proyecto_id: 'proj-2',
-    categoria_id: 'cat-2',
+    partida_id: 'part-13',
     transaccion_id: null,
     solicitante_id: 'coord-2',
     solicitante_nombre: 'Hna. María Gómez (Coordinadora Médica)',
@@ -170,7 +209,7 @@ const INITIAL_EXPENSES: ExpenseReceipt[] = [
   {
     id: 'exp-3',
     proyecto_id: 'proj-3',
-    categoria_id: 'cat-4',
+    partida_id: 'part-22',
     transaccion_id: 'tx-5', // Pre-conciliado en el mock
     solicitante_id: 'coord-3',
     solicitante_nombre: 'Carlos Silva (Logística Táchira)',
@@ -185,7 +224,7 @@ const INITIAL_EXPENSES: ExpenseReceipt[] = [
   {
     id: 'exp-4',
     proyecto_id: 'proj-1',
-    categoria_id: 'cat-3',
+    partida_id: 'part-23',
     transaccion_id: 'tx-6',
     solicitante_id: 'coord-1',
     solicitante_nombre: 'José Rodríguez (Coordinador Zulia)',
@@ -234,6 +273,9 @@ const initLocalStorage = () => {
   if (!localStorage.getItem('cnbv_requisitions')) {
     localStorage.setItem('cnbv_requisitions', JSON.stringify([]));
   }
+  if (!localStorage.getItem('cnbv_partidas')) {
+    localStorage.setItem('cnbv_partidas', JSON.stringify(INITIAL_PARTIDAS));
+  }
 };
 
 if (isSimulationMode) {
@@ -277,6 +319,17 @@ export const api = {
       return data as ExpenseCategory[];
     } else {
       return JSON.parse(localStorage.getItem('cnbv_categories') || '[]');
+    }
+  },
+
+  // --- PARTIDAS ---
+  getPartidas: async (): Promise<PartidaGasto[]> => {
+    if (!isSimulationMode) {
+      const { data, error } = await supabase.from('partidas_gasto').select('*').order('codigo');
+      if (error) throw error;
+      return data as PartidaGasto[];
+    } else {
+      return JSON.parse(localStorage.getItem('cnbv_partidas') || '[]');
     }
   },
 
@@ -441,14 +494,14 @@ export const api = {
       // Si se aprueba el gasto en modo simulación, actualizar la ejecución presupuestaria
       if (estado === 'aprobado' && expenses[index].estado !== 'aprobado') {
         const budgets = JSON.parse(localStorage.getItem('cnbv_budgets') || '[]');
-        const bIndex = budgets.findIndex((b: Budget) => b.proyecto_id === updated.proyecto_id && b.categoria_id === updated.categoria_id);
+        const bIndex = budgets.findIndex((b: Budget) => b.proyecto_id === updated.proyecto_id && b.partida_id === updated.partida_id);
         if (bIndex !== -1) {
           budgets[bIndex].monto_ejecutado += updated.monto;
           localStorage.setItem('cnbv_budgets', JSON.stringify(budgets));
         }
       } else if (estado !== 'aprobado' && expenses[index].estado === 'aprobado') {
         const budgets = JSON.parse(localStorage.getItem('cnbv_budgets') || '[]');
-        const bIndex = budgets.findIndex((b: Budget) => b.proyecto_id === updated.proyecto_id && b.categoria_id === updated.categoria_id);
+        const bIndex = budgets.findIndex((b: Budget) => b.proyecto_id === updated.proyecto_id && b.partida_id === updated.partida_id);
         if (bIndex !== -1) {
           budgets[bIndex].monto_ejecutado = Math.max(0, budgets[bIndex].monto_ejecutado - updated.monto);
           localStorage.setItem('cnbv_budgets', JSON.stringify(budgets));
@@ -600,7 +653,9 @@ export interface Requisition {
   solicitante_nombre?: string;
   proyecto_id: string;
   proyecto_nombre?: string;
-  categoria_id: string;
+  partida_id: string;
+  partida_nombre?: string;
+  partida_codigo?: string;
   categoria_nombre?: string;
   monto_solicitado: number;
   motivo: string;
@@ -632,7 +687,11 @@ export const requisitionsApi = {
           *,
           solicitante:usuarios_perfiles!solicitante_id(nombre_completo),
           proyecto:proyectos(nombre),
-          categoria:categorias_gasto(nombre)
+          partida:partidas_gasto(
+            nombre,
+            codigo,
+            categoria:categorias_gasto(nombre)
+          )
         `)
         .order('created_at', { ascending: false });
       
@@ -642,22 +701,28 @@ export const requisitionsApi = {
         ...row,
         solicitante_nombre: row.solicitante?.nombre_completo,
         proyecto_nombre: row.proyecto?.nombre,
-        categoria_nombre: row.categoria?.nombre
+        partida_nombre: row.partida?.nombre,
+        partida_codigo: row.partida?.codigo,
+        categoria_nombre: row.partida?.categoria?.nombre
       }));
     } else {
       const reqs = JSON.parse(localStorage.getItem('cnbv_requisitions') || '[]');
       const projects = JSON.parse(localStorage.getItem('cnbv_projects') || '[]');
+      const partidas = JSON.parse(localStorage.getItem('cnbv_partidas') || '[]');
       const categories = JSON.parse(localStorage.getItem('cnbv_categories') || '[]');
       const profiles = JSON.parse(localStorage.getItem('cnbv_profiles') || '{}');
       
       return reqs.map((r: any) => {
         const p = projects.find((x: any) => x.id === r.proyecto_id);
-        const c = categories.find((x: any) => x.id === r.categoria_id);
+        const part = partidas.find((x: any) => x.id === r.partida_id);
+        const cat = part ? categories.find((x: any) => x.id === part.categoria_id) : null;
         const user = profiles[r.solicitante_id];
         return {
           ...r,
           proyecto_nombre: p ? p.nombre : 'Proyecto Zulia',
-          categoria_nombre: c ? c.nombre : 'Alimentación',
+          partida_nombre: part ? part.nombre : 'Artículos No Alimentarios',
+          partida_codigo: part ? part.codigo : '1.1',
+          categoria_nombre: cat ? cat.nombre : 'Costos Directos',
           solicitante_nombre: user ? user.nombre_completo : 'Coordinador'
         };
       });
@@ -725,7 +790,7 @@ export const requisitionsApi = {
       // En simulación, si pasa a 'aprobada_ejecucion', reservamos presupuesto (monto_comprometido)
       if (nextStatus === 'aprobada_ejecucion') {
         const budgets = JSON.parse(localStorage.getItem('cnbv_budgets') || '[]');
-        const bIndex = budgets.findIndex((b: Budget) => b.proyecto_id === updated.proyecto_id && b.categoria_id === updated.categoria_id);
+        const bIndex = budgets.findIndex((b: Budget) => b.proyecto_id === updated.proyecto_id && b.partida_id === updated.partida_id);
         if (bIndex !== -1) {
           budgets[bIndex].monto_comprometido = (budgets[bIndex].monto_comprometido || 0) + updated.monto_solicitado;
           localStorage.setItem('cnbv_budgets', JSON.stringify(budgets));
@@ -766,7 +831,7 @@ export const requisitionsApi = {
       // Si estaba en aprobada_ejecucion y se rechaza, liberamos el monto comprometido
       if (original.estado === 'aprobada_ejecucion') {
         const budgets = JSON.parse(localStorage.getItem('cnbv_budgets') || '[]');
-        const bIndex = budgets.findIndex((b: Budget) => b.proyecto_id === updated.proyecto_id && b.categoria_id === updated.categoria_id);
+        const bIndex = budgets.findIndex((b: Budget) => b.proyecto_id === updated.proyecto_id && b.partida_id === updated.partida_id);
         if (bIndex !== -1) {
           budgets[bIndex].monto_comprometido = Math.max(0, (budgets[bIndex].monto_comprometido || 0) - updated.monto_solicitado);
           localStorage.setItem('cnbv_budgets', JSON.stringify(budgets));

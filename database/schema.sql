@@ -35,6 +35,7 @@ CREATE TABLE public.proyectos (
     activo BOOLEAN DEFAULT TRUE NOT NULL,
     fecha_inicio DATE,
     fecha_fin DATE,
+    overhead_porcentaje NUMERIC(5,2) DEFAULT 7.00,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL,
     created_by UUID REFERENCES public.usuarios_perfiles(id)
 );
@@ -47,18 +48,29 @@ CREATE TABLE public.categorias_gasto (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
 );
 
--- Presupuestos asignados a proyectos por categoría de gasto
+-- Partidas de gastos detalladas por categoría
+CREATE TABLE public.partidas_gasto (
+    id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+    categoria_id UUID REFERENCES public.categorias_gasto(id) ON DELETE CASCADE NOT NULL,
+    codigo TEXT NOT NULL UNIQUE,
+    nombre TEXT NOT NULL,
+    descripcion TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL,
+    CONSTRAINT unique_categoria_partida UNIQUE (categoria_id, nombre)
+);
+
+-- Presupuestos asignados a proyectos por partida de gasto
 CREATE TABLE public.presupuestos (
     id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
     proyecto_id UUID REFERENCES public.proyectos(id) ON DELETE CASCADE NOT NULL,
-    categoria_id UUID REFERENCES public.categorias_gasto(id) ON DELETE CASCADE NOT NULL,
+    partida_id UUID REFERENCES public.partidas_gasto(id) ON DELETE CASCADE NOT NULL,
     monto_asignado NUMERIC(15, 2) NOT NULL CHECK (monto_asignado >= 0),
     monto_ejecutado NUMERIC(15, 2) DEFAULT 0.00 NOT NULL CHECK (monto_ejecutado >= 0),
     monto_comprometido NUMERIC(15, 2) DEFAULT 0.00 NOT NULL CHECK (monto_comprometido >= 0),
     periodo TEXT NOT NULL, -- Ej: '2026-Q1', '2026-Q2', '2026-ANUAL'
     created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL,
-    CONSTRAINT unique_proyecto_categoria_periodo UNIQUE (proyecto_id, categoria_id, periodo)
+    CONSTRAINT unique_proyecto_partida_periodo UNIQUE (proyecto_id, partida_id, periodo)
 );
 
 -- Transacciones bancarias importadas de estados de cuenta en CSV
@@ -92,7 +104,7 @@ CREATE TABLE public.solicitudes_gasto (
     id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
     solicitante_id UUID REFERENCES public.usuarios_perfiles(id) ON DELETE CASCADE NOT NULL,
     proyecto_id UUID REFERENCES public.proyectos(id) ON DELETE RESTRICT NOT NULL,
-    categoria_id UUID REFERENCES public.categorias_gasto(id) ON DELETE RESTRICT NOT NULL,
+    partida_id UUID REFERENCES public.partidas_gasto(id) ON DELETE RESTRICT NOT NULL,
     monto_solicitado NUMERIC(15, 2) NOT NULL CHECK (monto_solicitado > 0),
     motivo TEXT NOT NULL,
     estado public.requisition_status DEFAULT 'pendiente_aprobacion_1' NOT NULL,
@@ -116,7 +128,7 @@ CREATE TABLE public.solicitudes_gasto (
 CREATE TABLE public.comprobantes_gasto (
     id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
     proyecto_id UUID REFERENCES public.proyectos(id) ON DELETE RESTRICT NOT NULL,
-    categoria_id UUID REFERENCES public.categorias_gasto(id) ON DELETE RESTRICT NOT NULL,
+    partida_id UUID REFERENCES public.partidas_gasto(id) ON DELETE RESTRICT NOT NULL,
     transaccion_id UUID REFERENCES public.transacciones_bancarias(id) ON DELETE SET NULL, -- Se llena en la conciliación
     solicitante_id UUID REFERENCES public.usuarios_perfiles(id) NOT NULL,
     solicitud_id UUID REFERENCES public.solicitudes_gasto(id) ON DELETE SET NULL, -- Enlace a requisición previa
@@ -175,7 +187,7 @@ BEGIN
         SET monto_ejecutado = monto_ejecutado + NEW.monto,
             updated_at = NOW()
         WHERE proyecto_id = NEW.proyecto_id 
-          AND categoria_id = NEW.categoria_id 
+          AND partida_id = NEW.partida_id 
           AND periodo = v_periodo;
 
         -- Si proviene de una requisición, restamos del monto comprometido original
@@ -187,7 +199,7 @@ BEGIN
                 SET monto_comprometido = GREATEST(0.00, monto_comprometido - v_monto_solicitado),
                     updated_at = NOW()
                 WHERE proyecto_id = NEW.proyecto_id 
-                  AND categoria_id = NEW.categoria_id 
+                  AND partida_id = NEW.partida_id 
                   AND periodo = v_periodo;
             END IF;
         END IF;
@@ -198,7 +210,7 @@ BEGIN
         SET monto_ejecutado = GREATEST(0.00, monto_ejecutado - OLD.monto),
             updated_at = NOW()
         WHERE proyecto_id = OLD.proyecto_id 
-          AND categoria_id = OLD.categoria_id 
+          AND partida_id = OLD.partida_id 
           AND periodo = v_periodo;
 
         -- Si proviene de una requisición y se anula la aprobación del gasto, volvemos a comprometer el monto
@@ -209,7 +221,7 @@ BEGIN
                 SET monto_comprometido = monto_comprometido + v_monto_solicitado,
                     updated_at = NOW()
                 WHERE proyecto_id = OLD.proyecto_id 
-                  AND categoria_id = OLD.categoria_id 
+                  AND partida_id = OLD.partida_id 
                   AND periodo = v_periodo;
             END IF;
         END IF;
@@ -219,7 +231,7 @@ BEGIN
         SET monto_ejecutado = GREATEST(0.00, monto_ejecutado - OLD.monto),
             updated_at = NOW()
         WHERE proyecto_id = OLD.proyecto_id 
-          AND categoria_id = OLD.categoria_id 
+          AND partida_id = OLD.partida_id 
           AND periodo = v_periodo;
     END IF;
     
@@ -292,7 +304,7 @@ BEGIN
         SET monto_comprometido = monto_comprometido + NEW.monto_solicitado,
             updated_at = NOW()
         WHERE proyecto_id = NEW.proyecto_id 
-          AND categoria_id = NEW.categoria_id 
+          AND partida_id = NEW.partida_id 
           AND periodo = v_periodo;
           
     -- Si es rechazada tras haber estado aprobada (ej. anulación administrativa)
@@ -301,7 +313,7 @@ BEGIN
         SET monto_comprometido = GREATEST(0.00, monto_comprometido - OLD.monto_solicitado),
             updated_at = NOW()
         WHERE proyecto_id = OLD.proyecto_id 
-          AND categoria_id = OLD.categoria_id 
+          AND partida_id = OLD.partida_id 
           AND periodo = v_periodo;
     END IF;
 
@@ -321,6 +333,7 @@ CREATE TRIGGER tr_sync_presupuesto_requisicion
 ALTER TABLE public.usuarios_perfiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.proyectos ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.categorias_gasto ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.partidas_gasto ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.presupuestos ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.transacciones_bancarias ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.donaciones ENABLE ROW LEVEL SECURITY;
@@ -352,6 +365,14 @@ CREATE POLICY "Permitir lectura de categorías a todos los autenticados"
 
 CREATE POLICY "Solo administradores pueden gestionar categorías"
     ON public.categorias_gasto FOR ALL TO authenticated 
+    USING (EXISTS (SELECT 1 FROM public.usuarios_perfiles WHERE id = auth.uid() AND rol = 'administrador'));
+
+-- Políticas para partidas_gasto
+CREATE POLICY "Permitir lectura de partidas a todos los autenticados"
+    ON public.partidas_gasto FOR SELECT TO authenticated USING (true);
+
+CREATE POLICY "Solo administradores pueden gestionar partidas"
+    ON public.partidas_gasto FOR ALL TO authenticated 
     USING (EXISTS (SELECT 1 FROM public.usuarios_perfiles WHERE id = auth.uid() AND rol = 'administrador'));
 
 -- Políticas para presupuestos

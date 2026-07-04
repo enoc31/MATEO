@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { api } from '../../services/api';
-import type { Project, ExpenseCategory, Budget, ExpenseReceipt } from '../../services/api';
+import type { Project, ExpenseCategory, PartidaGasto, Budget, ExpenseReceipt } from '../../services/api';
+import { BudgetWizard } from './BudgetWizard';
 import * as XLSX from 'xlsx';
 import { jsPDF } from 'jspdf';
 
@@ -8,31 +9,37 @@ export const BudgetsAndReports: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [projects, setProjects] = useState<Project[]>([]);
   const [categories, setCategories] = useState<ExpenseCategory[]>([]);
+  const [partidas, setPartidas] = useState<PartidaGasto[]>([]);
   const [budgets, setBudgets] = useState<Budget[]>([]);
   const [expenses, setExpenses] = useState<ExpenseReceipt[]>([]);
-
-  // Formulario de asignación
-  const [projectId, setProjectId] = useState('');
-  const [categoryId, setCategoryId] = useState('');
-  const [montoAsignado, setMontoAsignado] = useState('');
-  const [periodo, setPeriodo] = useState('2026-ANUAL');
-  const [submitting, setSubmitting] = useState(false);
+  
+  // Selection
+  const [filterProjectId, setFilterProjectId] = useState('');
+  const [filterPeriodo, setFilterPeriodo] = useState('2026-ANUAL');
+  const [isWizardOpen, setIsWizardOpen] = useState(false);
 
   const loadData = async () => {
     setLoading(true);
     try {
-      const [projList, catList, bList, expList] = await Promise.all([
+      const [projList, catList, partList, bList, expList] = await Promise.all([
         api.getProjects(),
         api.getCategories(),
+        api.getPartidas(),
         api.getBudgets(),
         api.getExpenses()
       ]);
       setProjects(projList);
       setCategories(catList);
+      setPartidas(partList);
       setBudgets(bList);
       setExpenses(expList);
+
+      // Auto-select first project if available
+      if (projList.length > 0 && !filterProjectId) {
+        setFilterProjectId(projList[0].id);
+      }
     } catch (err) {
-      console.error(err);
+      console.error('Error loading budgets page data:', err);
     } finally {
       setLoading(false);
     }
@@ -42,88 +49,116 @@ export const BudgetsAndReports: React.FC = () => {
     loadData();
   }, []);
 
-  const handleCreateBudget = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!projectId || !categoryId || !montoAsignado) {
-      alert('Por favor complete todos los campos.');
-      return;
-    }
-
-    setSubmitting(true);
-    try {
-      const mockBudgets = JSON.parse(localStorage.getItem('cnbv_budgets') || '[]');
-      const existingIdx = mockBudgets.findIndex((b: Budget) => 
-        b.proyecto_id === projectId && b.categoria_id === categoryId && b.periodo === periodo
-      );
-
-      if (existingIdx !== -1) {
-        mockBudgets[existingIdx].monto_asignado = parseFloat(montoAsignado);
-      } else {
-        mockBudgets.push({
-          id: `b-${Date.now()}`,
-          proyecto_id: projectId,
-          categoria_id: categoryId,
-          monto_asignado: parseFloat(montoAsignado),
-          monto_ejecutado: 0,
-          periodo: periodo
-        });
-      }
-
-      localStorage.setItem('cnbv_budgets', JSON.stringify(mockBudgets));
-      alert('Presupuesto asignado con éxito.');
-      setMontoAsignado('');
-      await loadData();
-    } catch (err) {
-      console.error(err);
-      alert('Error al asignar el presupuesto.');
-    } finally {
-      setSubmitting(false);
-    }
+  const getFilteredBudgets = () => {
+    return budgets.filter(b => b.proyecto_id === filterProjectId && b.periodo === filterPeriodo);
   };
+
+  const getPartidaBudgetInfo = (partidaId: string) => {
+    const b = budgets.find(x => x.proyecto_id === filterProjectId && x.partida_id === partidaId && x.periodo === filterPeriodo);
+    return {
+      asignado: b ? b.monto_asignado : 0,
+      ejecutado: b ? b.monto_ejecutado : 0,
+      comprometido: b ? b.monto_comprometido || 0 : 0,
+      disponible: b ? b.monto_asignado - b.monto_ejecutado - (b.monto_comprometido || 0) : 0
+    };
+  };
+
+  // Summaries
+  const selectedProject = projects.find(p => p.id === filterProjectId);
+  const overheadPct = selectedProject?.overhead_porcentaje !== undefined ? selectedProject.overhead_porcentaje : 7.0;
+
+  const calculateDirectCostsSum = () => {
+    let sum = 0;
+    partidas.forEach(p => {
+      if (p.categoria_id !== 'c4000000-0000-0000-0000-000000000004' && p.categoria_id !== 'cat-4') {
+        sum += getPartidaBudgetInfo(p.id).asignado;
+      }
+    });
+    return sum;
+  };
+
+  const directCostsTotal = calculateDirectCostsSum();
+  const calculatedOverhead = parseFloat((directCostsTotal * (overheadPct / 100)).toFixed(2));
+
+  const getCategoryTotal = (catId: string, field: 'asignado' | 'ejecutado' | 'comprometido' | 'disponible') => {
+    let sum = 0;
+    const catPartidas = partidas.filter(p => p.categoria_id === catId);
+
+    catPartidas.forEach(p => {
+      const info = getPartidaBudgetInfo(p.id);
+      if (p.codigo === '4.3') {
+        if (field === 'asignado') sum += calculatedOverhead;
+        else if (field === 'ejecutado') sum += info.ejecutado;
+        else if (field === 'comprometido') sum += info.comprometido;
+        else if (field === 'disponible') sum += calculatedOverhead - info.ejecutado - info.comprometido;
+      } else {
+        sum += info[field];
+      }
+    });
+    return sum;
+  };
+
+  const projectTotalAsignado = directCostsTotal + getCategoryTotal('c4000000-0000-0000-0000-000000000004', 'asignado');
+  const projectTotalEjecutado = budgets.filter(b => b.proyecto_id === filterProjectId && b.periodo === filterPeriodo).reduce((sum, b) => sum + b.monto_ejecutado, 0);
+  const projectTotalComprometido = budgets.filter(b => b.proyecto_id === filterProjectId && b.periodo === filterPeriodo).reduce((sum, b) => sum + (b.monto_comprometido || 0), 0);
+  const projectTotalDisponible = projectTotalAsignado - projectTotalEjecutado - projectTotalComprometido;
 
   // =========================================================================
   // 1. GENERACIÓN DE REPORTE EXCEL (xlsx)
   // =========================================================================
   const handleExportExcel = () => {
     try {
-      // Hoja 1: Resumen Presupuestario
-      const resumenData = budgets.map(b => {
+      const currentBudgets = getFilteredBudgets();
+      if (currentBudgets.length === 0) {
+        alert('No hay presupuestos para exportar de este proyecto.');
+        return;
+      }
+
+      // Hoja 1: Resumen Presupuestario UNDG
+      const resumenData = currentBudgets.map(b => {
         const projName = projects.find(p => p.id === b.proyecto_id)?.nombre || 'N/A';
-        const catName = categories.find(c => c.id === b.categoria_id)?.nombre || 'N/A';
+        const partida = partidas.find(p => p.id === b.partida_id);
+        const catName = categories.find(c => c.id === partida?.categoria_id)?.nombre || 'N/A';
+        
         return {
           'Proyecto': projName,
-          'Categoría de Gasto': catName,
-          'Monto Presupuestado (USD)': b.monto_asignado,
+          'Período': b.periodo,
+          'Categoría': catName,
+          'Código Partida': partida?.codigo || '',
+          'Partida Contable': partida?.nombre || 'N/A',
+          'Monto Asignado (USD)': b.monto_asignado,
+          'Monto Comprometido (USD)': b.monto_comprometido || 0,
           'Monto Ejecutado (USD)': b.monto_ejecutado,
-          'Disponible (USD)': b.monto_asignado - b.monto_ejecutado,
+          'Disponible (USD)': b.monto_asignado - b.monto_ejecutado - (b.monto_comprometido || 0),
           '% Ejecución': b.monto_asignado > 0 ? `${((b.monto_ejecutado / b.monto_asignado) * 100).toFixed(1)}%` : '0%'
         };
       });
 
       // Hoja 2: Egresos Aprobados
-      const egresostData = expenses.filter(e => e.estado === 'aprobado').map(e => {
-        const projName = projects.find(p => p.id === e.proyecto_id)?.nombre || 'N/A';
-        const catName = categories.find(c => c.id === e.categoria_id)?.nombre || 'N/A';
-        return {
-          'Fecha': e.fecha_gasto,
-          'Proyecto': projName,
-          'Categoría': catName,
-          'Descripción del Gasto': e.descripcion,
-          'Monto (USD)': e.monto,
-          'Solicitado Por': e.solicitante_nombre || 'Coordinador',
-          'Estado Conciliación': e.transaccion_id ? 'Conciliado con Banco' : 'Pendiente Conciliar'
-        };
-      });
+      const egresostData = expenses
+        .filter(e => e.proyecto_id === filterProjectId && e.estado === 'aprobado')
+        .map(e => {
+          const partida = partidas.find(p => p.id === e.partida_id);
+          return {
+            'Fecha': e.fecha_gasto,
+            'Partida Código': partida?.codigo || '',
+            'Partida Nombre': partida?.nombre || 'N/A',
+            'Descripción del Gasto': e.descripcion,
+            'Monto (USD)': e.monto,
+            'Solicitado Por': e.solicitante_nombre || 'Coordinador',
+            'Estado Conciliación': e.transaccion_id ? 'Conciliado con Banco' : 'Pendiente Conciliar'
+          };
+        });
 
       const wb = XLSX.utils.book_new();
       
       const wsResumen = XLSX.utils.json_to_sheet(resumenData);
       const wsEgresos = XLSX.utils.json_to_sheet(egresostData);
 
-      XLSX.utils.book_append_sheet(wb, wsResumen, 'Resumen Presupuestario');
-      XLSX.utils.book_append_sheet(wb, wsEgresos, 'Egresos Aprobados');
+      XLSX.utils.book_append_sheet(wb, wsResumen, 'Presupuesto UNDG');
+      XLSX.utils.book_append_sheet(wb, wsEgresos, 'Gastos Ejecutados');
 
-      XLSX.writeFile(wb, `Reporte_Auditoria_CNBV_${new Date().toISOString().split('T')[0]}.xlsx`);
+      XLSX.writeFile(wb, `Reporte_Presupuestario_UNDG_${selectedProject?.nombre.replace(/\s+/g, '_')}_2026.xlsx`);
     } catch (err) {
       console.error(err);
       alert('Error al generar archivo Excel.');
@@ -135,6 +170,8 @@ export const BudgetsAndReports: React.FC = () => {
   // =========================================================================
   const handleExportPDF = () => {
     try {
+      if (!selectedProject) return;
+
       const doc = new jsPDF();
       
       // Colores de la paleta
@@ -143,102 +180,101 @@ export const BudgetsAndReports: React.FC = () => {
       doc.setFontSize(16);
       doc.text('CONVENCIÓN NACIONAL BAUTISTA DE VENEZUELA', 105, 20, { align: 'center' });
       
-      doc.setTextColor(7, 58, 17); // Verde Iglesia
+      doc.setTextColor(7, 58, 17); // Verde
       doc.setFontSize(12);
-      doc.text('Reporte de Auditoría y Rendición de Cuentas de Fondos', 105, 28, { align: 'center' });
+      doc.text(`Reporte de Ejecución Presupuestaria UNDG - ${filterPeriodo}`, 105, 28, { align: 'center' });
       
-      doc.setTextColor(39, 38, 38); // Gris Oscuro
+      doc.setTextColor(39, 38, 38);
       doc.setFont('Helvetica', 'normal');
       doc.setFontSize(9);
-      doc.text(`Fecha de Emisión: ${new Date().toLocaleString()}`, 15, 38);
-      doc.text('Destinatario: Dirección de Administración y Cooperación Internacional', 15, 43);
+      doc.text(`Proyecto: ${selectedProject.nombre}`, 15, 38);
+      doc.text(`Fecha de Emisión: ${new Date().toLocaleString()}`, 15, 43);
+      doc.text(`Tasa de Gastos Indirectos (Overhead): ${overheadPct}%`, 15, 48);
 
       doc.setDrawColor(226, 232, 240);
-      doc.line(15, 48, 195, 48);
+      doc.line(15, 52, 195, 52);
 
-      // Tabla de Resumen
+      // Tabla de Resumen por Categoría
       doc.setFont('Helvetica', 'bold');
       doc.setFontSize(11);
-      doc.text('1. RESUMEN EJECUTIVO DE PROYECTOS', 15, 56);
+      doc.text('RESUMEN GENERAL POR CATEGORÍA UNDG', 15, 60);
       
-      doc.setFont('Helvetica', 'bold');
       doc.setFontSize(9);
-      doc.text('Proyecto', 15, 65);
-      doc.text('Presupuestado', 110, 65);
-      doc.text('Ejecutado', 145, 65);
-      doc.text('% Ejec.', 175, 65);
+      doc.text('Categoría de Gasto', 15, 68);
+      doc.text('Asignado', 110, 68);
+      doc.text('Comprometido', 135, 68);
+      doc.text('Ejecutado', 165, 68);
+      doc.text('Disponible', 182, 68);
       
-      doc.setFont('Helvetica', 'normal');
-      doc.line(15, 67, 195, 67);
+      doc.line(15, 70, 195, 70);
 
-      let yOffset = 73;
-      projects.forEach(proj => {
-        const projBudgets = budgets.filter(b => b.proyecto_id === proj.id);
-        const assigned = projBudgets.reduce((sum, b) => sum + b.monto_asignado, 0);
-        const executed = projBudgets.reduce((sum, b) => sum + b.monto_ejecutado, 0);
-        const percent = assigned > 0 ? ((executed / assigned) * 100).toFixed(1) + '%' : '0.0%';
+      let yOffset = 76;
+      categories.forEach(cat => {
+        const asignado = getCategoryTotal(cat.id, 'asignado');
+        const comprometido = getCategoryTotal(cat.id, 'comprometido');
+        const ejecutado = getCategoryTotal(cat.id, 'ejecutado');
+        const disponible = getCategoryTotal(cat.id, 'disponible');
 
-        doc.text(proj.nombre.substring(0, 45), 15, yOffset);
-        doc.text(`$${assigned.toFixed(2)}`, 110, yOffset);
-        doc.text(`$${executed.toFixed(2)}`, 145, yOffset);
-        doc.text(percent, 175, yOffset);
+        doc.setFont('Helvetica', 'bold');
+        doc.text(cat.nombre.substring(0, 48), 15, yOffset);
+        doc.setFont('Helvetica', 'normal');
+        doc.text(`$${asignado.toFixed(2)}`, 110, yOffset);
+        doc.text(`$${comprometido.toFixed(2)}`, 135, yOffset);
+        doc.text(`$${ejecutado.toFixed(2)}`, 165, yOffset);
+        doc.text(`$${disponible.toFixed(2)}`, 182, yOffset);
 
         doc.line(15, yOffset + 2, 195, yOffset + 2);
         yOffset += 8;
       });
 
       // Sumatorias Totales
-      const totalB = budgets.reduce((sum, b) => sum + b.monto_asignado, 0);
-      const totalE = budgets.reduce((sum, b) => sum + b.monto_ejecutado, 0);
-      
       doc.setFont('Helvetica', 'bold');
-      doc.text('TOTAL CONSOLIDADO', 15, yOffset);
-      doc.text(`$${totalB.toFixed(2)}`, 110, yOffset);
-      doc.text(`$${totalE.toFixed(2)}`, 145, yOffset);
-      doc.text(totalB > 0 ? ((totalE / totalB) * 100).toFixed(1) + '%' : '0.0%', 175, yOffset);
+      doc.text('TOTAL PROYECTO', 15, yOffset);
+      doc.text(`$${projectTotalAsignado.toFixed(2)}`, 110, yOffset);
+      doc.text(`$${projectTotalComprometido.toFixed(2)}`, 135, yOffset);
+      doc.text(`$${projectTotalEjecutado.toFixed(2)}`, 165, yOffset);
+      doc.text(`$${projectTotalDisponible.toFixed(2)}`, 182, yOffset);
 
-      // Tabla de Recibos Recientes
       yOffset += 15;
-      doc.text('2. DETALLE DE GASTOS AUDITADOS Y CONCILIADOS', 15, yOffset);
+      doc.text('DETALLE DE EJECUCIÓN POR PARTIDAS', 15, yOffset);
       yOffset += 8;
 
       doc.setFontSize(8);
-      doc.text('Fecha', 15, yOffset);
-      doc.text('Concepto', 35, yOffset);
-      doc.text('Categoría', 115, yOffset);
-      doc.text('Monto', 165, yOffset);
-      doc.text('Conciliado', 180, yOffset);
+      doc.text('Partida', 15, yOffset);
+      doc.text('Monto Asignado', 110, yOffset);
+      doc.text('Monto Ejecutado', 145, yOffset);
+      doc.text('Disponible', 175, yOffset);
       doc.line(15, yOffset + 2, 195, yOffset + 2);
       
       doc.setFont('Helvetica', 'normal');
       yOffset += 7;
 
-      const approvedExpenses = expenses.filter(e => e.estado === 'aprobado');
-      approvedExpenses.slice(0, 15).forEach(e => {
+      partidas.forEach(p => {
         if (yOffset > 270) {
           doc.addPage();
           yOffset = 20;
           doc.setFont('Helvetica', 'bold');
-          doc.text('Detalle de Gastos (Continuación)', 15, yOffset);
+          doc.text('Detalle por Partidas (Continuación)', 15, yOffset);
           yOffset += 8;
           doc.line(15, yOffset, 195, yOffset);
           yOffset += 6;
           doc.setFont('Helvetica', 'normal');
         }
 
-        const catName = categories.find(c => c.id === e.categoria_id)?.nombre || 'Otros';
+        const info = getPartidaBudgetInfo(p.id);
+        const finalAsignado = p.codigo === '4.3' ? calculatedOverhead : info.asignado;
+        const finalDisponible = p.codigo === '4.3' ? calculatedOverhead - info.ejecutado - info.comprometido : info.disponible;
 
-        doc.text(e.fecha_gasto, 15, yOffset);
-        doc.text(e.descripcion.substring(0, 42), 35, yOffset);
-        doc.text(catName.substring(0, 25), 115, yOffset);
-        doc.text(`$${e.monto.toFixed(2)}`, 165, yOffset);
-        doc.text(e.transaccion_id ? 'Sí (Banco)' : 'No', 180, yOffset);
+        doc.text(`[${p.codigo}] ${p.nombre.substring(0, 45)}`, 15, yOffset);
+        doc.text(`$${finalAsignado.toFixed(2)}`, 110, yOffset);
+        doc.text(`$${info.ejecutado.toFixed(2)}`, 145, yOffset);
+        doc.text(`$${finalDisponible.toFixed(2)}`, 175, yOffset);
 
         doc.line(15, yOffset + 2, 195, yOffset + 2);
         yOffset += 7;
       });
 
-      // Pie de Página Firma
+      // Firmas Responsables
       if (yOffset > 240) {
         doc.addPage();
         yOffset = 30;
@@ -254,10 +290,10 @@ export const BudgetsAndReports: React.FC = () => {
       doc.line(115, yOffset, 180, yOffset);
       
       doc.setFontSize(7);
-      doc.text('Director de Finanzas CNBV', 15, yOffset + 4);
-      doc.text('Auditor Principal CNBV', 115, yOffset + 4);
+      doc.text('Director de Finanzas', 15, yOffset + 4);
+      doc.text('Auditor / Supervisor del Proyecto', 115, yOffset + 4);
 
-      doc.save(`Reporte_Auditoria_CNBV_${new Date().toISOString().split('T')[0]}.pdf`);
+      doc.save(`Reporte_UNDG_Presupuesto_${selectedProject.nombre.replace(/\s+/g, '_')}_2026.pdf`);
     } catch (err) {
       console.error(err);
       alert('Error al generar PDF.');
@@ -273,153 +309,258 @@ export const BudgetsAndReports: React.FC = () => {
       {/* Cabecera */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem', marginBottom: '2rem' }}>
         <div>
-          <h2 style={{ color: 'var(--primary)', fontSize: '1.75rem', fontWeight: 700 }}>Presupuestos y Rendición de Cuentas</h2>
+          <h2 style={{ color: 'var(--primary)', fontSize: '1.75rem', fontWeight: 700 }}>Presupuestos Modelo UNDG</h2>
           <p style={{ color: 'var(--neutral-dark)', opacity: 0.8, fontSize: '0.9rem', marginTop: '0.25rem' }}>
-            Gestiona los presupuestos asignados a cada campaña y genera reportes oficiales para donantes en PDF y Excel.
+            Monitoreo en cascada y distribución financiera de partidas estándar (Naciones Unidas) con indirectos automáticos.
           </p>
         </div>
 
         <div style={{ display: 'flex', gap: '0.75rem' }}>
-          <button onClick={handleExportExcel} className="btn btn-outline" style={{ fontSize: '0.85rem' }}>
-            🟢 Exportar Excel (.xlsx)
+          <button onClick={() => setIsWizardOpen(true)} className="btn btn-primary" style={{ fontSize: '0.85rem', fontWeight: 600 }}>
+            💼 Asistente Presupuesto UNDG
           </button>
           
-          <button onClick={handleExportPDF} className="btn btn-secondary" style={{ fontSize: '0.85rem' }}>
-            🔴 Generar Reporte PDF (.pdf)
+          <button onClick={handleExportExcel} className="btn btn-outline" style={{ fontSize: '0.85rem' }} disabled={!filterProjectId}>
+            🟢 Excel (.xlsx)
           </button>
+          
+          <button onClick={handleExportPDF} className="btn btn-secondary" style={{ fontSize: '0.85rem' }} disabled={!filterProjectId}>
+            🔴 Reporte PDF (.pdf)
+          </button>
+        </div>
+      </div>
+
+      {/* Selectores de visualización */}
+      <div style={{
+        display: 'flex',
+        gap: '1.5rem',
+        alignItems: 'center',
+        padding: '1rem',
+        backgroundColor: 'rgba(255,255,255,0.03)',
+        borderRadius: '8px',
+        marginBottom: '2rem',
+        border: '1px solid var(--border-color)',
+        flexWrap: 'wrap'
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+          <label style={{ fontWeight: 700, fontSize: '0.9rem', color: 'var(--primary)' }}>Proyecto:</label>
+          <select
+            className="form-input form-select"
+            style={{ width: '280px', margin: 0 }}
+            value={filterProjectId}
+            onChange={e => setFilterProjectId(e.target.value)}
+          >
+            {projects.map(p => <option key={p.id} value={p.id}>{p.nombre}</option>)}
+          </select>
+        </div>
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+          <label style={{ fontWeight: 700, fontSize: '0.9rem', color: 'var(--primary)' }}>Período:</label>
+          <select
+            className="form-input form-select"
+            style={{ width: '180px', margin: 0 }}
+            value={filterPeriodo}
+            onChange={e => setFilterPeriodo(e.target.value)}
+          >
+            <option value="2026-ANUAL">2026 ANUAL</option>
+            <option value="2026-Q1">2026 Q1 Trimestre</option>
+            <option value="2026-Q2">2026 Q2 Trimestre</option>
+          </select>
         </div>
       </div>
 
       {/* Contenido en dos columnas */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '2rem' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(360px, 1fr))', gap: '2rem', alignItems: 'start' }}>
         
-        {/* Columna Izquierda: Listado de Presupuestos Activos */}
-        <div className="card" style={{ display: 'flex', flexDirection: 'column' }}>
-          <h3 className="card-title">Distribución Presupuestaria Vigente</h3>
+        {/* Columna Izquierda: Tabla jerárquica por Categoría y Partida */}
+        <div className="card" style={{ gridColumn: 'span 2', display: 'flex', flexDirection: 'column' }}>
+          <h3 className="card-title">Matriz Presupuestaria de Partidas</h3>
           
           {loading ? (
-            <div>Cargando datos...</div>
-          ) : budgets.length === 0 ? (
-            <div style={{ padding: '2rem', textAlign: 'center', opacity: 0.6 }}>
-              No se han definido presupuestos para ningún proyecto todavía.
+            <div style={{ padding: '2rem', textAlign: 'center' }}>Cargando datos presupuestarios...</div>
+          ) : getFilteredBudgets().length === 0 ? (
+            <div style={{ padding: '4rem 2rem', textAlign: 'center', opacity: 0.6 }}>
+              ⚠️ Este proyecto no tiene un presupuesto asignado para el período seleccionado.
+              <br />
+              <button 
+                onClick={() => setIsWizardOpen(true)} 
+                className="btn btn-outline" 
+                style={{ marginTop: '1.5rem', fontSize: '0.85rem' }}
+              >
+                Configurar Presupuesto Ahora
+              </button>
             </div>
           ) : (
-            <div style={{ overflowX: 'auto' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
-                <thead>
-                  <tr style={{ borderBottom: '2px solid var(--border-color)', textAlign: 'left', fontWeight: 700 }}>
-                    <th style={{ padding: '0.5rem 0.25rem' }}>Proyecto</th>
-                    <th style={{ padding: '0.5rem 0.25rem' }}>Categoría</th>
-                    <th style={{ padding: '0.5rem 0.25rem', textAlign: 'right' }}>Presupuesto</th>
-                    <th style={{ padding: '0.5rem 0.25rem', textAlign: 'right' }}>Ejecutado</th>
-                    <th style={{ padding: '0.5rem 0.25rem', textAlign: 'right' }}>Disponible</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {budgets.map(b => {
-                    const projName = projects.find(p => p.id === b.proyecto_id)?.nombre || 'N/A';
-                    const catName = categories.find(c => c.id === b.categoria_id)?.nombre || 'N/A';
-                    const disponible = b.monto_asignado - b.monto_ejecutado;
-                    return (
-                      <tr key={b.id} style={{ borderBottom: '1px solid var(--border-color)' }}>
-                        <td style={{ padding: '0.75rem 0.25rem', fontWeight: 500 }}>
-                          {projName.length > 25 ? projName.substring(0, 25) + '...' : projName}
-                        </td>
-                        <td style={{ padding: '0.75rem 0.25rem', opacity: 0.8 }}>{catName}</td>
-                        <td style={{ padding: '0.75rem 0.25rem', textAlign: 'right', fontWeight: 600 }}>{formatCurrency(b.monto_asignado)}</td>
-                        <td style={{ padding: '0.75rem 0.25rem', textAlign: 'right', color: 'var(--success)', fontWeight: 600 }}>{formatCurrency(b.monto_ejecutado)}</td>
-                        <td style={{ padding: '0.75rem 0.25rem', textAlign: 'right', color: disponible < 100 ? 'var(--danger)' : 'var(--primary)', fontWeight: 700 }}>
-                          {formatCurrency(disponible)}
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
+            <div>
+              {categories.map(cat => {
+                const catPartidas = partidas.filter(p => p.categoria_id === cat.id);
+                return (
+                  <div key={cat.id} style={{ marginBottom: '1.75rem' }}>
+                    <div style={{
+                      backgroundColor: 'rgba(var(--primary-rgb), 0.08)',
+                      padding: '0.5rem 1rem',
+                      fontWeight: 700,
+                      fontSize: '0.9rem',
+                      color: 'var(--primary)',
+                      borderLeft: '3px solid var(--primary)',
+                      display: 'flex',
+                      justifyContent: 'space-between'
+                    }}>
+                      <span>{cat.nombre}</span>
+                      <span>Total: {formatCurrency(getCategoryTotal(cat.id, 'asignado'))}</span>
+                    </div>
+
+                    <div style={{ overflowX: 'auto' }}>
+                      <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.8rem' }}>
+                        <thead>
+                          <tr style={{ borderBottom: '1px solid var(--border-color)', textAlign: 'left', opacity: 0.7 }}>
+                            <th style={{ padding: '0.5rem', width: '80px' }}>Código</th>
+                            <th style={{ padding: '0.5rem' }}>Partida Contable</th>
+                            <th style={{ padding: '0.5rem', textAlign: 'right' }}>Asignado</th>
+                            <th style={{ padding: '0.5rem', textAlign: 'right' }}>Comprometido</th>
+                            <th style={{ padding: '0.5rem', textAlign: 'right' }}>Ejecutado</th>
+                            <th style={{ padding: '0.5rem', textAlign: 'right' }}>Disponible</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {catPartidas.map(p => {
+                            const info = getPartidaBudgetInfo(p.id);
+                            const finalAsignado = p.codigo === '4.3' ? calculatedOverhead : info.asignado;
+                            const finalDisponible = p.codigo === '4.3' ? calculatedOverhead - info.ejecutado - info.comprometido : info.disponible;
+
+                            return (
+                              <tr key={p.id} style={{ borderBottom: '1px solid rgba(0,0,0,0.05)' }}>
+                                <td style={{ padding: '0.6rem 0.5rem', fontWeight: 700, color: 'var(--primary)' }}>{p.codigo}</td>
+                                <td style={{ padding: '0.6rem 0.5rem', fontWeight: 500 }}>
+                                  {p.nombre}
+                                  <span style={{ display: 'block', fontSize: '0.7rem', opacity: 0.5, fontWeight: 'normal' }}>
+                                    {p.descripcion}
+                                  </span>
+                                </td>
+                                <td style={{ padding: '0.6rem 0.5rem', textAlign: 'right', fontWeight: 600 }}>{formatCurrency(finalAsignado)}</td>
+                                <td style={{ padding: '0.6rem 0.5rem', textAlign: 'right', color: info.comprometido > 0 ? 'var(--secondary)' : 'inherit' }}>{formatCurrency(info.comprometido)}</td>
+                                <td style={{ padding: '0.6rem 0.5rem', textAlign: 'right', color: 'var(--success)', fontWeight: 600 }}>{formatCurrency(info.ejecutado)}</td>
+                                <td style={{
+                                  padding: '0.6rem 0.5rem',
+                                  textAlign: 'right',
+                                  fontWeight: 700,
+                                  color: finalDisponible < 0 ? 'var(--danger)' : 'var(--neutral-dark)'
+                                }}>
+                                  {formatCurrency(finalDisponible)}
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           )}
         </div>
 
-        {/* Columna Derecha: Formulario para Asignar Presupuesto */}
-        <div className="card" style={{ height: 'fit-content' }}>
-          <h3 className="card-title">Asignar o Modificar Presupuesto</h3>
+        {/* Columna Derecha: Tarjeta Resumen Consolidado del Proyecto */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
           
-          <form onSubmit={handleCreateBudget}>
-            {/* Proyecto */}
-            <div className="form-group">
-              <label className="form-label">Seleccionar Proyecto *</label>
-              <select
-                className="form-input form-select"
-                value={projectId}
-                onChange={e => setProjectId(e.target.value)}
-                required
-                disabled={submitting}
-              >
-                <option value="">Selecciona el Proyecto</option>
-                {projects.map(p => <option key={p.id} value={p.id}>{p.nombre}</option>)}
-              </select>
-            </div>
+          <div className="card" style={{ backgroundColor: 'rgba(var(--primary-rgb), 0.02)' }}>
+            <h3 className="card-title" style={{ borderBottom: '1px solid var(--border-color)', paddingBottom: '0.5rem' }}>
+              Rendimiento Financiero
+            </h3>
+            
+            {loading ? (
+              <div>Cargando resumen...</div>
+            ) : !selectedProject ? (
+              <div>Ningún proyecto seleccionado</div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem', marginTop: '0.5rem' }}>
+                <div>
+                  <span style={{ fontSize: '0.8rem', opacity: 0.6 }}>PRESUPUESTO ASIGNADO TOTAL</span>
+                  <div style={{ fontSize: '1.75rem', fontWeight: 800, color: 'var(--primary)' }}>
+                    {formatCurrency(projectTotalAsignado)}
+                  </div>
+                </div>
 
-            {/* Categoría */}
-            <div className="form-group">
-              <label className="form-label">Seleccionar Categoría de Gasto *</label>
-              <select
-                className="form-input form-select"
-                value={categoryId}
-                onChange={e => setCategoryId(e.target.value)}
-                required
-                disabled={submitting}
-              >
-                <option value="">Selecciona la Categoría</option>
-                {categories.map(c => <option key={c.id} value={c.id}>{c.nombre}</option>)}
-              </select>
-            </div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                  <div>
+                    <span style={{ fontSize: '0.75rem', opacity: 0.6 }}>Costos Directos</span>
+                    <div style={{ fontSize: '1rem', fontWeight: 700 }}>
+                      {formatCurrency(directCostsTotal)}
+                    </div>
+                  </div>
+                  <div>
+                    <span style={{ fontSize: '0.75rem', opacity: 0.6 }}>Overhead ({overheadPct}%)</span>
+                    <div style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--success)' }}>
+                      {formatCurrency(calculatedOverhead)}
+                    </div>
+                  </div>
+                </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-              {/* Monto Asignado */}
-              <div className="form-group">
-                <label className="form-label">Monto Asignado (USD) *</label>
-                <input
-                  type="number"
-                  step="0.01"
-                  className="form-input"
-                  placeholder="0.00"
-                  value={montoAsignado}
-                  onChange={e => setMontoAsignado(e.target.value)}
-                  required
-                  disabled={submitting}
-                />
+                <hr style={{ border: 'none', borderTop: '1px solid var(--border-color)', margin: 0 }} />
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                  <div>
+                    <span style={{ fontSize: '0.75rem', opacity: 0.6 }}>Comprometido</span>
+                    <div style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--secondary)' }}>
+                      {formatCurrency(projectTotalComprometido)}
+                    </div>
+                  </div>
+                  <div>
+                    <span style={{ fontSize: '0.75rem', opacity: 0.6 }}>Ejecutado</span>
+                    <div style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--success)' }}>
+                      {formatCurrency(projectTotalEjecutado)}
+                    </div>
+                  </div>
+                </div>
+
+                <hr style={{ border: 'none', borderTop: '1px solid var(--border-color)', margin: 0 }} />
+
+                <div>
+                  <span style={{ fontSize: '0.8rem', opacity: 0.6 }}>DISPONIBLE REMANENTE</span>
+                  <div style={{
+                    fontSize: '1.35rem',
+                    fontWeight: 800,
+                    color: projectTotalDisponible < 0 ? 'var(--danger)' : 'var(--primary)'
+                  }}>
+                    {formatCurrency(projectTotalDisponible)}
+                  </div>
+                </div>
+
+                {/* Progress bar */}
+                <div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', marginBottom: '0.25rem', opacity: 0.7 }}>
+                    <span>Progreso de Ejecución</span>
+                    <span>
+                      {projectTotalAsignado > 0 
+                        ? `${(((projectTotalEjecutado + projectTotalComprometido) / projectTotalAsignado) * 100).toFixed(1)}%` 
+                        : '0%'}
+                    </span>
+                  </div>
+                  <div style={{ width: '100%', height: '8px', backgroundColor: 'rgba(0,0,0,0.1)', borderRadius: '4px', overflow: 'hidden' }}>
+                    <div style={{
+                      width: `${projectTotalAsignado > 0 ? Math.min(100, ((projectTotalEjecutado + projectTotalComprometido) / projectTotalAsignado) * 100) : 0}%`,
+                      height: '100%',
+                      backgroundColor: 'var(--primary)',
+                      borderRadius: '4px'
+                    }} />
+                  </div>
+                </div>
+
               </div>
-
-              {/* Período */}
-              <div className="form-group">
-                <label className="form-label">Período de Ejecución *</label>
-                <select
-                  className="form-input form-select"
-                  value={periodo}
-                  onChange={e => setPeriodo(e.target.value)}
-                  required
-                  disabled={submitting}
-                >
-                  <option value="2026-ANUAL">2026 ANUAL</option>
-                  <option value="2026-Q1">2026 Primer Trimestre</option>
-                  <option value="2026-Q2">2026 Segundo Trimestre</option>
-                </select>
-              </div>
-            </div>
-
-            <button
-              type="submit"
-              className="btn btn-primary"
-              style={{ width: '100%', padding: '0.75rem', marginTop: '1rem' }}
-              disabled={submitting}
-            >
-              {submitting ? 'Asignando presupuesto...' : 'Guardar Asignación Presupuestaria'}
-            </button>
-          </form>
+            )}
+          </div>
+          
         </div>
 
       </div>
+
+      {/* Modal Asistente de Presupuesto */}
+      <BudgetWizard
+        isOpen={isWizardOpen}
+        onClose={() => setIsWizardOpen(false)}
+        onSuccess={loadData}
+      />
     </div>
   );
 };

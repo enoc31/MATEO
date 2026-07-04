@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { api } from '../../services/api';
-import type { ExpenseReceipt, Project, ExpenseCategory } from '../../services/api';
+import type { ExpenseReceipt, Project, ExpenseCategory, PartidaGasto } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 
 export const Audit: React.FC = () => {
@@ -9,6 +9,7 @@ export const Audit: React.FC = () => {
   const [expenses, setExpenses] = useState<ExpenseReceipt[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
   const [categories, setCategories] = useState<ExpenseCategory[]>([]);
+  const [partidas, setPartidas] = useState<PartidaGasto[]>([]);
   const [filterStatus, setFilterStatus] = useState<string>('todos');
   const [selectedExp, setSelectedExp] = useState<ExpenseReceipt | null>(null);
   const [activeDocTab, setActiveDocTab] = useState<'recibo' | 'pago'>('recibo');
@@ -25,14 +26,16 @@ export const Audit: React.FC = () => {
   const loadData = async () => {
     setLoading(true);
     try {
-      const [expList, projList, catList] = await Promise.all([
+      const [expList, projList, catList, partList] = await Promise.all([
         api.getExpenses(),
         api.getProjects(),
-        api.getCategories()
+        api.getCategories(),
+        api.getPartidas()
       ]);
       setExpenses(expList);
       setProjects(projList);
       setCategories(catList);
+      setPartidas(partList);
     } catch (err) {
       console.error(err);
     } finally {
@@ -87,7 +90,12 @@ export const Audit: React.FC = () => {
   };
 
   const getProjectName = (id: string) => projects.find(p => p.id === id)?.nombre || 'Proyecto Desconocido';
-  const getCategoryName = (id: string) => categories.find(c => c.id === id)?.nombre || 'Categoría Desconocida';
+  const getPartidaName = (id: string) => {
+    const p = partidas.find(x => x.id === id);
+    if (!p) return 'Partida Desconocida';
+    const cat = categories.find(c => c.id === p.categoria_id);
+    return `[Partida ${p.codigo}] ${p.nombre} (${cat ? cat.nombre.split(' (')[0].replace(/^\d+\.\s+/, '') : ''})`;
+  };
 
   const filteredExpenses = expenses.filter(exp => {
     if (filterStatus === 'todos') return true;
@@ -156,7 +164,7 @@ export const Audit: React.FC = () => {
                   <td style={{ fontWeight: 600, whiteSpace: 'nowrap' }}>{exp.fecha_gasto}</td>
                   <td style={{ fontSize: '0.85rem' }}>
                     <div style={{ fontWeight: 600, color: 'var(--primary)' }}>{getProjectName(exp.proyecto_id)}</div>
-                    <div style={{ opacity: 0.6, fontSize: '0.75rem', marginTop: '0.1rem' }}>{getCategoryName(exp.categoria_id)}</div>
+                    <div style={{ opacity: 0.6, fontSize: '0.75rem', marginTop: '0.1rem' }}>{getPartidaName(exp.partida_id)}</div>
                   </td>
                   <td>
                     <div style={{ fontWeight: 500 }}>{exp.descripcion}</div>
@@ -362,7 +370,7 @@ export const Audit: React.FC = () => {
                     <strong>Proyecto:</strong> {getProjectName(selectedExp.proyecto_id)}
                   </div>
                   <div style={{ marginBottom: '0.5rem' }}>
-                    <strong>Categoría:</strong> {getCategoryName(selectedExp.categoria_id)}
+                    <strong>Partida de Gasto:</strong> {getPartidaName(selectedExp.partida_id)}
                   </div>
                   <div style={{ marginBottom: '0.5rem' }}>
                     <strong>Monto:</strong> <strong style={{ color: 'var(--primary)', fontSize: '1rem' }}>{formatCurrency(selectedExp.monto)}</strong>
