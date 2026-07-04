@@ -185,7 +185,7 @@ export const IncomeRegistrationForm: React.FC = () => {
       alert('Debe seleccionar al menos una transacción bancaria.');
       return;
     }
-    if (!proyectoId || !donanteId || !montoOriginal || !descripcion) {
+    if (!donanteId || !montoOriginal || !descripcion) {
       alert('Complete todos los campos obligatorios.');
       return;
     }
@@ -225,7 +225,7 @@ export const IncomeRegistrationForm: React.FC = () => {
     try {
       const donante = donantes.find(d => d.id === donanteId);
       await api.createDonation({
-        proyecto_id: proyectoId,
+        proyecto_id: proyectoId || null,
         transaccion_id: transaccionId || null,
         donante: donante?.nombre || 'Donante Desconocido',
         monto: calculatedMontoUsd,
@@ -391,9 +391,9 @@ export const IncomeRegistrationForm: React.FC = () => {
             {/* Fila de Proyecto y Donante */}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
               <div className="form-group" style={{ marginBottom: 0 }}>
-                <label className="form-label" style={{ fontWeight: 700 }}>Proyecto Receptor *</label>
-                <select className="form-input" value={proyectoId} onChange={e => setProyectoId(e.target.value)} required disabled={submitting}>
-                  <option value="">Selecciona el proyecto...</option>
+                <label className="form-label" style={{ fontWeight: 700 }}>Proyecto Receptor (Opcional)</label>
+                <select className="form-input" value={proyectoId} onChange={e => setProyectoId(e.target.value)} disabled={submitting}>
+                  <option value="">Sin Proyecto / Pendiente de Asignación</option>
                   {projects.map(p => <option key={p.id} value={p.id}>{p.nombre}</option>)}
                 </select>
               </div>
