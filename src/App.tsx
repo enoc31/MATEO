@@ -9,6 +9,7 @@ import { BudgetsAndReports } from './features/budgets/BudgetsAndReports';
 import { MobileEntry } from './features/mobile-entry/MobileEntry';
 import { UserManagement } from './features/users/UserManagement';
 import { RequisitionsManager } from './features/requisitions/RequisitionsManager';
+import { IncomesManager } from './features/incomes/IncomesManager';
 
 const MainAppContent: React.FC = () => {
   const { profile, loading, logout, refreshProfile } = useAuth();
@@ -80,6 +81,8 @@ const MainAppContent: React.FC = () => {
         return ['administrador', 'coordinador', 'director', 'auxiliar_campo'].includes(profile.rol) ? <RequisitionsManager /> : <AccessDenied />;
       case 'users':
         return profile.rol === 'administrador' ? <UserManagement /> : <AccessDenied />;
+      case 'incomes':
+        return ['administrador', 'director', 'auditor'].includes(profile.rol) ? <IncomesManager /> : <AccessDenied />;
       default:
         return <div>Página no encontrada</div>;
     }

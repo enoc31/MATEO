@@ -18,9 +18,10 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTa
   const menuItems = [
     { id: 'dashboard', label: 'Tableros', icon: '📊', roles: ['administrador', 'auditor', 'director', 'donante'] },
     { id: 'requisitions', label: 'Requisiciones', icon: '📋', roles: ['administrador', 'coordinador', 'director', 'auxiliar_campo'] },
+    { id: 'incomes', label: 'Ingresos', icon: '💰', roles: ['administrador', 'director', 'auditor'] },
     { id: 'reconciliation', label: 'Conciliación', icon: '⚖️', roles: ['administrador', 'auditor'] },
     { id: 'audit', label: 'Auditoría', icon: '🔍', roles: ['administrador', 'auditor'] },
-    { id: 'budgets', label: 'Presupuestos', icon: '💰', roles: ['administrador', 'auditor', 'director'] },
+    { id: 'budgets', label: 'Presupuestos', icon: '📑', roles: ['administrador', 'auditor', 'director'] },
     { id: 'field-entry', label: 'Cargar Gastos', icon: '📸', roles: ['administrador', 'coordinador', 'director', 'auxiliar_campo'] },
     { id: 'users', label: 'Usuarios', icon: '👥', roles: ['administrador'] }
   ];

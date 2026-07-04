@@ -43,6 +43,7 @@ export const MobileEntry: React.FC = () => {
   // Requisitions
   const [approvedRequisitions, setApprovedRequisitions] = useState<Requisition[]>([]);
   const [partidas, setPartidas] = useState<PartidaGasto[]>([]);
+  const [budgets, setBudgets] = useState<import('../../services/api').Budget[]>([]);
   
   // Document 1: Factura o Recibo
   const [doc1File, setDoc1File] = useState<File | null>(null);
@@ -56,16 +57,18 @@ export const MobileEntry: React.FC = () => {
     if (!profile) return;
     setLoading(true);
     try {
-      const [projList, catList, partList, expList, reqList] = await Promise.all([
+      const [projList, catList, partList, expList, reqList, budgetList] = await Promise.all([
         api.getProjects(),
         api.getCategories(),
         api.getPartidas(),
         api.getExpenses(),
-        requisitionsApi.getRequisitions()
+        requisitionsApi.getRequisitions(),
+        api.getBudgets()
       ]);
       setProjects(projList.filter(p => p.activo));
       setCategories(catList);
       setPartidas(partList);
+      setBudgets(budgetList);
       
       // Filter expenses created by this coordinator
       const myExpenses = expList.filter(e => e.solicitante_id === profile.id);
@@ -113,6 +116,11 @@ export const MobileEntry: React.FC = () => {
     setDoc2File(null);
     setDoc2Preview(null);
   };
+
+  // Partidas con presupuesto asignado en el proyecto seleccionado
+  const partidasConPresupuesto = projectId
+    ? partidas.filter(p => budgets.some(b => b.proyecto_id === projectId && b.partida_id === p.id && b.monto_asignado > 0))
+    : [];
 
   const handleSelectRequisition = (reqId: string) => {
     setSolicitudId(reqId);
@@ -352,23 +360,38 @@ export const MobileEntry: React.FC = () => {
                 <label htmlFor="partida-select" style={{ fontSize: '0.75rem', fontWeight: 600, opacity: 0.8, marginBottom: '0.25rem' }}>
                   Seleccionar Partida de Gasto UNDG *
                 </label>
-                <select
-                  id="partida-select"
-                  className="form-input form-select"
-                  value={partidaId}
-                  onChange={e => setPartidaId(e.target.value)}
-                  disabled={submitting}
-                  required
-                >
-                  <option value="">-- Eliga la partida contable --</option>
-                  {partidas
-                    .filter(p => p.categoria_id === categoryId)
-                    .map(p => (
-                      <option key={p.id} value={p.id}>
-                        [{p.codigo}] {p.nombre}
-                      </option>
-                    ))}
-                </select>
+                {partidasConPresupuesto.filter(p => p.categoria_id === categoryId).length === 0 ? (
+                  <div style={{
+                    padding: '0.75rem', borderRadius: '6px',
+                    backgroundColor: 'rgba(190,87,75,0.08)', border: '1px solid rgba(190,87,75,0.3)',
+                    fontSize: '0.8rem', color: 'var(--danger)'
+                  }}>
+                    ⚠️ Esta categoría no tiene presupuesto asignado en el proyecto seleccionado.
+                    Ve a <strong>Presupuestos → Asistente UNDG</strong> para asignar montos primero.
+                  </div>
+                ) : (
+                  <select
+                    id="partida-select"
+                    className="form-input form-select"
+                    value={partidaId}
+                    onChange={e => setPartidaId(e.target.value)}
+                    disabled={submitting}
+                    required
+                  >
+                    <option value="">-- Elija la partida contable --</option>
+                    {partidasConPresupuesto
+                      .filter(p => p.categoria_id === categoryId)
+                      .map(p => {
+                        const b = budgets.find(b => b.proyecto_id === projectId && b.partida_id === p.id);
+                        const disponible = b ? b.monto_asignado - b.monto_ejecutado - b.monto_comprometido : 0;
+                        return (
+                          <option key={p.id} value={p.id}>
+                            [{p.codigo}] {p.nombre} — Disponible: ${disponible.toFixed(2)}
+                          </option>
+                        );
+                      })}
+                  </select>
+                )}
               </div>
             )}
           </div>
