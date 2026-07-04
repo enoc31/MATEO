@@ -6,10 +6,18 @@ import { supabase } from '../../supabaseClient';
 
 export const Login: React.FC = () => {
   const { refreshProfile } = useAuth();
+  
+  // Estados generales del formulario
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [nombreCompleto, setNombreCompleto] = useState('');
+  const [rolSugerido, setRolSugerido] = useState<UserRole>('coordinador');
+  
+  // Estados de control
+  const [isRegister, setIsRegister] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
 
   // Manejador para login en Supabase real
   const handleRealLogin = async (e: React.FormEvent) => {
@@ -17,6 +25,7 @@ export const Login: React.FC = () => {
     if (!email || !password) return;
     setLoading(true);
     setError(null);
+    setSuccess(null);
     try {
       const { error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) throw error;
@@ -28,12 +37,42 @@ export const Login: React.FC = () => {
     }
   };
 
-  // Manejador para simulación local (Inicio rápido con roles preconfigurados)
+  // Manejador para registro en Supabase real
+  const handleRealRegister = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email || !password || !nombreCompleto) return;
+    setLoading(true);
+    setError(null);
+    setSuccess(null);
+    try {
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            nombre_completo: nombreCompleto,
+            rol: rolSugerido,
+          }
+        }
+      });
+      if (error) throw error;
+      setSuccess('¡Registro exitoso! Tu cuenta ha sido creada y está pendiente de aprobación por un administrador.');
+      setIsRegister(false);
+      setNombreCompleto('');
+      setPassword('');
+    } catch (err: any) {
+      setError(err.message || 'Error al registrar usuario');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Manejador para login en simulación local (Inicio rápido con roles preconfigurados)
   const handleSimulatedLogin = async (role: UserRole) => {
     setLoading(true);
     setError(null);
+    setSuccess(null);
     try {
-      // Simulamos la creación de una sesión en el cliente de Supabase
       const mockSession = {
         user: {
           id: `user-${role}`,
@@ -42,7 +81,6 @@ export const Login: React.FC = () => {
         }
       };
 
-      // Guardamos la simulación del perfil directamente en la tabla usuarios_perfiles del localStorage
       const profiles = JSON.parse(localStorage.getItem('cnbv_profiles') || '{}');
       profiles[`user-${role}`] = {
         id: `user-${role}`,
@@ -50,20 +88,101 @@ export const Login: React.FC = () => {
         nombre_completo: role === 'administrador' ? 'Director Nacional CNBV' : 
                          role === 'auditor' ? 'Auditor de Finanzas CNBV' : 'Coordinador Ayuda Apure',
         rol: role,
+        aprobado: true, // Los preconfigurados ya están aprobados
         created_at: new Date().toISOString()
       };
       localStorage.setItem('cnbv_profiles', JSON.stringify(profiles));
-      
-      // Guardar sesión ficticia activa
       localStorage.setItem('cnbv_mock_session', JSON.stringify(mockSession));
       
-      // Forzamos un reload para que el AuthContext capte el cambio
       window.location.reload();
     } catch (err: any) {
       setError('Error al simular inicio de sesión');
     } finally {
       setLoading(false);
     }
+  };
+
+  // Manejador para login simulado personalizado (por correo y contraseña)
+  const handleSimulatedPasswordLogin = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email || !password) return;
+    setLoading(true);
+    setError(null);
+    setSuccess(null);
+    try {
+      const profiles = JSON.parse(localStorage.getItem('cnbv_profiles') || '{}');
+      const foundProfile = Object.values(profiles).find(
+        (p: any) => p.email.toLowerCase() === email.toLowerCase()
+      ) as any;
+
+      if (!foundProfile) {
+        setError('Usuario no encontrado en la base de datos simulada local.');
+        setLoading(false);
+        return;
+      }
+
+      // En simulación aceptamos cualquier contraseña para este demo local
+      const mockSession = {
+        user: {
+          id: foundProfile.id,
+          email: foundProfile.email,
+          user_metadata: { nombre_completo: foundProfile.nombre_completo, rol: foundProfile.rol }
+        }
+      };
+
+      localStorage.setItem('cnbv_mock_session', JSON.stringify(mockSession));
+      window.location.reload();
+    } catch (err) {
+      setError('Error al iniciar sesión simulada');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Manejador para registro simulado local
+  const handleSimulatedRegister = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email || !password || !nombreCompleto) return;
+    setLoading(true);
+    setError(null);
+    setSuccess(null);
+    try {
+      const userId = `user-sim-${Date.now()}`;
+      const profiles = JSON.parse(localStorage.getItem('cnbv_profiles') || '{}');
+      
+      // Validar si ya existe el correo
+      const emailExists = Object.values(profiles).some((p: any) => p.email.toLowerCase() === email.toLowerCase());
+      if (emailExists) {
+        setError('El correo electrónico ya está registrado.');
+        setLoading(false);
+        return;
+      }
+
+      profiles[userId] = {
+        id: userId,
+        email,
+        nombre_completo: nombreCompleto,
+        rol: rolSugerido,
+        aprobado: false, // Inicia pendiente de aprobación
+        created_at: new Date().toISOString()
+      };
+      
+      localStorage.setItem('cnbv_profiles', JSON.stringify(profiles));
+      setSuccess('¡Registro simulado exitoso! Tu cuenta ha sido creada y está pendiente de aprobación por el Administrador.');
+      setIsRegister(false);
+      setNombreCompleto('');
+      setPassword('');
+    } catch (err: any) {
+      setError('Error al simular registro');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleToggleMode = () => {
+    setIsRegister(!isRegister);
+    setError(null);
+    setSuccess(null);
   };
 
   return (
@@ -90,7 +209,7 @@ export const Login: React.FC = () => {
             style={{ height: '70px', objectFit: 'contain', marginBottom: '1rem' }}
           />
           <h2 style={{ color: 'var(--primary)', fontFamily: 'var(--font-headings)', fontSize: '1.4rem' }}>
-            Auditoría de Recursos
+            {isRegister ? 'Registro de Cuenta' : 'Auditoría de Recursos'}
           </h2>
           <p style={{ fontSize: '0.85rem', color: 'var(--neutral-dark)', opacity: 0.8, marginTop: '0.25rem' }}>
             Convención Nacional Bautista de Venezuela
@@ -110,67 +229,41 @@ export const Login: React.FC = () => {
           </div>
         )}
 
-        {isSimulationMode ? (
-          // Vista Modo Simulación: Permite ingresar con un clic
-          <div>
-            <div style={{
-              backgroundColor: 'rgba(0, 143, 166, 0.08)',
-              border: '1px solid var(--accent)',
-              borderRadius: 'var(--radius-sm)',
-              padding: '1rem',
-              marginBottom: '1.5rem',
-              textAlign: 'center'
-            }}>
-              <p style={{ fontSize: '0.8rem', color: 'var(--accent)', fontWeight: 600 }}>
-                💡 Modo Demostración Activo
-              </p>
-              <p style={{ fontSize: '0.75rem', color: 'var(--neutral-dark)', marginTop: '0.25rem', opacity: 0.9 }}>
-                Para evaluar el sistema de inmediato sin configurar bases de datos, selecciona un rol de prueba:
-              </p>
-            </div>
-
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-              <button 
-                onClick={() => handleSimulatedLogin('administrador')} 
-                disabled={loading}
-                className="btn btn-primary" 
-                style={{ width: '100%', padding: '0.75rem' }}
-              >
-                Entrar como Administrador (Director)
-              </button>
-              
-              <button 
-                onClick={() => handleSimulatedLogin('auditor')} 
-                disabled={loading}
-                className="btn btn-secondary" 
-                style={{ width: '100%', padding: '0.75rem' }}
-              >
-                Entrar como Auditor (Finanzas)
-              </button>
-
-              <button 
-                onClick={() => handleSimulatedLogin('coordinador')} 
-                disabled={loading}
-                className="btn btn-outline" 
-                style={{ width: '100%', padding: '0.75rem' }}
-              >
-                Entrar como Coordinador de Campo
-              </button>
-            </div>
-            
-            <p style={{ 
-              fontSize: '0.7rem', 
-              color: 'var(--neutral-dark)', 
-              opacity: 0.6, 
-              textAlign: 'center',
-              marginTop: '1.5rem' 
-            }}>
-              Los datos que cargues se guardarán localmente en el navegador.
-            </p>
+        {success && (
+          <div className="badge" style={{ 
+            width: '100%', 
+            padding: '0.75rem', 
+            borderRadius: 'var(--radius-sm)', 
+            marginBottom: '1.5rem',
+            textAlign: 'center',
+            backgroundColor: 'rgba(0, 143, 166, 0.1)',
+            color: 'var(--accent)',
+            border: '1px solid var(--accent)',
+            display: 'block',
+            lineHeight: '1.4',
+            fontSize: '0.8rem'
+          }}>
+            {success}
           </div>
-        ) : (
-          // Vista Login Supabase Real
-          <form onSubmit={handleRealLogin}>
+        )}
+
+        {isRegister ? (
+          // ==================== FORMULARIO DE REGISTRO ====================
+          <form onSubmit={isSimulationMode ? handleSimulatedRegister : handleRealRegister}>
+            <div className="form-group">
+              <label className="form-label" htmlFor="nombreCompleto">Nombre Completo</label>
+              <input 
+                id="nombreCompleto"
+                type="text" 
+                className="form-input" 
+                value={nombreCompleto}
+                onChange={e => setNombreCompleto(e.target.value)}
+                required
+                disabled={loading}
+                placeholder="Juan Pérez"
+              />
+            </div>
+
             <div className="form-group">
               <label className="form-label" htmlFor="email">Correo Electrónico</label>
               <input 
@@ -185,7 +278,7 @@ export const Login: React.FC = () => {
               />
             </div>
 
-            <div className="form-group" style={{ marginBottom: '2rem' }}>
+            <div className="form-group">
               <label className="form-label" htmlFor="password">Contraseña</label>
               <input 
                 id="password"
@@ -199,16 +292,163 @@ export const Login: React.FC = () => {
               />
             </div>
 
+            <div className="form-group" style={{ marginBottom: '2rem' }}>
+              <label className="form-label" htmlFor="rolSugerido">Rol Solicitado</label>
+              <select
+                id="rolSugerido"
+                className="form-input"
+                value={rolSugerido}
+                onChange={e => setRolSugerido(e.target.value as UserRole)}
+                required
+                disabled={loading}
+              >
+                <option value="coordinador">Coordinador de Campo (Carga de comprobantes)</option>
+                <option value="auditor">Auditor (Finanzas, Conciliación y Reportes)</option>
+                <option value="administrador">Administrador (Control Total)</option>
+              </select>
+            </div>
+
             <button 
               type="submit" 
               className="btn btn-primary" 
-              style={{ width: '100%', padding: '0.75rem' }}
+              style={{ width: '100%', padding: '0.75rem', marginBottom: '1rem' }}
               disabled={loading}
             >
-              {loading ? 'Iniciando sesión...' : 'Ingresar al Sistema'}
+              {loading ? 'Creando cuenta...' : 'Solicitar Registro'}
             </button>
           </form>
+        ) : (
+          // ==================== FORMULARIO DE ACCESO ====================
+          <div>
+            {isSimulationMode && (
+              <div style={{
+                backgroundColor: 'rgba(0, 143, 166, 0.08)',
+                border: '1px solid var(--accent)',
+                borderRadius: 'var(--radius-sm)',
+                padding: '1rem',
+                marginBottom: '1.5rem',
+                textAlign: 'center'
+              }}>
+                <p style={{ fontSize: '0.8rem', color: 'var(--accent)', fontWeight: 600 }}>
+                  💡 Modo Demostración Activo
+                </p>
+                <p style={{ fontSize: '0.75rem', color: 'var(--neutral-dark)', marginTop: '0.25rem', opacity: 0.9 }}>
+                  Selecciona un rol pre-aprobado para ingresar de inmediato:
+                </p>
+              </div>
+            )}
+
+            {isSimulationMode ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginBottom: '1.5rem' }}>
+                <button 
+                  onClick={() => handleSimulatedLogin('administrador')} 
+                  disabled={loading}
+                  className="btn btn-primary" 
+                  style={{ width: '100%', padding: '0.75rem' }}
+                >
+                  Entrar como Administrador (Director)
+                </button>
+                
+                <button 
+                  onClick={() => handleSimulatedLogin('auditor')} 
+                  disabled={loading}
+                  className="btn btn-secondary" 
+                  style={{ width: '100%', padding: '0.75rem' }}
+                >
+                  Entrar como Auditor (Finanzas)
+                </button>
+
+                <button 
+                  onClick={() => handleSimulatedLogin('coordinador')} 
+                  disabled={loading}
+                  className="btn btn-outline" 
+                  style={{ width: '100%', padding: '0.75rem' }}
+                >
+                  Entrar como Coordinador de Campo
+                </button>
+              </div>
+            ) : null}
+
+            {/* Formulario de Correo/Contraseña (Real o Simulado) */}
+            <form onSubmit={isSimulationMode ? handleSimulatedPasswordLogin : handleRealLogin}>
+              {isSimulationMode && (
+                <div style={{ textAlign: 'center', margin: '1rem 0', position: 'relative' }}>
+                  <hr style={{ border: 'none', borderTop: '1px solid #e2e8f0' }} />
+                  <span style={{ 
+                    position: 'absolute', 
+                    top: '-10px', 
+                    left: '50%', 
+                    transform: 'translateX(-50%)', 
+                    backgroundColor: '#ffffff', 
+                    padding: '0 0.5rem',
+                    fontSize: '0.7rem',
+                    color: 'var(--neutral-dark)',
+                    opacity: 0.7
+                  }}>
+                    O ingresa con cuenta creada
+                  </span>
+                </div>
+              )}
+
+              <div className="form-group">
+                <label className="form-label" htmlFor="email">Correo Electrónico</label>
+                <input 
+                  id="email"
+                  type="email" 
+                  className="form-input" 
+                  value={email}
+                  onChange={e => setEmail(e.target.value)}
+                  required
+                  disabled={loading}
+                  placeholder="ejemplo@cnbv.org"
+                />
+              </div>
+
+              <div className="form-group" style={{ marginBottom: '2rem' }}>
+                <label className="form-label" htmlFor="password">Contraseña</label>
+                <input 
+                  id="password"
+                  type="password" 
+                  className="form-input" 
+                  value={password}
+                  onChange={e => setPassword(e.target.value)}
+                  required
+                  disabled={loading}
+                  placeholder="••••••••"
+                />
+              </div>
+
+              <button 
+                type="submit" 
+                className="btn btn-primary" 
+                style={{ width: '100%', padding: '0.75rem' }}
+                disabled={loading}
+              >
+                {loading ? 'Iniciando sesión...' : 'Ingresar al Sistema'}
+              </button>
+            </form>
+          </div>
         )}
+
+        {/* Enlace para alternar entre Login y Registro */}
+        <div style={{ textAlign: 'center', marginTop: '1.5rem' }}>
+          <button
+            onClick={handleToggleMode}
+            style={{
+              background: 'none',
+              border: 'none',
+              color: 'var(--accent)',
+              cursor: 'pointer',
+              fontSize: '0.85rem',
+              fontWeight: 600,
+              textDecoration: 'underline'
+            }}
+          >
+            {isRegister 
+              ? '¿Ya tienes una cuenta? Iniciar Sesión' 
+              : '¿No tienes una cuenta? Regístrate aquí'}
+          </button>
+        </div>
       </div>
     </div>
   );

@@ -20,7 +20,8 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTa
     { id: 'reconciliation', label: 'Conciliación', icon: '⚖️', roles: ['administrador', 'auditor'] },
     { id: 'audit', label: 'Auditoría', icon: '🔍', roles: ['administrador', 'auditor'] },
     { id: 'budgets', label: 'Presupuestos', icon: '💰', roles: ['administrador', 'auditor'] },
-    { id: 'field-entry', label: 'Cargar Gastos', icon: '📸', roles: ['administrador', 'coordinador'] }
+    { id: 'field-entry', label: 'Cargar Gastos', icon: '📸', roles: ['administrador', 'coordinador'] },
+    { id: 'users', label: 'Usuarios', icon: '👥', roles: ['administrador'] }
   ];
 
   const visibleMenuItems = menuItems.filter(item => item.roles.includes(role));

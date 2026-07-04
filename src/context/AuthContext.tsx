@@ -10,6 +10,7 @@ export interface UserProfile {
   email: string;
   nombre_completo: string;
   rol: UserRole;
+  aprobado: boolean;
   created_at: string;
 }
 

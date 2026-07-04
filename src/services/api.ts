@@ -1,4 +1,5 @@
 import { supabase } from '../supabaseClient';
+import type { UserRole } from '../context/AuthContext';
 
 // Interfaces del Dominio
 export interface Project {
@@ -503,6 +504,50 @@ export const api = {
       }
 
       return created;
+    }
+  },
+
+  // --- GESTIÓN DE USUARIOS ---
+  getUsers: async (): Promise<any[]> => {
+    if (!isSimulationMode) {
+      const { data, error } = await supabase
+        .from('usuarios_perfiles')
+        .select('*')
+        .order('nombre_completo');
+      if (error) throw error;
+      return data;
+    } else {
+      const profiles = JSON.parse(localStorage.getItem('cnbv_profiles') || '{}');
+      return Object.values(profiles);
+    }
+  },
+
+  updateUserProfile: async (userId: string, updates: { rol?: UserRole; aprobado?: boolean }): Promise<any> => {
+    if (!isSimulationMode) {
+      const { data, error } = await supabase
+        .from('usuarios_perfiles')
+        .update({
+          ...updates,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', userId)
+        .select()
+        .single();
+      if (error) throw error;
+      return data;
+    } else {
+      const profiles = JSON.parse(localStorage.getItem('cnbv_profiles') || '{}');
+      if (!profiles[userId]) throw new Error('User profile not found in simulation');
+      
+      const updated = {
+        ...profiles[userId],
+        ...updates,
+        updated_at: new Date().toISOString()
+      };
+      
+      profiles[userId] = updated;
+      localStorage.setItem('cnbv_profiles', JSON.stringify(profiles));
+      return updated;
     }
   }
 };

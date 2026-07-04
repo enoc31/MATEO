@@ -7,9 +7,10 @@ import { Reconciliation } from './features/reconciliation/Reconciliation';
 import { Audit } from './features/audit/Audit';
 import { BudgetsAndReports } from './features/budgets/BudgetsAndReports';
 import { MobileEntry } from './features/mobile-entry/MobileEntry';
+import { UserManagement } from './features/users/UserManagement';
 
 const MainAppContent: React.FC = () => {
-  const { profile, loading } = useAuth();
+  const { profile, loading, logout } = useAuth();
   const [activeTab, setActiveTab] = useState<string>('');
 
   // Configurar la pestaña por defecto basada en el rol del usuario
@@ -56,6 +57,11 @@ const MainAppContent: React.FC = () => {
     return <Login />;
   }
 
+  // Si está logueado pero no ha sido aprobado por un administrador
+  if (profile.aprobado === false) {
+    return <PendingApproval logout={logout} />;
+  }
+
   // Renderizar componentes según la pestaña activa y validación de roles
   const renderContent = () => {
     switch (activeTab) {
@@ -69,6 +75,8 @@ const MainAppContent: React.FC = () => {
         return ['administrador', 'auditor'].includes(profile.rol) ? <BudgetsAndReports /> : <AccessDenied />;
       case 'field-entry':
         return ['administrador', 'coordinador'].includes(profile.rol) ? <MobileEntry /> : <AccessDenied />;
+      case 'users':
+        return profile.rol === 'administrador' ? <UserManagement /> : <AccessDenied />;
       default:
         return <div>Página no encontrada</div>;
     }
@@ -81,10 +89,73 @@ const MainAppContent: React.FC = () => {
   );
 };
 
+// Componente para Pantalla Intermedia: Pendiente de Aprobación
+interface PendingApprovalProps {
+  logout: () => Promise<void>;
+}
+
+const PendingApproval: React.FC<PendingApprovalProps> = ({ logout }) => {
+  return (
+    <div style={{
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      minHeight: '100vh',
+      background: 'linear-gradient(135deg, #f4f5f7 0%, #e2e8f0 100%)',
+      padding: '1rem'
+    }}>
+      <div className="card animate-fade-in-up" style={{
+        maxWidth: '500px',
+        width: '100%',
+        padding: '3rem',
+        textAlign: 'center',
+        borderRadius: 'var(--radius-lg)',
+        boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04)'
+      }}>
+        <div style={{ fontSize: '4.5rem', marginBottom: '1rem' }}>⏳</div>
+        <h2 style={{ color: 'var(--primary)', fontFamily: 'var(--font-headings)', fontSize: '1.6rem', fontWeight: 700 }}>
+          Registro Pendiente
+        </h2>
+        <p style={{ fontSize: '0.95rem', color: 'var(--neutral-dark)', opacity: 0.9, marginTop: '1rem', lineHeight: '1.6' }}>
+          Tu cuenta ha sido creada exitosamente. Para poder ingresar, un **Administrador** de la CNBV debe validar tu identidad, aprobar tu registro y asignarte un rol dentro de la plataforma.
+        </p>
+        
+        <div style={{ 
+          marginTop: '2rem',
+          backgroundColor: 'rgba(0, 143, 166, 0.06)',
+          border: '1px solid rgba(0, 143, 166, 0.2)',
+          borderRadius: 'var(--radius-sm)',
+          padding: '1.2rem',
+          fontSize: '0.82rem',
+          textAlign: 'left',
+          color: 'var(--neutral-dark)'
+        }}>
+          <strong style={{ color: 'var(--accent)', display: 'block', marginBottom: '0.4rem' }}>
+            ¿Qué debes hacer ahora?
+          </strong>
+          <ul style={{ paddingLeft: '1.2rem', margin: 0, opacity: 0.9, display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
+            <li>Contacta al Administrador de Finanzas o Director Nacional de la CNBV.</li>
+            <li>Solicita la aprobación de tu correo institucional.</li>
+            <li>Una vez aprobado, recarga esta página para ingresar automáticamente.</li>
+          </ul>
+        </div>
+
+        <button 
+          onClick={logout}
+          className="btn btn-outline" 
+          style={{ width: '100%', marginTop: '2.5rem', padding: '0.75rem', fontWeight: 600 }}
+        >
+          Cerrar Sesión / Volver
+        </button>
+      </div>
+    </div>
+  );
+};
+
 // Componente para Control de Acceso / Rutas Protegidas
 const AccessDenied: React.FC = () => {
   return (
-    <div className="card" style={{ textAlign: 'center', padding: '3rem', marginTop: '2rem' }}>
+    <div className="card text-center" style={{ textAlign: 'center', padding: '3rem', marginTop: '2rem' }}>
       <span style={{ fontSize: '3rem' }}>🚫</span>
       <h3 style={{ color: 'var(--danger)', marginTop: '1rem', fontWeight: 700 }}>Acceso Denegado</h3>
       <p style={{ opacity: 0.8, fontSize: '0.9rem', marginTop: '0.5rem' }}>
