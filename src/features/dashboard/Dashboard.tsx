@@ -1,13 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { api } from '../../services/api';
-import type { Project, ExpenseReceipt, BankTransaction, Donation, Budget, ExpenseCategory, PartidaGasto } from '../../services/api';
+import type { Project, ExpenseReceipt, Donation, Budget, ExpenseCategory, PartidaGasto } from '../../services/api';
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, Legend, PieChart, Pie, Cell } from 'recharts';
 
 export const Dashboard: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [projects, setProjects] = useState<Project[]>([]);
   const [expenses, setExpenses] = useState<ExpenseReceipt[]>([]);
-  const [transactions, setTransactions] = useState<BankTransaction[]>([]);
   const [donations, setDonations] = useState<Donation[]>([]);
   const [budgets, setBudgets] = useState<Budget[]>([]);
   const [categories, setCategories] = useState<ExpenseCategory[]>([]);
@@ -16,10 +15,9 @@ export const Dashboard: React.FC = () => {
   useEffect(() => {
     const loadData = async () => {
       try {
-        const [projList, expList, txList, donList, bList, catList, partList] = await Promise.all([
+        const [projList, expList, donList, bList, catList, partList] = await Promise.all([
           api.getProjects(),
           api.getExpenses(),
-          api.getBankTransactions(),
           api.getDonations(),
           api.getBudgets(),
           api.getCategories(),
@@ -27,7 +25,6 @@ export const Dashboard: React.FC = () => {
         ]);
         setProjects(projList);
         setExpenses(expList);
-        setTransactions(txList);
         setDonations(donList);
         setBudgets(bList);
         setCategories(catList);
@@ -50,8 +47,7 @@ export const Dashboard: React.FC = () => {
   }
 
   // --- 1. CÁLCULO DE MÉTRICAS GENERALES ---
-  const totalInflows = donations.reduce((sum, d) => sum + Number(d.monto), 0) +
-                       transactions.filter(t => t.monto > 0 && t.estado === 'conciliado').reduce((sum, t) => sum + Number(t.monto), 0);
+  const totalInflows = donations.reduce((sum, d) => sum + Number(d.monto_usd || d.monto), 0);
 
   // Consideramos egresos únicamente los gastos aprobados por auditoría
   const approvedExpenses = expenses.filter(e => e.estado === 'aprobado');
