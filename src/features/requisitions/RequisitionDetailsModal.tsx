@@ -128,7 +128,7 @@ export const RequisitionDetailsModal: React.FC<ModalProps> = ({ req, onClose, on
             ) : null}
 
             {!showRejectForm ? (
-              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem' }}>
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', flexWrap: 'wrap' }}>
                 <button className="btn btn-outline" onClick={onClose} disabled={submitting}>Cerrar</button>
                 
                 <button 
@@ -162,7 +162,7 @@ export const RequisitionDetailsModal: React.FC<ModalProps> = ({ req, onClose, on
                     placeholder="Escriba aquí los comentarios u observaciones del por qué se rechaza esta solicitud..."
                   />
                 </div>
-                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', marginTop: '1rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', marginTop: '1rem', flexWrap: 'wrap' }}>
                   <button className="btn btn-outline" type="button" onClick={() => setShowRejectForm(false)} disabled={submitting}>Atrás</button>
                   <button className="btn btn-primary" type="submit" disabled={submitting} style={{ backgroundColor: 'var(--danger)', borderColor: 'var(--danger)' }}>
                     Confirmar Rechazo

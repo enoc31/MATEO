@@ -207,7 +207,7 @@ export const RequisitionForm: React.FC<RequisitionFormProps> = ({ onClose, onSuc
           </div>
 
           {/* Acciones */}
-          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem' }}>
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', flexWrap: 'wrap' }}>
             <button 
               type="button" 
               className="btn btn-outline" 

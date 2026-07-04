@@ -402,7 +402,7 @@ export const MobileEntry: React.FC = () => {
               3. Ingresa los Datos de la Compra *
             </span>
             
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', marginBottom: '0.75rem' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '0.75rem', marginBottom: '0.75rem' }}>
               {/* Amount */}
               <div style={{ display: 'flex', flexDirection: 'column' }}>
                 <label htmlFor="amount" style={{ fontSize: '0.75rem', fontWeight: 600, opacity: 0.8, marginBottom: '0.25rem' }}>
@@ -523,7 +523,7 @@ export const MobileEntry: React.FC = () => {
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
                         padding: '0.6rem', backgroundColor: 'var(--primary)', color: 'white',
                         border: 'none', borderRadius: 'var(--radius-sm)', cursor: 'pointer',
-                        fontSize: '0.75rem', fontWeight: 600
+                        fontSize: '0.75rem', fontWeight: 600, minHeight: '44px'
                       }}
                     >
                       📷 Usar Cámara de Campo
@@ -536,7 +536,7 @@ export const MobileEntry: React.FC = () => {
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
                         padding: '0.5rem', backgroundColor: 'white', color: 'var(--primary)',
                         border: '1px solid var(--primary)', borderRadius: 'var(--radius-sm)', cursor: 'pointer',
-                        fontSize: '0.7rem', fontWeight: 600
+                        fontSize: '0.7rem', fontWeight: 600, minHeight: '44px'
                       }}
                     >
                       📁 Cargar de Galería
@@ -598,7 +598,7 @@ export const MobileEntry: React.FC = () => {
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
                         padding: '0.6rem', backgroundColor: 'var(--primary)', color: 'white',
                         border: 'none', borderRadius: 'var(--radius-sm)', cursor: 'pointer',
-                        fontSize: '0.75rem', fontWeight: 600
+                        fontSize: '0.75rem', fontWeight: 600, minHeight: '44px'
                       }}
                     >
                       📷 Usar Cámara de Campo
@@ -611,7 +611,7 @@ export const MobileEntry: React.FC = () => {
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
                         padding: '0.5rem', backgroundColor: 'white', color: 'var(--primary)',
                         border: '1px solid var(--primary)', borderRadius: 'var(--radius-sm)', cursor: 'pointer',
-                        fontSize: '0.7rem', fontWeight: 600
+                        fontSize: '0.7rem', fontWeight: 600, minHeight: '44px'
                       }}
                     >
                       📁 Cargar de Galería

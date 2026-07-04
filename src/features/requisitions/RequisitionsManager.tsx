@@ -82,7 +82,7 @@ export const RequisitionsManager: React.FC = () => {
       {/* Controles de Filtros */}
       <div className="card" style={{ padding: '1rem 1.5rem', marginBottom: '1.5rem' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
-          <div style={{ display: 'flex', gap: '0.5rem' }}>
+          <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
             {(['todas', 'pendientes', 'aprobadas'] as const).map((f) => (
               <button
                 key={f}
@@ -123,7 +123,7 @@ export const RequisitionsManager: React.FC = () => {
           </p>
         </div>
       ) : (
-        <div className="card" style={{ padding: 0, overflowX: 'auto' }}>
+        <div className="card table-responsive" style={{ padding: 0, overflowX: 'auto' }}>
           <table className="table" style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
             <thead>
               <tr style={{ borderBottom: '1px solid #e2e8f0', backgroundColor: '#f8fafc' }}>
@@ -139,29 +139,29 @@ export const RequisitionsManager: React.FC = () => {
             <tbody>
               {filteredList.map(req => (
                 <tr key={req.id} style={{ borderBottom: '1px solid #e2e8f0', transition: 'background 0.2s' }}>
-                  <td style={{ padding: '1.2rem 1.5rem', fontSize: '0.85rem', opacity: 0.8 }}>
+                  <td data-label="Fecha Solicitud" style={{ padding: '1.2rem 1.5rem', fontSize: '0.85rem', opacity: 0.8 }}>
                     {new Date(req.created_at).toLocaleDateString('es-VE', {
                       year: 'numeric',
                       month: 'short',
                       day: 'numeric'
                     })}
                   </td>
-                  <td style={{ padding: '1.2rem 1.5rem', fontWeight: 600, color: 'var(--neutral-dark)' }}>
+                  <td data-label="Proyecto" style={{ padding: '1.2rem 1.5rem', fontWeight: 600, color: 'var(--neutral-dark)' }}>
                     {req.proyecto_nombre}
                   </td>
-                  <td style={{ padding: '1.2rem 1.5rem', fontSize: '0.9rem' }}>
+                  <td data-label="Categoría" style={{ padding: '1.2rem 1.5rem', fontSize: '0.9rem' }}>
                     {req.categoria_nombre}
                   </td>
-                  <td style={{ padding: '1.2rem 1.5rem', fontWeight: 800, color: 'var(--neutral-dark)' }}>
+                  <td data-label="Monto" style={{ padding: '1.2rem 1.5rem', fontWeight: 800, color: 'var(--neutral-dark)' }}>
                     {new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(req.monto_solicitado)}
                   </td>
-                  <td style={{ padding: '1.2rem 1.5rem', fontSize: '0.85rem' }}>
+                  <td data-label="Solicitado por" style={{ padding: '1.2rem 1.5rem', fontSize: '0.85rem' }}>
                     {req.solicitante_nombre || 'Coordinador'}
                   </td>
-                  <td style={{ padding: '1.2rem 1.5rem' }}>
+                  <td data-label="Estado" style={{ padding: '1.2rem 1.5rem' }}>
                     {getStatusBadge(req.estado)}
                   </td>
-                  <td style={{ padding: '1.2rem 1.5rem', textAlign: 'center' }}>
+                  <td data-label="Acciones" style={{ padding: '1.2rem 1.5rem', textAlign: 'center' }}>
                     <button 
                       className="btn btn-outline" 
                       style={{ padding: '0.35rem 0.75rem', fontSize: '0.8rem', fontWeight: 600 }}
