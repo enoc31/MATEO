@@ -21,6 +21,7 @@ CREATE TABLE public.usuarios_perfiles (
     email TEXT NOT NULL,
     nombre_completo TEXT,
     rol user_role NOT NULL DEFAULT 'coordinador',
+    aprobado BOOLEAN DEFAULT FALSE NOT NULL,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
 );
@@ -111,12 +112,13 @@ CREATE TABLE public.comprobantes_gasto (
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER AS $$
 BEGIN
-  INSERT INTO public.usuarios_perfiles (id, email, nombre_completo, rol)
+  INSERT INTO public.usuarios_perfiles (id, email, nombre_completo, rol, aprobado)
   VALUES (
     new.id,
     new.email,
     COALESCE(new.raw_user_meta_data->>'nombre_completo', 'Nuevo Usuario'),
-    COALESCE((new.raw_user_meta_data->>'rol')::user_role, 'coordinador'::user_role)
+    COALESCE((new.raw_user_meta_data->>'rol')::user_role, 'coordinador'::user_role),
+    FALSE -- Por defecto inicia desaprobado
   );
   RETURN NEW;
 END;
