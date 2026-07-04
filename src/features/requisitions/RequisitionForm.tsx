@@ -86,7 +86,7 @@ export const RequisitionForm: React.FC<RequisitionFormProps> = ({ onClose, onSuc
       justifyContent: 'center', zIndex: 1100, padding: '1rem',
       backdropFilter: 'blur(3px)'
     }}>
-      <div className="card animate-fade-in-up" style={{
+      <div className="card animate-fade-in-up app-fullscreen-modal" style={{
         maxWidth: '550px', width: '100%', padding: '2rem',
         borderRadius: 'var(--radius-lg)', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.15)',
         backgroundColor: 'var(--card-bg, #ffffff)',
@@ -118,7 +118,7 @@ export const RequisitionForm: React.FC<RequisitionFormProps> = ({ onClose, onSuc
             <label className="form-label" htmlFor="req-proyecto">Proyecto de Destino *</label>
             <select
               id="req-proyecto"
-              className="form-input"
+              className="app-input"
               value={proyectoId}
               onChange={e => setProyectoId(e.target.value)}
               required
@@ -136,7 +136,7 @@ export const RequisitionForm: React.FC<RequisitionFormProps> = ({ onClose, onSuc
             <label className="form-label" htmlFor="req-categoria">Categoría del Gasto *</label>
             <select
               id="req-categoria"
-              className="form-input"
+              className="app-input"
               value={categoriaId}
               onChange={e => { setCategoriaId(e.target.value); setPartidaId(''); }}
               required
@@ -155,7 +155,7 @@ export const RequisitionForm: React.FC<RequisitionFormProps> = ({ onClose, onSuc
               <label className="form-label" htmlFor="req-partida">Partida de Gasto Específica *</label>
               <select
                 id="req-partida"
-                className="form-input"
+                className="app-input"
                 value={partidaId}
                 onChange={e => setPartidaId(e.target.value)}
                 required
@@ -181,7 +181,7 @@ export const RequisitionForm: React.FC<RequisitionFormProps> = ({ onClose, onSuc
               type="number"
               step="0.01"
               min="0.01"
-              className="form-input"
+              className="app-input"
               value={montoSolicitado}
               onChange={e => setMontoSolicitado(e.target.value)}
               required
@@ -195,7 +195,7 @@ export const RequisitionForm: React.FC<RequisitionFormProps> = ({ onClose, onSuc
             <label className="form-label" htmlFor="req-motivo">Justificación / Destino de Fondos *</label>
             <textarea
               id="req-motivo"
-              className="form-input"
+              className="app-input"
               rows={4}
               value={motivo}
               onChange={e => setMotivo(e.target.value)}
@@ -207,22 +207,26 @@ export const RequisitionForm: React.FC<RequisitionFormProps> = ({ onClose, onSuc
           </div>
 
           {/* Acciones */}
-          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', flexWrap: 'wrap' }}>
-            <button 
-              type="button" 
-              className="btn btn-outline" 
-              onClick={onClose}
-              disabled={loading}
-            >
-              Cancelar
-            </button>
-            <button 
-              type="submit" 
-              className="btn btn-primary"
-              disabled={loading}
-            >
-              {loading ? 'Enviando solicitud...' : '🚀 Solicitar Autorización'}
-            </button>
+          <div className="sticky-bottom-bar">
+            <div style={{ display: 'flex', gap: '0.75rem', width: '100%', justifyContent: 'flex-end' }}>
+              <button 
+                type="button" 
+                className="btn btn-outline" 
+                onClick={onClose}
+                disabled={loading}
+                style={{ flex: 1, padding: '1rem', fontSize: '1rem' }}
+              >
+                Cancelar
+              </button>
+              <button 
+                type="submit" 
+                className="btn btn-primary"
+                disabled={loading}
+                style={{ flex: 2, padding: '1rem', fontSize: '1rem' }}
+              >
+                {loading ? 'Enviando...' : '🚀 Solicitar'}
+              </button>
+            </div>
           </div>
         </form>
       </div>

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { isSimulationMode } from '../services/api';
 
@@ -10,6 +10,7 @@ interface LayoutProps {
 
 export const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab }) => {
   const { profile, logout } = useAuth();
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   
   if (!profile) return null;
   const role = profile.rol;
@@ -79,9 +80,16 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTa
         </div>
       )}
 
-      {/* Header Corporativo (Escritorio) */}
+      {/* Header Corporativo */}
       <header className="header-bar">
         <div className="header-logo-container">
+          <button 
+            className="hamburger-btn" 
+            onClick={() => setIsMobileMenuOpen(true)}
+            aria-label="Abrir menú"
+          >
+            ☰
+          </button>
           <img 
             src="https://cnbv.org/wp-content/uploads/2020/09/logo-cnbv.jpg" 
             alt="CNBV Logo" 
@@ -153,62 +161,48 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTa
         {children}
       </main>
 
-      {/* Navegación Móvil (Bottom Bar) */}
-      <nav className="nav-menu" style={{ display: 'none' }}>
-        {visibleMenuItems.map(item => (
+      {/* Sidebar Navigation para Móvil */}
+      <div 
+        className={`sidebar-overlay ${isMobileMenuOpen ? 'open' : ''}`} 
+        onClick={() => setIsMobileMenuOpen(false)}
+      ></div>
+      <aside className={`sidebar-container ${isMobileMenuOpen ? 'open' : ''}`}>
+        <div className="sidebar-header">
+          <div style={{ display: 'flex', flexDirection: 'column' }}>
+            <span style={{ fontWeight: 700, color: 'var(--primary)', fontSize: '1.1rem' }}>Menú Principal</span>
+            <span style={{ fontSize: '0.8rem', color: 'var(--neutral-dark)' }}>{profile.nombre_completo}</span>
+          </div>
+          <button className="sidebar-close" onClick={() => setIsMobileMenuOpen(false)}>×</button>
+        </div>
+        <nav className="sidebar-nav">
+          {visibleMenuItems.map(item => (
+            <button
+              key={item.id}
+              onClick={() => {
+                setActiveTab(item.id);
+                setIsMobileMenuOpen(false);
+              }}
+              className={`sidebar-link ${activeTab === item.id ? 'active' : ''}`}
+            >
+              <span style={{ fontSize: '1.2rem' }}>{item.icon}</span>
+              <span>{item.label}</span>
+            </button>
+          ))}
+        </nav>
+        <div className="sidebar-footer">
           <button
-            key={item.id}
-            onClick={() => setActiveTab(item.id)}
-            className={`nav-link ${activeTab === item.id ? 'active' : ''}`}
-            style={{
-              background: 'none',
-              border: 'none',
-              cursor: 'pointer'
+            onClick={() => {
+              setIsMobileMenuOpen(false);
+              logout();
             }}
+            className="sidebar-link"
+            style={{ color: 'var(--danger)' }}
           >
-            <span className="nav-icon">{item.icon}</span>
-            <span>{item.label}</span>
+            <span style={{ fontSize: '1.2rem' }}>🚪</span>
+            <span>Cerrar Sesión</span>
           </button>
-        ))}
-        <button
-          onClick={logout}
-          className="nav-link"
-          style={{
-            background: 'none',
-            border: 'none',
-            cursor: 'pointer',
-            color: 'var(--danger)'
-          }}
-        >
-          <span className="nav-icon">🚪</span>
-          <span>Salir</span>
-        </button>
-      </nav>
-
-      {/* Script para activar menú responsivo por estilos CSS */}
-      <style>{`
-        @media (max-width: 768px) {
-          .nav-menu-desktop {
-            display: none !important;
-          }
-          nav.nav-menu {
-            display: flex !important;
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            background-color: #ffffff;
-            border-top: 1px solid var(--border-color);
-            padding: 0.5rem 1rem;
-            justify-content: space-around;
-            box-shadow: 0 -4px 10px rgba(0,0,0,0.05);
-            z-index: 999;
-          }
-          .main-content {
-            padding-bottom: 5.5rem !important;
-          }
-        }
-      `}</style>
+        </div>
+      </aside>
     </div>
   );
 };

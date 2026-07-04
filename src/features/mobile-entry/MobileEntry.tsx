@@ -229,7 +229,7 @@ export const MobileEntry: React.FC = () => {
       </div>
 
       {/* Simplified Entry Form */}
-      <div className="card" style={{ marginBottom: '2.5rem', padding: '1.5rem', borderRadius: 'var(--radius-lg)' }}>
+      <div style={{ marginBottom: '2.5rem', padding: '0.5rem' }}>
         <form onSubmit={handleSubmit}>
           
           {/* STEP 0: REQUISITION LINKING */}
@@ -246,7 +246,7 @@ export const MobileEntry: React.FC = () => {
               </label>
               <select
                 id="select-solicitud"
-                className="form-input"
+                className="app-input"
                 value={solicitudId}
                 onChange={e => handleSelectRequisition(e.target.value)}
                 disabled={submitting}
@@ -372,7 +372,7 @@ export const MobileEntry: React.FC = () => {
                 ) : (
                   <select
                     id="partida-select"
-                    className="form-input form-select"
+                    className="app-input form-select"
                     value={partidaId}
                     onChange={e => setPartidaId(e.target.value)}
                     disabled={submitting}
@@ -420,7 +420,7 @@ export const MobileEntry: React.FC = () => {
                     id="amount"
                     type="number"
                     step="0.01"
-                    className="form-input"
+                    className="app-input"
                     placeholder="0.00"
                     value={monto}
                     onChange={e => setMonto(e.target.value)}
@@ -445,7 +445,7 @@ export const MobileEntry: React.FC = () => {
                 <input
                   id="date"
                   type="date"
-                  className="form-input"
+                  className="app-input"
                   value={fechaGasto}
                   onChange={e => setFechaGasto(e.target.value)}
                   required
@@ -462,7 +462,7 @@ export const MobileEntry: React.FC = () => {
               </label>
               <textarea
                 id="description"
-                className="form-input"
+                className="app-input"
                 rows={2}
                 placeholder="Ej: Compra de 10 botes de agua potable para comedores infantiles..."
                 value={descripcion}
@@ -638,22 +638,24 @@ export const MobileEntry: React.FC = () => {
           </div>
 
           {/* Submit Button */}
-          <button 
-            type="submit" 
-            className="btn btn-secondary" 
-            style={{ 
-              width: '100%', 
-              padding: '1rem', 
-              fontSize: '1rem', 
-              fontWeight: 700, 
-              borderRadius: 'var(--radius-md)',
-              boxShadow: 'var(--shadow-md)',
-              cursor: submitting ? 'not-allowed' : 'pointer'
-            }}
-            disabled={submitting}
-          >
-            {submitting ? 'Enviando comprobantes...' : '🚀 Guardar Gasto y Enviar a Auditoría'}
-          </button>
+          <div className="sticky-bottom-bar">
+            <button 
+              type="submit" 
+              className="btn btn-secondary" 
+              style={{ 
+                width: '100%', 
+                padding: '1.2rem', 
+                fontSize: '1.1rem', 
+                fontWeight: 700, 
+                borderRadius: 'var(--radius-md)',
+                boxShadow: 'var(--shadow-md)',
+                cursor: submitting ? 'not-allowed' : 'pointer'
+              }}
+              disabled={submitting}
+            >
+              {submitting ? 'Enviando comprobantes...' : '🚀 Guardar Gasto y Enviar a Auditoría'}
+            </button>
+          </div>
 
         </form>
       </div>
