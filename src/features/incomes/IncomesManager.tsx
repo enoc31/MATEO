@@ -40,6 +40,7 @@ export const IncomesManager: React.FC = () => {
   const [descripcion, setDescripcion] = useState('');
   const [fecha, setFecha] = useState(new Date().toISOString().split('T')[0]);
   const [transaccionId, setTransaccionId] = useState('');
+  const [selectedTxIds, setSelectedTxIds] = useState<string[]>([]);
   const [tipoRegistro, setTipoRegistro] = useState<'manual' | 'bancario'>('manual');
 
   // Import CSV state
@@ -115,33 +116,56 @@ export const IncomesManager: React.FC = () => {
     return anteriores[0]?.tasa || latestRate;
   };
 
-  const handleSelectTx = (txId: string) => {
-    setTransaccionId(txId);
-    if (txId) {
-      const tx = bankTxs.find(t => t.id === txId);
-      if (tx) {
-        setMontoOriginal(tx.monto.toString());
-        setDescripcion(tx.descripcion);
-        setFecha(tx.fecha);
-        const txMoneda = tx.csv_metadata?.moneda || 
-          ((tx.descripcion.toLowerCase().includes('ves') || tx.descripcion.toLowerCase().includes('bs') || tx.monto > 1000) ? 'VES' : 'USD');
-        setMoneda(txMoneda);
+  const handleToggleTx = (txId: string) => {
+    setSelectedTxIds(prev => {
+      const next = prev.includes(txId) ? prev.filter(id => id !== txId) : [...prev, txId];
+      if (next.length > 0) {
+        const selectedTxs = bankTxs.filter(t => next.includes(t.id));
+        const totalAmount = selectedTxs.reduce((s, t) => s + t.monto, 0);
+        setMontoOriginal(totalAmount.toFixed(2));
+        
+        const combinedDesc = selectedTxs.map(t => {
+          const ref = t.referencia ? ` [Ref: ${t.referencia.trim()}]` : '';
+          return `${t.fecha}${ref}: ${t.descripcion.trim()}`;
+        }).join('\n');
+        setDescripcion(combinedDesc);
+        
+        const dates = selectedTxs.map(t => t.fecha).sort();
+        setFecha(dates[dates.length - 1]);
+        
+        const hasVes = selectedTxs.some(t => {
+          const coin = t.csv_metadata?.moneda;
+          if (coin === 'VES') return true;
+          const desc = t.descripcion.toLowerCase();
+          return desc.includes('ves') || desc.includes('bs') || t.monto > 1000;
+        });
+        setMoneda(hasVes ? 'VES' : 'USD');
+        setTransaccionId(next[0]);
+      } else {
+        setMontoOriginal('');
+        setDescripcion('');
+        setFecha(new Date().toISOString().split('T')[0]);
+        setTransaccionId('');
+        setMoneda('USD');
       }
-    } else {
-      setMontoOriginal(''); setDescripcion(''); setFecha(new Date().toISOString().split('T')[0]);
-      setMoneda('USD');
-    }
+      return next;
+    });
   };
+
+
 
   const resetForm = () => {
     setProyectoId(''); setDonanteId(''); setMontoOriginal(''); setDescripcion('');
     setFecha(new Date().toISOString().split('T')[0]);
-    setTransaccionId(''); setTipoRegistro('manual');
+    setTransaccionId(''); setSelectedTxIds([]); setTipoRegistro('manual');
     setMoneda('USD'); setMedioPago('transferencia'); setTasaBcv(null); setTasaManualEditable(false);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (tipoRegistro === 'bancario' && selectedTxIds.length === 0) {
+      alert('Por favor, seleccione al menos una transacción bancaria.'); return;
+    }
     if (!proyectoId || !donanteId || !montoOriginal || !descripcion) {
       alert('Complete todos los campos obligatorios.'); return;
     }
@@ -184,7 +208,8 @@ export const IncomesManager: React.FC = () => {
         monto_original: numMontoOriginal,
         tasa_bcv: finalTasaBcv,
         monto_usd: calculatedMontoUsd,
-        monto_ves: calculatedMontoVes
+        monto_ves: calculatedMontoVes,
+        vinculo_transaccion_ids: selectedTxIds.length > 0 ? selectedTxIds : undefined
       });
       alert('✅ Ingreso registrado correctamente.');
       resetForm();
@@ -557,20 +582,55 @@ export const IncomesManager: React.FC = () => {
               {/* Vincular a transacción bancaria */}
               {tipoRegistro === 'bancario' && (
                 <div className="form-group" style={{ marginBottom: 0 }}>
-                  <label className="form-label" style={{ fontWeight: 600 }}>Transacción Bancaria Pendiente *</label>
+                  <label className="form-label" style={{ fontWeight: 600 }}>Seleccione una o más Transacciones Bancarias *</label>
                   {bankTxs.length === 0 ? (
                     <div style={{ padding: '0.75rem', borderRadius: '6px', backgroundColor: 'rgba(190,87,75,0.06)', border: '1px solid rgba(190,87,75,0.2)', fontSize: '0.82rem', color: 'var(--danger)' }}>
                       No hay transacciones de ingreso pendientes de conciliar.
                     </div>
                   ) : (
-                    <select className="form-input" value={transaccionId} onChange={e => handleSelectTx(e.target.value)} required>
-                      <option value="">Seleccionar transferencia bancaria...</option>
-                      {bankTxs.map(tx => (
-                        <option key={tx.id} value={tx.id}>
-                          {tx.fecha} — {tx.referencia} — ${tx.monto.toFixed(2)} — {tx.descripcion.slice(0, 40)}
-                        </option>
-                      ))}
-                    </select>
+                    <div style={{
+                      maxHeight: '160px', overflowY: 'auto', border: '1px solid var(--border-color)',
+                      borderRadius: '6px', padding: '0.5rem', display: 'flex', flexDirection: 'column', gap: '0.5rem',
+                      backgroundColor: '#fff'
+                    }}>
+                      {bankTxs.map(tx => {
+                        const isChecked = selectedTxIds.includes(tx.id);
+                        const isTxVes = tx.csv_metadata?.moneda === 'VES' || 
+                          tx.descripcion.toLowerCase().includes('ves') || 
+                          tx.descripcion.toLowerCase().includes('bs') || 
+                          tx.monto > 1000;
+                        return (
+                          <label key={tx.id} style={{
+                            display: 'flex', alignItems: 'flex-start', gap: '0.5rem', padding: '0.4rem',
+                            borderRadius: '4px', backgroundColor: isChecked ? 'rgba(47,90,174,0.05)' : 'transparent',
+                            cursor: 'pointer', fontSize: '0.78rem', border: '1px solid',
+                            borderColor: isChecked ? 'var(--primary)' : 'rgba(0,0,0,0.08)', transition: 'all 0.15s',
+                            userSelect: 'none'
+                          }}>
+                            <input
+                              type="checkbox"
+                              checked={isChecked}
+                              onChange={() => handleToggleTx(tx.id)}
+                              style={{ marginTop: '0.15rem' }}
+                            />
+                            <div style={{ flex: 1 }}>
+                              <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 700 }}>
+                                <span>{tx.fecha} — Ref: {tx.referencia}</span>
+                                <span style={{ color: 'var(--success)' }}>
+                                  {isTxVes ? formatVesCurrency(tx.monto) : formatCurrency(tx.monto)}
+                                </span>
+                              </div>
+                              <div style={{ opacity: 0.7, fontSize: '0.72rem', marginTop: '0.1rem' }}>{tx.descripcion}</div>
+                            </div>
+                          </label>
+                        );
+                      })}
+                    </div>
+                  )}
+                  {selectedTxIds.length > 0 && (
+                    <div style={{ fontSize: '0.72rem', opacity: 0.6, marginTop: '0.25rem', textAlign: 'right' }}>
+                      Seleccionados: <strong>{selectedTxIds.length}</strong> movimientos (Monto sumado automáticamente)
+                    </div>
                   )}
                 </div>
               )}

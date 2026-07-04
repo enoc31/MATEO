@@ -660,23 +660,43 @@ export const api = {
     }
   },
 
-  createDonation: async (donation: Omit<Donation, 'id'>): Promise<Donation> => {
+  createDonation: async (donation: Omit<Donation, 'id'> & { vinculo_transaccion_ids?: string[] }): Promise<Donation> => {
+    const { vinculo_transaccion_ids, ...donationData } = donation;
+
     if (!isSimulationMode) {
-      const { data, error } = await supabase.from('donaciones').insert([donation]).select().single();
+      const { data, error } = await supabase.from('donaciones').insert([donationData]).select().single();
       if (error) throw error;
+
+      // Conciliar las transacciones vinculadas
+      const targetIds = vinculo_transaccion_ids || (donationData.transaccion_id ? [donationData.transaccion_id] : []);
+      if (targetIds.length > 0) {
+        const { error: txError } = await supabase
+          .from('transacciones_bancarias')
+          .update({ estado: 'conciliado' })
+          .in('id', targetIds);
+        if (txError) console.error('Error updating bank transactions state:', txError);
+      }
+
       return data as Donation;
     } else {
       const donations = JSON.parse(localStorage.getItem('cnbv_donations') || '[]');
-      const created = { ...donation, id: `don-${Date.now()}` };
+      const created = { ...donationData, id: `don-${Date.now()}` };
       donations.unshift(created);
       localStorage.setItem('cnbv_donations', JSON.stringify(donations));
 
-      // Si viene ligada a una transacción bancaria, marcarla como conciliada en simulación
-      if (donation.transaccion_id) {
+      // Conciliar las transacciones vinculadas en simulación
+      const targetIds = vinculo_transaccion_ids || (donationData.transaccion_id ? [donationData.transaccion_id] : []);
+      if (targetIds.length > 0) {
         const transactions = JSON.parse(localStorage.getItem('cnbv_bank_transactions') || '[]');
-        const txIndex = transactions.findIndex((t: BankTransaction) => t.id === donation.transaccion_id);
-        if (txIndex !== -1) {
-          transactions[txIndex].estado = 'conciliado';
+        let updated = false;
+        targetIds.forEach(id => {
+          const txIndex = transactions.findIndex((t: BankTransaction) => t.id === id);
+          if (txIndex !== -1) {
+            transactions[txIndex].estado = 'conciliado';
+            updated = true;
+          }
+        });
+        if (updated) {
           localStorage.setItem('cnbv_bank_transactions', JSON.stringify(transactions));
         }
       }
