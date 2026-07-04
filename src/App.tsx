@@ -10,7 +10,7 @@ import { MobileEntry } from './features/mobile-entry/MobileEntry';
 import { UserManagement } from './features/users/UserManagement';
 
 const MainAppContent: React.FC = () => {
-  const { profile, loading, logout } = useAuth();
+  const { profile, loading, logout, refreshProfile } = useAuth();
   const [activeTab, setActiveTab] = useState<string>('');
 
   // Configurar la pestaña por defecto basada en el rol del usuario
@@ -59,7 +59,7 @@ const MainAppContent: React.FC = () => {
 
   // Si está logueado pero no ha sido aprobado por un administrador
   if (profile.aprobado === false) {
-    return <PendingApproval logout={logout} />;
+    return <PendingApproval logout={logout} refreshProfile={refreshProfile} />;
   }
 
   // Renderizar componentes según la pestaña activa y validación de roles
@@ -92,9 +92,28 @@ const MainAppContent: React.FC = () => {
 // Componente para Pantalla Intermedia: Pendiente de Aprobación
 interface PendingApprovalProps {
   logout: () => Promise<void>;
+  refreshProfile: () => Promise<void>;
 }
 
-const PendingApproval: React.FC<PendingApprovalProps> = ({ logout }) => {
+const PendingApproval: React.FC<PendingApprovalProps> = ({ logout, refreshProfile }) => {
+  const [checking, setChecking] = useState(false);
+  const [feedback, setFeedback] = useState<string | null>(null);
+
+  const handleCheckStatus = async () => {
+    setChecking(true);
+    setFeedback(null);
+    try {
+      // Simular una pequeña espera para dar feedback visual al usuario
+      await new Promise((resolve) => setTimeout(resolve, 800));
+      await refreshProfile();
+      setFeedback('Tu cuenta aún está pendiente de aprobación por el Administrador.');
+    } catch (err) {
+      setFeedback('Error al verificar el estado del usuario.');
+    } finally {
+      setChecking(false);
+    }
+  };
+
   return (
     <div style={{
       display: 'flex',
@@ -136,14 +155,63 @@ const PendingApproval: React.FC<PendingApprovalProps> = ({ logout }) => {
           <ul style={{ paddingLeft: '1.2rem', margin: 0, opacity: 0.9, display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
             <li>Contacta al Administrador de Finanzas o Director Nacional de la CNBV.</li>
             <li>Solicita la aprobación de tu correo institucional.</li>
-            <li>Una vez aprobado, recarga esta página para ingresar automáticamente.</li>
+            <li>Una vez aprobado, pulsa el botón **Verificar Estado de Acceso** o recarga esta página.</li>
           </ul>
         </div>
+
+        {feedback && (
+          <div style={{
+            marginTop: '1.5rem',
+            fontSize: '0.85rem',
+            color: 'var(--accent)',
+            backgroundColor: 'rgba(0, 143, 166, 0.08)',
+            border: '1px solid var(--accent)',
+            borderRadius: 'var(--radius-sm)',
+            padding: '0.75rem',
+            textAlign: 'center',
+            animation: 'fadeInUp 0.3s ease'
+          }}>
+            📢 {feedback}
+          </div>
+        )}
+
+        <button 
+          onClick={handleCheckStatus}
+          className="btn btn-primary" 
+          disabled={checking}
+          style={{ 
+            width: '100%', 
+            marginTop: '2rem', 
+            padding: '0.75rem', 
+            fontWeight: 600,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '0.5rem'
+          }}
+        >
+          {checking ? (
+            <>
+              <span style={{
+                width: '16px',
+                height: '16px',
+                border: '2px solid rgba(255,255,255,0.3)',
+                borderTopColor: '#ffffff',
+                borderRadius: '50%',
+                display: 'inline-block',
+                animation: 'spin 0.8s linear infinite'
+              }}></span>
+              <span>Verificando...</span>
+            </>
+          ) : (
+            '🔄 Verificar Estado de Acceso'
+          )}
+        </button>
 
         <button 
           onClick={logout}
           className="btn btn-outline" 
-          style={{ width: '100%', marginTop: '2.5rem', padding: '0.75rem', fontWeight: 600 }}
+          style={{ width: '100%', marginTop: '0.75rem', padding: '0.75rem', fontWeight: 600 }}
         >
           Cerrar Sesión / Volver
         </button>

@@ -196,6 +196,10 @@ CREATE POLICY "Permitir lectura de perfiles a todos los usuarios autenticados"
 CREATE POLICY "Permitir actualización de perfil propio" 
     ON public.usuarios_perfiles FOR UPDATE TO authenticated USING (auth.uid() = id);
 
+CREATE POLICY "Permitir a administradores actualizar cualquier perfil" 
+    ON public.usuarios_perfiles FOR UPDATE TO authenticated 
+    USING (EXISTS (SELECT 1 FROM public.usuarios_perfiles WHERE id = auth.uid() AND rol = 'administrador'));
+
 -- Políticas para proyectos
 CREATE POLICY "Permitir lectura de proyectos a todos los autenticados"
     ON public.proyectos FOR SELECT TO authenticated USING (true);
