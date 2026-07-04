@@ -17,7 +17,7 @@ const MainAppContent: React.FC = () => {
   // Configurar la pestaña por defecto basada en el rol del usuario
   useEffect(() => {
     if (profile) {
-      if (profile.rol === 'coordinador') {
+      if (['coordinador', 'auxiliar_campo'].includes(profile.rol)) {
         setActiveTab('field-entry');
       } else {
         setActiveTab('dashboard');
@@ -67,17 +67,17 @@ const MainAppContent: React.FC = () => {
   const renderContent = () => {
     switch (activeTab) {
       case 'dashboard':
-        return ['administrador', 'auditor'].includes(profile.rol) ? <Dashboard /> : <AccessDenied />;
+        return ['administrador', 'auditor', 'director', 'donante'].includes(profile.rol) ? <Dashboard /> : <AccessDenied />;
       case 'reconciliation':
         return ['administrador', 'auditor'].includes(profile.rol) ? <Reconciliation /> : <AccessDenied />;
       case 'audit':
         return ['administrador', 'auditor'].includes(profile.rol) ? <Audit /> : <AccessDenied />;
       case 'budgets':
-        return ['administrador', 'auditor'].includes(profile.rol) ? <BudgetsAndReports /> : <AccessDenied />;
+        return ['administrador', 'auditor', 'director'].includes(profile.rol) ? <BudgetsAndReports /> : <AccessDenied />;
       case 'field-entry':
-        return ['administrador', 'coordinador'].includes(profile.rol) ? <MobileEntry /> : <AccessDenied />;
+        return ['administrador', 'coordinador', 'director', 'auxiliar_campo'].includes(profile.rol) ? <MobileEntry /> : <AccessDenied />;
       case 'requisitions':
-        return ['administrador', 'auditor', 'coordinador'].includes(profile.rol) ? <RequisitionsManager /> : <AccessDenied />;
+        return ['administrador', 'coordinador', 'director', 'auxiliar_campo'].includes(profile.rol) ? <RequisitionsManager /> : <AccessDenied />;
       case 'users':
         return profile.rol === 'administrador' ? <UserManagement /> : <AccessDenied />;
       default:

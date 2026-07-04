@@ -303,7 +303,10 @@ export const UserManagement: React.FC = () => {
                           onChange={e => handleRoleChange(user.id, e.target.value as UserRole)}
                         >
                           <option value="coordinador">Coordinador de Campo</option>
+                          <option value="auxiliar_campo">Auxiliar de Campo</option>
                           <option value="auditor">Auditor (Finanzas)</option>
+                          <option value="director">Director</option>
+                          <option value="donante">Donante</option>
                           <option value="administrador">Administrador</option>
                         </select>
                       </div>

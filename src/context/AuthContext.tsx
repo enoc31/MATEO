@@ -3,7 +3,7 @@ import type { User } from '@supabase/supabase-js';
 import { supabase } from '../supabaseClient';
 import { isSimulationMode } from '../services/api';
 
-export type UserRole = 'administrador' | 'auditor' | 'coordinador';
+export type UserRole = 'administrador' | 'auditor' | 'coordinador' | 'director' | 'auxiliar_campo' | 'donante';
 
 export interface UserProfile {
   id: string;

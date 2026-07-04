@@ -17,7 +17,7 @@ export const RequisitionDetailsModal: React.FC<ModalProps> = ({ req, onClose, on
 
   if (!profile) return null;
 
-  const isAuditorOrAdmin = ['administrador', 'auditor'].includes(profile.rol);
+  const isAuditorOrAdmin = ['administrador', 'director'].includes(profile.rol);
   
   // Regla: No auto-aprobación
   const isSolicitante = req.solicitante_id === profile.id;
@@ -27,7 +27,7 @@ export const RequisitionDetailsModal: React.FC<ModalProps> = ({ req, onClose, on
 
   const handleApprove = async () => {
     if (yaAprobadoPorMi) {
-      alert('Ya diste tu visto bueno en la primera fase. Se requiere la firma de un Auditor o Administrador distinto.');
+      alert('Ya diste tu visto bueno en la primera fase. Se requiere la firma de un Director o Administrador distinto.');
       return;
     }
     setSubmitting(true);
@@ -117,13 +117,13 @@ export const RequisitionDetailsModal: React.FC<ModalProps> = ({ req, onClose, on
 
         {isAuditorOrAdmin && req.estado.startsWith('pendiente') && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-            {isSolicitante ? (
+             {isSolicitante ? (
               <div style={{ 
                 fontSize: '0.8rem', color: 'var(--accent)', 
                 backgroundColor: 'rgba(0,143,166,0.06)', padding: '0.75rem', 
                 borderRadius: 'var(--radius-sm)', border: '1px solid var(--accent)' 
               }}>
-                ℹ️ Como creador de esta requisición, no puedes auto-aprobarla. Debe ser firmada por otros dos auditores/administradores.
+                ℹ️ Como creador de esta requisición, no puedes auto-aprobarla. Debe ser firmada por otros dos directores/administradores.
               </div>
             ) : null}
 

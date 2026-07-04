@@ -109,8 +109,11 @@ export const Login: React.FC = () => {
       profiles[`user-${role}`] = {
         id: `user-${role}`,
         email: `${role}@cnbv.org`,
-        nombre_completo: role === 'administrador' ? 'Director Nacional CNBV' : 
-                         role === 'auditor' ? 'Auditor de Finanzas CNBV' : 'Coordinador Ayuda Apure',
+        nombre_completo: role === 'administrador' ? 'Director Nacional CNBV (Admin)' : 
+                         role === 'director' ? 'Dr. Mateo Silva (Director)' :
+                         role === 'auditor' ? 'Auditor de Finanzas CNBV' : 
+                         role === 'auxiliar_campo' ? 'Pedro Páez (Auxiliar de Campo)' : 
+                         role === 'donante' ? 'Donante Internacional (Alianza)' : 'Coordinador Ayuda Apure',
         rol: role,
         aprobado: true, // Los preconfigurados ya están aprobados
         created_at: new Date().toISOString()
@@ -327,7 +330,10 @@ export const Login: React.FC = () => {
                 disabled={loading}
               >
                 <option value="coordinador">Coordinador de Campo (Carga de comprobantes)</option>
+                <option value="auxiliar_campo">Auxiliar de Campo (Carga y Requisiciones)</option>
                 <option value="auditor">Auditor (Finanzas, Conciliación y Reportes)</option>
+                <option value="director">Director (Reportes, Requisición y Carga)</option>
+                <option value="donante">Donante (Ver Tableros)</option>
                 <option value="administrador">Administrador (Control Total)</option>
               </select>
             </div>
@@ -363,32 +369,59 @@ export const Login: React.FC = () => {
             )}
 
             {isSimulationMode ? (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginBottom: '1.5rem' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem', marginBottom: '1.5rem' }}>
                 <button 
                   onClick={() => handleSimulatedLogin('administrador')} 
                   disabled={loading}
                   className="btn btn-primary" 
-                  style={{ width: '100%', padding: '0.75rem' }}
+                  style={{ padding: '0.6rem', fontSize: '0.8rem', gridColumn: 'span 2' }}
                 >
-                  Entrar como Administrador (Director)
+                  ⭐ Super Admin (Control Total)
+                </button>
+                
+                <button 
+                  onClick={() => handleSimulatedLogin('director')} 
+                  disabled={loading}
+                  className="btn btn-secondary" 
+                  style={{ padding: '0.6rem', fontSize: '0.8rem' }}
+                >
+                  👔 Director
                 </button>
                 
                 <button 
                   onClick={() => handleSimulatedLogin('auditor')} 
                   disabled={loading}
-                  className="btn btn-secondary" 
-                  style={{ width: '100%', padding: '0.75rem' }}
+                  className="btn btn-outline" 
+                  style={{ padding: '0.6rem', fontSize: '0.8rem' }}
                 >
-                  Entrar como Auditor (Finanzas)
+                  ⚖️ Auditor
                 </button>
 
                 <button 
                   onClick={() => handleSimulatedLogin('coordinador')} 
                   disabled={loading}
                   className="btn btn-outline" 
-                  style={{ width: '100%', padding: '0.75rem' }}
+                  style={{ padding: '0.6rem', fontSize: '0.8rem' }}
                 >
-                  Entrar como Coordinador de Campo
+                  🚜 Coordinador
+                </button>
+
+                <button 
+                  onClick={() => handleSimulatedLogin('auxiliar_campo')} 
+                  disabled={loading}
+                  className="btn btn-outline" 
+                  style={{ padding: '0.6rem', fontSize: '0.8rem' }}
+                >
+                  🤝 Auxiliar Campo
+                </button>
+
+                <button 
+                  onClick={() => handleSimulatedLogin('donante')} 
+                  disabled={loading}
+                  className="btn btn-outline" 
+                  style={{ padding: '0.6rem', fontSize: '0.8rem', gridColumn: 'span 2' }}
+                >
+                  🎁 Donante (Solo Tableros)
                 </button>
               </div>
             ) : null}

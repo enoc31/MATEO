@@ -32,10 +32,10 @@ export const RequisitionsManager: React.FC = () => {
 
   if (!profile) return null;
 
-  const isAuditorOrAdmin = ['administrador', 'auditor'].includes(profile.rol);
+  const isAuditorOrAdmin = ['administrador', 'director'].includes(profile.rol);
 
-  // Filtrar según rol: el coordinador solo ve las suyas
-  const myRequisitions = profile.rol === 'coordinador' 
+  // Filtrar según rol: coordinadores y auxiliares de campo solo ven las suyas
+  const myRequisitions = ['coordinador', 'auxiliar_campo'].includes(profile.rol) 
     ? requisitions.filter(r => r.solicitante_id === profile.id)
     : requisitions;
 
@@ -72,7 +72,7 @@ export const RequisitionsManager: React.FC = () => {
           </p>
         </div>
         
-        {profile.rol === 'coordinador' && (
+        {['coordinador', 'auxiliar_campo', 'director'].includes(profile.rol) && (
           <button className="btn btn-primary" onClick={() => setShowCreateForm(true)} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <span>➕</span> Nueva Solicitud
           </button>

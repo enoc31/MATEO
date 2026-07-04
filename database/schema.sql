@@ -7,7 +7,7 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 -- =========================================================================
 -- 1. ENUMS Y ROLES
 -- =========================================================================
-CREATE TYPE user_role AS ENUM ('administrador', 'auditor', 'coordinador');
+CREATE TYPE user_role AS ENUM ('administrador', 'auditor', 'coordinador', 'director', 'auxiliar_campo', 'donante');
 CREATE TYPE expense_status AS ENUM ('pendiente_soporte', 'pendiente_revision', 'aprobado', 'rechazado');
 CREATE TYPE transaction_status AS ENUM ('pendiente', 'conciliado');
 CREATE TYPE requisition_status AS ENUM ('pendiente_aprobacion_1', 'pendiente_aprobacion_2', 'aprobada_ejecucion', 'rechazada');
@@ -235,13 +235,13 @@ CREATE OR REPLACE TRIGGER tr_update_presupuesto_ejecutado
 CREATE OR REPLACE FUNCTION public.check_requisition_rules()
 RETURNS TRIGGER AS $$
 BEGIN
-    -- Validar que el primer aprobador tenga rol autorizado
+    -- Validar que el primer aprobador tenga rol autorizado (Administrador o Director)
     IF NEW.validador_1_id IS NOT NULL THEN
         IF NOT EXISTS (
             SELECT 1 FROM public.usuarios_perfiles 
-            WHERE id = NEW.validador_1_id AND rol IN ('administrador', 'auditor')
+            WHERE id = NEW.validador_1_id AND rol IN ('administrador', 'director')
         ) THEN
-            RAISE EXCEPTION 'El primer validador debe tener rol Administrador o Auditor.';
+            RAISE EXCEPTION 'El primer validador debe tener rol Administrador o Director.';
         END IF;
 
         -- No auto-aprobación
@@ -254,9 +254,9 @@ BEGIN
     IF NEW.validador_2_id IS NOT NULL THEN
         IF NOT EXISTS (
             SELECT 1 FROM public.usuarios_perfiles 
-            WHERE id = NEW.validador_2_id AND rol IN ('administrador', 'auditor')
+            WHERE id = NEW.validador_2_id AND rol IN ('administrador', 'director')
         ) THEN
-            RAISE EXCEPTION 'El segundo validador debe tener rol Administrador o Auditor.';
+            RAISE EXCEPTION 'El segundo validador debe tener rol Administrador o Director.';
         END IF;
 
         -- No auto-aprobación
