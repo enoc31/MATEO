@@ -2,6 +2,16 @@ import { supabase } from '../supabaseClient';
 import type { UserRole } from '../context/AuthContext';
 
 // Interfaces del Dominio
+export interface Donante {
+  id: string;
+  nombre: string;
+  tipo: 'nacional' | 'extranjero';
+  pais?: string;
+  contacto?: string;
+  email?: string;
+  activo: boolean;
+}
+
 export interface Project {
   id: string;
   nombre: string;
@@ -10,6 +20,7 @@ export interface Project {
   fecha_inicio: string;
   fecha_fin: string;
   overhead_porcentaje?: number;
+  donante_id?: string | null;
 }
 
 export interface ExpenseCategory {
@@ -86,6 +97,16 @@ export const isSimulationMode = !isSupabaseConfigured();
 // =========================================================================
 // MOCK DATA PARA MODO SIMULACIÓN (INSPIRADO EN CNBV)
 // =========================================================================
+const INITIAL_DONANTES: Donante[] = [
+  // Nacionales
+  { id: 'don-nac-1', nombre: 'Fondo Lazos de Amor', tipo: 'nacional', pais: 'Venezuela', contacto: '', email: '', activo: true },
+  // Extranjeros
+  { id: 'don-ext-1', nombre: 'Alianza Bautista Mundial', tipo: 'extranjero', pais: 'Internacional', contacto: '', email: '', activo: true },
+  { id: 'don-ext-2', nombre: 'Tearfund', tipo: 'extranjero', pais: 'Reino Unido', contacto: '', email: '', activo: true },
+  { id: 'don-ext-3', nombre: 'Junta Misionera Internacional', tipo: 'extranjero', pais: 'Estados Unidos', contacto: '', email: '', activo: true },
+  { id: 'don-ext-4', nombre: 'Convención Bautista Europea', tipo: 'extranjero', pais: 'Europa', contacto: '', email: '', activo: true }
+];
+
 const INITIAL_PROJECTS: Project[] = [
   {
     id: 'proj-1',
@@ -94,7 +115,8 @@ const INITIAL_PROJECTS: Project[] = [
     activo: true,
     fecha_inicio: '2026-01-01',
     fecha_fin: '2026-12-31',
-    overhead_porcentaje: 7.00
+    overhead_porcentaje: 7.00,
+    donante_id: 'don-ext-1'
   },
   {
     id: 'proj-2',
@@ -103,7 +125,8 @@ const INITIAL_PROJECTS: Project[] = [
     activo: true,
     fecha_inicio: '2026-02-15',
     fecha_fin: '2026-08-31',
-    overhead_porcentaje: 8.50
+    overhead_porcentaje: 8.50,
+    donante_id: 'don-ext-3'
   },
   {
     id: 'proj-3',
@@ -112,7 +135,8 @@ const INITIAL_PROJECTS: Project[] = [
     activo: true,
     fecha_inicio: '2026-03-01',
     fecha_fin: '2026-09-30',
-    overhead_porcentaje: 10.00
+    overhead_porcentaje: 10.00,
+    donante_id: 'don-nac-1'
   }
 ];
 
@@ -252,6 +276,9 @@ const INITIAL_DONATIONS: Donation[] = [
 
 // Helper para inicializar LocalStorage en modo simulación
 const initLocalStorage = () => {
+  if (!localStorage.getItem('cnbv_donantes')) {
+    localStorage.setItem('cnbv_donantes', JSON.stringify(INITIAL_DONANTES));
+  }
   if (!localStorage.getItem('cnbv_projects')) {
     localStorage.setItem('cnbv_projects', JSON.stringify(INITIAL_PROJECTS));
   }
@@ -286,6 +313,31 @@ if (isSimulationMode) {
 // SERVICIOS / MÉTODOS DE LA API (SUPABASE O LOCALSTORAGE)
 // =========================================================================
 export const api = {
+  // --- DONANTES ---
+  getDonantes: async (): Promise<Donante[]> => {
+    if (!isSimulationMode) {
+      const { data, error } = await supabase.from('donantes').select('*').order('nombre');
+      if (error) throw error;
+      return data as Donante[];
+    } else {
+      return JSON.parse(localStorage.getItem('cnbv_donantes') || '[]');
+    }
+  },
+
+  createDonante: async (donante: Omit<Donante, 'id'>): Promise<Donante> => {
+    if (!isSimulationMode) {
+      const { data, error } = await supabase.from('donantes').insert([donante]).select().single();
+      if (error) throw error;
+      return data as Donante;
+    } else {
+      const donantes = JSON.parse(localStorage.getItem('cnbv_donantes') || '[]');
+      const newDonante = { ...donante, id: `don-${Date.now()}` };
+      donantes.push(newDonante);
+      localStorage.setItem('cnbv_donantes', JSON.stringify(donantes));
+      return newDonante;
+    }
+  },
+
   // --- PROYECTOS ---
   getProjects: async (): Promise<Project[]> => {
     if (!isSimulationMode) {
