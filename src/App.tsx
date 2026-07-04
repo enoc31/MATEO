@@ -8,6 +8,7 @@ import { Audit } from './features/audit/Audit';
 import { BudgetsAndReports } from './features/budgets/BudgetsAndReports';
 import { MobileEntry } from './features/mobile-entry/MobileEntry';
 import { UserManagement } from './features/users/UserManagement';
+import { RequisitionsManager } from './features/requisitions/RequisitionsManager';
 
 const MainAppContent: React.FC = () => {
   const { profile, loading, logout, refreshProfile } = useAuth();
@@ -75,6 +76,8 @@ const MainAppContent: React.FC = () => {
         return ['administrador', 'auditor'].includes(profile.rol) ? <BudgetsAndReports /> : <AccessDenied />;
       case 'field-entry':
         return ['administrador', 'coordinador'].includes(profile.rol) ? <MobileEntry /> : <AccessDenied />;
+      case 'requisitions':
+        return ['administrador', 'auditor', 'coordinador'].includes(profile.rol) ? <RequisitionsManager /> : <AccessDenied />;
       case 'users':
         return profile.rol === 'administrador' ? <UserManagement /> : <AccessDenied />;
       default:

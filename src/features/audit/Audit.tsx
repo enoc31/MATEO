@@ -11,6 +11,7 @@ export const Audit: React.FC = () => {
   const [categories, setCategories] = useState<ExpenseCategory[]>([]);
   const [filterStatus, setFilterStatus] = useState<string>('todos');
   const [selectedExp, setSelectedExp] = useState<ExpenseReceipt | null>(null);
+  const [activeDocTab, setActiveDocTab] = useState<'recibo' | 'pago'>('recibo');
   
   // Auditoria States
   const [auditComment, setAuditComment] = useState('');
@@ -45,6 +46,7 @@ export const Audit: React.FC = () => {
 
   const handleOpenAudit = (exp: ExpenseReceipt) => {
     setSelectedExp(exp);
+    setActiveDocTab('recibo');
     setAuditComment(exp.comentarios_auditoria || '');
     setChecklist({
       facturaValida: exp.estado === 'aprobado',
@@ -234,42 +236,121 @@ export const Audit: React.FC = () => {
             {/* Contenido en Doble Columna */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '2rem', marginBottom: '1.5rem', flex: 1, minHeight: 0 }}>
               
-              {/* Columna 1: Vista de Factura/Recibo */}
+              {/* Columna 1: Vista de Soportes (Factura / Pago) */}
               <div style={{ display: 'flex', flexDirection: 'column' }}>
-                <span className="form-label" style={{ fontWeight: 600, marginBottom: '0.5rem' }}>Factura / Evidencia Digital de Compra:</span>
-                {selectedExp.url_comprobante ? (
-                  <div style={{ 
-                    flex: 1, 
-                    border: '1px solid var(--border-color)', 
-                    borderRadius: 'var(--radius-md)', 
-                    overflow: 'hidden', 
-                    backgroundColor: '#000000',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    minHeight: '250px'
-                  }}>
-                    <img 
-                      src={selectedExp.url_comprobante} 
-                      alt="Comprobante de Gasto" 
-                      style={{ maxWidth: '100%', maxHeight: '400px', objectFit: 'contain' }}
-                    />
-                  </div>
+                <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.75rem' }}>
+                  <button
+                    onClick={() => setActiveDocTab('recibo')}
+                    style={{
+                      flex: 1,
+                      padding: '0.5rem',
+                      borderRadius: 'var(--radius-sm)',
+                      border: '1px solid var(--border-color)',
+                      backgroundColor: activeDocTab === 'recibo' ? 'var(--primary)' : 'white',
+                      color: activeDocTab === 'recibo' ? 'white' : 'var(--neutral-dark)',
+                      cursor: 'pointer',
+                      fontWeight: 600,
+                      fontSize: '0.85rem',
+                      transition: 'all var(--transition-fast)'
+                    }}
+                  >
+                    📄 Factura o Recibo
+                  </button>
+                  <button
+                    onClick={() => setActiveDocTab('pago')}
+                    style={{
+                      flex: 1,
+                      padding: '0.5rem',
+                      borderRadius: 'var(--radius-sm)',
+                      border: '1px solid var(--border-color)',
+                      backgroundColor: activeDocTab === 'pago' ? 'var(--primary)' : 'white',
+                      color: activeDocTab === 'pago' ? 'white' : 'var(--neutral-dark)',
+                      cursor: 'pointer',
+                      fontWeight: 600,
+                      fontSize: '0.85rem',
+                      transition: 'all var(--transition-fast)'
+                    }}
+                  >
+                    💳 Comprobante de Pago
+                  </button>
+                </div>
+
+                {activeDocTab === 'recibo' ? (
+                  <>
+                    <span className="form-label" style={{ fontWeight: 600, marginBottom: '0.5rem', fontSize: '0.85rem' }}>Factura / Evidencia Digital de Compra:</span>
+                    {selectedExp.url_comprobante ? (
+                      <div style={{ 
+                        flex: 1, 
+                        border: '1px solid var(--border-color)', 
+                        borderRadius: 'var(--radius-md)', 
+                        overflow: 'hidden', 
+                        backgroundColor: '#000000',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        minHeight: '280px'
+                      }}>
+                        <img 
+                          src={selectedExp.url_comprobante} 
+                          alt="Factura o Recibo" 
+                          style={{ maxWidth: '100%', maxHeight: '400px', objectFit: 'contain' }}
+                        />
+                      </div>
+                    ) : (
+                      <div style={{ 
+                        flex: 1, 
+                        border: '1px dashed var(--border-color)', 
+                        borderRadius: 'var(--radius-md)', 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        justifyContent: 'center', 
+                        backgroundColor: 'var(--neutral-light)', 
+                        color: 'var(--neutral-dark)',
+                        opacity: 0.7,
+                        minHeight: '280px'
+                      }}>
+                        <span>⚠️ No se cargó ninguna foto del recibo físico.</span>
+                      </div>
+                    )}
+                  </>
                 ) : (
-                  <div style={{ 
-                    flex: 1, 
-                    border: '1px dashed var(--border-color)', 
-                    borderRadius: 'var(--radius-md)', 
-                    display: 'flex', 
-                    alignItems: 'center', 
-                    justifyContent: 'center', 
-                    backgroundColor: 'var(--neutral-light)', 
-                    color: 'var(--neutral-dark)',
-                    opacity: 0.7,
-                    minHeight: '250px'
-                  }}>
-                    <span>⚠️ No se cargó ninguna foto del recibo físico.</span>
-                  </div>
+                  <>
+                    <span className="form-label" style={{ fontWeight: 600, marginBottom: '0.5rem', fontSize: '0.85rem' }}>Comprobante de Pago (Transferencia / Captura):</span>
+                    {selectedExp.url_pago ? (
+                      <div style={{ 
+                        flex: 1, 
+                        border: '1px solid var(--border-color)', 
+                        borderRadius: 'var(--radius-md)', 
+                        overflow: 'hidden', 
+                        backgroundColor: '#000000',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        minHeight: '280px'
+                      }}>
+                        <img 
+                          src={selectedExp.url_pago} 
+                          alt="Comprobante de Pago" 
+                          style={{ maxWidth: '100%', maxHeight: '400px', objectFit: 'contain' }}
+                        />
+                      </div>
+                    ) : (
+                      <div style={{ 
+                        flex: 1, 
+                        border: '1px dashed var(--border-color)', 
+                        borderRadius: 'var(--radius-md)', 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        justifyContent: 'center', 
+                        backgroundColor: 'var(--neutral-light)', 
+                        color: 'var(--neutral-dark)',
+                        opacity: 0.7,
+                        minHeight: '280px'
+                      }}>
+                        <span>⚠️ No se cargó ninguna foto del comprobante de pago.</span>
+                      </div>
+                    )}
+                  </>
                 )}
               </div>
 

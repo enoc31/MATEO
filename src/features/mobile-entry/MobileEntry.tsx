@@ -1,7 +1,27 @@
 import React, { useState, useEffect } from 'react';
-import { api } from '../../services/api';
-import type { Project, ExpenseCategory, ExpenseReceipt } from '../../services/api';
+import { api, requisitionsApi } from '../../services/api';
+import type { Project, ExpenseCategory, ExpenseReceipt, Requisition } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
+
+// Helper icons for projects
+const getProjectIcon = (name: string) => {
+  const n = name.toLowerCase();
+  if (n.includes('alimentación') || n.includes('comedor')) return '🍲';
+  if (n.includes('médica') || n.includes('salud') || n.includes('medicina')) return '🏥';
+  if (n.includes('albergue') || n.includes('refugio') || n.includes('logística')) return '🏠';
+  return '📋';
+};
+
+// Helper icons for categories
+const getCategoryIcon = (name: string) => {
+  const n = name.toLowerCase();
+  if (n.includes('aliment')) return '🍎';
+  if (n.includes('medica') || n.includes('insumo')) return '💊';
+  if (n.includes('transp') || n.includes('combust')) return '🚚';
+  if (n.includes('logis') || n.includes('alberg')) return '🏠';
+  if (n.includes('operacion') || n.includes('gasto')) return '⚙️';
+  return '💵';
+};
 
 export const MobileEntry: React.FC = () => {
   const { profile } = useAuth();
@@ -11,29 +31,49 @@ export const MobileEntry: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
-  // Estados del Formulario
+  // Form states
   const [projectId, setProjectId] = useState('');
   const [categoryId, setCategoryId] = useState('');
   const [monto, setMonto] = useState('');
   const [descripcion, setDescripcion] = useState('');
   const [fechaGasto, setFechaGasto] = useState(new Date().toISOString().split('T')[0]);
-  const [photoFile, setPhotoFile] = useState<File | null>(null);
-  const [photoPreview, setPhotoPreview] = useState<string | null>(null);
+  const [solicitudId, setSolicitudId] = useState('');
+  
+  // Requisitions
+  const [approvedRequisitions, setApprovedRequisitions] = useState<Requisition[]>([]);
+  
+  // Document 1: Factura o Recibo
+  const [doc1File, setDoc1File] = useState<File | null>(null);
+  const [doc1Preview, setDoc1Preview] = useState<string | null>(null);
+  
+  // Document 2: Comprobante de Pago
+  const [doc2File, setDoc2File] = useState<File | null>(null);
+  const [doc2Preview, setDoc2Preview] = useState<string | null>(null);
 
   const loadData = async () => {
     if (!profile) return;
     setLoading(true);
     try {
-      const [projList, catList, expList] = await Promise.all([
+      const [projList, catList, expList, reqList] = await Promise.all([
         api.getProjects(),
         api.getCategories(),
-        api.getExpenses()
+        api.getExpenses(),
+        requisitionsApi.getRequisitions()
       ]);
       setProjects(projList.filter(p => p.activo));
       setCategories(catList);
       
-      // Mostrar solo los egresos creados por este coordinador
-      setRecentExpenses(expList.filter(e => e.solicitante_id === profile.id));
+      // Filter expenses created by this coordinator
+      const myExpenses = expList.filter(e => e.solicitante_id === profile.id);
+      setRecentExpenses(myExpenses);
+
+      // Filter approved requisitions that do not have an executed expense yet
+      const activeReqs = reqList.filter(r => 
+        r.solicitante_id === profile.id && 
+        r.estado === 'aprobada_ejecucion' &&
+        !expList.some(e => e.solicitud_id === r.id)
+      );
+      setApprovedRequisitions(activeReqs);
     } catch (err) {
       console.error(err);
     } finally {
@@ -45,33 +85,67 @@ export const MobileEntry: React.FC = () => {
     loadData();
   }, [profile]);
 
-  // Manejo de la captura de foto
-  const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Handle Photo Capture/Upload helper
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, setFile: (f: File | null) => void, setPreview: (p: string | null) => void) => {
     const file = e.target.files?.[0];
     if (file) {
-      setPhotoFile(file);
-      setPhotoPreview(URL.createObjectURL(file));
+      setFile(file);
+      // For low-bandwidth preview and offline fallback, URL.createObjectURL is fast and requires no network
+      setPreview(URL.createObjectURL(file));
     }
   };
 
-  // Limpiar formulario
+  // Reset form helper
   const resetForm = () => {
     setProjectId('');
     setCategoryId('');
     setMonto('');
     setDescripcion('');
     setFechaGasto(new Date().toISOString().split('T')[0]);
-    setPhotoFile(null);
-    setPhotoPreview(null);
+    setSolicitudId('');
+    setDoc1File(null);
+    setDoc1Preview(null);
+    setDoc2File(null);
+    setDoc2Preview(null);
   };
 
-  // Enviar el gasto
+  const handleSelectRequisition = (reqId: string) => {
+    setSolicitudId(reqId);
+    if (reqId) {
+      const selected = approvedRequisitions.find(r => r.id === reqId);
+      if (selected) {
+        setProjectId(selected.proyecto_id);
+        setCategoryId(selected.categoria_id);
+        setMonto(selected.monto_solicitado.toString());
+        setDescripcion(selected.motivo);
+      }
+    } else {
+      setProjectId('');
+      setCategoryId('');
+      setMonto('');
+      setDescripcion('');
+    }
+  };
+
+  // Submit expense
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!profile) return;
     
-    if (!projectId || !categoryId || !monto || !descripcion) {
-      alert('Por favor complete todos los campos obligatorios.');
+    if (!projectId) {
+      alert('Por favor selecciona un Proyecto.');
+      return;
+    }
+    if (!categoryId) {
+      alert('Por favor selecciona una Categoría de gasto.');
+      return;
+    }
+    if (!monto || parseFloat(monto) <= 0) {
+      alert('Por favor ingresa un monto válido mayor a 0.');
+      return;
+    }
+    if (!descripcion) {
+      alert('Por favor ingresa una descripción del gasto.');
       return;
     }
 
@@ -82,13 +156,14 @@ export const MobileEntry: React.FC = () => {
         categoria_id: categoryId,
         solicitante_id: profile.id,
         solicitante_nombre: profile.nombre_completo,
+        solicitud_id: solicitudId || null,
         monto: parseFloat(monto),
         descripcion: descripcion,
         fecha_gasto: fechaGasto,
-        url_comprobante: photoPreview
-      }, photoFile || undefined);
+        url_comprobante: doc1Preview // fallback simulated URL
+      }, doc1File || undefined, doc2File || undefined);
 
-      alert('Gasto cargado exitosamente. Queda pendiente para revisión de auditoría.');
+      alert('¡Gasto guardado exitosamente! Ha quedado en revisión para auditoría.');
       resetForm();
       await loadData();
     } catch (err) {
@@ -113,219 +188,456 @@ export const MobileEntry: React.FC = () => {
   };
 
   if (loading && recentExpenses.length === 0) {
-    return <div>Cargando cargador de gastos...</div>;
+    return (
+      <div style={{ textAlign: 'center', padding: '3rem', color: 'var(--primary)' }}>
+        <span style={{ fontSize: '2rem', display: 'block', marginBottom: '1rem' }}>🔄</span>
+        <strong>Cargando formulario simplificado...</strong>
+      </div>
+    );
   }
 
   return (
-    <div className="animate-fade-in-up" style={{ maxWidth: '600px', margin: '0 auto' }}>
+    <div className="animate-fade-in-up" style={{ maxWidth: '600px', margin: '0 auto', paddingBottom: '3rem' }}>
       
-      {/* Saludo y Cabecera Móvil */}
+      {/* Header Info */}
       <div style={{ marginBottom: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div>
-          <h2 style={{ fontSize: '1.4rem', color: 'var(--primary)', fontWeight: 700 }}>Carga de Comprobantes</h2>
-          <p style={{ fontSize: '0.8rem', opacity: 0.8 }}>Ingresa gastos de ayuda humanitaria desde el sitio.</p>
+          <h2 style={{ fontSize: '1.5rem', color: 'var(--primary)', fontWeight: 800 }}>Carga Rápida de Gastos</h2>
+          <p style={{ fontSize: '0.85rem', opacity: 0.8 }}>Diseñado para ingreso fácil en campo 🚜</p>
         </div>
-        <span style={{ fontSize: '1.8rem' }}>📲</span>
       </div>
 
-      {/* Formulario de Carga */}
-      <div className="card" style={{ marginBottom: '2rem', padding: '1.5rem' }}>
-        <h3 className="card-title" style={{ fontSize: '1rem', marginBottom: '1rem' }}>Registrar Gasto de Campo</h3>
-        
+      {/* Simplified Entry Form */}
+      <div className="card" style={{ marginBottom: '2.5rem', padding: '1.5rem', borderRadius: 'var(--radius-lg)' }}>
         <form onSubmit={handleSubmit}>
-          {/* Proyecto */}
-          <div className="form-group">
-            <label className="form-label" htmlFor="project">Proyecto Asignado *</label>
-            <select 
-              id="project"
-              className="form-input form-select"
-              value={projectId}
-              onChange={e => setProjectId(e.target.value)}
-              required
-              disabled={submitting}
-            >
-              <option value="">Selecciona el Proyecto</option>
-              {projects.map(p => <option key={p.id} value={p.id}>{p.nombre}</option>)}
-            </select>
-          </div>
-
-          {/* Categoría */}
-          <div className="form-group">
-            <label className="form-label" htmlFor="category">Categoría de Gasto *</label>
-            <select 
-              id="category"
-              className="form-input form-select"
-              value={categoryId}
-              onChange={e => setCategoryId(e.target.value)}
-              required
-              disabled={submitting}
-            >
-              <option value="">Selecciona la Categoría</option>
-              {categories.map(c => <option key={c.id} value={c.id}>{c.nombre}</option>)}
-            </select>
-          </div>
-
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-            {/* Monto */}
-            <div className="form-group">
-              <label className="form-label" htmlFor="amount">Monto (USD) *</label>
-              <input 
-                id="amount"
-                type="number" 
-                step="0.01" 
-                className="form-input" 
-                placeholder="0.00"
-                value={monto}
-                onChange={e => setMonto(e.target.value)}
-                required
+          
+          {/* STEP 0: REQUISITION LINKING */}
+          {approvedRequisitions.length > 0 && (
+            <div style={{ 
+              marginBottom: '1.5rem', 
+              padding: '1rem', 
+              backgroundColor: 'rgba(0, 143, 166, 0.05)', 
+              border: '1px solid rgba(0, 143, 166, 0.2)', 
+              borderRadius: 'var(--radius-md)' 
+            }}>
+              <label htmlFor="select-solicitud" style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, color: 'var(--accent)', marginBottom: '0.5rem' }}>
+                📋 ¿Esta compra proviene de una solicitud autorizada?
+              </label>
+              <select
+                id="select-solicitud"
+                className="form-input"
+                value={solicitudId}
+                onChange={e => handleSelectRequisition(e.target.value)}
                 disabled={submitting}
-              />
-            </div>
-
-            {/* Fecha */}
-            <div className="form-group">
-              <label className="form-label" htmlFor="date">Fecha del Gasto *</label>
-              <input 
-                id="date"
-                type="date" 
-                className="form-input" 
-                value={fechaGasto}
-                onChange={e => setFechaGasto(e.target.value)}
-                required
-                disabled={submitting}
-              />
-            </div>
-          </div>
-
-          {/* Detalle */}
-          <div className="form-group">
-            <label className="form-label" htmlFor="description">Detalles del Gasto (Destinatarios / Fin) *</label>
-            <textarea 
-              id="description"
-              className="form-input" 
-              rows={3} 
-              placeholder="Ej: Compra de medicamentos para 25 niños de la comunidad..."
-              value={descripcion}
-              onChange={e => setDescripcion(e.target.value)}
-              required
-              disabled={submitting}
-            />
-          </div>
-
-          {/* Cámara / Carga de foto */}
-          <div className="form-group" style={{ marginBottom: '2rem' }}>
-            <label className="form-label">Foto de Factura o Recibo Físico</label>
-            
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', alignItems: 'center' }}>
-              {photoPreview ? (
-                <div style={{ 
-                  position: 'relative', 
-                  width: '100%', 
-                  height: '200px', 
-                  border: '1px solid var(--border-color)', 
-                  borderRadius: 'var(--radius-md)',
-                  overflow: 'hidden'
-                }}>
-                  <img src={photoPreview} alt="Vista Previa" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
-                  <button 
-                    type="button" 
-                    onClick={() => { setPhotoFile(null); setPhotoPreview(null); }}
-                    style={{
-                      position: 'absolute',
-                      top: '0.5rem',
-                      right: '0.5rem',
-                      backgroundColor: 'rgba(239, 68, 68, 0.9)',
-                      color: 'white',
-                      border: 'none',
-                      padding: '0.3rem 0.6rem',
-                      borderRadius: '4px',
-                      cursor: 'pointer',
-                      fontSize: '0.75rem',
-                      fontWeight: 600
-                    }}
-                  >
-                    Eliminar
-                  </button>
+                style={{ borderColor: 'var(--accent)' }}
+              >
+                <option value="">Gasto independiente (Sin solicitud previa)</option>
+                {approvedRequisitions.map(r => (
+                  <option key={r.id} value={r.id}>
+                    {r.proyecto_nombre} - {r.categoria_nombre} (${r.monto_solicitado.toFixed(2)})
+                  </option>
+                ))}
+              </select>
+              {solicitudId && (
+                <div style={{ fontSize: '0.75rem', color: 'var(--accent)', marginTop: '0.4rem', fontWeight: 500 }}>
+                  ✓ Proyecto, categoría y monto pre-cargados desde la solicitud.
                 </div>
-              ) : (
-                <label style={{
-                  width: '100%',
-                  height: '100px',
-                  border: '2px dashed var(--primary)',
-                  borderRadius: 'var(--radius-md)',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  cursor: 'pointer',
-                  backgroundColor: 'rgba(47, 90, 174, 0.02)',
-                  transition: 'background-color var(--transition-fast)'
-                }}>
-                  <span style={{ fontSize: '1.5rem' }}>📷</span>
-                  <span style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--primary)', marginTop: '0.25rem' }}>
-                    Tomar Foto o Cargar Imagen
-                  </span>
-                  {/* Atributo capture="environment" abre la cámara de inmediato en móviles */}
-                  <input 
-                    type="file" 
-                    accept="image/*" 
-                    capture="environment" 
-                    onChange={handlePhotoChange} 
-                    style={{ display: 'none' }} 
-                  />
-                </label>
               )}
             </div>
+          )}
+
+          {/* STEP 1: PROJECT SELECTION */}
+          <div style={{ marginBottom: '1.5rem' }}>
+            <span style={{ display: 'block', fontSize: '0.9rem', fontWeight: 700, color: 'var(--primary)', marginBottom: '0.75rem' }}>
+              1. Selecciona el Proyecto Asignado *
+            </span>
+            
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+              {projects.map(p => {
+                const isSelected = projectId === p.id;
+                return (
+                  <button
+                    key={p.id}
+                    type="button"
+                    onClick={() => setProjectId(p.id)}
+                    disabled={submitting}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      padding: '0.85rem 1rem',
+                      borderRadius: 'var(--radius-md)',
+                      border: isSelected ? '2.5px solid var(--primary)' : '1px solid var(--border-color)',
+                      backgroundColor: isSelected ? 'rgba(47, 90, 174, 0.08)' : 'white',
+                      cursor: 'pointer',
+                      textAlign: 'left',
+                      transition: 'all var(--transition-fast)',
+                      fontWeight: isSelected ? 700 : 500
+                    }}
+                  >
+                    <span style={{ fontSize: '1.5rem', marginRight: '0.75rem' }}>
+                      {getProjectIcon(p.nombre)}
+                    </span>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontSize: '0.9rem', color: 'var(--neutral-dark)' }}>{p.nombre}</div>
+                    </div>
+                    {isSelected && (
+                      <span style={{ color: 'var(--primary)', fontWeight: 800, fontSize: '1.2rem' }}>✓</span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
           </div>
 
+          {/* STEP 2: CATEGORY SELECTION */}
+          <div style={{ marginBottom: '1.5rem' }}>
+            <span style={{ display: 'block', fontSize: '0.9rem', fontWeight: 700, color: 'var(--primary)', marginBottom: '0.75rem' }}>
+              2. ¿En qué se gastó el dinero? *
+            </span>
+            
+            <div style={{ 
+              display: 'grid', 
+              gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', 
+              gap: '0.5rem' 
+            }}>
+              {categories.map(c => {
+                const isSelected = categoryId === c.id;
+                return (
+                  <button
+                    key={c.id}
+                    type="button"
+                    onClick={() => setCategoryId(c.id)}
+                    disabled={submitting}
+                    style={{
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      padding: '1rem 0.5rem',
+                      borderRadius: 'var(--radius-md)',
+                      border: isSelected ? '2.5px solid var(--primary)' : '1px solid var(--border-color)',
+                      backgroundColor: isSelected ? 'rgba(47, 90, 174, 0.08)' : 'white',
+                      cursor: 'pointer',
+                      transition: 'all var(--transition-fast)',
+                      fontWeight: isSelected ? 700 : 500,
+                      minHeight: '90px'
+                    }}
+                  >
+                    <span style={{ fontSize: '1.8rem', marginBottom: '0.4rem' }}>
+                      {getCategoryIcon(c.nombre)}
+                    </span>
+                    <span style={{ fontSize: '0.75rem', textAlign: 'center', color: 'var(--neutral-dark)' }}>
+                      {c.nombre}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* STEP 3: AMOUNT & DETAILS */}
+          <div style={{ marginBottom: '1.5rem' }}>
+            <span style={{ display: 'block', fontSize: '0.9rem', fontWeight: 700, color: 'var(--primary)', marginBottom: '0.75rem' }}>
+              3. Ingresa los Datos de la Compra *
+            </span>
+            
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', marginBottom: '0.75rem' }}>
+              {/* Amount */}
+              <div style={{ display: 'flex', flexDirection: 'column' }}>
+                <label htmlFor="amount" style={{ fontSize: '0.75rem', fontWeight: 600, opacity: 0.8, marginBottom: '0.25rem' }}>
+                  Monto Total (Dólares USD)
+                </label>
+                <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                  <span style={{ 
+                    position: 'absolute', 
+                    left: '0.75rem', 
+                    fontWeight: 700, 
+                    color: 'var(--primary)',
+                    fontSize: '1.1rem'
+                  }}>$</span>
+                  <input
+                    id="amount"
+                    type="number"
+                    step="0.01"
+                    className="form-input"
+                    placeholder="0.00"
+                    value={monto}
+                    onChange={e => setMonto(e.target.value)}
+                    required
+                    disabled={submitting}
+                    style={{ 
+                      paddingLeft: '1.75rem', 
+                      fontSize: '1.1rem', 
+                      fontWeight: 700,
+                      color: 'var(--neutral-dark)',
+                      borderRadius: 'var(--radius-sm)'
+                    }}
+                  />
+                </div>
+              </div>
+
+              {/* Date */}
+              <div style={{ display: 'flex', flexDirection: 'column' }}>
+                <label htmlFor="date" style={{ fontSize: '0.75rem', fontWeight: 600, opacity: 0.8, marginBottom: '0.25rem' }}>
+                  Fecha de Compra
+                </label>
+                <input
+                  id="date"
+                  type="date"
+                  className="form-input"
+                  value={fechaGasto}
+                  onChange={e => setFechaGasto(e.target.value)}
+                  required
+                  disabled={submitting}
+                  style={{ borderRadius: 'var(--radius-sm)' }}
+                />
+              </div>
+            </div>
+
+            {/* Description */}
+            <div style={{ display: 'flex', flexDirection: 'column' }}>
+              <label htmlFor="description" style={{ fontSize: '0.75rem', fontWeight: 600, opacity: 0.8, marginBottom: '0.25rem' }}>
+                ¿Qué se compró y para quién?
+              </label>
+              <textarea
+                id="description"
+                className="form-input"
+                rows={2}
+                placeholder="Ej: Compra de 10 botes de agua potable para comedores infantiles..."
+                value={descripcion}
+                onChange={e => setDescripcion(e.target.value)}
+                required
+                disabled={submitting}
+                style={{ borderRadius: 'var(--radius-sm)', resize: 'vertical' }}
+              />
+            </div>
+          </div>
+
+          {/* STEP 4: DOUBLE DOCUMENT UPLOAD */}
+          <div style={{ marginBottom: '2rem' }}>
+            <span style={{ display: 'block', fontSize: '0.9rem', fontWeight: 700, color: 'var(--primary)', marginBottom: '0.75rem' }}>
+              4. Toma Fotos de las Evidencias (Factura y Pago) *
+            </span>
+            
+            <div style={{ 
+              display: 'grid', 
+              gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', 
+              gap: '1rem' 
+            }}>
+              {/* Document 1: Factura o Recibo */}
+              <div style={{ 
+                border: '1px solid var(--border-color)', 
+                borderRadius: 'var(--radius-md)', 
+                padding: '0.85rem',
+                backgroundColor: 'var(--neutral-light)'
+              }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+                  <span style={{ fontSize: '0.75rem', fontWeight: 700 }}>📄 Recibo o Factura Física</span>
+                  {doc1File && <span style={{ color: 'var(--success)', fontSize: '0.7rem', fontWeight: 700 }}>✓ Listo</span>}
+                </div>
+                
+                {doc1Preview ? (
+                  <div style={{ position: 'relative', width: '100%', height: '120px', borderRadius: 'var(--radius-sm)', overflow: 'hidden', border: '1px solid var(--border-color)' }}>
+                    <img src={doc1Preview} alt="Factura Preview" style={{ width: '100%', height: '100%', objectFit: 'contain', backgroundColor: '#fff' }} />
+                    <button
+                      type="button"
+                      onClick={() => { setDoc1File(null); setDoc1Preview(null); }}
+                      style={{
+                        position: 'absolute', top: '0.25rem', right: '0.25rem',
+                        backgroundColor: 'rgba(239, 68, 68, 0.9)', color: 'white',
+                        border: 'none', padding: '0.25rem 0.5rem', borderRadius: '4px',
+                        cursor: 'pointer', fontSize: '0.65rem', fontWeight: 600
+                      }}
+                    >
+                      Quitar
+                    </button>
+                  </div>
+                ) : (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                    {/* CAMERA SHORTCUT */}
+                    <button
+                      type="button"
+                      onClick={() => document.getElementById('cam-doc1')?.click()}
+                      style={{
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        padding: '0.6rem', backgroundColor: 'var(--primary)', color: 'white',
+                        border: 'none', borderRadius: 'var(--radius-sm)', cursor: 'pointer',
+                        fontSize: '0.75rem', fontWeight: 600
+                      }}
+                    >
+                      📷 Usar Cámara de Campo
+                    </button>
+                    {/* GALLERY ALTERNATIVE */}
+                    <button
+                      type="button"
+                      onClick={() => document.getElementById('file-doc1')?.click()}
+                      style={{
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        padding: '0.5rem', backgroundColor: 'white', color: 'var(--primary)',
+                        border: '1px solid var(--primary)', borderRadius: 'var(--radius-sm)', cursor: 'pointer',
+                        fontSize: '0.7rem', fontWeight: 600
+                      }}
+                    >
+                      📁 Cargar de Galería
+                    </button>
+                    <input
+                      id="cam-doc1"
+                      type="file"
+                      accept="image/*"
+                      capture="environment"
+                      onChange={e => handleFileChange(e, setDoc1File, setDoc1Preview)}
+                      style={{ display: 'none' }}
+                    />
+                    <input
+                      id="file-doc1"
+                      type="file"
+                      accept="image/*,application/pdf"
+                      onChange={e => handleFileChange(e, setDoc1File, setDoc1Preview)}
+                      style={{ display: 'none' }}
+                    />
+                  </div>
+                )}
+              </div>
+
+              {/* Document 2: Comprobante de Pago */}
+              <div style={{ 
+                border: '1px solid var(--border-color)', 
+                borderRadius: 'var(--radius-md)', 
+                padding: '0.85rem',
+                backgroundColor: 'var(--neutral-light)'
+              }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+                  <span style={{ fontSize: '0.75rem', fontWeight: 700 }}>💳 Comprobante de Pago</span>
+                  {doc2File && <span style={{ color: 'var(--success)', fontSize: '0.7rem', fontWeight: 700 }}>✓ Listo</span>}
+                </div>
+                
+                {doc2Preview ? (
+                  <div style={{ position: 'relative', width: '100%', height: '120px', borderRadius: 'var(--radius-sm)', overflow: 'hidden', border: '1px solid var(--border-color)' }}>
+                    <img src={doc2Preview} alt="Comprobante Pago Preview" style={{ width: '100%', height: '100%', objectFit: 'contain', backgroundColor: '#fff' }} />
+                    <button
+                      type="button"
+                      onClick={() => { setDoc2File(null); setDoc2Preview(null); }}
+                      style={{
+                        position: 'absolute', top: '0.25rem', right: '0.25rem',
+                        backgroundColor: 'rgba(239, 68, 68, 0.9)', color: 'white',
+                        border: 'none', padding: '0.25rem 0.5rem', borderRadius: '4px',
+                        cursor: 'pointer', fontSize: '0.65rem', fontWeight: 600
+                      }}
+                    >
+                      Quitar
+                    </button>
+                  </div>
+                ) : (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                    {/* CAMERA SHORTCUT */}
+                    <button
+                      type="button"
+                      onClick={() => document.getElementById('cam-doc2')?.click()}
+                      style={{
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        padding: '0.6rem', backgroundColor: 'var(--primary)', color: 'white',
+                        border: 'none', borderRadius: 'var(--radius-sm)', cursor: 'pointer',
+                        fontSize: '0.75rem', fontWeight: 600
+                      }}
+                    >
+                      📷 Usar Cámara de Campo
+                    </button>
+                    {/* GALLERY ALTERNATIVE */}
+                    <button
+                      type="button"
+                      onClick={() => document.getElementById('file-doc2')?.click()}
+                      style={{
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        padding: '0.5rem', backgroundColor: 'white', color: 'var(--primary)',
+                        border: '1px solid var(--primary)', borderRadius: 'var(--radius-sm)', cursor: 'pointer',
+                        fontSize: '0.7rem', fontWeight: 600
+                      }}
+                    >
+                      📁 Cargar de Galería
+                    </button>
+                    <input
+                      id="cam-doc2"
+                      type="file"
+                      accept="image/*"
+                      capture="environment"
+                      onChange={e => handleFileChange(e, setDoc2File, setDoc2Preview)}
+                      style={{ display: 'none' }}
+                    />
+                    <input
+                      id="file-doc2"
+                      type="file"
+                      accept="image/*,application/pdf"
+                      onChange={e => handleFileChange(e, setDoc2File, setDoc2Preview)}
+                      style={{ display: 'none' }}
+                    />
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Submit Button */}
           <button 
             type="submit" 
             className="btn btn-secondary" 
-            style={{ width: '100%', padding: '0.75rem' }}
+            style={{ 
+              width: '100%', 
+              padding: '1rem', 
+              fontSize: '1rem', 
+              fontWeight: 700, 
+              borderRadius: 'var(--radius-md)',
+              boxShadow: 'var(--shadow-md)',
+              cursor: submitting ? 'not-allowed' : 'pointer'
+            }}
             disabled={submitting}
           >
-            {submitting ? 'Enviando gasto...' : 'Enviar Comprobante a Auditoría'}
+            {submitting ? 'Enviando comprobantes...' : '🚀 Guardar Gasto y Enviar a Auditoría'}
           </button>
+
         </form>
       </div>
 
-      {/* Lista de Envios Recientes del Coordinador */}
+      {/* History of coordinator spends */}
       <div>
-        <h3 style={{ fontSize: '1.1rem', color: 'var(--primary)', marginBottom: '1rem', fontWeight: 700 }}>
-          Historial de Envíos
+        <h3 style={{ fontSize: '1.2rem', color: 'var(--primary)', marginBottom: '1rem', fontWeight: 800 }}>
+          Tus Envíos Recientes
         </h3>
 
         {recentExpenses.length === 0 ? (
-          <div className="card" style={{ padding: '2rem', textAlign: 'center', opacity: 0.6 }}>
+          <div className="card" style={{ padding: '2.5rem', textAlign: 'center', opacity: 0.6, backgroundColor: '#fff', borderRadius: 'var(--radius-md)' }}>
+            <span style={{ fontSize: '2rem', display: 'block', marginBottom: '0.5rem' }}>📭</span>
             No has cargado gastos todavía.
           </div>
         ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
             {recentExpenses.map(exp => (
-              <div key={exp.id} className="card" style={{ padding: '1rem' }}>
+              <div key={exp.id} className="card" style={{ padding: '1.2rem', borderRadius: 'var(--radius-md)', backgroundColor: '#fff', border: '1px solid var(--border-color)' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                  <span style={{ fontSize: '0.75rem', opacity: 0.6, fontWeight: 700 }}>{exp.fecha_gasto}</span>
-                  <span style={{ fontWeight: 700 }}>{formatCurrency(exp.monto)}</span>
+                  <span style={{ fontSize: '0.8rem', opacity: 0.6, fontWeight: 700 }}>{exp.fecha_gasto}</span>
+                  <span style={{ fontWeight: 800, color: 'var(--neutral-dark)', fontSize: '1.1rem' }}>
+                    {formatCurrency(exp.monto)}
+                  </span>
                 </div>
                 
-                <p style={{ fontSize: '0.85rem', marginTop: '0.25rem', fontWeight: 500 }}>{exp.descripcion}</p>
+                <p style={{ fontSize: '0.9rem', marginTop: '0.5rem', color: 'var(--neutral-dark)', fontWeight: 500 }}>
+                  {exp.descripcion}
+                </p>
                 
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '0.5rem' }}>
-                  <span style={{ fontSize: '0.75rem', color: 'var(--neutral-dark)', opacity: 0.7 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '0.75rem', paddingTop: '0.75rem', borderTop: '1px solid var(--neutral-light)' }}>
+                  <span style={{ fontSize: '0.75rem', color: 'var(--neutral-dark)', opacity: 0.75 }}>
                     Categoría: {categories.find(c => c.id === exp.categoria_id)?.nombre || 'Ayuda'}
                   </span>
                   {getStatusBadge(exp.estado)}
                 </div>
 
-                {/* Mostrar observaciones de rechazo en caso de auditoría desfavorable */}
                 {exp.estado === 'rechazado' && exp.comentarios_auditoria && (
                   <div style={{
                     marginTop: '0.75rem',
                     backgroundColor: 'rgba(239, 68, 68, 0.05)',
                     border: '1px solid rgba(239, 68, 68, 0.2)',
-                    borderRadius: '4px',
-                    padding: '0.5rem 0.75rem',
-                    fontSize: '0.75rem',
+                    borderRadius: 'var(--radius-sm)',
+                    padding: '0.6rem 0.85rem',
+                    fontSize: '0.8rem',
                     color: 'var(--danger)'
                   }}>
                     <strong>Nota de Auditoría:</strong> {exp.comentarios_auditoria}

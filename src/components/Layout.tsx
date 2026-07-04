@@ -17,6 +17,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTa
   // Configuración de menús basados en roles
   const menuItems = [
     { id: 'dashboard', label: 'Tableros', icon: '📊', roles: ['administrador', 'auditor'] },
+    { id: 'requisitions', label: 'Requisiciones', icon: '📋', roles: ['administrador', 'auditor', 'coordinador'] },
     { id: 'reconciliation', label: 'Conciliación', icon: '⚖️', roles: ['administrador', 'auditor'] },
     { id: 'audit', label: 'Auditoría', icon: '🔍', roles: ['administrador', 'auditor'] },
     { id: 'budgets', label: 'Presupuestos', icon: '💰', roles: ['administrador', 'auditor'] },
