@@ -83,6 +83,7 @@ export interface Donation {
   tasa_bcv: number | null;
   monto_usd: number;
   monto_ves: number | null;
+  created_at?: string;
 }
 
 
@@ -680,7 +681,7 @@ export const api = {
       return data as Donation;
     } else {
       const donations = JSON.parse(localStorage.getItem('cnbv_donations') || '[]');
-      const created = { ...donationData, id: `don-${Date.now()}` };
+      const created = { ...donationData, id: `don-${Date.now()}`, created_at: new Date().toISOString() };
       donations.unshift(created);
       localStorage.setItem('cnbv_donations', JSON.stringify(donations));
 

@@ -342,7 +342,14 @@ export const IncomesManager: React.FC = () => {
                   
                   return (
                     <tr key={d.id} style={{ borderBottom: '1px solid var(--border-color)', backgroundColor: i % 2 === 0 ? 'transparent' : 'rgba(0,0,0,0.015)' }}>
-                      <td style={{ padding: '0.85rem 1rem', whiteSpace: 'nowrap', fontWeight: 600 }}>{d.fecha}</td>
+                      <td style={{ padding: '0.85rem 1rem', whiteSpace: 'nowrap' }}>
+                        <div style={{ fontWeight: 600 }}>{d.fecha}</div>
+                        {d.created_at && (
+                          <div style={{ fontSize: '0.7rem', opacity: 0.5, marginTop: '0.15rem' }} title="Fecha en que se procesó el registro">
+                            Reg: {new Date(d.created_at).toLocaleDateString('es-VE')}
+                          </div>
+                        )}
+                      </td>
                       <td style={{ padding: '0.85rem 1rem' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
                           <span>{flag}</span>
