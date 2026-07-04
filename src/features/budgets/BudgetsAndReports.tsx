@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { api } from '../../services/api';
 import type { Project, ExpenseCategory, PartidaGasto, Budget, ExpenseReceipt } from '../../services/api';
 import { BudgetWizard } from './BudgetWizard';
+import { CreateProjectModal } from './CreateProjectModal';
 import * as XLSX from 'xlsx';
 import { jsPDF } from 'jspdf';
 
@@ -17,6 +18,13 @@ export const BudgetsAndReports: React.FC = () => {
   const [filterProjectId, setFilterProjectId] = useState('');
   const [filterPeriodo, setFilterPeriodo] = useState('2026-ANUAL');
   const [isWizardOpen, setIsWizardOpen] = useState(false);
+  const [isCreateProjectOpen, setIsCreateProjectOpen] = useState(false);
+
+  const handleProjectCreated = async (newProjId: string) => {
+    await loadData();
+    setFilterProjectId(newProjId);
+    setIsWizardOpen(true);
+  };
 
   const loadData = async () => {
     setLoading(true);
@@ -316,6 +324,10 @@ export const BudgetsAndReports: React.FC = () => {
         </div>
 
         <div style={{ display: 'flex', gap: '0.75rem' }}>
+          <button onClick={() => setIsCreateProjectOpen(true)} className="btn btn-outline" style={{ fontSize: '0.85rem', fontWeight: 600, borderColor: 'var(--primary)', color: 'var(--primary)' }}>
+            ➕ Crear Proyecto
+          </button>
+
           <button onClick={() => setIsWizardOpen(true)} className="btn btn-primary" style={{ fontSize: '0.85rem', fontWeight: 600 }}>
             💼 Asistente Presupuesto UNDG
           </button>
@@ -560,6 +572,13 @@ export const BudgetsAndReports: React.FC = () => {
         isOpen={isWizardOpen}
         onClose={() => setIsWizardOpen(false)}
         onSuccess={loadData}
+      />
+
+      {/* Modal Crear Proyecto */}
+      <CreateProjectModal
+        isOpen={isCreateProjectOpen}
+        onClose={() => setIsCreateProjectOpen(false)}
+        onSuccess={handleProjectCreated}
       />
     </div>
   );
