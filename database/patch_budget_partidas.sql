@@ -38,29 +38,29 @@ CREATE POLICY "Permitir lectura de partidas a todos los autenticados"
 -- 5. Sembrar Catálogo de 17 Partidas Oficiales del Modelo UNDG
 INSERT INTO public.partidas_gasto (id, categoria_id, codigo, nombre, descripcion) VALUES
 -- Categoría 1
-('p1000000-0000-0000-0000-000000000011', 'c1000000-0000-0000-0000-000000000001', '1.1', 'Artículos No Alimentarios (NFI)', 'Compra y distribución de kits de emergencia, lonas, carpas, mantas, utensilios.'),
-('p1000000-0000-0000-0000-000000000012', 'c1000000-0000-0000-0000-000000000001', '1.2', 'Agua, Saneamiento e Higiene (WASH)', 'Letrinas de emergencia, pastillas potabilizadoras, camiones cisterna, kits de higiene.'),
-('p1000000-0000-0000-0000-000000000013', 'c1000000-0000-0000-0000-000000000001', '1.3', 'Asistencia Sanitaria de Urgencia', 'Medicamentos esenciales, clínicas móviles, insumos de trauma, generadores de clínicas.'),
-('p1000000-0000-0000-0000-000000000014', 'c1000000-0000-0000-0000-000000000001', '1.4', 'Seguridad Alimentaria y Nutrición', 'Alimentos de primera necesidad y suplementos nutricionales.'),
-('p1000000-0000-0000-0000-000000000015', 'c1000000-0000-0000-0000-000000000001', '1.5', 'Programas de Transferencias Monetarias (PTM)', 'Dinero en efectivo o vales entregados directamente a beneficiarios.'),
+('a1000000-0000-0000-0000-000000000011', 'c1000000-0000-0000-0000-000000000001', '1.1', 'Artículos No Alimentarios (NFI)', 'Compra y distribución de kits de emergencia, lonas, carpas, mantas, utensilios.'),
+('a1000000-0000-0000-0000-000000000012', 'c1000000-0000-0000-0000-000000000001', '1.2', 'Agua, Saneamiento e Higiene (WASH)', 'Letrinas de emergencia, pastillas potabilizadoras, camiones cisterna, kits de higiene.'),
+('a1000000-0000-0000-0000-000000000013', 'c1000000-0000-0000-0000-000000000001', '1.3', 'Asistencia Sanitaria de Urgencia', 'Medicamentos esenciales, clínicas móviles, insumos de trauma, generadores de clínicas.'),
+('a1000000-0000-0000-0000-000000000014', 'c1000000-0000-0000-0000-000000000001', '1.4', 'Seguridad Alimentaria y Nutrición', 'Alimentos de primera necesidad y suplementos nutricionales.'),
+('a1000000-0000-0000-0000-000000000015', 'c1000000-0000-0000-0000-000000000001', '1.5', 'Programas de Transferencias Monetarias (PTM)', 'Dinero en efectivo o vales entregados directamente a beneficiarios.'),
 
 -- Categoría 2
-('p2000000-0000-0000-0000-000000000021', 'c2000000-0000-0000-0000-000000000002', '2.1', 'Transporte y Envíos', 'Fletes terrestres, marítimos o aéreos para movilizar la ayuda a las zonas afectadas.'),
-('p2000000-0000-0000-0000-000000000022', 'c2000000-0000-0000-0000-000000000002', '2.2', 'Almacenamiento', 'Alquiler de bodegas, almacenes temporales y costos de estiba.'),
-('p2000000-0000-0000-0000-000000000023', 'c2000000-0000-0000-0000-000000000002', '2.3', 'Logística Local', 'Combustible local, peajes, alquiler de vehículos 4x4 de operación.'),
+('a2000000-0000-0000-0000-000000000021', 'c2000000-0000-0000-0000-000000000002', '2.1', 'Transporte y Envíos', 'Fletes terrestres, marítimos o aéreos para movilizar la ayuda a las zonas afectadas.'),
+('a2000000-0000-0000-0000-000000000022', 'c2000000-0000-0000-0000-000000000002', '2.2', 'Almacenamiento', 'Alquiler de bodegas, almacenes temporales y costos de estiba.'),
+('a2000000-0000-0000-0000-000000000023', 'c2000000-0000-0000-0000-000000000002', '2.3', 'Logística Local', 'Combustible local, peajes, alquiler de vehículos 4x4 de operación.'),
 
 -- Categoría 3
-('p3000000-0000-0000-0000-000000000031', 'c3000000-0000-0000-0000-000000000003', '3.1', 'Personal Local e Internacional', 'Salarios y dietas de coordinadores, médicos, ingenieros WASH y logistas.'),
-('p3000000-0000-0000-0000-000000000032', 'c3000000-0000-0000-0000-000000000003', '3.2', 'Seguridad Social y Seguros', 'Pólizas de seguro médico y accidentes de riesgo especial para zonas de desastre.'),
+('a3000000-0000-0000-0000-000000000031', 'c3000000-0000-0000-0000-000000000003', '3.1', 'Personal Local e Internacional', 'Salarios y dietas de coordinadores, médicos, ingenieros WASH y logistas.'),
+('a3000000-0000-0000-0000-000000000032', 'c3000000-0000-0000-0000-000000000003', '3.2', 'Seguridad Social y Seguros', 'Pólizas de seguro médico y accidentes de riesgo especial para zonas de desastre.'),
 
 -- Categoría 4
-('p4000000-0000-0000-0000-000000000041', 'c4000000-0000-0000-0000-000000000004', '4.1', 'Costos de Oficina sobre el Terreno', 'Alquiler de oficinas/bases, internet satelital, luz, agua y papelería contable.'),
-('p4000000-0000-0000-0000-000000000042', 'c4000000-0000-0000-0000-000000000004', '4.2', 'Gestión de Seguridad', 'Equipamiento de comunicación (radios VHF), personal de vigilancia, kits de evacuación.'),
-('p4000000-0000-0000-0000-000000000043', 'c4000000-0000-0000-0000-000000000004', '4.3', 'Costos Indirectos (Overhead)', 'Porcentaje destinado a gastos centrales de administración y contabilidad general.'),
+('a4000000-0000-0000-0000-000000000041', 'c4000000-0000-0000-0000-000000000004', '4.1', 'Costos de Oficina sobre el Terreno', 'Alquiler de oficinas/bases, internet satelital, luz, agua y papelería contable.'),
+('a4000000-0000-0000-0000-000000000042', 'c4000000-0000-0000-0000-000000000004', '4.2', 'Gestión de Seguridad', 'Equipamiento de comunicación (radios VHF), personal de vigilancia, kits de evacuación.'),
+('a4000000-0000-0000-0000-000000000043', 'c4000000-0000-0000-0000-000000000004', '4.3', 'Costos Indirectos (Overhead)', 'Porcentaje destinado a gastos centrales de administración y contabilidad general.'),
 
 -- Categoría 5
-('p5000000-0000-0000-0000-000000000051', 'c5000000-0000-0000-0000-000000000005', '5.1', 'Visibilidad', 'Banners, chalecos identificadores de personal, y calcomanías para logos de donantes.'),
-('p5000000-0000-0000-0000-000000000052', 'c5000000-0000-0000-0000-000000000005', '5.2', 'Monitoreo, Evaluación y Rendición de Cuentas', 'Viajes de control de hitos, auditorías del proyecto y elaboración de reportes de impacto.');
+('a5000000-0000-0000-0000-000000000051', 'c5000000-0000-0000-0000-000000000005', '5.1', 'Visibilidad', 'Banners, chalecos identificadores de personal, y calcomanías para logos de donantes.'),
+('a5000000-0000-0000-0000-000000000052', 'c5000000-0000-0000-0000-000000000005', '5.2', 'Monitoreo, Evaluación y Rendición de Cuentas', 'Viajes de control de hitos, auditorías del proyecto y elaboración de reportes de impacto.');
 
 -- 6. Modificar tablas de negocio para apuntar a Partidas en vez de Categorías
 
