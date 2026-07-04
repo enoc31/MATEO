@@ -19,6 +19,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTa
     { id: 'dashboard', label: 'Tableros', icon: '📊', roles: ['administrador', 'auditor', 'director', 'donante'] },
     { id: 'requisitions', label: 'Requisiciones', icon: '📋', roles: ['administrador', 'coordinador', 'director', 'auxiliar_campo'] },
     { id: 'incomes', label: 'Ingresos', icon: '💰', roles: ['administrador', 'director', 'auditor'] },
+    { id: 'tasas', label: 'Tasas BCV', icon: '💱', roles: ['administrador', 'director'] },
     { id: 'reconciliation', label: 'Conciliación', icon: '⚖️', roles: ['administrador', 'auditor'] },
     { id: 'audit', label: 'Auditoría', icon: '🔍', roles: ['administrador', 'auditor'] },
     { id: 'budgets', label: 'Presupuestos', icon: '📑', roles: ['administrador', 'auditor', 'director'] },

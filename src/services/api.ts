@@ -54,6 +54,19 @@ export interface BankTransaction {
   descripcion: string;
   monto: number; // Positivo = Ingreso, Negativo = Egreso
   estado: 'pendiente' | 'conciliado';
+  csv_metadata?: {
+    rowNumber?: number;
+    fileName?: string;
+    moneda?: 'USD' | 'VES';
+  } | null;
+}
+
+export interface TasaBCV {
+  id: string;
+  fecha: string;
+  tasa: number;
+  fuente: 'bcv_api' | 'manual' | 'historico_csv';
+  created_at: string;
 }
 
 export interface Donation {
@@ -61,10 +74,17 @@ export interface Donation {
   proyecto_id: string | null;
   transaccion_id: string | null;
   donante: string;
-  monto: number;
+  monto: number; // compatible con monto_usd
   descripcion: string;
   fecha: string;
+  moneda: 'USD' | 'VES';
+  medio_pago: 'efectivo' | 'transferencia';
+  monto_original: number;
+  tasa_bcv: number | null;
+  monto_usd: number;
+  monto_ves: number | null;
 }
+
 
 export interface ExpenseReceipt {
   id: string;
@@ -262,6 +282,13 @@ const INITIAL_EXPENSES: ExpenseReceipt[] = [
   }
 ];
 
+const INITIAL_TASAS_BCV: TasaBCV[] = [
+  { id: 'rate-1', fecha: '2026-07-04', tasa: 652.9726, fuente: 'bcv_api', created_at: new Date().toISOString() },
+  { id: 'rate-2', fecha: '2026-07-03', tasa: 652.9726, fuente: 'bcv_api', created_at: new Date().toISOString() },
+  { id: 'rate-3', fecha: '2026-07-02', tasa: 651.5000, fuente: 'bcv_api', created_at: new Date().toISOString() },
+  { id: 'rate-4', fecha: '2026-07-01', tasa: 650.1200, fuente: 'bcv_api', created_at: new Date().toISOString() }
+];
+
 const INITIAL_DONATIONS: Donation[] = [
   {
     id: 'don-1',
@@ -270,7 +297,13 @@ const INITIAL_DONATIONS: Donation[] = [
     donante: 'Alianza Bautista Internacional',
     monto: 35000.00,
     descripcion: 'Fondo internacional etiquetado para Zulia.',
-    fecha: '2026-06-01'
+    fecha: '2026-06-01',
+    moneda: 'USD',
+    medio_pago: 'transferencia',
+    monto_original: 35000.00,
+    tasa_bcv: null,
+    monto_usd: 35000.00,
+    monto_ves: null
   }
 ];
 
@@ -302,6 +335,9 @@ const initLocalStorage = () => {
   }
   if (!localStorage.getItem('cnbv_partidas')) {
     localStorage.setItem('cnbv_partidas', JSON.stringify(INITIAL_PARTIDAS));
+  }
+  if (!localStorage.getItem('cnbv_tasas_bcv')) {
+    localStorage.setItem('cnbv_tasas_bcv', JSON.stringify(INITIAL_TASAS_BCV));
   }
 };
 
@@ -646,6 +682,112 @@ export const api = {
       }
 
       return created;
+    }
+  },
+
+  // --- TASAS BCV ---
+  getTasasBCV: async (): Promise<TasaBCV[]> => {
+    if (!isSimulationMode) {
+      const { data, error } = await supabase.from('tasas_bcv').select('*').order('fecha', { ascending: false });
+      if (error) throw error;
+      return data as TasaBCV[];
+    } else {
+      return JSON.parse(localStorage.getItem('cnbv_tasas_bcv') || '[]');
+    }
+  },
+
+  getTasaByDate: async (fecha: string): Promise<TasaBCV | null> => {
+    if (!isSimulationMode) {
+      // Intentar obtener la tasa exacta para esa fecha
+      const { data, error } = await supabase
+        .from('tasas_bcv')
+        .select('*')
+        .eq('fecha', fecha)
+        .maybeSingle();
+      if (error) throw error;
+      if (data) return data as TasaBCV;
+
+      // Si no hay tasa exacta para esa fecha, retornar la más reciente anterior
+      const { data: recent, error: recentErr } = await supabase
+        .from('tasas_bcv')
+        .select('*')
+        .lt('fecha', fecha)
+        .order('fecha', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (recentErr) throw recentErr;
+      return (recent as TasaBCV) || null;
+    } else {
+      const tasas: TasaBCV[] = JSON.parse(localStorage.getItem('cnbv_tasas_bcv') || '[]');
+      // Buscar exacta
+      const exacta = tasas.find(t => t.fecha === fecha);
+      if (exacta) return exacta;
+      // Buscar la más reciente anterior
+      const anteriores = tasas.filter(t => t.fecha < fecha).sort((a, b) => b.fecha.localeCompare(a.fecha));
+      return anteriores[0] || null;
+    }
+  },
+
+  upsertTasaBCV: async (tasa: Omit<TasaBCV, 'id' | 'created_at'>): Promise<TasaBCV> => {
+    if (!isSimulationMode) {
+      const { data, error } = await supabase
+        .from('tasas_bcv')
+        .upsert(tasa, { onConflict: 'fecha' })
+        .select()
+        .single();
+      if (error) throw error;
+      return data as TasaBCV;
+    } else {
+      const tasas = JSON.parse(localStorage.getItem('cnbv_tasas_bcv') || '[]');
+      const index = tasas.findIndex((t: TasaBCV) => t.fecha === tasa.fecha);
+      const updatedTasa = {
+        ...tasa,
+        id: index !== -1 ? tasas[index].id : `rate-${Date.now()}`,
+        created_at: index !== -1 ? tasas[index].created_at : new Date().toISOString()
+      };
+      if (index !== -1) {
+        tasas[index] = updatedTasa;
+      } else {
+        tasas.unshift(updatedTasa);
+      }
+      localStorage.setItem('cnbv_tasas_bcv', JSON.stringify(tasas));
+      return updatedTasa;
+    }
+  },
+
+  bulkUpsertTasasBCV: async (tasasInput: Array<{ fecha: string; tasa: number }>): Promise<TasaBCV[]> => {
+    const formatted = tasasInput.map(t => ({
+      fecha: t.fecha,
+      tasa: t.tasa,
+      fuente: 'historico_csv' as const
+    }));
+
+    if (!isSimulationMode) {
+      const { data, error } = await supabase
+        .from('tasas_bcv')
+        .upsert(formatted, { onConflict: 'fecha' })
+        .select();
+      if (error) throw error;
+      return data as TasaBCV[];
+    } else {
+      const tasas = JSON.parse(localStorage.getItem('cnbv_tasas_bcv') || '[]');
+      const result: TasaBCV[] = [];
+      for (const t of formatted) {
+        const index = tasas.findIndex((x: TasaBCV) => x.fecha === t.fecha);
+        const updatedTasa = {
+          ...t,
+          id: index !== -1 ? tasas[index].id : `rate-${Math.random().toString(36).substr(2, 9)}`,
+          created_at: index !== -1 ? tasas[index].created_at : new Date().toISOString()
+        };
+        if (index !== -1) {
+          tasas[index] = updatedTasa;
+        } else {
+          tasas.unshift(updatedTasa);
+        }
+        result.push(updatedTasa);
+      }
+      localStorage.setItem('cnbv_tasas_bcv', JSON.stringify(tasas));
+      return result;
     }
   },
 

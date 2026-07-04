@@ -1,0 +1,3 @@
+project_id = "TU_PROJECT_REF"
+# Reemplaza "TU_PROJECT_REF" con el Reference ID de tu proyecto.
+# Lo encuentras en: Supabase Dashboard → Settings → General → Reference ID

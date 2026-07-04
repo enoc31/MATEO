@@ -1,10 +1,14 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { api } from '../../services/api';
-import type { Project, Donation, Donante, BankTransaction } from '../../services/api';
+import type { Project, Donation, Donante, BankTransaction, TasaBCV } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
+import Papa from 'papaparse';
 
 const formatCurrency = (amount: number) =>
   new Intl.NumberFormat('es-VE', { style: 'currency', currency: 'USD' }).format(amount);
+
+const formatVesCurrency = (amount: number) =>
+  new Intl.NumberFormat('es-VE', { style: 'currency', currency: 'VES' }).format(amount);
 
 const FLAG_MAP: Record<string, string> = {
   'Venezuela': '🇻🇪', 'Reino Unido': '🇬🇧', 'Estados Unidos': '🇺🇸',
@@ -21,16 +25,30 @@ export const IncomesManager: React.FC = () => {
   const [donantes, setDonantes] = useState<Donante[]>([]);
   const [donations, setDonations] = useState<Donation[]>([]);
   const [bankTxs, setBankTxs] = useState<BankTransaction[]>([]);
+  const [tasas, setTasas] = useState<TasaBCV[]>([]);
+  const [latestRate, setLatestRate] = useState<number | null>(null);
 
   // Form state
   const [showForm, setShowForm] = useState(false);
   const [proyectoId, setProyectoId] = useState('');
   const [donanteId, setDonanteId] = useState('');
-  const [monto, setMonto] = useState('');
+  const [montoOriginal, setMontoOriginal] = useState('');
+  const [moneda, setMoneda] = useState<'USD' | 'VES'>('USD');
+  const [medioPago, setMedioPago] = useState<'efectivo' | 'transferencia'>('transferencia');
+  const [tasaBcv, setTasaBcv] = useState<number | null>(null);
+  const [tasaManualEditable, setTasaManualEditable] = useState(false);
   const [descripcion, setDescripcion] = useState('');
   const [fecha, setFecha] = useState(new Date().toISOString().split('T')[0]);
   const [transaccionId, setTransaccionId] = useState('');
   const [tipoRegistro, setTipoRegistro] = useState<'manual' | 'bancario'>('manual');
+
+  // Import CSV state
+  const [showImportModal, setShowImportModal] = useState(false);
+  const [importingFile, setImportingFile] = useState(false);
+  const [importMoneda, setImportMoneda] = useState<'USD' | 'VES'>('USD');
+  const [csvTxs, setCsvTxs] = useState<Omit<BankTransaction, 'id' | 'estado'>[]>([]);
+  const [importFileName, setImportFileName] = useState('');
+  const importFileInputRef = useRef<HTMLInputElement>(null);
 
   // Filters
   const [filterProject, setFilterProject] = useState('todos');
@@ -38,17 +56,21 @@ export const IncomesManager: React.FC = () => {
   const loadData = async () => {
     setLoading(true);
     try {
-      const [projList, donList, donationList, txList] = await Promise.all([
+      const [projList, donList, donationList, txList, ratesList] = await Promise.all([
         api.getProjects(),
         api.getDonantes(),
         api.getDonations(),
-        api.getBankTransactions()
+        api.getBankTransactions(),
+        api.getTasasBCV()
       ]);
       setProjects(projList.filter(p => p.activo));
       setDonantes(donList);
       setDonations(donationList);
-      // Only show pending inflows (positive amounts not yet reconciled)
       setBankTxs(txList.filter(t => t.monto > 0 && t.estado === 'pendiente'));
+      setTasas(ratesList);
+      
+      const latest = ratesList[0];
+      setLatestRate(latest ? latest.tasa : null);
     } catch (err) {
       console.error(err);
     } finally {
@@ -58,34 +80,93 @@ export const IncomesManager: React.FC = () => {
 
   useEffect(() => { loadData(); }, []);
 
+  // Buscar tasa BCV al cambiar fecha o moneda en el formulario manual
+  useEffect(() => {
+    const fetchTasa = async () => {
+      if (moneda === 'VES' && fecha) {
+        try {
+          const rateObj = await api.getTasaByDate(fecha);
+          if (rateObj) {
+            setTasaBcv(rateObj.tasa);
+            setTasaManualEditable(false);
+          } else {
+            setTasaBcv(null);
+            setTasaManualEditable(true);
+          }
+        } catch (err) {
+          console.error('Error al consultar tasa:', err);
+          setTasaBcv(null);
+          setTasaManualEditable(true);
+        }
+      } else {
+        setTasaBcv(null);
+        setTasaManualEditable(false);
+      }
+    };
+    fetchTasa();
+  }, [fecha, moneda]);
+
+  // Helper local para buscar tasa
+  const getRateForDateLocal = (dateStr: string) => {
+    if (!tasas || tasas.length === 0) return latestRate;
+    const exacta = tasas.find(t => t.fecha === dateStr);
+    if (exacta) return exacta.tasa;
+    const anteriores = tasas.filter(t => t.fecha < dateStr).sort((a, b) => b.fecha.localeCompare(a.fecha));
+    return anteriores[0]?.tasa || latestRate;
+  };
+
   const handleSelectTx = (txId: string) => {
     setTransaccionId(txId);
     if (txId) {
       const tx = bankTxs.find(t => t.id === txId);
       if (tx) {
-        setMonto(tx.monto.toString());
+        setMontoOriginal(tx.monto.toString());
         setDescripcion(tx.descripcion);
         setFecha(tx.fecha);
+        const txMoneda = tx.csv_metadata?.moneda || 
+          ((tx.descripcion.toLowerCase().includes('ves') || tx.descripcion.toLowerCase().includes('bs') || tx.monto > 1000) ? 'VES' : 'USD');
+        setMoneda(txMoneda);
       }
     } else {
-      setMonto(''); setDescripcion(''); setFecha(new Date().toISOString().split('T')[0]);
+      setMontoOriginal(''); setDescripcion(''); setFecha(new Date().toISOString().split('T')[0]);
+      setMoneda('USD');
     }
   };
 
   const resetForm = () => {
-    setProyectoId(''); setDonanteId(''); setMonto(''); setDescripcion('');
+    setProyectoId(''); setDonanteId(''); setMontoOriginal(''); setDescripcion('');
     setFecha(new Date().toISOString().split('T')[0]);
     setTransaccionId(''); setTipoRegistro('manual');
+    setMoneda('USD'); setMedioPago('transferencia'); setTasaBcv(null); setTasaManualEditable(false);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!proyectoId || !donanteId || !monto || !descripcion) {
+    if (!proyectoId || !donanteId || !montoOriginal || !descripcion) {
       alert('Complete todos los campos obligatorios.'); return;
     }
-    const numMonto = parseFloat(monto);
-    if (isNaN(numMonto) || numMonto <= 0) {
+    const numMontoOriginal = parseFloat(montoOriginal);
+    if (isNaN(numMontoOriginal) || numMontoOriginal <= 0) {
       alert('El monto debe ser mayor a 0.'); return;
+    }
+
+    let calculatedMontoUsd = numMontoOriginal;
+    let calculatedMontoVes = null;
+    let finalTasaBcv = null;
+
+    if (moneda === 'VES') {
+      if (!tasaBcv || tasaBcv <= 0) {
+        alert('Debe especificar una tasa BCV válida.');
+        return;
+      }
+      finalTasaBcv = tasaBcv;
+      calculatedMontoUsd = parseFloat((numMontoOriginal / tasaBcv).toFixed(2));
+      calculatedMontoVes = numMontoOriginal;
+    } else {
+      const activeRate = tasaBcv || latestRate;
+      if (activeRate) {
+        calculatedMontoVes = parseFloat((numMontoOriginal * activeRate).toFixed(2));
+      }
     }
 
     setSubmitting(true);
@@ -95,9 +176,15 @@ export const IncomesManager: React.FC = () => {
         proyecto_id: proyectoId,
         transaccion_id: transaccionId || null,
         donante: donante?.nombre || 'Donante Desconocido',
-        monto: numMonto,
+        monto: calculatedMontoUsd,
         descripcion: descripcion.trim(),
-        fecha
+        fecha,
+        moneda,
+        medio_pago: medioPago,
+        monto_original: numMontoOriginal,
+        tasa_bcv: finalTasaBcv,
+        monto_usd: calculatedMontoUsd,
+        monto_ves: calculatedMontoVes
       });
       alert('✅ Ingreso registrado correctamente.');
       resetForm();
@@ -110,12 +197,105 @@ export const IncomesManager: React.FC = () => {
     }
   };
 
+  // Procesar archivo CSV del banco
+  const handleImportCsvChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setImportFileName(file.name);
+
+    Papa.parse(file, {
+      header: true,
+      skipEmptyLines: true,
+      delimiter: ';',
+      complete: (results) => {
+        const parsedTxs: Omit<BankTransaction, 'id' | 'estado'>[] = [];
+
+        results.data.forEach((row: any) => {
+          const keys = Object.keys(row);
+          const fechaKey = keys.find(k => {
+            const ck = k.replace(/^\uFEFF/, '').replace(/"/g, '').trim().toLowerCase();
+            return ck.includes('fecha') || ck.includes('date');
+          });
+          const refKey = keys.find(k => {
+            const ck = k.replace(/^\uFEFF/, '').replace(/"/g, '').trim().toLowerCase();
+            return ck.includes('ref');
+          });
+          const descKey = keys.find(k => {
+            const ck = k.replace(/^\uFEFF/, '').replace(/"/g, '').trim().toLowerCase();
+            return ck.includes('desc');
+          });
+          const amountKey = keys.find(k => {
+            const ck = k.replace(/^\uFEFF/, '').replace(/"/g, '').trim().toLowerCase();
+            return ck.includes('importe') || ck.includes('amount') || ck.includes('monto');
+          });
+
+          const dateStr = fechaKey ? row[fechaKey]?.replace(/"/g, '').trim() : null;
+          const refStr = refKey ? row[refKey]?.replace(/"/g, '').trim() : null;
+          const descStr = descKey ? row[descKey]?.replace(/"/g, '').trim() : null;
+          const amountStr = amountKey ? row[amountKey]?.replace(/"/g, '').trim() : null;
+
+          if (dateStr && amountStr && descStr) {
+            const dateParts = dateStr.split('-');
+            if (dateParts.length === 3) {
+              const formattedDate = `${dateParts[2]}-${dateParts[1]}-${dateParts[0]}`;
+              let cleanAmountStr = amountStr.replace(/\./g, '').replace(',', '.');
+              const amountVal = parseFloat(cleanAmountStr);
+
+              if (!isNaN(amountVal) && amountVal > 0) {
+                parsedTxs.push({
+                  fecha: formattedDate,
+                  referencia: refStr || `REF-${Math.random().toString(36).substr(2, 6).toUpperCase()}`,
+                  descripcion: descStr,
+                  monto: amountVal,
+                  csv_metadata: {
+                    fileName: file.name,
+                    moneda: importMoneda
+                  }
+                });
+              }
+            }
+          }
+        });
+
+        if (parsedTxs.length === 0) {
+          alert('No se encontraron transacciones de ingreso válidas (con importe mayor a 0) en el archivo.');
+          setCsvTxs([]);
+          setImportFileName('');
+        } else {
+          setCsvTxs(parsedTxs);
+        }
+      },
+      error: (err) => {
+        alert('Error al leer el archivo CSV: ' + err.message);
+      }
+    });
+  };
+
+  // Confirmar importación
+  const handleConfirmImport = async () => {
+    if (csvTxs.length === 0) return;
+    setImportingFile(true);
+    try {
+      await api.importBankTransactions(csvTxs);
+      alert(`✅ Se importaron exitosamente ${csvTxs.length} transacciones de ingreso.`);
+      setCsvTxs([]);
+      setImportFileName('');
+      setShowImportModal(false);
+      await loadData();
+    } catch (err: any) {
+      alert('Error al registrar las transacciones: ' + (err.message || ''));
+    } finally {
+      setImportingFile(false);
+    }
+  };
+
   // Filtered & computed
   const filteredDonations = donations.filter(d =>
     filterProject === 'todos' ? true : d.proyecto_id === filterProject
   );
 
-  const totalIngresos = filteredDonations.reduce((s, d) => s + d.monto, 0);
+  const totalIngresosUsd = filteredDonations.reduce((s, d) => s + (d.monto_usd || d.monto), 0);
+  const totalIngresosVes = filteredDonations.reduce((s, d) => s + (d.monto_ves || 0), 0);
 
   const getProjectName = (id: string | null) =>
     id ? (projects.find(p => p.id === id)?.nombre ?? 'Proyecto Desconocido') : 'Sin Proyecto';
@@ -125,11 +305,26 @@ export const IncomesManager: React.FC = () => {
     return d ? { flag: FLAG_MAP[d.pais || ''] || '🤝', tipo: d.tipo } : { flag: '🤝', tipo: null };
   };
 
-  const projectTotals = projects.map(p => ({
-    ...p,
-    total: donations.filter(d => d.proyecto_id === p.id).reduce((s, d) => s + d.monto, 0),
-    count: donations.filter(d => d.proyecto_id === p.id).length
-  })).filter(p => p.total > 0 || p.activo);
+  const projectTotals = projects.map(p => {
+    const projDonations = donations.filter(d => d.proyecto_id === p.id);
+    return {
+      ...p,
+      totalUsd: projDonations.reduce((s, d) => s + (d.monto_usd || d.monto), 0),
+      totalVes: projDonations.reduce((s, d) => s + (d.monto_ves || 0), 0),
+      count: projDonations.length
+    };
+  }).filter(p => p.totalUsd > 0 || p.activo);
+
+  // Totales de vista previa en el modal de importación
+  const sumOriginal = csvTxs.reduce((s, tx) => s + tx.monto, 0);
+  const sumUsdEquivalent = csvTxs.reduce((s, tx) => {
+    if (importMoneda === 'VES') {
+      const rate = getRateForDateLocal(tx.fecha);
+      return s + (rate ? tx.monto / rate : 0);
+    } else {
+      return s + tx.monto;
+    }
+  }, 0);
 
   if (loading) {
     return (
@@ -154,33 +349,54 @@ export const IncomesManager: React.FC = () => {
           </p>
         </div>
         {['administrador', 'director'].includes(profile?.rol || '') && (
-          <button
-            className="btn btn-primary"
-            onClick={() => setShowForm(true)}
-            style={{ fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.5rem' }}
-          >
-            ＋ Registrar Ingreso
-          </button>
+          <div style={{ display: 'flex', gap: '0.75rem' }}>
+            <button
+              className="btn btn-outline"
+              onClick={() => setShowImportModal(true)}
+              style={{ fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.5rem' }}
+            >
+              📥 Importar Extracto (CSV)
+            </button>
+            <button
+              className="btn btn-primary"
+              onClick={() => setShowForm(true)}
+              style={{ fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.5rem' }}
+            >
+              ＋ Registrar Ingreso
+            </button>
+          </div>
         )}
       </div>
 
-      {/* ── RESUMEN POR PROYECTO ─────────────────────────────────── */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1rem', marginBottom: '2rem' }}>
+      {/* ── RESUMEN GENERAL Y POR PROYECTO ───────────────────────── */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1rem', marginBottom: '2rem' }}>
         {/* Total general */}
         <div className="card" style={{ padding: '1.25rem', background: 'linear-gradient(135deg, var(--primary) 0%, #1a3a7a 100%)', color: '#fff', borderRadius: 'var(--radius-md)' }}>
-          <div style={{ fontSize: '0.7rem', fontWeight: 700, letterSpacing: '0.1em', opacity: 0.8, textTransform: 'uppercase', marginBottom: '0.5rem' }}>Total Ingresos Registrados</div>
-          <div style={{ fontSize: '1.8rem', fontWeight: 800 }}>{formatCurrency(donations.reduce((s, d) => s + d.monto, 0))}</div>
-          <div style={{ fontSize: '0.75rem', opacity: 0.75, marginTop: '0.25rem' }}>{donations.length} transferencias registradas</div>
+          <div style={{ fontSize: '0.7rem', fontWeight: 700, letterSpacing: '0.1em', opacity: 0.8, textTransform: 'uppercase', marginBottom: '0.5rem' }}>Total Ingresos</div>
+          <div style={{ fontSize: '1.8rem', fontWeight: 800 }}>{formatCurrency(totalIngresosUsd)}</div>
+          {totalIngresosVes > 0 && (
+            <div style={{ fontSize: '0.9rem', opacity: 0.9, marginTop: '0.15rem' }}>
+              Equiv. VES: {formatVesCurrency(totalIngresosVes)}
+            </div>
+          )}
+          <div style={{ fontSize: '0.75rem', opacity: 0.75, marginTop: '0.4rem' }}>{filteredDonations.length} transacciones registradas</div>
         </div>
 
-        {/* Por proyecto */}
-        {projectTotals.slice(0, 4).map(p => (
-          <div key={p.id} className="card" style={{ padding: '1.25rem', borderRadius: 'var(--radius-md)', borderLeft: '4px solid var(--primary)' }}>
-            <div style={{ fontSize: '0.7rem', fontWeight: 700, opacity: 0.6, textTransform: 'uppercase', marginBottom: '0.5rem', letterSpacing: '0.05em' }}>
-              {p.nombre.length > 30 ? p.nombre.slice(0, 30) + '…' : p.nombre}
+        {/* Por proyecto (Top 3) */}
+        {projectTotals.slice(0, 3).map(p => (
+          <div key={p.id} className="card" style={{ padding: '1.25rem', borderRadius: 'var(--radius-md)', borderLeft: '4px solid var(--primary)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+            <div>
+              <div style={{ fontSize: '0.7rem', fontWeight: 700, opacity: 0.6, textTransform: 'uppercase', marginBottom: '0.5rem', letterSpacing: '0.05em' }}>
+                {p.nombre.length > 30 ? p.nombre.slice(0, 30) + '…' : p.nombre}
+              </div>
+              <div style={{ fontSize: '1.4rem', fontWeight: 800, color: 'var(--primary)' }}>{formatCurrency(p.totalUsd)}</div>
+              {p.totalVes > 0 && (
+                <div style={{ fontSize: '0.8rem', opacity: 0.7, fontWeight: 500 }}>
+                  {formatVesCurrency(p.totalVes)}
+                </div>
+              )}
             </div>
-            <div style={{ fontSize: '1.4rem', fontWeight: 800, color: 'var(--primary)' }}>{formatCurrency(p.total)}</div>
-            <div style={{ fontSize: '0.75rem', opacity: 0.55, marginTop: '0.2rem' }}>{p.count} {p.count === 1 ? 'ingreso' : 'ingresos'}</div>
+            <div style={{ fontSize: '0.75rem', opacity: 0.55, marginTop: '0.5rem' }}>{p.count} {p.count === 1 ? 'ingreso' : 'ingresos'}</div>
           </div>
         ))}
       </div>
@@ -211,7 +427,7 @@ export const IncomesManager: React.FC = () => {
         <div style={{ padding: '1rem 1.5rem', borderBottom: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <span style={{ fontWeight: 700 }}>Historial de Ingresos</span>
           <span style={{ fontWeight: 800, color: 'var(--primary)', fontSize: '1.05rem' }}>
-            {formatCurrency(totalIngresos)}
+            {formatCurrency(totalIngresosUsd)}
           </span>
         </div>
 
@@ -229,14 +445,18 @@ export const IncomesManager: React.FC = () => {
                   <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontWeight: 700, opacity: 0.7 }}>Fecha</th>
                   <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontWeight: 700, opacity: 0.7 }}>Donante</th>
                   <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontWeight: 700, opacity: 0.7 }}>Proyecto</th>
-                  <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontWeight: 700, opacity: 0.7 }}>Descripción</th>
-                  <th style={{ padding: '0.75rem 1rem', textAlign: 'right', fontWeight: 700, opacity: 0.7 }}>Monto</th>
+                  <th style={{ padding: '0.75rem 1rem', textAlign: 'center', fontWeight: 700, opacity: 0.7 }}>Medio/Moneda</th>
+                  <th style={{ padding: '0.75rem 1rem', textAlign: 'right', fontWeight: 700, opacity: 0.7 }}>Monto Original</th>
+                  <th style={{ padding: '0.75rem 1rem', textAlign: 'right', fontWeight: 700, opacity: 0.7 }}>Tasa BCV</th>
+                  <th style={{ padding: '0.75rem 1rem', textAlign: 'right', fontWeight: 700, opacity: 0.7 }}>Equiv. USD</th>
                   <th style={{ padding: '0.75rem 1rem', textAlign: 'center', fontWeight: 700, opacity: 0.7 }}>Estado</th>
                 </tr>
               </thead>
               <tbody>
                 {filteredDonations.map((d, i) => {
                   const { flag, tipo } = getDonanteInfo(d.donante);
+                  const isVES = d.moneda === 'VES';
+                  
                   return (
                     <tr key={d.id} style={{ borderBottom: '1px solid var(--border-color)', backgroundColor: i % 2 === 0 ? 'transparent' : 'rgba(0,0,0,0.015)' }}>
                       <td style={{ padding: '0.85rem 1rem', whiteSpace: 'nowrap', fontWeight: 600 }}>{d.fecha}</td>
@@ -252,9 +472,27 @@ export const IncomesManager: React.FC = () => {
                         </div>
                       </td>
                       <td style={{ padding: '0.85rem 1rem', fontSize: '0.8rem', opacity: 0.85 }}>{getProjectName(d.proyecto_id)}</td>
-                      <td style={{ padding: '0.85rem 1rem', maxWidth: '220px', fontSize: '0.82rem', opacity: 0.75 }}>{d.descripcion}</td>
+                      <td style={{ padding: '0.85rem 1rem', textAlign: 'center' }}>
+                        <div style={{ display: 'inline-flex', flexDirection: 'column', gap: '0.15rem', alignItems: 'center' }}>
+                          <span className={`badge ${isVES ? 'badge-warning' : 'badge-success'}`} style={{ fontSize: '0.65rem', textTransform: 'uppercase', padding: '0.1rem 0.4rem' }}>
+                            {isVES ? '🇻🇪 VES' : '💵 USD'}
+                          </span>
+                          <span style={{ fontSize: '0.7rem', opacity: 0.6 }}>
+                            {d.medio_pago === 'efectivo' ? '💵 Efectivo' : '🏦 Transf.'}
+                          </span>
+                        </div>
+                      </td>
+                      <td style={{ padding: '0.85rem 1rem', textAlign: 'right', fontWeight: 600, fontFamily: 'monospace' }}>
+                        {isVES 
+                          ? formatVesCurrency(d.monto_original || 0) 
+                          : formatCurrency(d.monto_original || d.monto)
+                        }
+                      </td>
+                      <td style={{ padding: '0.85rem 1rem', textAlign: 'right', fontFamily: 'monospace', opacity: d.tasa_bcv ? 1 : 0.4 }}>
+                        {d.tasa_bcv ? `${d.tasa_bcv.toFixed(4)} Bs` : '—'}
+                      </td>
                       <td style={{ padding: '0.85rem 1rem', textAlign: 'right', fontWeight: 800, color: 'var(--success)', whiteSpace: 'nowrap' }}>
-                        +{formatCurrency(d.monto)}
+                        +{formatCurrency(d.monto_usd || d.monto)}
                       </td>
                       <td style={{ padding: '0.85rem 1rem', textAlign: 'center' }}>
                         <span className={`badge ${d.transaccion_id ? 'badge-success' : 'badge-warning'}`}>
@@ -270,7 +508,7 @@ export const IncomesManager: React.FC = () => {
         )}
       </div>
 
-      {/* ── MODAL FORMULARIO ─────────────────────────────────────── */}
+      {/* ── FORMULARIO REGISTRO INGRESO ──────────────────────────── */}
       {showForm && (
         <div style={{
           position: 'fixed', top: 0, left: 0, width: '100%', height: '100%',
@@ -300,7 +538,7 @@ export const IncomesManager: React.FC = () => {
                 <button
                   key={t}
                   type="button"
-                  onClick={() => { setTipoRegistro(t); setTransaccionId(''); setMonto(''); setDescripcion(''); }}
+                  onClick={() => { setTipoRegistro(t); setTransaccionId(''); setMontoOriginal(''); setDescripcion(''); }}
                   style={{
                     flex: 1, padding: '0.6rem', borderRadius: '8px', fontWeight: 600,
                     fontSize: '0.8rem', border: '2px solid', cursor: 'pointer', transition: 'all 0.2s',
@@ -364,6 +602,53 @@ export const IncomesManager: React.FC = () => {
                 </select>
               </div>
 
+              {/* Moneda y Medio de Pago */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+                <div className="form-group" style={{ marginBottom: 0 }}>
+                  <label className="form-label" style={{ fontWeight: 600 }}>Moneda *</label>
+                  <div style={{ display: 'flex', gap: '0.25rem' }}>
+                    {(['USD', 'VES'] as const).map(m => (
+                      <button
+                        key={m}
+                        type="button"
+                        onClick={() => setMoneda(m)}
+                        style={{
+                          flex: 1, padding: '0.5rem', borderRadius: '6px', fontWeight: 600,
+                          fontSize: '0.8rem', border: '1.5px solid', cursor: 'pointer', transition: 'all 0.2s',
+                          borderColor: moneda === m ? 'var(--primary)' : 'var(--border-color)',
+                          backgroundColor: moneda === m ? 'var(--primary)' : 'transparent',
+                          color: moneda === m ? '#fff' : 'var(--neutral-dark)'
+                        }}
+                      >
+                        {m === 'USD' ? '💵 USD' : '🇻🇪 VES'}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                
+                <div className="form-group" style={{ marginBottom: 0 }}>
+                  <label className="form-label" style={{ fontWeight: 600 }}>Medio de Pago *</label>
+                  <div style={{ display: 'flex', gap: '0.25rem' }}>
+                    {(['transferencia', 'efectivo'] as const).map(mp => (
+                      <button
+                        key={mp}
+                        type="button"
+                        onClick={() => setMedioPago(mp)}
+                        style={{
+                          flex: 1, padding: '0.5rem', borderRadius: '6px', fontWeight: 600,
+                          fontSize: '0.8rem', border: '1.5px solid', cursor: 'pointer', transition: 'all 0.2s',
+                          borderColor: medioPago === mp ? 'var(--primary)' : 'var(--border-color)',
+                          backgroundColor: medioPago === mp ? 'var(--primary)' : 'transparent',
+                          color: medioPago === mp ? '#fff' : 'var(--neutral-dark)'
+                        }}
+                      >
+                        {mp === 'transferencia' ? '🏦 Banco' : '💵 Efectivo'}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
               {/* Fecha y Monto */}
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
                 <div className="form-group" style={{ marginBottom: 0 }}>
@@ -371,18 +656,82 @@ export const IncomesManager: React.FC = () => {
                   <input type="date" className="form-input" value={fecha} onChange={e => setFecha(e.target.value)} required disabled={submitting} />
                 </div>
                 <div className="form-group" style={{ marginBottom: 0 }}>
-                  <label className="form-label" style={{ fontWeight: 600 }}>Monto (USD) *</label>
+                  <label className="form-label" style={{ fontWeight: 600 }}>Monto ({moneda}) *</label>
                   <input
                     type="number" step="0.01" min="0.01"
                     className="form-input"
-                    value={monto}
-                    onChange={e => setMonto(e.target.value)}
+                    value={montoOriginal}
+                    onChange={e => setMontoOriginal(e.target.value)}
                     placeholder="0.00"
                     required
                     disabled={submitting || (tipoRegistro === 'bancario' && !!transaccionId)}
                   />
                 </div>
               </div>
+
+              {/* Tasa de cambio BCV si aplica */}
+              {moneda === 'VES' && (
+                <div style={{ backgroundColor: 'rgba(47,90,174,0.05)', padding: '1rem', borderRadius: 'var(--radius-md)', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ fontSize: '0.8rem', fontWeight: 600 }}>Tasa de Cambio BCV (Bs./USD) *</span>
+                    {!tasaManualEditable && (
+                      <button 
+                        type="button" 
+                        onClick={() => setTasaManualEditable(true)}
+                        style={{ border: 'none', background: 'none', color: 'var(--primary)', fontWeight: 700, fontSize: '0.75rem', cursor: 'pointer' }}
+                      >
+                        Ajustar Tasa
+                      </button>
+                    )}
+                  </div>
+                  {tasaBcv ? (
+                    <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+                      <input
+                        type="number" step="0.0001"
+                        className="form-input"
+                        value={tasaBcv}
+                        onChange={e => setTasaBcv(parseFloat(e.target.value) || null)}
+                        disabled={!tasaManualEditable || submitting}
+                        style={{ width: '130px', padding: '0.3rem 0.5rem', fontSize: '0.9rem', backgroundColor: tasaManualEditable ? '#fff' : 'rgba(0,0,0,0.03)' }}
+                        required
+                      />
+                      <span style={{ fontSize: '0.75rem', opacity: 0.6 }}>
+                        {!tasaManualEditable ? '🤖 Tasa oficial encontrada para esta fecha.' : '✏️ Tasa ajustada manualmente.'}
+                      </span>
+                    </div>
+                  ) : (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                      <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+                        <input
+                          type="number" step="0.0001"
+                          className="form-input"
+                          placeholder="Ingrese tasa"
+                          onChange={e => setTasaBcv(parseFloat(e.target.value) || null)}
+                          disabled={submitting}
+                          style={{ width: '130px', padding: '0.3rem 0.5rem', fontSize: '0.9rem' }}
+                          required
+                        />
+                        <span style={{ fontSize: '0.75rem', color: 'var(--warning)', fontWeight: 600 }}>
+                          ⚠️ No se encontró tasa oficial en base de datos.
+                        </span>
+                      </div>
+                      <span style={{ fontSize: '0.7rem', opacity: 0.6 }}>
+                        Por favor, ingrese el valor de la tasa BCV manualmente para realizar la conversión.
+                      </span>
+                    </div>
+                  )}
+
+                  {/* Preview de conversión */}
+                  {montoOriginal && tasaBcv && tasaBcv > 0 && (
+                    <div style={{ borderTop: '1px solid rgba(0,0,0,0.1)', paddingTop: '0.5rem', marginTop: '0.25rem', display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem' }}>
+                      <span>Equivalente en USD:</span>
+                      <strong style={{ color: 'var(--success)' }}>
+                        {formatCurrency(parseFloat(montoOriginal) / tasaBcv)}
+                      </strong>
+                    </div>
+                  )}
+                </div>
+              )}
 
               {/* Descripción */}
               <div className="form-group" style={{ marginBottom: 0 }}>
@@ -411,6 +760,181 @@ export const IncomesManager: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* ── MODAL IMPORTACIÓN CSV ───────────────────────────────── */}
+      {showImportModal && (
+        <div style={{
+          position: 'fixed', top: 0, left: 0, width: '100%', height: '100%',
+          backgroundColor: 'rgba(15,23,42,0.75)', backdropFilter: 'blur(8px)',
+          display: 'flex', justifyContent: 'center', alignItems: 'center',
+          zIndex: 1200, padding: '1.5rem', overflowY: 'auto'
+        }}>
+          <div className="card" style={{
+            width: '100%', maxWidth: '660px', padding: '2rem',
+            boxShadow: '0 25px 50px -12px rgba(0,0,0,0.4)',
+            backgroundColor: 'var(--card-bg, #ffffff)',
+            maxHeight: '90vh', overflowY: 'auto'
+          }}>
+
+            {/* Header modal */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.5rem', borderBottom: '1px solid var(--border-color)', paddingBottom: '1rem' }}>
+              <div>
+                <h3 style={{ color: 'var(--primary)', fontWeight: 800, margin: 0 }}>📥 Importar Extracto Bancario</h3>
+                <p style={{ margin: '0.25rem 0 0', fontSize: '0.78rem', opacity: 0.6 }}>Subir movimientos en formato CSV para conciliar</p>
+              </div>
+              <button onClick={() => { setShowImportModal(false); setCsvTxs([]); setImportFileName(''); }} style={{ background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer', opacity: 0.5 }}>×</button>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              
+              {/* Selector de Moneda */}
+              <div className="form-group" style={{ marginBottom: '0.5rem' }}>
+                <label className="form-label" style={{ fontWeight: 600 }}>Seleccione la moneda del Extracto Bancario *</label>
+                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                  {(['USD', 'VES'] as const).map(m => (
+                    <button
+                      key={m}
+                      type="button"
+                      onClick={() => {
+                        setImportMoneda(m);
+                        setCsvTxs([]);
+                        setImportFileName('');
+                        if (importFileInputRef.current) importFileInputRef.current.value = '';
+                      }}
+                      style={{
+                        flex: 1, padding: '0.6rem', borderRadius: '8px', fontWeight: 600,
+                        fontSize: '0.85rem', border: '2px solid', cursor: 'pointer', transition: 'all 0.2s',
+                        borderColor: importMoneda === m ? 'var(--primary)' : 'var(--border-color)',
+                        backgroundColor: importMoneda === m ? 'var(--primary)' : 'transparent',
+                        color: importMoneda === m ? '#fff' : 'var(--neutral-dark)'
+                      }}
+                    >
+                      {m === 'USD' ? '💵 Dólares (USD)' : '🇻🇪 Bolívares (VES)'}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <p style={{ fontSize: '0.82rem', opacity: 0.7, lineHeight: 1.5, margin: 0 }}>
+                Seleccione el archivo <strong>REPORTE.CSV</strong> del banco. Solo se considerarán los depósitos o transferencias recibidos (importes positivos mayores a 0).
+              </p>
+
+              <input
+                type="file"
+                accept=".csv"
+                ref={importFileInputRef}
+                onChange={handleImportCsvChange}
+                style={{ display: 'none' }}
+              />
+
+              <button
+                type="button"
+                className="btn btn-outline"
+                style={{ borderStyle: 'dashed', borderWidth: '2px', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.5rem', padding: '1.25rem' }}
+                onClick={() => importFileInputRef.current?.click()}
+                disabled={importingFile}
+              >
+                <span>📂</span> {importFileName || 'Seleccionar Archivo REPORTE.CSV'}
+              </button>
+
+              {csvTxs.length > 0 && (
+                <div style={{ backgroundColor: 'rgba(47,90,174,0.05)', padding: '1rem', borderRadius: 'var(--radius-md)', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                  
+                  <div style={{ fontSize: '0.8rem', fontWeight: 700, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span>Movimientos detectados: {csvTxs.length} ingresos</span>
+                    <button
+                      type="button"
+                      onClick={() => { setCsvTxs([]); setImportFileName(''); if (importFileInputRef.current) importFileInputRef.current.value = ''; }}
+                      style={{ background: 'none', border: 'none', color: 'var(--danger)', cursor: 'pointer', fontSize: '0.75rem', fontWeight: 700 }}
+                    >
+                      Limpiar
+                    </button>
+                  </div>
+
+                  <div style={{ maxHeight: '180px', overflowY: 'auto', fontSize: '0.78rem', border: '1px solid var(--border-color)', borderRadius: '6px', backgroundColor: '#fff' }}>
+                    <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                      <thead>
+                        <tr style={{ backgroundColor: 'rgba(0,0,0,0.02)', borderBottom: '1px solid var(--border-color)', position: 'sticky', top: 0, zIndex: 10 }}>
+                          <th style={{ padding: '0.4rem 0.6rem', textAlign: 'left', fontWeight: 600 }}>Fecha</th>
+                          <th style={{ padding: '0.4rem 0.6rem', textAlign: 'left', fontWeight: 600 }}>Descripción</th>
+                          <th style={{ padding: '0.4rem 0.6rem', textAlign: 'right', fontWeight: 600 }}>Monto Original</th>
+                          {importMoneda === 'VES' && (
+                            <>
+                              <th style={{ padding: '0.4rem 0.6rem', textAlign: 'right', fontWeight: 600 }}>Tasa BCV</th>
+                              <th style={{ padding: '0.4rem 0.6rem', textAlign: 'right', fontWeight: 600 }}>Equiv. USD</th>
+                            </>
+                          )}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {csvTxs.map((tx, idx) => {
+                          const rate = importMoneda === 'VES' ? getRateForDateLocal(tx.fecha) : null;
+                          const usdVal = importMoneda === 'VES' && rate ? tx.monto / rate : tx.monto;
+                          return (
+                            <tr key={idx} style={{ borderBottom: '1px solid var(--border-color)' }}>
+                              <td style={{ padding: '0.4rem 0.6rem', whiteSpace: 'nowrap' }}>{tx.fecha}</td>
+                              <td style={{ padding: '0.4rem 0.6rem', maxWidth: '160px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{tx.descripcion}</td>
+                              <td style={{ padding: '0.4rem 0.6rem', textAlign: 'right', fontWeight: 600 }}>
+                                {importMoneda === 'VES' ? formatVesCurrency(tx.monto) : formatCurrency(tx.monto)}
+                              </td>
+                              {importMoneda === 'VES' && (
+                                <>
+                                  <td style={{ padding: '0.4rem 0.6rem', textAlign: 'right', fontFamily: 'monospace', opacity: rate ? 1 : 0.4 }}>
+                                    {rate ? `${rate.toFixed(4)}` : 'Sin Tasa'}
+                                  </td>
+                                  <td style={{ padding: '0.4rem 0.6rem', textAlign: 'right', fontWeight: 700, color: 'var(--success)' }}>
+                                    {formatCurrency(usdVal)}
+                                  </td>
+                                </>
+                              )}
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  {/* Resumen de totales */}
+                  <div style={{ display: 'grid', gridTemplateColumns: importMoneda === 'VES' ? '1fr 1fr' : '1fr', gap: '0.75rem', backgroundColor: '#fff', padding: '0.75rem', borderRadius: '6px', border: '1px solid var(--border-color)', fontSize: '0.8rem' }}>
+                    <div>
+                      <span style={{ opacity: 0.6, display: 'block', fontSize: '0.7rem', textTransform: 'uppercase', fontWeight: 700 }}>Total Original ({importMoneda})</span>
+                      <strong style={{ fontSize: '1.05rem', color: 'var(--neutral-dark)' }}>
+                        {importMoneda === 'VES' ? formatVesCurrency(sumOriginal) : formatCurrency(sumOriginal)}
+                      </strong>
+                    </div>
+                    {importMoneda === 'VES' && (
+                      <div>
+                        <span style={{ opacity: 0.6, display: 'block', fontSize: '0.7rem', textTransform: 'uppercase', fontWeight: 700 }}>Total Equivalente (USD)</span>
+                        <strong style={{ fontSize: '1.05rem', color: 'var(--success)' }}>
+                          {formatCurrency(sumUsdEquivalent)}
+                        </strong>
+                      </div>
+                    )}
+                  </div>
+
+                  <button
+                    type="button"
+                    className="btn btn-primary"
+                    style={{ width: '100%', padding: '0.6rem', fontWeight: 700 }}
+                    onClick={handleConfirmImport}
+                    disabled={importingFile}
+                  >
+                    {importingFile ? 'Importando transacciones...' : `Importar ${csvTxs.length} Transacciones`}
+                  </button>
+                </div>
+              )}
+
+              {/* Acciones */}
+              <div style={{ display: 'flex', justifyContent: 'flex-end', borderTop: '1px solid var(--border-color)', paddingTop: '1rem', marginTop: '0.5rem' }}>
+                <button type="button" className="btn btn-outline" onClick={() => { setShowImportModal(false); setCsvTxs([]); setImportFileName(''); }} disabled={importingFile}>
+                  Cerrar
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 };

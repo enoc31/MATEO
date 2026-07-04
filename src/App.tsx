@@ -10,6 +10,7 @@ import { MobileEntry } from './features/mobile-entry/MobileEntry';
 import { UserManagement } from './features/users/UserManagement';
 import { RequisitionsManager } from './features/requisitions/RequisitionsManager';
 import { IncomesManager } from './features/incomes/IncomesManager';
+import { TasasManager } from './features/tasas/TasasManager';
 
 const MainAppContent: React.FC = () => {
   const { profile, loading, logout, refreshProfile } = useAuth();
@@ -83,6 +84,8 @@ const MainAppContent: React.FC = () => {
         return profile.rol === 'administrador' ? <UserManagement /> : <AccessDenied />;
       case 'incomes':
         return ['administrador', 'director', 'auditor'].includes(profile.rol) ? <IncomesManager /> : <AccessDenied />;
+      case 'tasas':
+        return ['administrador', 'director'].includes(profile.rol) ? <TasasManager /> : <AccessDenied />;
       default:
         return <div>Página no encontrada</div>;
     }
