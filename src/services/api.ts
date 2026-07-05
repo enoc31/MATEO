@@ -696,6 +696,73 @@ export const api = {
     }
   },
 
+  reconcileCashDonation: async (donationId: string): Promise<Donation> => {
+    if (!isSimulationMode) {
+      // 1. Obtener los detalles de la donación
+      const { data: donation, error: getError } = await supabase
+        .from('donaciones')
+        .select('*')
+        .eq('id', donationId)
+        .single();
+      if (getError) throw getError;
+      if (!donation) throw new Error('Donation not found');
+
+      // 2. Crear una transacción bancaria virtual (de tipo caja efectivo)
+      const { data: virtualTx, error: txError } = await supabase
+        .from('transacciones_bancarias')
+        .insert([{
+          fecha: donation.fecha,
+          referencia: 'CAJA-' + donationId.split('-')[0].toUpperCase(),
+          descripcion: `[CAJA EFECTIVO] Recepción de Aporte - ${donation.donante}`,
+          monto: donation.monto_original || donation.monto,
+          estado: 'conciliado',
+          csv_metadata: { moneda: donation.moneda, tipo: 'efectivo_caja' }
+        }])
+        .select()
+        .single();
+      if (txError) throw txError;
+
+      // 3. Vincular la donación con esta transacción
+      const { data: updatedDonation, error: linkError } = await supabase
+        .from('donaciones')
+        .update({ transaccion_id: virtualTx.id })
+        .eq('id', donationId)
+        .select()
+        .single();
+      if (linkError) throw linkError;
+
+      return updatedDonation as Donation;
+    } else {
+      const donations = JSON.parse(localStorage.getItem('cnbv_donations') || '[]');
+      const transactions = JSON.parse(localStorage.getItem('cnbv_bank_transactions') || '[]');
+
+      const donIndex = donations.findIndex((d: Donation) => d.id === donationId);
+      if (donIndex === -1) throw new Error('Donation not found');
+
+      const donation = donations[donIndex];
+      const virtualTxId = `tx-caja-${Date.now()}`;
+
+      // Crear transacción virtual
+      const virtualTx = {
+        id: virtualTxId,
+        fecha: donation.fecha,
+        referencia: 'CAJA-' + donationId.split('-')[0].toUpperCase(),
+        descripcion: `[CAJA EFECTIVO] Recepción de Aporte - ${donation.donante}`,
+        monto: donation.monto_original || donation.monto,
+        estado: 'conciliado',
+        csv_metadata: { moneda: donation.moneda, tipo: 'efectivo_caja' }
+      };
+
+      transactions.push(virtualTx);
+      donations[donIndex].transaccion_id = virtualTxId;
+
+      localStorage.setItem('cnbv_donations', JSON.stringify(donations));
+      localStorage.setItem('cnbv_bank_transactions', JSON.stringify(transactions));
+
+      return donations[donIndex];
+    }
+  },
+
   // --- DONACIONES ---
   getDonations: async (): Promise<Donation[]> => {
     if (!isSimulationMode) {

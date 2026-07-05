@@ -46,6 +46,33 @@ export const IncomesManager: React.FC = () => {
 
   useEffect(() => { loadData(); }, []);
 
+  const handleReconcileCash = async (donation: Donation) => {
+    const isVES = donation.moneda === 'VES';
+    const originalText = isVES 
+      ? formatVesCurrency(donation.monto_original || donation.monto) 
+      : formatCurrency(donation.monto);
+
+    const usdEquiv = donation.moneda === 'VES' && donation.monto_usd 
+      ? ` (Equiv: ${formatCurrency(donation.monto_usd)})` 
+      : '';
+
+    const confirmReconcile = window.confirm(
+      `¿Desea conciliar este aporte de ${originalText}${usdEquiv} recibido en EFECTIVO?\n\nEsto registrará el ingreso físico del dinero en la caja de efectivo de la organización, balanceará el libro contable virtual y lo marcará como disponible.`
+    );
+    if (!confirmReconcile) return;
+
+    try {
+      setLoading(true);
+      await api.reconcileCashDonation(donation.id);
+      await loadData();
+      alert('Aporte en efectivo conciliado con éxito en la caja de efectivo.');
+    } catch (err) {
+      console.error(err);
+      alert('Error al conciliar aporte en efectivo.');
+      setLoading(false);
+    }
+  };
+
   // Recargar datos cuando el usuario vuelve a enfocar esta pestaña (ej: tras cerrar la pestaña de registro)
   useEffect(() => {
     const handleFocus = () => {
@@ -279,9 +306,29 @@ export const IncomesManager: React.FC = () => {
                         +{formatCurrency(d.monto_usd || d.monto)}
                       </td>
                       <td style={{ padding: '0.85rem 1rem', textAlign: 'center' }}>
-                        <span className={`badge ${d.transaccion_id ? 'badge-success' : 'badge-warning'}`} style={{ whiteSpace: 'nowrap' }}>
-                          {d.transaccion_id ? '⚖️ Conciliado (Disponible)' : '📋 Registrado (No disp.)'}
-                        </span>
+                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.25rem' }}>
+                          <span className={`badge ${d.transaccion_id ? 'badge-success' : 'badge-warning'}`} style={{ whiteSpace: 'nowrap' }}>
+                            {d.transaccion_id ? '⚖️ Conciliado (Disponible)' : '📋 Registrado (No disp.)'}
+                          </span>
+                          {!d.transaccion_id && d.medio_pago === 'efectivo' && ['administrador', 'director'].includes(profile?.rol || '') && (
+                            <button
+                              onClick={() => handleReconcileCash(d)}
+                              className="btn btn-secondary"
+                              style={{
+                                padding: '0.25rem 0.5rem',
+                                fontSize: '0.7rem',
+                                fontWeight: 700,
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '0.2rem',
+                                marginTop: '0.15rem',
+                                cursor: 'pointer'
+                              }}
+                            >
+                              💵 Conciliar en Caja
+                            </button>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   );
