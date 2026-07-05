@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { api } from '../../services/api';
-import type { BankTransaction, ExpenseReceipt, TasaBCV } from '../../services/api';
+import type { BankTransaction, ExpenseReceipt, TasaBCV, Donation } from '../../services/api';
 import Papa from 'papaparse';
 
 const formatCurrency = (amount: number) => {
@@ -11,12 +11,25 @@ const formatVesCurrency = (amount: number) => {
   return new Intl.NumberFormat('es-VE', { style: 'currency', currency: 'VES' }).format(amount);
 };
 
+export interface ReconciliationItem {
+  id: string;
+  tipo: 'gasto' | 'donacion';
+  monto: number; // En USD siempre
+  monto_original?: number;
+  moneda?: 'USD' | 'VES';
+  tasa_bcv?: number | null;
+  descripcion: string;
+  fecha: string;
+  transaccion_id: string | null;
+  reference_object: ExpenseReceipt | Donation;
+}
+
 export const Reconciliation: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [transactions, setTransactions] = useState<BankTransaction[]>([]);
-  const [expenses, setExpenses] = useState<ExpenseReceipt[]>([]);
+  const [reconciliationItems, setReconciliationItems] = useState<ReconciliationItem[]>([]);
   const [selectedTx, setSelectedTx] = useState<BankTransaction | null>(null);
-  const [selectedExp, setSelectedExp] = useState<ExpenseReceipt | null>(null);
+  const [selectedItem, setSelectedItem] = useState<ReconciliationItem | null>(null);
   
   // Tasas de cambio
   const [tasas, setTasas] = useState<TasaBCV[]>([]);
@@ -66,15 +79,48 @@ export const Reconciliation: React.FC = () => {
   const loadData = async () => {
     setLoading(true);
     try {
-      const [txList, expList, ratesList] = await Promise.all([
+      const [txList, expList, ratesList, donationList] = await Promise.all([
         api.getBankTransactions(),
         api.getExpenses(),
-        api.getTasasBCV()
+        api.getTasasBCV(),
+        api.getDonations()
       ]);
       // Mostrar solo transacciones pendientes
       setTransactions(txList.filter(t => t.estado === 'pendiente'));
-      // Mostrar gastos que no tengan transacción vinculada y no estén rechazados
-      setExpenses(expList.filter(e => !e.transaccion_id && e.estado !== 'rechazado'));
+      
+      // Mapear gastos pendientes
+      const mappedExpenses: ReconciliationItem[] = expList
+        .filter(e => !e.transaccion_id && e.estado !== 'rechazado')
+        .map(e => ({
+          id: e.id,
+          tipo: 'gasto',
+          monto: e.monto,
+          descripcion: `[EGRESO] ${e.descripcion}`,
+          fecha: e.fecha_gasto,
+          transaccion_id: e.transaccion_id,
+          reference_object: e
+        }));
+
+      // Mapear donaciones pendientes
+      const mappedDonations: ReconciliationItem[] = donationList
+        .filter(d => !d.transaccion_id)
+        .map(d => ({
+          id: d.id,
+          tipo: 'donacion',
+          monto: d.monto_usd || d.monto,
+          monto_original: d.monto_original || d.monto,
+          moneda: d.moneda,
+          tasa_bcv: d.tasa_bcv,
+          descripcion: `[INGRESO] Donación de: ${d.donante} - ${d.descripcion || 'Sin descripción'}`,
+          fecha: d.fecha,
+          transaccion_id: d.transaccion_id,
+          reference_object: d
+        }));
+
+      // Unificar y ordenar por fecha (más reciente primero)
+      const unified = [...mappedExpenses, ...mappedDonations].sort((a, b) => b.fecha.localeCompare(a.fecha));
+      setReconciliationItems(unified);
+
       setTasas(ratesList);
       const latest = ratesList[0];
       setLatestRate(latest ? latest.tasa : null);
@@ -165,7 +211,7 @@ export const Reconciliation: React.FC = () => {
 
   // Ejecución de conciliación entre elemento bancario y egreso/donación
   const handleReconcile = async () => {
-    if (!selectedTx || !selectedExp) return;
+    if (!selectedTx || !selectedItem) return;
 
     // Validación de montos aproximados o exactos
     const isVES = selectedTx.csv_metadata?.moneda === 'VES';
@@ -178,25 +224,29 @@ export const Reconciliation: React.FC = () => {
       }
     }
 
-    const diff = Math.abs(txMontoUsd - selectedExp.monto);
+    const diff = Math.abs(txMontoUsd - selectedItem.monto);
     if (diff > 0.01) {
       const formattedTxVal = isVES 
         ? `${formatVesCurrency(Math.abs(selectedTx.monto))} [Equiv: ${formatCurrency(txMontoUsd)}]`
         : formatCurrency(txMontoUsd);
 
       const confirmDiff = window.confirm(
-        `Atención: El monto del extracto bancario (${formattedTxVal}) no coincide exactamente con el monto del comprobante cargado (${formatCurrency(selectedExp.monto)}).\n\n¿Desea forzar la conciliación de todas formas?`
+        `Atención: El monto del extracto bancario (${formattedTxVal}) no coincide exactamente con el monto del comprobante cargado (${formatCurrency(selectedItem.monto)}).\n\n¿Desea forzar la conciliación de todas formas?`
       );
       if (!confirmDiff) return;
     }
 
     try {
       setLoading(true);
-      await api.reconcileExpense(selectedExp.id, selectedTx.id);
+      if (selectedItem.tipo === 'gasto') {
+        await api.reconcileExpense(selectedItem.id, selectedTx.id);
+      } else {
+        await api.reconcileDonation(selectedItem.id, selectedTx.id);
+      }
       
       // Limpiar selección
       setSelectedTx(null);
-      setSelectedExp(null);
+      setSelectedItem(null);
       
       // Recargar datos
       await loadData();
@@ -258,7 +308,7 @@ export const Reconciliation: React.FC = () => {
         </div>
       </div>
 
-      {loading && transactions.length === 0 && expenses.length === 0 ? (
+      {loading && transactions.length === 0 && reconciliationItems.length === 0 ? (
         <div style={{ textAlign: 'center', padding: '3rem' }}>Cargando datos de conciliación...</div>
       ) : (
         /* Grid Principal de Conciliación */
@@ -325,49 +375,59 @@ export const Reconciliation: React.FC = () => {
           {/* Columna Derecha: Comprobantes de Campo */}
           <div className="reconciliation-column">
             <div className="card-title" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span>Gastos y Donaciones Cargados ({expenses.length} sin conciliar)</span>
+              <span>Gastos y Donaciones Cargados ({reconciliationItems.length} sin conciliar)</span>
               <span style={{ fontSize: '0.8rem', fontWeight: 400, color: 'var(--neutral-dark)' }}>Selecciona un registro</span>
             </div>
 
             <div className="reconciliation-list">
-              {expenses.length === 0 ? (
+              {reconciliationItems.length === 0 ? (
                 <div className="card" style={{ textAlign: 'center', color: 'var(--neutral-dark)', opacity: 0.7, padding: '3rem' }}>
                   <p style={{ fontSize: '2.5rem' }}>📸</p>
-                  <p style={{ fontWeight: 600, marginTop: '1rem' }}>No hay gastos cargados sin conciliar</p>
-                  <p style={{ fontSize: '0.8rem', marginTop: '0.25rem' }}>Los coordinadores de campo deben cargar egresos desde la vista móvil.</p>
+                  <p style={{ fontWeight: 600, marginTop: '1rem' }}>No hay gastos o donaciones pendientes por conciliar</p>
+                  <p style={{ fontSize: '0.8rem', marginTop: '0.25rem' }}>Los registros del sistema aparecerán aquí de forma automática.</p>
                 </div>
               ) : (
-                expenses.map(exp => (
+                reconciliationItems.map(item => (
                   <div 
-                    key={exp.id}
-                    onClick={() => setSelectedExp(selectedExp?.id === exp.id ? null : exp)}
+                    key={`${item.tipo}-${item.id}`}
+                    onClick={() => setSelectedItem(selectedItem?.id === item.id && selectedItem?.tipo === item.tipo ? null : item)}
                     className="card"
                     style={{
                       padding: '1rem',
                       cursor: 'pointer',
-                      borderColor: selectedExp?.id === exp.id ? 'var(--primary)' : 'var(--border-color)',
-                      backgroundColor: selectedExp?.id === exp.id ? 'rgba(47, 90, 174, 0.03)' : '#ffffff',
+                      borderColor: selectedItem?.id === item.id && selectedItem?.tipo === item.tipo ? 'var(--primary)' : 'var(--border-color)',
+                      borderLeft: `5px solid ${item.tipo === 'gasto' ? 'var(--danger)' : 'var(--success)'}`,
+                      backgroundColor: selectedItem?.id === item.id && selectedItem?.tipo === item.tipo ? 'rgba(47, 90, 174, 0.03)' : '#ffffff',
                       transition: 'all var(--transition-fast)'
                     }}
                   >
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                       <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--neutral-dark)', opacity: 0.7 }}>
-                        {exp.fecha_gasto}
+                        {item.fecha}
                       </span>
-                      <span style={{ fontWeight: 700, color: 'var(--neutral-dark)' }}>
-                        {formatCurrency(exp.monto)}
-                      </span>
+                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
+                        <span style={{ fontWeight: 700, color: item.tipo === 'gasto' ? 'var(--danger)' : 'var(--success)' }}>
+                          {item.tipo === 'gasto' ? '-' : '+'}{item.moneda === 'VES' ? formatVesCurrency(item.monto_original || item.monto) : formatCurrency(item.monto)}
+                        </span>
+                        {item.moneda === 'VES' && (
+                          <span style={{ fontSize: '0.7rem', opacity: 0.6 }}>
+                            Equiv: {formatCurrency(item.monto)}
+                          </span>
+                        )}
+                      </div>
                     </div>
                     <p style={{ fontWeight: 500, fontSize: '0.9rem', marginTop: '0.5rem', wordBreak: 'break-word' }}>
-                      {exp.descripcion}
+                      {item.descripcion}
                     </p>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '0.5rem', fontSize: '0.75rem' }}>
-                      <span style={{ color: 'var(--neutral-dark)', opacity: 0.6 }}>Solicitante: {exp.solicitante_nombre}</span>
-                      <span className={`badge ${
-                        exp.estado === 'aprobado' ? 'badge-success' : 
-                        exp.estado === 'pendiente_revision' ? 'badge-warning' : 'badge-info'
-                      }`}>
-                        {exp.estado.replace('_', ' ')}
+                      <span style={{ color: 'var(--neutral-dark)', opacity: 0.6 }}>
+                        {item.tipo === 'gasto' 
+                          ? `Solicitante: ${(item.reference_object as ExpenseReceipt).solicitante_nombre || 'N/A'}` 
+                          : `Donante: ${(item.reference_object as Donation).donante}`
+                        }
+                      </span>
+                      <span className={`badge ${item.tipo === 'gasto' ? 'badge-warning' : 'badge-success'}`}>
+                        {item.tipo === 'gasto' ? '💸 Egreso' : '🤝 Donación'}
                       </span>
                     </div>
                   </div>
@@ -380,7 +440,7 @@ export const Reconciliation: React.FC = () => {
       )}
 
       {/* Barra Flotante de Conciliación */}
-      {(selectedTx || selectedExp) && (
+      {(selectedTx || selectedItem) && (
         <div style={{
           position: 'fixed',
           bottom: '2rem',
@@ -418,25 +478,30 @@ export const Reconciliation: React.FC = () => {
 
             {/* Resumen Exp */}
             <div style={{ flex: 1, minWidth: '200px' }}>
-              <div style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--neutral-dark)', opacity: 0.6 }}>COMPROBANTE CARGADO:</div>
-              {selectedExp ? (
+              <div style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--neutral-dark)', opacity: 0.6 }}>REGISTRO DEL SISTEMA:</div>
+              {selectedItem ? (
                 <div style={{ fontSize: '0.85rem', marginTop: '0.25rem' }}>
-                  <strong>{formatCurrency(selectedExp.monto)}</strong> - {selectedExp.descripcion.substring(0, 45)}...
+                  <strong>
+                    {selectedItem.moneda === 'VES' 
+                      ? formatVesCurrency(selectedItem.monto_original || selectedItem.monto) 
+                      : formatCurrency(selectedItem.monto)
+                    }
+                  </strong> - {selectedItem.descripcion.substring(0, 45)}...
                 </div>
               ) : (
-                <div style={{ fontSize: '0.85rem', color: 'red', marginTop: '0.25rem' }}>Seleccione comprobante o gasto</div>
+                <div style={{ fontSize: '0.85rem', color: 'red', marginTop: '0.25rem' }}>Seleccione comprobante o donación</div>
               )}
             </div>
           </div>
 
           <div>
             <button 
-              disabled={!selectedTx || !selectedExp}
+              disabled={!selectedTx || !selectedItem}
               onClick={handleReconcile}
               className="btn btn-secondary animate-fade-in-up"
               style={{
-                opacity: selectedTx && selectedExp ? 1 : 0.5,
-                cursor: selectedTx && selectedExp ? 'pointer' : 'not-allowed',
+                opacity: selectedTx && selectedItem ? 1 : 0.5,
+                cursor: selectedTx && selectedItem ? 'pointer' : 'not-allowed',
                 padding: '0.75rem 1.5rem'
               }}
             >

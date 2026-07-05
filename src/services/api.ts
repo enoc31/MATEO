@@ -650,6 +650,52 @@ export const api = {
     }
   },
 
+  reconcileDonation: async (donationId: string, transactionId: string): Promise<{ donation: Donation; transaction: BankTransaction }> => {
+    if (!isSimulationMode) {
+      // 1. Vincular la donación con la transacción
+      const { data: donationData, error: donError } = await supabase
+        .from('donaciones')
+        .update({ transaccion_id: transactionId })
+        .eq('id', donationId)
+        .select()
+        .single();
+      if (donError) throw donError;
+
+      // 2. Marcar la transacción bancaria como conciliada
+      const { data: txData, error: txError } = await supabase
+        .from('transacciones_bancarias')
+        .update({ estado: 'conciliado' })
+        .eq('id', transactionId)
+        .select()
+        .single();
+      if (txError) throw txError;
+
+      return {
+        donation: donationData as Donation,
+        transaction: txData as BankTransaction
+      };
+    } else {
+      const donations = JSON.parse(localStorage.getItem('cnbv_donations') || '[]');
+      const transactions = JSON.parse(localStorage.getItem('cnbv_bank_transactions') || '[]');
+
+      const donIndex = donations.findIndex((d: Donation) => d.id === donationId);
+      const txIndex = transactions.findIndex((t: BankTransaction) => t.id === transactionId);
+
+      if (donIndex === -1 || txIndex === -1) throw new Error('Donation or Transaction not found');
+
+      donations[donIndex].transaccion_id = transactionId;
+      transactions[txIndex].estado = 'conciliado';
+
+      localStorage.setItem('cnbv_donations', JSON.stringify(donations));
+      localStorage.setItem('cnbv_bank_transactions', JSON.stringify(transactions));
+
+      return {
+        donation: donations[donIndex],
+        transaction: transactions[txIndex]
+      };
+    }
+  },
+
   // --- DONACIONES ---
   getDonations: async (): Promise<Donation[]> => {
     if (!isSimulationMode) {
