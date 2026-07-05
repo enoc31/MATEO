@@ -110,11 +110,14 @@ export const IncomesManager: React.FC = () => {
     Papa.parse(file, {
       header: true,
       skipEmptyLines: true,
+      encoding: 'ISO-8859-1',
       complete: (results) => {
         const parsedTxs: Omit<BankTransaction, 'id' | 'estado'>[] = [];
 
         results.data.forEach((row: any) => {
           const keys = Object.keys(row);
+          if (keys.length === 0) return;
+
           const fechaKey = keys.find(k => {
             const ck = k.replace(/^\uFEFF/, '').replace(/"/g, '').trim().toLowerCase();
             return ck.includes('fecha') || ck.includes('date');
@@ -132,10 +135,16 @@ export const IncomesManager: React.FC = () => {
             return ck.includes('importe') || ck.includes('amount') || ck.includes('monto');
           });
 
-          const dateStr = fechaKey ? row[fechaKey]?.replace(/"/g, '').trim() : null;
-          const refStr = refKey ? row[refKey]?.replace(/"/g, '').trim() : null;
-          const descStr = descKey ? row[descKey]?.replace(/"/g, '').trim() : null;
-          const amountStr = amountKey ? row[amountKey]?.replace(/"/g, '').trim() : null;
+          // Fallback por índice si no coincide por nombre
+          const fKey = fechaKey || keys[0];
+          const rKey = refKey || keys[1];
+          const dKey = descKey || keys[2];
+          const aKey = amountKey || keys[3];
+
+          const dateStr = fKey ? row[fKey]?.replace(/"/g, '').trim() : null;
+          const refStr = rKey ? row[rKey]?.replace(/"/g, '').trim() : null;
+          const descStr = dKey ? row[dKey]?.replace(/"/g, '').trim() : null;
+          const amountStr = aKey ? row[aKey]?.replace(/"/g, '').trim() : null;
 
           if (dateStr && amountStr && descStr) {
             const dateStrClean = dateStr.replace(/\//g, '-');
@@ -168,7 +177,9 @@ export const IncomesManager: React.FC = () => {
         });
 
         if (parsedTxs.length === 0) {
-          alert('No se encontraron transacciones de ingreso válidas (con importe mayor a 0) en el archivo.');
+          const firstRow = results.data[0] || {};
+          const detectedHeaders = Object.keys(firstRow).join(', ');
+          alert(`No se encontraron transacciones de ingreso válidas en el archivo.\n\nCabeceras detectadas: [${detectedHeaders || 'Ninguna'}]\n\nAsegúrese de que el archivo tenga columnas para Fecha, Referencia, Descripción e Importe.`);
           setCsvTxs([]);
           setImportFileName('');
         } else {
@@ -193,7 +204,10 @@ export const IncomesManager: React.FC = () => {
       setShowImportModal(false);
       await loadData();
     } catch (err: any) {
-      alert('Error al registrar las transacciones: ' + (err.message || ''));
+      const errMsg = err.message || '';
+      const errDetails = err.details || '';
+      const errHint = err.hint || '';
+      alert(`Error al registrar las transacciones: ${errMsg}\nDetalles: ${errDetails}\nSugerencia: ${errHint}`);
     } finally {
       setImportingFile(false);
     }
