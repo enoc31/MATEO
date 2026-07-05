@@ -11,6 +11,7 @@ interface LayoutProps {
 export const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab }) => {
   const { profile, logout } = useAuth();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isPinned, setIsPinned] = useState(false);
   
   if (!profile) return null;
   const role = profile.rol;
@@ -38,7 +39,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTa
   };
 
   return (
-    <div className="app-container">
+    <div className={`app-container ${isPinned ? 'sidebar-pinned' : ''}`}>
       {/* Banner de Simulación */}
       {isSimulationMode && (
         <div style={{
@@ -158,6 +159,16 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTa
 
       {/* Contenido Principal */}
       <main className="main-content">
+        {/* User Info Bar (Desktop Only) */}
+        <div className="desktop-user-bar" style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: '1rem', marginBottom: '1.5rem', paddingBottom: '0.5rem', borderBottom: '1px solid var(--border-color)' }}>
+            <div style={{ textAlign: 'right' }}>
+              <div style={{ fontWeight: 600, fontSize: '0.9rem', color: 'var(--neutral-dark)' }}>{profile.nombre_completo}</div>
+              <span className="badge badge-info" style={{ fontSize: '0.65rem', padding: '0.1rem 0.5rem', marginTop: '2px', display: 'inline-block' }}>
+                {role.toUpperCase()}
+              </span>
+            </div>
+        </div>
+
         {children}
       </main>
 
@@ -166,13 +177,28 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTa
         className={`sidebar-overlay ${isMobileMenuOpen ? 'open' : ''}`} 
         onClick={() => setIsMobileMenuOpen(false)}
       ></div>
-      <aside className={`sidebar-container ${isMobileMenuOpen ? 'open' : ''}`}>
-        <div className="sidebar-header">
-          <div style={{ display: 'flex', flexDirection: 'column' }}>
-            <span style={{ fontWeight: 700, color: 'var(--primary)', fontSize: '1.1rem' }}>Menú Principal</span>
-            <span style={{ fontSize: '0.8rem', color: 'var(--neutral-dark)' }}>{profile.nombre_completo}</span>
+      <aside className={`sidebar-container ${isMobileMenuOpen ? 'open' : ''} ${isPinned ? 'pinned' : ''}`}>
+        <div className="sidebar-header" style={{ flexDirection: 'column', alignItems: 'center', gap: '0.5rem' }}>
+          <div style={{ display: 'flex', width: '100%', justifyContent: 'center', alignItems: 'center', position: 'relative', minHeight: '40px' }}>
+            <img 
+              src="https://cnbv.org/wp-content/uploads/2020/09/logo-cnbv.jpg" 
+              alt="CNBV Logo" 
+              className="sidebar-logo"
+            />
+            <button className="sidebar-close" onClick={() => setIsMobileMenuOpen(false)} style={{ position: 'absolute', right: 0 }}>×</button>
+            <button 
+              className="pin-btn" 
+              onClick={() => setIsPinned(!isPinned)}
+              title={isPinned ? 'Soltar Menú' : 'Fijar Menú'}
+              style={{ position: 'absolute', right: '-5px', background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.2rem', color: 'var(--primary)' }}
+            >
+              {isPinned ? '📌' : '📌'}
+            </button>
           </div>
-          <button className="sidebar-close" onClick={() => setIsMobileMenuOpen(false)}>×</button>
+          <div className="user-info mobile-only-user-info" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
+            <span style={{ fontWeight: 700, color: 'var(--primary)', fontSize: '0.9rem' }}>{profile.nombre_completo}</span>
+            <span style={{ fontSize: '0.75rem', color: 'var(--neutral-dark)' }}>{role.toUpperCase()}</span>
+          </div>
         </div>
         <nav className="sidebar-nav">
           {visibleMenuItems.map(item => (
