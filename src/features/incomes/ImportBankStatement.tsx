@@ -184,6 +184,9 @@ export const ImportBankStatement: React.FC = () => {
       await api.importBankTransactions(csvTxs);
       alert(`✅ Se importaron exitosamente ${csvTxs.length} transacciones de ingreso.`);
       window.close();
+      setTimeout(() => {
+        window.location.href = '/?page=incomes';
+      }, 100);
     } catch (err: any) {
       const errMsg = err.message || '';
       const errDetails = err.details || '';
@@ -232,7 +235,12 @@ export const ImportBankStatement: React.FC = () => {
           <button 
             type="button" 
             className="btn btn-outline" 
-            onClick={() => window.close()}
+            onClick={() => {
+              window.close();
+              setTimeout(() => {
+                window.location.href = '/?page=incomes';
+              }, 100);
+            }}
             style={{ fontWeight: 700 }}
           >
             <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}><XCircle size={18} /> Cerrar Ventana</span>
@@ -400,7 +408,12 @@ export const ImportBankStatement: React.FC = () => {
               <button 
                 type="button" 
                 className="btn btn-outline" 
-                onClick={() => window.close()} 
+                onClick={() => {
+               window.close();
+               setTimeout(() => {
+                 window.location.href = '/?page=incomes';
+               }, 100);
+             }} 
                 disabled={importingFile}
                 style={{ fontWeight: 700 }}
               >
