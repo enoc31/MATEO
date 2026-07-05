@@ -106,6 +106,7 @@ export const IncomesManager: React.FC = () => {
     const file = e.target.files?.[0];
     if (!file) return;
     setImportFileName(file.name);
+    e.target.value = '';
 
     Papa.parse(file, {
       header: true,
