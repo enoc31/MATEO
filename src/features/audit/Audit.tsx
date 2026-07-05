@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Scale, Search, FileText, CreditCard, AlertTriangle, XCircle, CheckCircle } from 'lucide-react';
 import { api } from '../../services/api';
 import type { ExpenseReceipt, Project, ExpenseCategory, PartidaGasto } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
@@ -170,7 +171,7 @@ export const Audit: React.FC = () => {
                     <div style={{ fontWeight: 500 }}>{exp.descripcion}</div>
                     {exp.transaccion_id && (
                       <span style={{ fontSize: '0.7rem', color: 'var(--success)', fontWeight: 600, display: 'inline-flex', gap: '0.25rem', marginTop: '0.25rem' }}>
-                        ⚖️ Conciliado con extracto bancario
+                        <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}><Scale size={14} /> Conciliado con extracto bancario</span>
                       </span>
                     )}
                   </td>
@@ -190,7 +191,7 @@ export const Audit: React.FC = () => {
                       className="btn btn-outline"
                       style={{ padding: '0.35rem 0.75rem', fontSize: '0.75rem' }}
                     >
-                      Auditar Gasto 🔎
+                      <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>Auditar Gasto <Search size={14} style={{ marginLeft: '4px' }} /></span>
                     </button>
                   </td>
                 </tr>
@@ -262,7 +263,7 @@ export const Audit: React.FC = () => {
                       transition: 'all var(--transition-fast)'
                     }}
                   >
-                    📄 Factura o Recibo
+                    <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}><FileText size={16} style={{ marginRight: '6px' }} /> Factura o Recibo</span>
                   </button>
                   <button
                     onClick={() => setActiveDocTab('pago')}
@@ -279,7 +280,7 @@ export const Audit: React.FC = () => {
                       transition: 'all var(--transition-fast)'
                     }}
                   >
-                    💳 Comprobante de Pago
+                    <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}><CreditCard size={16} style={{ marginRight: '6px' }} /> Comprobante de Pago</span>
                   </button>
                 </div>
 
@@ -317,7 +318,7 @@ export const Audit: React.FC = () => {
                         opacity: 0.7,
                         minHeight: '280px'
                       }}>
-                        <span>⚠️ No se cargó ninguna foto del recibo físico.</span>
+                        <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}><AlertTriangle size={18} color="var(--warning)" /> No se cargó ninguna foto del recibo físico.</span>
                       </div>
                     )}
                   </>
@@ -355,7 +356,7 @@ export const Audit: React.FC = () => {
                         opacity: 0.7,
                         minHeight: '280px'
                       }}>
-                        <span>⚠️ No se cargó ninguna foto del comprobante de pago.</span>
+                        <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}><AlertTriangle size={18} color="var(--warning)" /> No se cargó ninguna foto del comprobante de pago.</span>
                       </div>
                     )}
                   </>
@@ -465,7 +466,7 @@ export const Audit: React.FC = () => {
                     className="btn btn-outline"
                     style={{ padding: '0.5rem 1rem', borderColor: 'var(--danger)', color: 'var(--danger)' }}
                   >
-                    Rechazar Soporte ❌
+                    <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}><XCircle size={18} style={{ marginRight: '6px' }} /> Rechazar Soporte</span>
                   </button>
 
                   <button 
@@ -473,7 +474,7 @@ export const Audit: React.FC = () => {
                     className="btn btn-secondary"
                     style={{ padding: '0.5rem 1.25rem' }}
                   >
-                    Aprobar Gasto y Comprobante ✔️
+                    <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}><CheckCircle size={18} style={{ marginRight: '6px' }} /> Aprobar Gasto y Comprobante</span>
                   </button>
                 </>
               )}

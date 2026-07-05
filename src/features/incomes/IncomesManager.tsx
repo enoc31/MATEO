@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Wallet, Download, CheckCircle, Clock, Mailbox, DollarSign, Landmark, Scale, ClipboardList } from 'lucide-react';
 import { api } from '../../services/api';
 import type { Project, Donation, Donante } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
@@ -123,7 +124,7 @@ export const IncomesManager: React.FC = () => {
   if (loading) {
     return (
       <div style={{ textAlign: 'center', padding: '4rem', color: 'var(--primary)' }}>
-        <div style={{ fontSize: '2rem', marginBottom: '1rem' }}>💰</div>
+        <div style={{ marginBottom: '1rem', display: 'flex', justifyContent: 'center' }}><Wallet size={36} color="var(--primary)" /></div>
         <strong>Cargando ingresos...</strong>
       </div>
     );
@@ -136,7 +137,7 @@ export const IncomesManager: React.FC = () => {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '2rem', flexWrap: 'wrap', gap: '1rem' }}>
         <div>
           <h2 style={{ color: 'var(--primary)', fontWeight: 800, margin: 0, fontSize: '1.6rem' }}>
-            💰 Registro de Ingresos
+            <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}><Wallet size={18} /> Registro de Ingresos</span>
           </h2>
           <p style={{ margin: '0.25rem 0 0', opacity: 0.6, fontSize: '0.85rem' }}>
             Donaciones y aportes confirmados por proyecto y donante
@@ -149,7 +150,7 @@ export const IncomesManager: React.FC = () => {
               onClick={() => window.open('/?page=importar-extracto', '_blank')}
               style={{ fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.5rem' }}
             >
-              📥 Importar Extracto (CSV)
+              <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}><Download size={16} /> Importar Extracto (CSV)</span>
             </button>
             <button
               className="btn btn-primary"
@@ -176,11 +177,11 @@ export const IncomesManager: React.FC = () => {
           
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem', marginTop: '0.8rem', paddingTop: '0.8rem', borderTop: '1px solid rgba(255,255,255,0.15)', fontSize: '0.78rem' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span style={{ opacity: 0.8 }}>🟢 Disponible (Conciliado):</span>
+              <span style={{ opacity: 0.8, display: 'flex', alignItems: 'center', gap: '0.4rem' }}><CheckCircle size={14} color="var(--success)" /> Disponible (Conciliado):</span>
               <strong style={{ fontWeight: 800 }}>{formatCurrency(reconciledIngresosUsd)}</strong>
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span style={{ opacity: 0.8 }}>🟡 No Disponible (Pendiente):</span>
+              <span style={{ opacity: 0.8, display: 'flex', alignItems: 'center', gap: '0.4rem' }}><Clock size={14} color="#d97706" /> No Disponible (Pendiente):</span>
               <strong style={{ fontWeight: 800, color: '#fcd34d' }}>{formatCurrency(unreconciledIngresosUsd)}</strong>
             </div>
           </div>
@@ -237,7 +238,7 @@ export const IncomesManager: React.FC = () => {
 
         {filteredDonations.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '4rem 2rem', opacity: 0.5 }}>
-            <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>📭</div>
+            <div style={{ marginBottom: '1rem', display: 'flex', justifyContent: 'center' }}><Mailbox size={48} color="var(--neutral-dark)" style={{ opacity: 0.5 }} /></div>
             <p style={{ fontWeight: 600 }}>No hay ingresos registrados aún.</p>
             <p style={{ fontSize: '0.85rem' }}>Haz clic en <strong>"Registrar Ingreso"</strong> para comenzar.</p>
           </div>
@@ -286,10 +287,10 @@ export const IncomesManager: React.FC = () => {
                       <td style={{ padding: '0.85rem 1rem', textAlign: 'center' }}>
                         <div style={{ display: 'inline-flex', flexDirection: 'column', gap: '0.15rem', alignItems: 'center' }}>
                           <span className={`badge ${isVES ? 'badge-warning' : 'badge-success'}`} style={{ fontSize: '0.65rem', textTransform: 'uppercase', padding: '0.1rem 0.4rem' }}>
-                            {isVES ? '🇻🇪 VES' : '💵 USD'}
+                            {isVES ? '🇻🇪 VES' : <span style={{display:'flex', gap:'0.25rem', alignItems:'center'}}><DollarSign size={14}/> USD</span>}
                           </span>
                           <span style={{ fontSize: '0.7rem', opacity: 0.6 }}>
-                            {d.medio_pago === 'efectivo' ? '💵 Efectivo' : '🏦 Transf.'}
+                            {d.medio_pago === 'efectivo' ? <span style={{display:'flex', gap:'0.25rem', alignItems:'center'}}><DollarSign size={14}/> Efectivo</span> : <span style={{display:'flex', gap:'0.25rem', alignItems:'center'}}><Landmark size={14}/> Transf.</span>}
                           </span>
                         </div>
                       </td>
@@ -308,7 +309,7 @@ export const IncomesManager: React.FC = () => {
                       <td style={{ padding: '0.85rem 1rem', textAlign: 'center' }}>
                         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.25rem' }}>
                           <span className={`badge ${d.transaccion_id ? 'badge-success' : 'badge-warning'}`} style={{ whiteSpace: 'nowrap' }}>
-                            {d.transaccion_id ? '⚖️ Conciliado (Disponible)' : '📋 Registrado (No disp.)'}
+                            {d.transaccion_id ? <span style={{display:'flex', gap:'0.4rem', alignItems:'center'}}><Scale size={14} color="var(--success)" /> Conciliado (Disponible)</span> : <span style={{display:'flex', gap:'0.4rem', alignItems:'center'}}><ClipboardList size={14} color="var(--warning)" /> Registrado (No disp.)</span>}
                           </span>
                           {!d.transaccion_id && d.medio_pago === 'efectivo' && ['administrador', 'director'].includes(profile?.rol || '') && (
                             <button
@@ -325,7 +326,7 @@ export const IncomesManager: React.FC = () => {
                                 cursor: 'pointer'
                               }}
                             >
-                              💵 Conciliar en Caja
+                              <span style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}><DollarSign size={14} /> Conciliar en Caja</span>
                             </button>
                           )}
                         </div>

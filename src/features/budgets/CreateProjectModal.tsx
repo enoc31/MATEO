@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Plus, AlertTriangle, Folder, Handshake, CheckCircle } from 'lucide-react';
 import { api } from '../../services/api';
 import type { Donante } from '../../services/api';
 import { isSimulationMode } from '../../services/api';
@@ -121,7 +122,7 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({ isOpen, 
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.5rem', borderBottom: '1px solid var(--border-color)', paddingBottom: '1rem' }}>
           <div>
             <h3 style={{ color: 'var(--primary)', fontSize: '1.2rem', fontWeight: 800, margin: 0 }}>
-              ➕ Nuevo Proyecto
+              <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}><Plus size={18} /> Nuevo Proyecto</span>
             </h3>
             <p style={{ margin: '0.25rem 0 0', fontSize: '0.78rem', opacity: 0.6 }}>
               Complete la ficha del proyecto y su fuente de financiamiento
@@ -132,7 +133,7 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({ isOpen, 
 
         {error && (
           <div style={{ background: 'var(--danger)', color: '#fff', padding: '0.75rem 1rem', borderRadius: '6px', marginBottom: '1rem', fontSize: '0.85rem' }}>
-            ⚠️ {error}
+            <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}><AlertTriangle size={16} /> {error}</span>
           </div>
         )}
 
@@ -140,7 +141,7 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({ isOpen, 
 
           {/* ── SECCIÓN 1: DATOS DEL PROYECTO ─────────────────────────── */}
           <div style={{ fontSize: '0.7rem', fontWeight: 700, letterSpacing: '0.1em', color: 'var(--primary)', textTransform: 'uppercase', opacity: 0.8 }}>
-            📁 Datos del Proyecto
+            <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}><Folder size={18} /> Datos del Proyecto</span>
           </div>
 
           <div className="form-group" style={{ marginBottom: 0 }}>
@@ -200,7 +201,7 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({ isOpen, 
 
           {/* ── SECCIÓN 2: DONANTE ─────────────────────────────────────── */}
           <div style={{ fontSize: '0.7rem', fontWeight: 700, letterSpacing: '0.1em', color: 'var(--primary)', textTransform: 'uppercase', opacity: 0.8, marginTop: '0.5rem', borderTop: '1px solid var(--border-color)', paddingTop: '1rem' }}>
-            🤝 Fuente de Financiamiento
+            <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}><Handshake size={18} /> Fuente de Financiamiento</span>
           </div>
 
           {/* Filtro de tipo */}
@@ -275,7 +276,7 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({ isOpen, 
               Cancelar
             </button>
             <button type="submit" className="btn btn-primary" disabled={isSubmitting || !donanteId}>
-              {isSubmitting ? 'Registrando...' : '✅ Registrar Proyecto'}
+              {isSubmitting ? 'Registrando...' : <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}><CheckCircle size={16} /> Registrar Proyecto</span>}
             </button>
           </div>
 

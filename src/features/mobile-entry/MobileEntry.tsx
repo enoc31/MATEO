@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Send } from 'lucide-react';
 import { api, requisitionsApi } from '../../services/api';
 import type { Project, ExpenseCategory, PartidaGasto, ExpenseReceipt, Requisition } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
@@ -649,11 +650,15 @@ export const MobileEntry: React.FC = () => {
                 fontWeight: 700, 
                 borderRadius: 'var(--radius-md)',
                 boxShadow: 'var(--shadow-md)',
-                cursor: submitting ? 'not-allowed' : 'pointer'
+                cursor: submitting ? 'not-allowed' : 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '0.5rem'
               }}
               disabled={submitting}
             >
-              {submitting ? 'Enviando comprobantes...' : '🚀 Guardar Gasto y Enviar a Auditoría'}
+              {submitting ? 'Enviando comprobantes...' : <><Send size={20} /> Guardar Gasto y Enviar a Auditoría</>}
             </button>
           </div>
 

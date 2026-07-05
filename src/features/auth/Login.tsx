@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Lightbulb, Shield, Briefcase, Scale, MapPin, Users, Gift } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import type { UserRole } from '../../context/AuthContext';
 import { isSimulationMode } from '../../services/api';
@@ -360,7 +361,7 @@ export const Login: React.FC = () => {
                 textAlign: 'center'
               }}>
                 <p style={{ fontSize: '0.8rem', color: 'var(--accent)', fontWeight: 600 }}>
-                  💡 Modo Demostración Activo
+                  <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Lightbulb size={18} style={{ marginRight: '6px' }} /> Modo Demostración Activo</span>
                 </p>
                 <p style={{ fontSize: '0.75rem', color: 'var(--neutral-dark)', marginTop: '0.25rem', opacity: 0.9 }}>
                   Selecciona un rol pre-aprobado para ingresar de inmediato:
@@ -376,7 +377,7 @@ export const Login: React.FC = () => {
                   className="btn btn-primary" 
                   style={{ padding: '0.6rem', fontSize: '0.8rem', gridColumn: 'span 2' }}
                 >
-                  ⭐ Super Admin (Control Total)
+                  <span style={{ display: 'flex', alignItems: 'center' }}><Shield size={16} style={{ marginRight: '6px' }} /> Super Admin (Control Total)</span>
                 </button>
                 
                 <button 
@@ -385,7 +386,7 @@ export const Login: React.FC = () => {
                   className="btn btn-secondary" 
                   style={{ padding: '0.6rem', fontSize: '0.8rem' }}
                 >
-                  👔 Director
+                  <span style={{ display: 'flex', alignItems: 'center' }}><Briefcase size={16} style={{ marginRight: '6px' }} /> Director</span>
                 </button>
                 
                 <button 
@@ -394,7 +395,7 @@ export const Login: React.FC = () => {
                   className="btn btn-outline" 
                   style={{ padding: '0.6rem', fontSize: '0.8rem' }}
                 >
-                  ⚖️ Auditor
+                  <span style={{ display: 'flex', alignItems: 'center' }}><Scale size={16} style={{ marginRight: '6px' }} /> Auditor</span>
                 </button>
 
                 <button 
@@ -403,7 +404,7 @@ export const Login: React.FC = () => {
                   className="btn btn-outline" 
                   style={{ padding: '0.6rem', fontSize: '0.8rem' }}
                 >
-                  🚜 Coordinador
+                  <span style={{ display: 'flex', alignItems: 'center' }}><MapPin size={16} style={{ marginRight: '6px' }} /> Coordinador</span>
                 </button>
 
                 <button 
@@ -412,7 +413,7 @@ export const Login: React.FC = () => {
                   className="btn btn-outline" 
                   style={{ padding: '0.6rem', fontSize: '0.8rem' }}
                 >
-                  🤝 Auxiliar Campo
+                  <span style={{ display: 'flex', alignItems: 'center' }}><Users size={16} style={{ marginRight: '6px' }} /> Auxiliar Campo</span>
                 </button>
 
                 <button 
@@ -421,7 +422,7 @@ export const Login: React.FC = () => {
                   className="btn btn-outline" 
                   style={{ padding: '0.6rem', fontSize: '0.8rem', gridColumn: 'span 2' }}
                 >
-                  🎁 Donante (Solo Tableros)
+                  <span style={{ display: 'flex', alignItems: 'center' }}><Gift size={16} style={{ marginRight: '6px' }} /> Donante (Solo Tableros)</span>
                 </button>
               </div>
             ) : null}

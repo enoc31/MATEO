@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { Download, XCircle, DollarSign, FolderOpen, ClipboardList, Trash2 } from 'lucide-react';
 import { api } from '../../services/api';
 import type { BankTransaction, TasaBCV } from '../../services/api';
 import Papa from 'papaparse';
@@ -207,7 +208,7 @@ export const ImportBankStatement: React.FC = () => {
     return (
       <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh', backgroundColor: '#f8fafc', color: 'var(--primary)' }}>
         <div style={{ textAlign: 'center' }}>
-          <div style={{ fontSize: '2.5rem', marginBottom: '1rem' }}>📥</div>
+          <div style={{ marginBottom: '1rem', color: 'var(--primary)', display: 'flex', justifyContent: 'center' }}><Download size={40} /></div>
           <strong>Cargando importador bancario...</strong>
         </div>
       </div>
@@ -222,7 +223,7 @@ export const ImportBankStatement: React.FC = () => {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
           <div>
             <h1 style={{ color: 'var(--primary)', fontWeight: 800, margin: 0, fontSize: '1.8rem' }}>
-              📥 Importar Extracto Bancario (CSV)
+              <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}><Download size={18} /> Importar Extracto Bancario (CSV)</span>
             </h1>
             <p style={{ margin: '0.25rem 0 0', opacity: 0.6, fontSize: '0.85rem' }}>
               Cargue los depósitos o transferencias del banco para conciliación.
@@ -234,7 +235,7 @@ export const ImportBankStatement: React.FC = () => {
             onClick={() => window.close()}
             style={{ fontWeight: 700 }}
           >
-            ❌ Cerrar Ventana
+            <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}><XCircle size={18} /> Cerrar Ventana</span>
           </button>
         </div>
 
@@ -265,7 +266,7 @@ export const ImportBankStatement: React.FC = () => {
                       color: importMoneda === m ? '#fff' : 'var(--neutral-dark)'
                     }}
                   >
-                    {m === 'USD' ? '💵 Dólares (USD)' : '🇻🇪 Bolívares (VES)'}
+                    {m === 'USD' ? <span style={{display: 'flex', gap: '0.5rem', alignItems: 'center'}}><DollarSign size={16}/> Dólares (USD)</span> : '🇻🇪 Bolívares (VES)'}
                   </button>
                 ))}
               </div>
@@ -297,7 +298,7 @@ export const ImportBankStatement: React.FC = () => {
               onClick={() => importFileInputRef.current?.click()}
               disabled={importingFile}
             >
-              <span style={{ fontSize: '2.5rem' }}>📂</span>
+              <div style={{ display: 'flex', justifyContent: 'center' }}><FolderOpen size={40} color="var(--primary)" /></div>
               <strong style={{ fontSize: '0.95rem', color: 'var(--primary)' }}>
                 {importFileName || 'Haga clic aquí para seleccionar el archivo REPORTE.CSV'}
               </strong>
@@ -311,13 +312,13 @@ export const ImportBankStatement: React.FC = () => {
               <div style={{ backgroundColor: 'rgba(47,90,174,0.05)', padding: '1.25rem', borderRadius: 'var(--radius-md)', display: 'flex', flexDirection: 'column', gap: '1rem', border: '1px solid rgba(47,90,174,0.1)' }}>
                 
                 <div style={{ fontSize: '0.88rem', fontWeight: 700, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span style={{ color: 'var(--primary)' }}>📋 Movimientos de Ingreso Detectados ({csvTxs.length})</span>
+                  <span style={{ color: 'var(--primary)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}><ClipboardList size={18} /> Movimientos de Ingreso Detectados ({csvTxs.length})</span>
                   <button
                     type="button"
                     onClick={() => { setCsvTxs([]); setImportFileName(''); if (importFileInputRef.current) importFileInputRef.current.value = ''; }}
                     style={{ background: 'none', border: 'none', color: 'var(--danger)', cursor: 'pointer', fontSize: '0.8rem', fontWeight: 700 }}
                   >
-                    🗑️ Limpiar Archivo
+                    <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}><Trash2 size={16} /> Limpiar Archivo</span>
                   </button>
                 </div>
 
@@ -389,7 +390,7 @@ export const ImportBankStatement: React.FC = () => {
                   onClick={handleConfirmImport}
                   disabled={importingFile}
                 >
-                  {importingFile ? 'Procesando importación...' : `📥 Confirmar e Importar ${csvTxs.length} Transacciones`}
+                  {importingFile ? 'Procesando importación...' : <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}><Download size={18} /> Confirmar e Importar {csvTxs.length} Transacciones</span>}
                 </button>
               </div>
             )}

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { AlertTriangle } from 'lucide-react';
 import { api, isSimulationMode } from '../../services/api';
 import type { Project, ExpenseCategory, PartidaGasto, Budget } from '../../services/api';
 import { supabase } from '../../supabaseClient';
@@ -351,7 +352,7 @@ export const BudgetWizard: React.FC<BudgetWizardProps> = ({ isOpen, onClose, onS
         <div style={{ flex: 1, overflowY: 'auto', marginBottom: '1.5rem', paddingRight: '0.5rem' }}>
           {!selectedProjectId ? (
             <div style={{ padding: '4rem 2rem', textAlign: 'center', opacity: 0.6, fontSize: '0.95rem' }}>
-              ⚠️ Seleccione un proyecto en el panel superior para desplegar la matriz presupuestaria UNDG.
+              <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}><AlertTriangle size={18} color="var(--warning)" /> Seleccione un proyecto en el panel superior para desplegar la matriz presupuestaria UNDG.</span>
             </div>
           ) : (
             <div>

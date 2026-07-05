@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Send } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { api, requisitionsApi } from '../../services/api';
 import type { Project, ExpenseCategory, PartidaGasto } from '../../services/api';
@@ -222,9 +223,9 @@ export const RequisitionForm: React.FC<RequisitionFormProps> = ({ onClose, onSuc
                 type="submit" 
                 className="btn btn-primary"
                 disabled={loading}
-                style={{ flex: 2, padding: '1rem', fontSize: '1rem' }}
+                style={{ flex: 2, padding: '1rem', fontSize: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}
               >
-                {loading ? 'Enviando...' : '🚀 Solicitar'}
+                {loading ? 'Enviando...' : <><Send size={18} /> Solicitar</>}
               </button>
             </div>
           </div>

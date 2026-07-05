@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Wallet, XCircle, Pencil, Landmark, CheckSquare, Square, Calendar, Save } from 'lucide-react';
 import { api } from '../../services/api';
 import type { Project, Donante, BankTransaction, TasaBCV } from '../../services/api';
 
@@ -239,7 +240,7 @@ export const IncomeRegistrationForm: React.FC = () => {
     return (
       <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh', backgroundColor: '#f8fafc', color: 'var(--primary)' }}>
         <div style={{ textAlign: 'center' }}>
-          <div style={{ fontSize: '2.5rem', marginBottom: '1rem' }}>💰</div>
+          <div style={{ marginBottom: '1rem', display: 'flex', justifyContent: 'center' }}><Wallet size={40} color="var(--primary)" /></div>
           <strong>Cargando formulario de registro...</strong>
         </div>
       </div>
@@ -254,7 +255,7 @@ export const IncomeRegistrationForm: React.FC = () => {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
           <div>
             <h1 style={{ color: 'var(--primary)', fontWeight: 800, margin: 0, fontSize: '1.8rem' }}>
-              💰 Registrar Nuevo Ingreso
+              <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}><Wallet size={18} /> Registrar Nuevo Ingreso</span>
             </h1>
             <p style={{ margin: '0.25rem 0 0', opacity: 0.6, fontSize: '0.85rem' }}>
               Complete el formulario para registrar un aporte o donación en el sistema.
@@ -266,7 +267,7 @@ export const IncomeRegistrationForm: React.FC = () => {
             onClick={() => window.close()}
             style={{ fontWeight: 700 }}
           >
-            ❌ Cerrar Ventana
+            <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}><XCircle size={18} /> Cerrar Ventana</span>
           </button>
         </div>
 
@@ -295,7 +296,7 @@ export const IncomeRegistrationForm: React.FC = () => {
                   color: tipoRegistro === t ? '#fff' : 'var(--neutral-dark)'
                 }}
               >
-                {t === 'manual' ? '✏️ Registro de Ingreso Manual' : '🏦 Registro Desde Extracto Bancario'}
+                {t === 'manual' ? <span style={{display: 'flex', gap: '0.4rem', alignItems: 'center'}}><Pencil size={16}/> Registro de Ingreso Manual</span> : <span style={{display: 'flex', gap: '0.4rem', alignItems: 'center'}}><Landmark size={16}/> Registro Desde Extracto Bancario</span>}
               </button>
             ))}
           </div>
@@ -316,7 +317,7 @@ export const IncomeRegistrationForm: React.FC = () => {
                         fontWeight: 700, fontSize: '0.8rem', cursor: 'pointer'
                       }}
                     >
-                      {selectedTxIds.length === bankTxs.length ? '☑️ Desmarcar Todos' : '✅ Marcar Todos'}
+                      {selectedTxIds.length === bankTxs.length ? <span style={{display:'flex', gap:'0.4rem', alignItems:'center'}}><Square size={14}/> Desmarcar Todos</span> : <span style={{display:'flex', gap:'0.4rem', alignItems:'center'}}><CheckSquare size={14}/> Marcar Todos</span>}
                     </button>
                   )}
                 </div>
@@ -353,7 +354,7 @@ export const IncomeRegistrationForm: React.FC = () => {
                           />
                           <div style={{ flex: 1 }}>
                             <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 700 }}>
-                              <span>📅 {tx.fecha} — Ref: {tx.referencia}</span>
+                              <span style={{display:'flex', gap:'0.4rem', alignItems:'center'}}><Calendar size={14}/> {tx.fecha} — Ref: {tx.referencia}</span>
                               <span style={{ color: 'var(--success)', fontSize: '0.85rem' }}>
                                 {isTxVes ? formatVesCurrency(tx.monto) : formatCurrency(tx.monto)}
                               </span>
@@ -599,7 +600,7 @@ export const IncomeRegistrationForm: React.FC = () => {
                 Cancelar
               </button>
               <button type="submit" className="btn btn-primary" disabled={submitting} style={{ fontWeight: 700, padding: '0.6rem 1.5rem' }}>
-                {submitting ? 'Registrando...' : '✅ Registrar Ingreso'}
+                {submitting ? 'Guardando...' : <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}><Save size={18} /> Guardar y Finalizar Ingreso</span>}
               </button>
             </div>
 

@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { Download, CheckCircle, Clock, Upload, Scale } from 'lucide-react';
 import { api } from '../../services/api';
 import type { Project, ExpenseReceipt, Donation, Budget, ExpenseCategory, PartidaGasto } from '../../services/api';
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, Legend, PieChart, Pie, Cell } from 'recharts';
@@ -129,16 +130,16 @@ export const Dashboard: React.FC = () => {
                 {formatCurrency(totalInflows)}
               </h3>
             </div>
-            <span style={{ fontSize: '2.2rem', marginTop: '-0.2rem' }}>📥</span>
+            <span style={{ display: 'flex', alignItems: 'center' }}><Download size={36} color="var(--primary)" /></span>
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem', marginTop: '0.8rem', paddingTop: '0.8rem', borderTop: '1px solid var(--border-color)', fontSize: '0.78rem' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span style={{ opacity: 0.7 }}>🟢 Disponible (Conciliado):</span>
+              <span style={{ opacity: 0.7, display: 'flex', alignItems: 'center', gap: '0.25rem' }}><CheckCircle size={14} color="var(--success)" /> Disponible (Conciliado):</span>
               <strong style={{ color: 'var(--success)' }}>{formatCurrency(reconciledInflows)}</strong>
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span style={{ opacity: 0.7 }}>🟡 No Disponible (Pendiente):</span>
+              <span style={{ opacity: 0.7, display: 'flex', alignItems: 'center', gap: '0.25rem' }}><Clock size={14} color="#d97706" /> No Disponible (Pendiente):</span>
               <strong style={{ color: '#d97706' }}>{formatCurrency(unreconciledInflows)}</strong>
             </div>
           </div>
@@ -155,7 +156,7 @@ export const Dashboard: React.FC = () => {
                 {formatCurrency(totalOutflows)}
               </h3>
             </div>
-            <span style={{ fontSize: '2rem' }}>📤</span>
+            <span style={{ display: 'flex', alignItems: 'center' }}><Upload size={32} color="var(--secondary)" /></span>
           </div>
           <div style={{ fontSize: '0.75rem', color: 'var(--neutral-dark)', opacity: 0.6, marginTop: '0.75rem' }}>
             Egresos correspondientes a comprobantes debidamente auditados y aprobados.
@@ -173,7 +174,7 @@ export const Dashboard: React.FC = () => {
                 {formatCurrency(availableBalance)}
               </h3>
             </div>
-            <span style={{ fontSize: '2rem' }}>⚖️</span>
+            <span style={{ display: 'flex', alignItems: 'center' }}><Scale size={32} color="var(--accent)" /></span>
           </div>
           <div style={{ fontSize: '0.75rem', color: 'var(--neutral-dark)', opacity: 0.6, marginTop: '0.75rem' }}>
             Fondos reales líquidos disponibles en banco/caja (Ingresos conciliados - Egresos aprobados).

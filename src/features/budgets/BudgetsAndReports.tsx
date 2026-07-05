@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Plus, Briefcase, FileSpreadsheet, FileText, AlertTriangle } from 'lucide-react';
 import { api } from '../../services/api';
 import type { Project, ExpenseCategory, PartidaGasto, Budget, ExpenseReceipt } from '../../services/api';
 import { BudgetWizard } from './BudgetWizard';
@@ -325,19 +326,19 @@ export const BudgetsAndReports: React.FC = () => {
 
         <div style={{ display: 'flex', gap: '0.75rem' }}>
           <button onClick={() => setIsCreateProjectOpen(true)} className="btn btn-outline" style={{ fontSize: '0.85rem', fontWeight: 600, borderColor: 'var(--primary)', color: 'var(--primary)' }}>
-            ➕ Crear Proyecto
+            <span style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}><Plus size={16} /> Crear Proyecto</span>
           </button>
 
           <button onClick={() => setIsWizardOpen(true)} className="btn btn-primary" style={{ fontSize: '0.85rem', fontWeight: 600 }}>
-            💼 Asistente Presupuesto UNDG
+            <span style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}><Briefcase size={16} /> Asistente Presupuesto UNDG</span>
           </button>
           
           <button onClick={handleExportExcel} className="btn btn-outline" style={{ fontSize: '0.85rem' }} disabled={!filterProjectId}>
-            🟢 Excel (.xlsx)
+            <span style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}><FileSpreadsheet size={16} color="var(--success)" /> Excel (.xlsx)</span>
           </button>
           
           <button onClick={handleExportPDF} className="btn btn-secondary" style={{ fontSize: '0.85rem' }} disabled={!filterProjectId}>
-            🔴 Reporte PDF (.pdf)
+            <span style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}><FileText size={16} color="var(--danger)" /> Reporte PDF (.pdf)</span>
           </button>
         </div>
       </div>
@@ -392,7 +393,7 @@ export const BudgetsAndReports: React.FC = () => {
             <div style={{ padding: '2rem', textAlign: 'center' }}>Cargando datos presupuestarios...</div>
           ) : getFilteredBudgets().length === 0 ? (
             <div style={{ padding: '4rem 2rem', textAlign: 'center', opacity: 0.6 }}>
-              ⚠️ Este proyecto no tiene un presupuesto asignado para el período seleccionado.
+              <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}><AlertTriangle size={18} color="var(--warning)" /> Este proyecto no tiene un presupuesto asignado para el período seleccionado.</span>
               <br />
               <button 
                 onClick={() => setIsWizardOpen(true)} 

@@ -1,4 +1,20 @@
 import React, { useState } from 'react';
+import { 
+  LayoutDashboard, 
+  ClipboardList, 
+  Wallet, 
+  ArrowRightLeft, 
+  Scale, 
+  Search, 
+  PieChart, 
+  Camera, 
+  Users,
+  LogOut,
+  Pin,
+  PinOff,
+  Menu,
+  Lightbulb
+} from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { isSimulationMode } from '../services/api';
 
@@ -18,15 +34,15 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTa
 
   // Configuración de menús basados en roles
   const menuItems = [
-    { id: 'dashboard', label: 'Tableros', icon: '📊', roles: ['administrador', 'auditor', 'director', 'donante'] },
-    { id: 'requisitions', label: 'Requisiciones', icon: '📋', roles: ['administrador', 'coordinador', 'director', 'auxiliar_campo'] },
-    { id: 'incomes', label: 'Ingresos', icon: '💰', roles: ['administrador', 'director', 'auditor'] },
-    { id: 'tasas', label: 'Tasas BCV', icon: '💱', roles: ['administrador', 'director'] },
-    { id: 'reconciliation', label: 'Conciliación', icon: '⚖️', roles: ['administrador', 'auditor'] },
-    { id: 'audit', label: 'Auditoría', icon: '🔍', roles: ['administrador', 'auditor'] },
-    { id: 'budgets', label: 'Presupuestos', icon: '📑', roles: ['administrador', 'auditor', 'director'] },
-    { id: 'field-entry', label: 'Cargar Gastos', icon: '📸', roles: ['administrador', 'coordinador', 'director', 'auxiliar_campo'] },
-    { id: 'users', label: 'Usuarios', icon: '👥', roles: ['administrador'] }
+    { id: 'dashboard', label: 'Tableros', icon: <LayoutDashboard size={20} strokeWidth={1.5} />, roles: ['administrador', 'auditor', 'director', 'donante'] },
+    { id: 'requisitions', label: 'Requisiciones', icon: <ClipboardList size={20} strokeWidth={1.5} />, roles: ['administrador', 'coordinador', 'director', 'auxiliar_campo'] },
+    { id: 'incomes', label: 'Ingresos', icon: <Wallet size={20} strokeWidth={1.5} />, roles: ['administrador', 'director', 'auditor'] },
+    { id: 'tasas', label: 'Tasas BCV', icon: <ArrowRightLeft size={20} strokeWidth={1.5} />, roles: ['administrador', 'director'] },
+    { id: 'reconciliation', label: 'Conciliación', icon: <Scale size={20} strokeWidth={1.5} />, roles: ['administrador', 'auditor'] },
+    { id: 'audit', label: 'Auditoría', icon: <Search size={20} strokeWidth={1.5} />, roles: ['administrador', 'auditor'] },
+    { id: 'budgets', label: 'Presupuestos', icon: <PieChart size={20} strokeWidth={1.5} />, roles: ['administrador', 'auditor', 'director'] },
+    { id: 'field-entry', label: 'Cargar Gastos', icon: <Camera size={20} strokeWidth={1.5} />, roles: ['administrador', 'coordinador', 'director', 'auxiliar_campo'] },
+    { id: 'users', label: 'Usuarios', icon: <Users size={20} strokeWidth={1.5} />, roles: ['administrador'] }
   ];
 
   const visibleMenuItems = menuItems.filter(item => item.roles.includes(role));
@@ -56,7 +72,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTa
           flexWrap: 'wrap'
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <span>💡 <strong>Modo Demostración Activo:</strong> Los datos se almacenan de manera local y segura en este navegador.</span>
+            <span style={{ display: 'flex', alignItems: 'center' }}><Lightbulb size={16} strokeWidth={2} style={{marginRight: '6px'}} /> <strong>Modo Demostración Activo:</strong> Los datos se almacenan de manera local y segura en este navegador.</span>
           </div>
           <div style={{ display: 'flex', gap: '1rem' }}>
             <button 
@@ -89,7 +105,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTa
             onClick={() => setIsMobileMenuOpen(true)}
             aria-label="Abrir menú"
           >
-            ☰
+            <Menu size={24} />
           </button>
           <img 
             src="https://cnbv.org/wp-content/uploads/2020/09/logo-cnbv.jpg" 
@@ -149,9 +165,9 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTa
             <button
               onClick={logout}
               className="btn btn-outline"
-              style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem', borderColor: '#cbd5e1', color: 'var(--neutral-dark)' }}
+              style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem', borderColor: '#cbd5e1', color: 'var(--neutral-dark)', display: 'flex', alignItems: 'center', gap: '0.4rem' }}
             >
-              Salir
+              <LogOut size={14} /> Salir
             </button>
           </div>
         </nav>
@@ -190,9 +206,9 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTa
               className="pin-btn" 
               onClick={() => setIsPinned(!isPinned)}
               title={isPinned ? 'Soltar Menú' : 'Fijar Menú'}
-              style={{ position: 'absolute', right: '-5px', background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.2rem', color: 'var(--primary)' }}
+              style={{ position: 'absolute', right: '-5px', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
             >
-              {isPinned ? '📌' : '📌'}
+              {isPinned ? <PinOff size={18} strokeWidth={1.5} /> : <Pin size={18} strokeWidth={1.5} />}
             </button>
           </div>
           <div className="user-info mobile-only-user-info" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
@@ -210,7 +226,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTa
               }}
               className={`sidebar-link ${activeTab === item.id ? 'active' : ''}`}
             >
-              <span style={{ fontSize: '1.2rem' }}>{item.icon}</span>
+              <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '24px' }}>{item.icon}</span>
               <span>{item.label}</span>
             </button>
           ))}
@@ -224,7 +240,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTa
             className="sidebar-link"
             style={{ color: 'var(--danger)' }}
           >
-            <span style={{ fontSize: '1.2rem' }}>🚪</span>
+            <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '24px' }}><LogOut size={20} strokeWidth={1.5} /></span>
             <span>Cerrar Sesión</span>
           </button>
         </div>

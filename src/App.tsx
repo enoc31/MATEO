@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Hourglass, Megaphone, RefreshCw, ShieldAlert } from 'lucide-react';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { Login } from './features/auth/Login';
 import { Layout } from './components/Layout';
@@ -154,7 +155,9 @@ const PendingApproval: React.FC<PendingApprovalProps> = ({ logout, refreshProfil
         borderRadius: 'var(--radius-lg)',
         boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04)'
       }}>
-        <div style={{ fontSize: '4.5rem', marginBottom: '1rem' }}>⏳</div>
+        <div style={{ marginBottom: '1rem', color: 'var(--primary)', display: 'flex', justifyContent: 'center' }}>
+          <Hourglass size={72} strokeWidth={1.2} />
+        </div>
         <h2 style={{ color: 'var(--primary)', fontFamily: 'var(--font-headings)', fontSize: '1.6rem', fontWeight: 700 }}>
           Registro Pendiente
         </h2>
@@ -183,18 +186,8 @@ const PendingApproval: React.FC<PendingApprovalProps> = ({ logout, refreshProfil
         </div>
 
         {feedback && (
-          <div style={{
-            marginTop: '1.5rem',
-            fontSize: '0.85rem',
-            color: 'var(--accent)',
-            backgroundColor: 'rgba(0, 143, 166, 0.08)',
-            border: '1px solid var(--accent)',
-            borderRadius: 'var(--radius-sm)',
-            padding: '0.75rem',
-            textAlign: 'center',
-            animation: 'fadeInUp 0.3s ease'
-          }}>
-            📢 {feedback}
+          <div style={{ padding: '0.75rem', backgroundColor: 'rgba(255, 204, 0, 0.2)', borderRadius: 'var(--radius-md)', color: '#b47b00', fontWeight: 600, fontSize: '0.9rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', marginTop: '1.5rem' }}>
+            <Megaphone size={18} /> {feedback}
           </div>
         )}
 
@@ -227,7 +220,7 @@ const PendingApproval: React.FC<PendingApprovalProps> = ({ logout, refreshProfil
               <span>Verificando...</span>
             </>
           ) : (
-            '🔄 Verificar Estado de Acceso'
+            <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}><RefreshCw size={18} /> Verificar Estado de Acceso</span>
           )}
         </button>
 
@@ -247,7 +240,7 @@ const PendingApproval: React.FC<PendingApprovalProps> = ({ logout, refreshProfil
 const AccessDenied: React.FC = () => {
   return (
     <div className="card text-center" style={{ textAlign: 'center', padding: '3rem', marginTop: '2rem' }}>
-      <span style={{ fontSize: '3rem' }}>🚫</span>
+      <ShieldAlert size={48} color="var(--danger)" strokeWidth={1.5} />
       <h3 style={{ color: 'var(--danger)', marginTop: '1rem', fontWeight: 700 }}>Acceso Denegado</h3>
       <p style={{ opacity: 0.8, fontSize: '0.9rem', marginTop: '0.5rem' }}>
         Su rol actual no cuenta con los permisos necesarios para visualizar esta sección.
