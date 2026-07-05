@@ -4,14 +4,7 @@ import { api, requisitionsApi } from '../../services/api';
 import type { Project, ExpenseCategory, PartidaGasto, ExpenseReceipt, Requisition } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 
-// Helper icons for projects
-const getProjectIcon = (name: string) => {
-  const n = name.toLowerCase();
-  if (n.includes('alimentación') || n.includes('comedor')) return <Utensils size={24} />;
-  if (n.includes('médica') || n.includes('salud') || n.includes('medicina')) return <HeartPulse size={24} />;
-  if (n.includes('albergue') || n.includes('refugio') || n.includes('logística')) return <Home size={24} />;
-  return <ClipboardList size={24} />;
-};
+
 
 // Helper icons for categories
 const getCategoryIcon = (name: string) => {
@@ -274,41 +267,21 @@ export const MobileEntry: React.FC = () => {
               1. Selecciona el Proyecto Asignado *
             </span>
             
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-              {projects.map(p => {
-                const isSelected = projectId === p.id;
-                return (
-                  <button
-                    key={p.id}
-                    type="button"
-                    onClick={() => setProjectId(p.id)}
-                    disabled={submitting}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      padding: '0.85rem 1rem',
-                      borderRadius: 'var(--radius-md)',
-                      border: isSelected ? '2.5px solid var(--primary)' : '1px solid var(--border-color)',
-                      backgroundColor: isSelected ? 'rgba(47, 90, 174, 0.08)' : 'white',
-                      cursor: 'pointer',
-                      textAlign: 'left',
-                      transition: 'all var(--transition-fast)',
-                      fontWeight: isSelected ? 700 : 500
-                    }}
-                  >
-                    <span style={{ fontSize: '1.5rem', marginRight: '0.75rem' }}>
-                      {getProjectIcon(p.nombre)}
-                    </span>
-                    <div style={{ flex: 1 }}>
-                      <div style={{ fontSize: '0.9rem', color: 'var(--neutral-dark)' }}>{p.nombre}</div>
-                    </div>
-                    {isSelected && (
-                      <span style={{ color: 'var(--primary)' }}><Check size={20} /></span>
-                    )}
-                  </button>
-                );
-              })}
-            </div>
+            <select
+              id="select-proyecto"
+              className="app-input"
+              value={projectId}
+              onChange={e => setProjectId(e.target.value)}
+              disabled={submitting}
+              required
+            >
+              <option value="">-- Selecciona el proyecto --</option>
+              {projects.map(p => (
+                <option key={p.id} value={p.id}>
+                  {p.nombre}
+                </option>
+              ))}
+            </select>
           </div>
 
           {/* STEP 2: CATEGORY SELECTION */}
