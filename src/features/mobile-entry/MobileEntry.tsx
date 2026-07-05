@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Send } from 'lucide-react';
+import { Send, Utensils, HeartPulse, Home, ClipboardList, Truck, Users, Building, Megaphone, Banknote, RefreshCw, MapPin, Check, AlertTriangle, FileText, Camera, FolderOpen, CreditCard, Mailbox } from 'lucide-react';
 import { api, requisitionsApi } from '../../services/api';
 import type { Project, ExpenseCategory, PartidaGasto, ExpenseReceipt, Requisition } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
@@ -7,21 +7,21 @@ import { useAuth } from '../../context/AuthContext';
 // Helper icons for projects
 const getProjectIcon = (name: string) => {
   const n = name.toLowerCase();
-  if (n.includes('alimentación') || n.includes('comedor')) return '🍲';
-  if (n.includes('médica') || n.includes('salud') || n.includes('medicina')) return '🏥';
-  if (n.includes('albergue') || n.includes('refugio') || n.includes('logística')) return '🏠';
-  return '📋';
+  if (n.includes('alimentación') || n.includes('comedor')) return <Utensils size={24} />;
+  if (n.includes('médica') || n.includes('salud') || n.includes('medicina')) return <HeartPulse size={24} />;
+  if (n.includes('albergue') || n.includes('refugio') || n.includes('logística')) return <Home size={24} />;
+  return <ClipboardList size={24} />;
 };
 
 // Helper icons for categories
 const getCategoryIcon = (name: string) => {
   const n = name.toLowerCase();
-  if (n.includes('1.') || n.includes('direct') || n.includes('alim') || n.includes('nutri')) return '🍲';
-  if (n.includes('2.') || n.includes('transp') || n.includes('logis') || n.includes('almacen')) return '🚚';
-  if (n.includes('3.') || n.includes('person') || n.includes('recurs')) return '👥';
-  if (n.includes('4.') || n.includes('oficin') || n.includes('funcion') || n.includes('operat')) return '🏢';
-  if (n.includes('5.') || n.includes('visibil') || n.includes('monito') || n.includes('evalua')) return '📣';
-  return '💵';
+  if (n.includes('1.') || n.includes('direct') || n.includes('alim') || n.includes('nutri')) return <Utensils size={24} />;
+  if (n.includes('2.') || n.includes('transp') || n.includes('logis') || n.includes('almacen')) return <Truck size={24} />;
+  if (n.includes('3.') || n.includes('person') || n.includes('recurs')) return <Users size={24} />;
+  if (n.includes('4.') || n.includes('oficin') || n.includes('funcion') || n.includes('operat')) return <Building size={24} />;
+  if (n.includes('5.') || n.includes('visibil') || n.includes('monito') || n.includes('evalua')) return <Megaphone size={24} />;
+  return <Banknote size={24} />;
 };
 
 export const MobileEntry: React.FC = () => {
@@ -212,7 +212,7 @@ export const MobileEntry: React.FC = () => {
   if (loading && recentExpenses.length === 0) {
     return (
       <div style={{ textAlign: 'center', padding: '3rem', color: 'var(--primary)' }}>
-        <span style={{ fontSize: '2rem', display: 'block', marginBottom: '1rem' }}>🔄</span>
+        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '1rem' }}><RefreshCw size={32} /></div>
         <strong>Cargando formulario simplificado...</strong>
       </div>
     );
@@ -225,7 +225,7 @@ export const MobileEntry: React.FC = () => {
       <div style={{ marginBottom: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div>
           <h2 style={{ fontSize: '1.5rem', color: 'var(--primary)', fontWeight: 800 }}>Carga Rápida de Gastos</h2>
-          <p style={{ fontSize: '0.85rem', opacity: 0.8 }}>Diseñado para ingreso fácil en campo 🚜</p>
+          <p style={{ fontSize: '0.85rem', opacity: 0.8, display: 'flex', alignItems: 'center', gap: '0.3rem' }}>Diseñado para ingreso fácil en campo <MapPin size={14} /></p>
         </div>
       </div>
 
@@ -243,7 +243,7 @@ export const MobileEntry: React.FC = () => {
               borderRadius: 'var(--radius-md)' 
             }}>
               <label htmlFor="select-solicitud" style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, color: 'var(--accent)', marginBottom: '0.5rem' }}>
-                📋 ¿Esta compra proviene de una solicitud autorizada?
+                <span style={{display: 'flex', alignItems: 'center', gap: '0.4rem'}}><ClipboardList size={16} /> ¿Esta compra proviene de una solicitud autorizada?</span>
               </label>
               <select
                 id="select-solicitud"
@@ -303,7 +303,7 @@ export const MobileEntry: React.FC = () => {
                       <div style={{ fontSize: '0.9rem', color: 'var(--neutral-dark)' }}>{p.nombre}</div>
                     </div>
                     {isSelected && (
-                      <span style={{ color: 'var(--primary)', fontWeight: 800, fontSize: '1.2rem' }}>✓</span>
+                      <span style={{ color: 'var(--primary)' }}><Check size={20} /></span>
                     )}
                   </button>
                 );
@@ -367,7 +367,7 @@ export const MobileEntry: React.FC = () => {
                     backgroundColor: 'rgba(190,87,75,0.08)', border: '1px solid rgba(190,87,75,0.3)',
                     fontSize: '0.8rem', color: 'var(--danger)'
                   }}>
-                    ⚠️ Esta categoría no tiene presupuesto asignado en el proyecto seleccionado.
+                    <span style={{display: 'flex', alignItems: 'center', gap: '0.4rem'}}><AlertTriangle size={16} /> Esta categoría no tiene presupuesto asignado en el proyecto seleccionado.</span>
                     Ve a <strong>Presupuestos → Asistente UNDG</strong> para asignar montos primero.
                   </div>
                 ) : (
@@ -494,8 +494,8 @@ export const MobileEntry: React.FC = () => {
                 backgroundColor: 'var(--neutral-light)'
               }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
-                  <span style={{ fontSize: '0.75rem', fontWeight: 700 }}>📄 Recibo o Factura Física</span>
-                  {doc1File && <span style={{ color: 'var(--success)', fontSize: '0.7rem', fontWeight: 700 }}>✓ Listo</span>}
+                  <span style={{ fontSize: '0.75rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.4rem' }}><FileText size={14} /> Recibo o Factura Física</span>
+                  {doc1File && <span style={{ color: 'var(--success)', fontSize: '0.7rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.2rem' }}><Check size={10} /> Listo</span>}
                 </div>
                 
                 {doc1Preview ? (
@@ -527,7 +527,7 @@ export const MobileEntry: React.FC = () => {
                         fontSize: '0.75rem', fontWeight: 600, minHeight: '44px'
                       }}
                     >
-                      📷 Usar Cámara de Campo
+                      <span style={{display: 'flex', alignItems: 'center', gap: '0.4rem'}}><Camera size={14} /> Usar Cámara de Campo</span>
                     </button>
                     {/* GALLERY ALTERNATIVE */}
                     <button
@@ -540,7 +540,7 @@ export const MobileEntry: React.FC = () => {
                         fontSize: '0.7rem', fontWeight: 600, minHeight: '44px'
                       }}
                     >
-                      📁 Cargar de Galería
+                      <span style={{display: 'flex', alignItems: 'center', gap: '0.4rem'}}><FolderOpen size={14} /> Cargar de Galería</span>
                     </button>
                     <input
                       id="cam-doc1"
@@ -569,8 +569,8 @@ export const MobileEntry: React.FC = () => {
                 backgroundColor: 'var(--neutral-light)'
               }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
-                  <span style={{ fontSize: '0.75rem', fontWeight: 700 }}>💳 Comprobante de Pago</span>
-                  {doc2File && <span style={{ color: 'var(--success)', fontSize: '0.7rem', fontWeight: 700 }}>✓ Listo</span>}
+                  <span style={{ fontSize: '0.75rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.4rem' }}><CreditCard size={14} /> Comprobante de Pago</span>
+                  {doc2File && <span style={{ color: 'var(--success)', fontSize: '0.7rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.2rem' }}><Check size={10} /> Listo</span>}
                 </div>
                 
                 {doc2Preview ? (
@@ -602,7 +602,7 @@ export const MobileEntry: React.FC = () => {
                         fontSize: '0.75rem', fontWeight: 600, minHeight: '44px'
                       }}
                     >
-                      📷 Usar Cámara de Campo
+                      <span style={{display: 'flex', alignItems: 'center', gap: '0.4rem'}}><Camera size={14} /> Usar Cámara de Campo</span>
                     </button>
                     {/* GALLERY ALTERNATIVE */}
                     <button
@@ -615,7 +615,7 @@ export const MobileEntry: React.FC = () => {
                         fontSize: '0.7rem', fontWeight: 600, minHeight: '44px'
                       }}
                     >
-                      📁 Cargar de Galería
+                      <span style={{display: 'flex', alignItems: 'center', gap: '0.4rem'}}><FolderOpen size={14} /> Cargar de Galería</span>
                     </button>
                     <input
                       id="cam-doc2"
@@ -673,7 +673,7 @@ export const MobileEntry: React.FC = () => {
 
         {recentExpenses.length === 0 ? (
           <div className="card" style={{ padding: '2.5rem', textAlign: 'center', opacity: 0.6, backgroundColor: '#fff', borderRadius: 'var(--radius-md)' }}>
-            <span style={{ fontSize: '2rem', display: 'block', marginBottom: '0.5rem' }}>📭</span>
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '0.5rem' }}><Mailbox size={32} /></div>
             No has cargado gastos todavía.
           </div>
         ) : (
