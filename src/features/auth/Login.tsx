@@ -49,7 +49,7 @@ export const Login: React.FC = () => {
     setError(null);
     setSuccess(null);
     try {
-      const { data, error } = await supabase.auth.signUp({
+      const { error } = await supabase.auth.signUp({
         email,
         password,
         options: {
@@ -61,32 +61,12 @@ export const Login: React.FC = () => {
       });
       if (error) throw error;
 
-      if (data?.user) {
-        const { error: profileError } = await supabase
-          .from('usuarios_perfiles')
-          .insert({
-            id: data.user.id,
-            email: email,
-            nombre_completo: nombreCompleto,
-            rol: rolSugerido,
-            aprobado: false,
-          });
-        
-        if (profileError) {
-          // Si falla la creación del perfil, intentamos limpiar o al menos arrojar el error
-          throw profileError;
-        }
-      }
-
       setSuccess('¡Registro exitoso! Tu cuenta ha sido creada y está pendiente de aprobación por un administrador.');
       setIsRegister(false);
       setNombreCompleto('');
       setPassword('');
     } catch (err: any) {
-      const friendlyMessage = err.message === '{}'
-        ? 'Error interno del servidor (500). Esto suele deberse a que la función del disparador (trigger) en Supabase `handle_new_user` está desactualizada o falla al insertar el campo `aprobado` en `usuarios_perfiles`.'
-        : (err.message || 'Error al registrar usuario');
-      setError(friendlyMessage);
+      setError(err.message || 'Error al registrar usuario');
     } finally {
       setLoading(false);
     }

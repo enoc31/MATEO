@@ -188,10 +188,8 @@ export const ImportBankStatement: React.FC = () => {
         window.location.href = '/?page=incomes';
       }, 100);
     } catch (err: any) {
-      const errMsg = err.message || '';
-      const errDetails = err.details || '';
-      const errHint = err.hint || '';
-      alert(`Error al registrar las transacciones: ${errMsg}\nDetalles: ${errDetails}\nSugerencia: ${errHint}`);
+      console.error('Error al registrar transacciones:', err);
+      alert('Error al registrar las transacciones. Por favor, intente de nuevo o comuníquese con el administrador del sistema.');
     } finally {
       setImportingFile(false);
     }
