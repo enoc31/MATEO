@@ -106,7 +106,7 @@ export const IncomesManager: React.FC = () => {
     const file = e.target.files?.[0];
     if (!file) return;
     setImportFileName(file.name);
-    e.target.value = '';
+    const target = e.target;
 
     Papa.parse(file, {
       header: true,
@@ -202,9 +202,12 @@ export const IncomesManager: React.FC = () => {
         } catch (error: any) {
           alert('Error durante el procesamiento del archivo: ' + (error.message || error));
           console.error(error);
+        } finally {
+          target.value = '';
         }
       },
       error: (err) => {
+        target.value = '';
         alert('Error al leer el archivo CSV: ' + err.message);
       }
     });
