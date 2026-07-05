@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Plus, RefreshCw, ClipboardList, PenTool, Search, Check, X } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { requisitionsApi } from '../../services/api';
 import type { Requisition } from '../../services/api';
@@ -52,9 +53,9 @@ export const RequisitionsManager: React.FC = () => {
       case 'pendiente_aprobacion_2':
         return <span className="badge" style={{ padding: '0.35rem 0.6rem', fontSize: '0.75rem', fontWeight: 600, backgroundColor: 'rgba(0,143,166,0.1)', color: 'var(--accent)', border: '1px solid var(--accent)' }}>Aprobación 2 (Falta)</span>;
       case 'aprobada_ejecucion':
-        return <span className="badge badge-success" style={{ padding: '0.35rem 0.6rem', fontSize: '0.75rem', fontWeight: 600 }}>✓ Aprobada Ejecución</span>;
+        return <span className="badge badge-success" style={{ padding: '0.35rem 0.6rem', fontSize: '0.75rem', fontWeight: 600 }}><span style={{display: 'inline-flex', alignItems: 'center', gap: '0.2rem'}}><Check size={12} /> Aprobada Ejecución</span></span>;
       case 'rechazada':
-        return <span className="badge badge-danger" style={{ padding: '0.35rem 0.6rem', fontSize: '0.75rem', fontWeight: 600 }}>✕ Rechazada</span>;
+        return <span className="badge badge-danger" style={{ padding: '0.35rem 0.6rem', fontSize: '0.75rem', fontWeight: 600 }}><span style={{display: 'inline-flex', alignItems: 'center', gap: '0.2rem'}}><X size={12} /> Rechazada</span></span>;
       default:
         return <span className="badge" style={{ padding: '0.35rem 0.6rem', fontSize: '0.75rem', fontWeight: 600 }}>{status}</span>;
     }
@@ -74,7 +75,7 @@ export const RequisitionsManager: React.FC = () => {
         
         {['coordinador', 'auxiliar_campo', 'director'].includes(profile.rol) && (
           <button className="btn btn-primary" onClick={() => setShowCreateForm(true)} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <span>➕</span> Nueva Solicitud
+            <Plus size={16} /> Nueva Solicitud
           </button>
         )}
       </div>
@@ -101,7 +102,7 @@ export const RequisitionsManager: React.FC = () => {
             style={{ padding: '0.4rem 0.85rem', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '0.3rem' }}
             disabled={loading}
           >
-            🔄 Recargar
+            <RefreshCw size={14} /> Recargar
           </button>
         </div>
       </div>
@@ -112,7 +113,7 @@ export const RequisitionsManager: React.FC = () => {
         </div>
       ) : filteredList.length === 0 ? (
         <div style={{ textAlign: 'center', padding: '5rem 2rem', opacity: 0.7 }} className="card">
-          <span style={{ fontSize: '3rem' }}>📋</span>
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '1rem' }}><ClipboardList size={48} /></div>
           <div style={{ fontSize: '1.1rem', fontWeight: 600, marginTop: '1rem' }}>
             No se encontraron solicitudes
           </div>
@@ -167,7 +168,7 @@ export const RequisitionsManager: React.FC = () => {
                       style={{ padding: '0.35rem 0.75rem', fontSize: '0.8rem', fontWeight: 600 }}
                       onClick={() => setSelectedReq(req)}
                     >
-                      {isAuditorOrAdmin && req.estado.startsWith('pendiente') ? '✍️ Evaluar' : '🔎 Ver Detalle'}
+                      {isAuditorOrAdmin && req.estado.startsWith('pendiente') ? <span style={{display: 'flex', alignItems: 'center', gap: '0.4rem', justifyContent: 'center'}}><PenTool size={14} /> Evaluar</span> : <span style={{display: 'flex', alignItems: 'center', gap: '0.4rem', justifyContent: 'center'}}><Search size={14} /> Ver Detalle</span>}
                     </button>
                   </td>
                 </tr>

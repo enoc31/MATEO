@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Shield, Clock, XCircle, Info, PenTool } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { requisitionsApi } from '../../services/api';
 import type { Requisition } from '../../services/api';
@@ -102,14 +103,14 @@ export const RequisitionDetailsModal: React.FC<ModalProps> = ({ req, onClose, on
           <h4 style={{ fontWeight: 700, fontSize: '0.9rem', marginBottom: '0.5rem', color: 'var(--primary)' }}>Seguimiento de Firmas (Doble Aprobación):</h4>
           <ul style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', paddingLeft: '1.2rem', margin: 0, fontSize: '0.85rem' }}>
             <li>
-              🛡️ <strong>Visto Bueno 1:</strong> {req.validador_1_id ? `Aprobado el ${new Date(req.validado_1_at!).toLocaleDateString()}` : '⏳ Pendiente de Firma 1'}
+              <span style={{display: 'flex', gap: '0.4rem', alignItems: 'center'}}><Shield size={14} /> <strong>Visto Bueno 1:</strong></span> {req.validador_1_id ? `Aprobado el ${new Date(req.validado_1_at!).toLocaleDateString()}` : <span style={{display: 'inline-flex', gap: '0.2rem', alignItems: 'center'}}><Clock size={14} /> Pendiente de Firma 1</span>}
             </li>
             <li>
-              🛡️ <strong>Visto Bueno 2:</strong> {req.validador_2_id ? `Aprobado el ${new Date(req.validado_2_at!).toLocaleDateString()}` : '⏳ Pendiente de Firma 2'}
+              <span style={{display: 'flex', gap: '0.4rem', alignItems: 'center'}}><Shield size={14} /> <strong>Visto Bueno 2:</strong></span> {req.validador_2_id ? `Aprobado el ${new Date(req.validado_2_at!).toLocaleDateString()}` : <span style={{display: 'inline-flex', gap: '0.2rem', alignItems: 'center'}}><Clock size={14} /> Pendiente de Firma 2</span>}
             </li>
             {req.estado === 'rechazada' && (
               <li style={{ color: 'var(--danger)', marginTop: '0.25rem' }}>
-                ❌ <strong>Rechazada:</strong> {req.motivo_rechazo} {req.rechazado_por ? `(por ${req.rechazado_por})` : ''}
+                <span style={{display: 'flex', gap: '0.4rem', alignItems: 'center'}}><XCircle size={14} /> <strong>Rechazada:</strong></span> {req.motivo_rechazo} {req.rechazado_por ? `(por ${req.rechazado_por})` : ''}
               </li>
             )}
           </ul>
@@ -123,7 +124,7 @@ export const RequisitionDetailsModal: React.FC<ModalProps> = ({ req, onClose, on
                 backgroundColor: 'rgba(0,143,166,0.06)', padding: '0.75rem', 
                 borderRadius: 'var(--radius-sm)', border: '1px solid var(--accent)' 
               }}>
-                ℹ️ Como creador de esta requisición, no puedes auto-aprobarla. Debe ser firmada por otros dos directores/administradores.
+                <span style={{display: 'flex', gap: '0.5rem', alignItems: 'center'}}><Info size={16} /> Como creador de esta requisición, no puedes auto-aprobarla. Debe ser firmada por otros dos directores/administradores.</span>
               </div>
             ) : null}
 
@@ -145,7 +146,7 @@ export const RequisitionDetailsModal: React.FC<ModalProps> = ({ req, onClose, on
                   onClick={handleApprove} 
                   disabled={submitting || isSolicitante || yaAprobadoPorMi}
                 >
-                  {req.estado === 'pendiente_aprobacion_1' ? '✍️ Firmar Primer Visto Bueno' : '✍️ Firmar Segundo Visto Bueno (Autorizar)'}
+                  {req.estado === 'pendiente_aprobacion_1' ? <span style={{display: 'flex', gap: '0.4rem', alignItems: 'center', justifyContent: 'center'}}><PenTool size={16} /> Firmar Primer Visto Bueno</span> : <span style={{display: 'flex', gap: '0.4rem', alignItems: 'center', justifyContent: 'center'}}><PenTool size={16} /> Firmar Segundo Visto Bueno (Autorizar)</span>}
                 </button>
               </div>
             ) : (
