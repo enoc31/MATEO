@@ -11,6 +11,7 @@ import { UserManagement } from './features/users/UserManagement';
 import { RequisitionsManager } from './features/requisitions/RequisitionsManager';
 import { IncomesManager } from './features/incomes/IncomesManager';
 import { IncomeRegistrationForm } from './features/incomes/IncomeRegistrationForm';
+import { ImportBankStatement } from './features/incomes/ImportBankStatement';
 import { TasasManager } from './features/tasas/TasasManager';
 
 const MainAppContent: React.FC = () => {
@@ -98,6 +99,10 @@ const MainAppContent: React.FC = () => {
 
   if (activeTab === 'nuevo-ingreso') {
     return <IncomeRegistrationForm />;
+  }
+
+  if (activeTab === 'importar-extracto') {
+    return <ImportBankStatement />;
   }
 
   return (
