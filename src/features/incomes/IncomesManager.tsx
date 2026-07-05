@@ -113,78 +113,95 @@ export const IncomesManager: React.FC = () => {
       skipEmptyLines: true,
       encoding: 'ISO-8859-1',
       complete: (results) => {
-        const parsedTxs: Omit<BankTransaction, 'id' | 'estado'>[] = [];
+        try {
+          if (!results || !results.data) {
+            alert('El archivo no contiene datos legibles.');
+            return;
+          }
 
-        results.data.forEach((row: any) => {
-          const keys = Object.keys(row);
-          if (keys.length === 0) return;
+          const parsedTxs: Omit<BankTransaction, 'id' | 'estado'>[] = [];
 
-          const fechaKey = keys.find(k => {
-            const ck = k.replace(/^\uFEFF/, '').replace(/"/g, '').trim().toLowerCase();
-            return ck.includes('fecha') || ck.includes('date');
-          });
-          const refKey = keys.find(k => {
-            const ck = k.replace(/^\uFEFF/, '').replace(/"/g, '').trim().toLowerCase();
-            return ck.includes('ref');
-          });
-          const descKey = keys.find(k => {
-            const ck = k.replace(/^\uFEFF/, '').replace(/"/g, '').trim().toLowerCase();
-            return ck.includes('desc');
-          });
-          const amountKey = keys.find(k => {
-            const ck = k.replace(/^\uFEFF/, '').replace(/"/g, '').trim().toLowerCase();
-            return ck.includes('importe') || ck.includes('amount') || ck.includes('monto');
-          });
+          results.data.forEach((row: any) => {
+            if (!row) return;
+            const keys = Object.keys(row);
+            if (keys.length === 0) return;
 
-          // Fallback por índice si no coincide por nombre
-          const fKey = fechaKey || keys[0];
-          const rKey = refKey || keys[1];
-          const dKey = descKey || keys[2];
-          const aKey = amountKey || keys[3];
+            const fechaKey = keys.find(k => {
+              const ck = k.replace(/^\uFEFF/, '').replace(/"/g, '').trim().toLowerCase();
+              return ck.includes('fecha') || ck.includes('date');
+            });
+            const refKey = keys.find(k => {
+              const ck = k.replace(/^\uFEFF/, '').replace(/"/g, '').trim().toLowerCase();
+              return ck.includes('ref');
+            });
+            const descKey = keys.find(k => {
+              const ck = k.replace(/^\uFEFF/, '').replace(/"/g, '').trim().toLowerCase();
+              return ck.includes('desc');
+            });
+            const amountKey = keys.find(k => {
+              const ck = k.replace(/^\uFEFF/, '').replace(/"/g, '').trim().toLowerCase();
+              return ck.includes('importe') || ck.includes('amount') || ck.includes('monto');
+            });
 
-          const dateStr = fKey ? row[fKey]?.replace(/"/g, '').trim() : null;
-          const refStr = rKey ? row[rKey]?.replace(/"/g, '').trim() : null;
-          const descStr = dKey ? row[dKey]?.replace(/"/g, '').trim() : null;
-          const amountStr = aKey ? row[aKey]?.replace(/"/g, '').trim() : null;
+            // Fallback por índice si no coincide por nombre
+            const fKey = fechaKey || keys[0];
+            const rKey = refKey || keys[1];
+            const dKey = descKey || keys[2];
+            const aKey = amountKey || keys[3];
 
-          if (dateStr && amountStr && descStr) {
-            const dateStrClean = dateStr.replace(/\//g, '-');
-            const dateParts = dateStrClean.split('-');
-            if (dateParts.length === 3) {
-              let formattedDate = '';
-              if (dateParts[0].length === 4) {
-                formattedDate = `${dateParts[0]}-${dateParts[1]}-${dateParts[2]}`;
-              } else {
-                let year = dateParts[2];
-                if (year.length === 2) year = '20' + year;
-                formattedDate = `${year}-${dateParts[1]}-${dateParts[0]}`;
-              }
-              const amountVal = parseRobustAmount(amountStr);
+            // Coerción segura a strings
+            const rawDate = (fKey && row[fKey] !== undefined && row[fKey] !== null) ? String(row[fKey]) : '';
+            const rawRef = (rKey && row[rKey] !== undefined && row[rKey] !== null) ? String(row[rKey]) : '';
+            const rawDesc = (dKey && row[dKey] !== undefined && row[dKey] !== null) ? String(row[dKey]) : '';
+            const rawAmount = (aKey && row[aKey] !== undefined && row[aKey] !== null) ? String(row[aKey]) : '';
 
-              if (!isNaN(amountVal) && amountVal > 0) {
-                parsedTxs.push({
-                  fecha: formattedDate,
-                  referencia: refStr || `REF-${Math.random().toString(36).substr(2, 6).toUpperCase()}`,
-                  descripcion: descStr,
-                  monto: amountVal,
-                  csv_metadata: {
-                    fileName: file.name,
-                    moneda: importMoneda
-                  }
-                });
+            const dateStr = rawDate.replace(/"/g, '').trim();
+            const refStr = rawRef.replace(/"/g, '').trim();
+            const descStr = rawDesc.replace(/"/g, '').trim();
+            const amountStr = rawAmount.replace(/"/g, '').trim();
+
+            if (dateStr && amountStr && descStr) {
+              const dateStrClean = dateStr.replace(/\//g, '-');
+              const dateParts = dateStrClean.split('-');
+              if (dateParts.length === 3) {
+                let formattedDate = '';
+                if (dateParts[0].length === 4) {
+                  formattedDate = `${dateParts[0]}-${dateParts[1]}-${dateParts[2]}`;
+                } else {
+                  let year = dateParts[2];
+                  if (year.length === 2) year = '20' + year;
+                  formattedDate = `${year}-${dateParts[1]}-${dateParts[0]}`;
+                }
+                const amountVal = parseRobustAmount(amountStr);
+
+                if (!isNaN(amountVal) && amountVal > 0) {
+                  parsedTxs.push({
+                    fecha: formattedDate,
+                    referencia: refStr || `REF-${Math.random().toString(36).substr(2, 6).toUpperCase()}`,
+                    descripcion: descStr,
+                    monto: amountVal,
+                    csv_metadata: {
+                      fileName: file.name,
+                      moneda: importMoneda
+                    }
+                  });
+                }
               }
             }
-          }
-        });
+          });
 
-        if (parsedTxs.length === 0) {
-          const firstRow = results.data[0] || {};
-          const detectedHeaders = Object.keys(firstRow).join(', ');
-          alert(`No se encontraron transacciones de ingreso válidas en el archivo.\n\nCabeceras detectadas: [${detectedHeaders || 'Ninguna'}]\n\nAsegúrese de que el archivo tenga columnas para Fecha, Referencia, Descripción e Importe.`);
-          setCsvTxs([]);
-          setImportFileName('');
-        } else {
-          setCsvTxs(parsedTxs);
+          if (parsedTxs.length === 0) {
+            const firstRow = results.data[0] || {};
+            const detectedHeaders = Object.keys(firstRow).join(', ');
+            alert(`No se encontraron transacciones de ingreso válidas en el archivo.\n\nCabeceras detectadas: [${detectedHeaders || 'Ninguna'}]\n\nAsegúrese de que el archivo tenga columnas para Fecha, Referencia, Descripción e Importe.`);
+            setCsvTxs([]);
+            setImportFileName('');
+          } else {
+            setCsvTxs(parsedTxs);
+          }
+        } catch (error: any) {
+          alert('Error durante el procesamiento del archivo: ' + (error.message || error));
+          console.error(error);
         }
       },
       error: (err) => {
