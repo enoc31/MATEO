@@ -67,6 +67,14 @@ export const IncomesManager: React.FC = () => {
   const totalIngresosUsd = filteredDonations.reduce((s, d) => s + (d.monto_usd || d.monto), 0);
   const totalIngresosVes = filteredDonations.reduce((s, d) => s + (d.monto_ves || 0), 0);
 
+  const reconciledIngresosUsd = filteredDonations
+    .filter(d => d.transaccion_id !== null)
+    .reduce((s, d) => s + (d.monto_usd || d.monto), 0);
+
+  const unreconciledIngresosUsd = filteredDonations
+    .filter(d => d.transaccion_id === null)
+    .reduce((s, d) => s + (d.monto_usd || d.monto), 0);
+
   const getProjectName = (id: string | null) =>
     id ? (projects.find(p => p.id === id)?.nombre ?? 'Proyecto Desconocido') : 'Sin Proyecto';
 
@@ -131,14 +139,24 @@ export const IncomesManager: React.FC = () => {
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1rem', marginBottom: '2rem' }}>
         {/* Total general */}
         <div className="card" style={{ padding: '1.25rem', background: 'linear-gradient(135deg, var(--primary) 0%, #1a3a7a 100%)', color: '#fff', borderRadius: 'var(--radius-md)' }}>
-          <div style={{ fontSize: '0.7rem', fontWeight: 700, letterSpacing: '0.1em', opacity: 0.8, textTransform: 'uppercase', marginBottom: '0.5rem' }}>Total Ingresos</div>
-          <div style={{ fontSize: '1.8rem', fontWeight: 800 }}>{formatCurrency(totalIngresosUsd)}</div>
+          <div style={{ fontSize: '0.7rem', fontWeight: 700, letterSpacing: '0.1em', opacity: 0.8, textTransform: 'uppercase', marginBottom: '0.5rem' }}>Total Ingresos Registrados</div>
+          <div style={{ fontSize: '1.7rem', fontWeight: 800 }}>{formatCurrency(totalIngresosUsd)}</div>
           {totalIngresosVes > 0 && (
-            <div style={{ fontSize: '0.9rem', opacity: 0.9, marginTop: '0.15rem' }}>
+            <div style={{ fontSize: '0.85rem', opacity: 0.9, marginTop: '0.15rem' }}>
               Equiv. VES: {formatVesCurrency(totalIngresosVes)}
             </div>
           )}
-          <div style={{ fontSize: '0.75rem', opacity: 0.75, marginTop: '0.4rem' }}>{filteredDonations.length} transacciones registradas</div>
+          
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem', marginTop: '0.8rem', paddingTop: '0.8rem', borderTop: '1px solid rgba(255,255,255,0.15)', fontSize: '0.78rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span style={{ opacity: 0.8 }}>🟢 Disponible (Conciliado):</span>
+              <strong style={{ fontWeight: 800 }}>{formatCurrency(reconciledIngresosUsd)}</strong>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span style={{ opacity: 0.8 }}>🟡 No Disponible (Pendiente):</span>
+              <strong style={{ fontWeight: 800, color: '#fcd34d' }}>{formatCurrency(unreconciledIngresosUsd)}</strong>
+            </div>
+          </div>
         </div>
 
         {/* Por proyecto (Top 3) */}
@@ -261,8 +279,8 @@ export const IncomesManager: React.FC = () => {
                         +{formatCurrency(d.monto_usd || d.monto)}
                       </td>
                       <td style={{ padding: '0.85rem 1rem', textAlign: 'center' }}>
-                        <span className={`badge ${d.transaccion_id ? 'badge-success' : 'badge-warning'}`}>
-                          {d.transaccion_id ? '⚖️ Conciliado' : '📋 Registrado'}
+                        <span className={`badge ${d.transaccion_id ? 'badge-success' : 'badge-warning'}`} style={{ whiteSpace: 'nowrap' }}>
+                          {d.transaccion_id ? '⚖️ Conciliado (Disponible)' : '📋 Registrado (No disp.)'}
                         </span>
                       </td>
                     </tr>

@@ -48,12 +48,18 @@ export const Dashboard: React.FC = () => {
 
   // --- 1. CÁLCULO DE MÉTRICAS GENERALES ---
   const totalInflows = donations.reduce((sum, d) => sum + Number(d.monto_usd || d.monto), 0);
+  const reconciledInflows = donations
+    .filter(d => d.transaccion_id !== null)
+    .reduce((sum, d) => sum + Number(d.monto_usd || d.monto), 0);
+  const unreconciledInflows = donations
+    .filter(d => d.transaccion_id === null)
+    .reduce((sum, d) => sum + Number(d.monto_usd || d.monto), 0);
 
   // Consideramos egresos únicamente los gastos aprobados por auditoría
   const approvedExpenses = expenses.filter(e => e.estado === 'aprobado');
   const totalOutflows = approvedExpenses.reduce((sum, e) => sum + Number(e.monto), 0);
 
-  const availableBalance = totalInflows - totalOutflows;
+  const availableBalance = reconciledInflows - totalOutflows;
 
   // Ejecución Presupuestaria Total
   const totalBudgeted = budgets.reduce((sum, b) => sum + Number(b.monto_asignado), 0);
@@ -114,19 +120,27 @@ export const Dashboard: React.FC = () => {
       <div className="grid-cols-3" style={{ marginBottom: '2rem' }}>
         {/* Total Entradas */}
         <div className="card" style={{ borderLeft: '5px solid var(--primary)', padding: '1.25rem' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
             <div>
-              <p style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--neutral-dark)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                Total Entradas (Fondos Recibidos)
+              <p style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--neutral-dark)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                Entradas (Ingresos Registrados)
               </p>
-              <h3 style={{ fontSize: '1.6rem', color: 'var(--primary)', marginTop: '0.5rem', fontWeight: 700 }}>
+              <h3 style={{ fontSize: '1.5rem', color: 'var(--primary)', marginTop: '0.35rem', fontWeight: 800 }}>
                 {formatCurrency(totalInflows)}
               </h3>
             </div>
-            <span style={{ fontSize: '2rem' }}>📥</span>
+            <span style={{ fontSize: '2.2rem', marginTop: '-0.2rem' }}>📥</span>
           </div>
-          <div style={{ fontSize: '0.75rem', color: 'var(--neutral-dark)', opacity: 0.6, marginTop: '0.75rem' }}>
-            Suma de donaciones y transferencias bancarias conciliadas.
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem', marginTop: '0.8rem', paddingTop: '0.8rem', borderTop: '1px solid var(--border-color)', fontSize: '0.78rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span style={{ opacity: 0.7 }}>🟢 Disponible (Conciliado):</span>
+              <strong style={{ color: 'var(--success)' }}>{formatCurrency(reconciledInflows)}</strong>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span style={{ opacity: 0.7 }}>🟡 No Disponible (Pendiente):</span>
+              <strong style={{ color: '#d97706' }}>{formatCurrency(unreconciledInflows)}</strong>
+            </div>
           </div>
         </div>
 
@@ -153,7 +167,7 @@ export const Dashboard: React.FC = () => {
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <div>
               <p style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--neutral-dark)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                Fondo de Reserva Neto
+                Fondo de Reserva Disponible
               </p>
               <h3 style={{ fontSize: '1.6rem', color: 'var(--accent)', marginTop: '0.5rem', fontWeight: 700 }}>
                 {formatCurrency(availableBalance)}
@@ -162,7 +176,7 @@ export const Dashboard: React.FC = () => {
             <span style={{ fontSize: '2rem' }}>⚖️</span>
           </div>
           <div style={{ fontSize: '0.75rem', color: 'var(--neutral-dark)', opacity: 0.6, marginTop: '0.75rem' }}>
-            Dinero neto disponible para asignación y proyectos activos.
+            Fondos reales líquidos disponibles en banco/caja (Ingresos conciliados - Egresos aprobados).
           </div>
         </div>
       </div>
