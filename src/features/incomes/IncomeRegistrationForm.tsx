@@ -34,7 +34,6 @@ export const IncomeRegistrationForm: React.FC = () => {
   const [tasaManualEditable, setTasaManualEditable] = useState(false);
   const [descripcion, setDescripcion] = useState('');
   const [fecha, setFecha] = useState(new Date().toISOString().split('T')[0]);
-  const [transaccionId, setTransaccionId] = useState('');
   const [selectedTxIds, setSelectedTxIds] = useState<string[]>([]);
   const [tipoRegistro, setTipoRegistro] = useState<'manual' | 'bancario'>('manual');
 
@@ -155,27 +154,14 @@ export const IncomeRegistrationForm: React.FC = () => {
   }, [selectedTxIds, moneda, tipoRegistro, bankTxs]);
 
   const handleToggleTx = (txId: string) => {
-    setSelectedTxIds(prev => {
-      const next = prev.includes(txId) ? prev.filter(id => id !== txId) : [...prev, txId];
-      if (next.length > 0) {
-        setTransaccionId(next[0]);
-      } else {
-        setTransaccionId('');
-      }
-      return next;
-    });
+    setSelectedTxIds(prev => prev.includes(txId) ? prev.filter(id => id !== txId) : [...prev, txId]);
   };
 
   const handleSelectAll = () => {
     if (selectedTxIds.length === bankTxs.length) {
       setSelectedTxIds([]);
-      setTransaccionId('');
     } else {
-      const allIds = bankTxs.map(t => t.id);
-      setSelectedTxIds(allIds);
-      if (allIds.length > 0) {
-        setTransaccionId(allIds[0]);
-      }
+      setSelectedTxIds(bankTxs.map(t => t.id));
     }
   };
 
@@ -226,7 +212,7 @@ export const IncomeRegistrationForm: React.FC = () => {
       const donante = donantes.find(d => d.id === donanteId);
       await api.createDonation({
         proyecto_id: proyectoId || null,
-        transaccion_id: transaccionId || null,
+        transaccion_id: tipoRegistro === 'bancario' && selectedTxIds.length > 0 ? selectedTxIds[0] : null,
         donante: donante?.nombre || 'Donante Desconocido',
         monto: calculatedMontoUsd,
         descripcion: descripcion.trim(),
@@ -295,7 +281,6 @@ export const IncomeRegistrationForm: React.FC = () => {
                 type="button"
                 onClick={() => {
                   setTipoRegistro(t);
-                  setTransaccionId('');
                   setSelectedTxIds([]);
                   setMontoOriginal('');
                   setDescripcion('');
