@@ -103,7 +103,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (!isSimulationMode) {
       // Suscribirse a cambios reales en Supabase Auth
       const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
-        setLoading(true);
         if (session) {
           setUser(session.user);
           await fetchProfile(session.user.id);
@@ -111,7 +110,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           setUser(null);
           setProfile(null);
         }
-        setLoading(false);
       });
 
       return () => {
