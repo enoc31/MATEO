@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Send, Utensils, HeartPulse, Home, ClipboardList, Truck, Users, Building, Megaphone, Banknote, RefreshCw, MapPin, Check, AlertTriangle, FileText, Camera, FolderOpen, CreditCard, Mailbox } from 'lucide-react';
+import { Send, Utensils, HeartPulse, Home, ClipboardList, Truck, Users, Building, Megaphone, Banknote, RefreshCw, MapPin, Check, AlertTriangle, FileText, Camera, FolderOpen, CreditCard, Mailbox, HeartHandshake } from 'lucide-react';
 import { api, requisitionsApi } from '../../services/api';
 import type { Project, ExpenseCategory, PartidaGasto, ExpenseReceipt, Requisition } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
@@ -16,10 +16,10 @@ const getProjectIcon = (name: string) => {
 // Helper icons for categories
 const getCategoryIcon = (name: string) => {
   const n = name.toLowerCase();
-  if (n.includes('1.') || n.includes('direct') || n.includes('alim') || n.includes('nutri')) return <Utensils size={24} />;
+  if (n.includes('1.') || n.includes('costos directos') || n.includes('alim') || n.includes('nutri')) return <HeartHandshake size={24} />;
   if (n.includes('2.') || n.includes('transp') || n.includes('logis') || n.includes('almacen')) return <Truck size={24} />;
   if (n.includes('3.') || n.includes('person') || n.includes('recurs')) return <Users size={24} />;
-  if (n.includes('4.') || n.includes('oficin') || n.includes('funcion') || n.includes('operat')) return <Building size={24} />;
+  if (n.includes('4.') || n.includes('oficin') || n.includes('funcion') || n.includes('operat') || n.includes('indirect')) return <Building size={24} />;
   if (n.includes('5.') || n.includes('visibil') || n.includes('monito') || n.includes('evalua')) return <Megaphone size={24} />;
   return <Banknote size={24} />;
 };
