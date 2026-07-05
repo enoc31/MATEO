@@ -104,15 +104,22 @@ export const IncomesManager: React.FC = () => {
   // Procesar archivo CSV del banco
   const handleImportCsvChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file) return;
+    if (!file) {
+      alert("Depuración: e.target.files está vacío o es nulo.");
+      return;
+    }
+    alert(`Depuración: Archivo cargado = ${file.name} (${file.size} bytes)`);
+    
     setImportFileName(file.name);
     const target = e.target;
 
+    alert("Depuración: Iniciando Papa.parse...");
     Papa.parse(file, {
       header: true,
       skipEmptyLines: true,
       encoding: 'ISO-8859-1',
       complete: (results) => {
+        alert(`Depuración: Papa.parse completo. Filas crudas detectadas = ${results?.data?.length}`);
         try {
           if (!results || !results.data) {
             alert('El archivo no contiene datos legibles.');
@@ -121,7 +128,7 @@ export const IncomesManager: React.FC = () => {
 
           const parsedTxs: Omit<BankTransaction, 'id' | 'estado'>[] = [];
 
-          results.data.forEach((row: any) => {
+          results.data.forEach((row: any, idx) => {
             if (!row) return;
             const keys = Object.keys(row);
             if (keys.length === 0) return;
@@ -160,6 +167,10 @@ export const IncomesManager: React.FC = () => {
             const descStr = rawDesc.replace(/"/g, '').trim();
             const amountStr = rawAmount.replace(/"/g, '').trim();
 
+            if (idx === 0) {
+              alert(`Depuración Fila 0:\nKeys: ${keys.join(', ')}\nfKey: ${fKey}, aKey: ${aKey}, dKey: ${dKey}\ndateStr: "${dateStr}", amountStr: "${amountStr}", descStr: "${descStr}"`);
+            }
+
             if (dateStr && amountStr && descStr) {
               const dateStrClean = dateStr.replace(/\//g, '-');
               const dateParts = dateStrClean.split('-');
@@ -185,10 +196,18 @@ export const IncomesManager: React.FC = () => {
                       moneda: importMoneda
                     }
                   });
+                } else if (idx === 0) {
+                  alert(`Depuración Fila 0: Ignorada por amountVal = ${amountVal}`);
                 }
+              } else if (idx === 0) {
+                alert(`Depuración Fila 0: Ignorada por dateParts.length = ${dateParts.length}`);
               }
+            } else if (idx === 0) {
+              alert(`Depuración Fila 0: Ignorada por faltar dateStr/amountStr/descStr`);
             }
           });
+
+          alert(`Depuración: Transacciones de ingreso parseadas con éxito = ${parsedTxs.length}`);
 
           if (parsedTxs.length === 0) {
             const firstRow = results.data[0] || {};
