@@ -1,7 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { api } from '../../services/api';
-import type { BankTransaction, ExpenseReceipt } from '../../services/api';
+import type { BankTransaction, ExpenseReceipt, TasaBCV } from '../../services/api';
 import Papa from 'papaparse';
+
+const formatCurrency = (amount: number) => {
+  return new Intl.NumberFormat('es-VE', { style: 'currency', currency: 'USD' }).format(amount);
+};
+
+const formatVesCurrency = (amount: number) => {
+  return new Intl.NumberFormat('es-VE', { style: 'currency', currency: 'VES' }).format(amount);
+};
 
 export const Reconciliation: React.FC = () => {
   const [loading, setLoading] = useState(true);
@@ -10,6 +18,10 @@ export const Reconciliation: React.FC = () => {
   const [selectedTx, setSelectedTx] = useState<BankTransaction | null>(null);
   const [selectedExp, setSelectedExp] = useState<ExpenseReceipt | null>(null);
   
+  // Tasas de cambio
+  const [tasas, setTasas] = useState<TasaBCV[]>([]);
+  const [latestRate, setLatestRate] = useState<number | null>(null);
+
   // Estados para importación CSV
   const [csvFile, setCsvFile] = useState<File | null>(null);
   const [csvHeaders, setCsvHeaders] = useState<string[]>([]);
@@ -22,17 +34,50 @@ export const Reconciliation: React.FC = () => {
     monto: ''
   });
 
+  const getRateForDateLocal = (dateStr: string) => {
+    if (!tasas || tasas.length === 0) return latestRate;
+    const exacta = tasas.find(t => t.fecha === dateStr);
+    if (exacta) return exacta.tasa;
+    const anteriores = tasas.filter(t => t.fecha < dateStr).sort((a, b) => b.fecha.localeCompare(a.fecha));
+    return anteriores[0]?.tasa || latestRate;
+  };
+
+  const formatTxAmount = (tx: BankTransaction) => {
+    const isVES = tx.csv_metadata?.moneda === 'VES';
+    if (isVES) {
+      return formatVesCurrency(tx.monto);
+    } else {
+      return formatCurrency(tx.monto);
+    }
+  };
+
+  const getSelectedTxDescription = (tx: BankTransaction) => {
+    const isVES = tx.csv_metadata?.moneda === 'VES';
+    const originalText = formatTxAmount(tx);
+    if (!isVES) return originalText;
+
+    const rate = getRateForDateLocal(tx.fecha);
+    if (!rate) return `${originalText} (Sin Tasa)`;
+
+    const usdVal = tx.monto / rate;
+    return `${originalText} [Equiv. en USD: ${formatCurrency(usdVal)} (BCV: ${rate.toFixed(4)})]`;
+  };
+
   const loadData = async () => {
     setLoading(true);
     try {
-      const [txList, expList] = await Promise.all([
+      const [txList, expList, ratesList] = await Promise.all([
         api.getBankTransactions(),
-        api.getExpenses()
+        api.getExpenses(),
+        api.getTasasBCV()
       ]);
       // Mostrar solo transacciones pendientes
       setTransactions(txList.filter(t => t.estado === 'pendiente'));
       // Mostrar gastos que no tengan transacción vinculada y no estén rechazados
       setExpenses(expList.filter(e => !e.transaccion_id && e.estado !== 'rechazado'));
+      setTasas(ratesList);
+      const latest = ratesList[0];
+      setLatestRate(latest ? latest.tasa : null);
     } catch (err) {
       console.error('Error loading reconciliation data:', err);
     } finally {
@@ -123,10 +168,24 @@ export const Reconciliation: React.FC = () => {
     if (!selectedTx || !selectedExp) return;
 
     // Validación de montos aproximados o exactos
-    const diff = Math.abs(Math.abs(selectedTx.monto) - selectedExp.monto);
+    const isVES = selectedTx.csv_metadata?.moneda === 'VES';
+    let txMontoUsd = Math.abs(selectedTx.monto);
+    
+    if (isVES) {
+      const rate = getRateForDateLocal(selectedTx.fecha);
+      if (rate) {
+        txMontoUsd = Math.abs(selectedTx.monto) / rate;
+      }
+    }
+
+    const diff = Math.abs(txMontoUsd - selectedExp.monto);
     if (diff > 0.01) {
+      const formattedTxVal = isVES 
+        ? `${formatVesCurrency(Math.abs(selectedTx.monto))} [Equiv: ${formatCurrency(txMontoUsd)}]`
+        : formatCurrency(txMontoUsd);
+
       const confirmDiff = window.confirm(
-        `Atención: El monto del extracto bancario (${Math.abs(selectedTx.monto)} USD) no coincide exactamente con el monto del comprobante cargado (${selectedExp.monto} USD).\n\n¿Desea forzar la conciliación de todas formas?`
+        `Atención: El monto del extracto bancario (${formattedTxVal}) no coincide exactamente con el monto del comprobante cargado (${formatCurrency(selectedExp.monto)}).\n\n¿Desea forzar la conciliación de todas formas?`
       );
       if (!confirmDiff) return;
     }
@@ -169,9 +228,7 @@ export const Reconciliation: React.FC = () => {
     document.body.removeChild(link);
   };
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('es-VE', { style: 'currency', currency: 'USD' }).format(amount);
-  };
+
 
   return (
     <div className="animate-fade-in-up">
@@ -241,9 +298,18 @@ export const Reconciliation: React.FC = () => {
                         {tx.fecha}
                       </span>
                       <span style={{ fontWeight: 700, color: tx.monto < 0 ? 'var(--danger)' : 'var(--success)' }}>
-                        {formatCurrency(tx.monto)}
+                        {formatTxAmount(tx)}
                       </span>
                     </div>
+                    {tx.csv_metadata?.moneda === 'VES' && (() => {
+                      const rate = getRateForDateLocal(tx.fecha);
+                      const usdVal = rate ? tx.monto / rate : 0;
+                      return (
+                        <div style={{ fontSize: '0.72rem', opacity: 0.85, textAlign: 'right', marginTop: '0.15rem', color: 'var(--primary)' }}>
+                          Equiv: <strong style={{ color: tx.monto < 0 ? 'var(--danger)' : 'var(--success)' }}>{formatCurrency(usdVal)}</strong> <span style={{ fontSize: '0.65rem', opacity: 0.6 }}>(Tasa: {rate ? rate.toFixed(4) : '—'})</span>
+                        </div>
+                      );
+                    })()}
                     <p style={{ fontWeight: 500, fontSize: '0.9rem', marginTop: '0.5rem', wordBreak: 'break-word' }}>
                       {tx.descripcion}
                     </p>
@@ -340,7 +406,7 @@ export const Reconciliation: React.FC = () => {
               <div style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--neutral-dark)', opacity: 0.6 }}>BANCO:</div>
               {selectedTx ? (
                 <div style={{ fontSize: '0.85rem', marginTop: '0.25rem' }}>
-                  <strong style={{ color: 'var(--primary)' }}>{formatCurrency(selectedTx.monto)}</strong> - {selectedTx.descripcion.substring(0, 45)}...
+                  <strong style={{ color: 'var(--primary)' }}>{getSelectedTxDescription(selectedTx)}</strong> - {selectedTx.descripcion.substring(0, 45)}...
                 </div>
               ) : (
                 <div style={{ fontSize: '0.85rem', color: 'red', marginTop: '0.25rem' }}>Seleccione transacción bancaria</div>
