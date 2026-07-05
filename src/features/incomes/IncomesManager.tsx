@@ -15,6 +15,27 @@ const FLAG_MAP: Record<string, string> = {
   'Europa': '🇪🇺', 'Internacional': '🌐'
 };
 
+const parseRobustAmount = (amountStr: string): number => {
+  let str = amountStr.trim();
+  if (str.includes('.') && str.includes(',')) {
+    const firstDot = str.indexOf('.');
+    const firstComma = str.indexOf(',');
+    if (firstDot < firstComma) {
+      str = str.replace(/\./g, '').replace(',', '.');
+    } else {
+      str = str.replace(/,/g, '');
+    }
+  } else if (str.includes(',')) {
+    const lastCommaIndex = str.lastIndexOf(',');
+    if (str.length - lastCommaIndex <= 3) {
+      str = str.replace(',', '.');
+    } else {
+      str = str.replace(/,/g, '');
+    }
+  }
+  return parseFloat(str);
+};
+
 export const IncomesManager: React.FC = () => {
   const { profile } = useAuth();
   const [loading, setLoading] = useState(true);
@@ -89,7 +110,6 @@ export const IncomesManager: React.FC = () => {
     Papa.parse(file, {
       header: true,
       skipEmptyLines: true,
-      delimiter: ';',
       complete: (results) => {
         const parsedTxs: Omit<BankTransaction, 'id' | 'estado'>[] = [];
 
@@ -118,11 +138,18 @@ export const IncomesManager: React.FC = () => {
           const amountStr = amountKey ? row[amountKey]?.replace(/"/g, '').trim() : null;
 
           if (dateStr && amountStr && descStr) {
-            const dateParts = dateStr.split('-');
+            const dateStrClean = dateStr.replace(/\//g, '-');
+            const dateParts = dateStrClean.split('-');
             if (dateParts.length === 3) {
-              const formattedDate = `${dateParts[2]}-${dateParts[1]}-${dateParts[0]}`;
-              let cleanAmountStr = amountStr.replace(/\./g, '').replace(',', '.');
-              const amountVal = parseFloat(cleanAmountStr);
+              let formattedDate = '';
+              if (dateParts[0].length === 4) {
+                formattedDate = `${dateParts[0]}-${dateParts[1]}-${dateParts[2]}`;
+              } else {
+                let year = dateParts[2];
+                if (year.length === 2) year = '20' + year;
+                formattedDate = `${year}-${dateParts[1]}-${dateParts[0]}`;
+              }
+              const amountVal = parseRobustAmount(amountStr);
 
               if (!isNaN(amountVal) && amountVal > 0) {
                 parsedTxs.push({
