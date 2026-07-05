@@ -273,7 +273,7 @@ export const ImportBankStatement: React.FC = () => {
             </div>
 
             <p style={{ fontSize: '0.85rem', opacity: 0.7, lineHeight: 1.5, margin: '0.5rem 0' }}>
-              Seleccione el archivo <strong>REPORTE.CSV</strong> del banco. Solo se considerarán los depósitos o transferencias recibidos (importes positivos mayores a 0).
+              Seleccione el archivo <strong>CSV</strong> del banco. Solo se considerarán los depósitos o transferencias recibidos (importes positivos mayores a 0).
             </p>
 
             {/* Input archivo oculto */}
@@ -300,7 +300,7 @@ export const ImportBankStatement: React.FC = () => {
             >
               <div style={{ display: 'flex', justifyContent: 'center' }}><FolderOpen size={40} color="var(--primary)" /></div>
               <strong style={{ fontSize: '0.95rem', color: 'var(--primary)' }}>
-                {importFileName || 'Haga clic aquí para seleccionar el archivo REPORTE.CSV'}
+                {importFileName || 'Haga clic aquí para seleccionar el archivo CSV'}
               </strong>
               <span style={{ fontSize: '0.78rem', opacity: 0.6 }}>
                 Formatos soportados: CSV delimitado por comas (,) o punto y coma (;)

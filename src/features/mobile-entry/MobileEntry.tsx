@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Send, Utensils, HeartPulse, Home, ClipboardList, Truck, Users, Building, Megaphone, Banknote, RefreshCw, MapPin, Check, AlertTriangle, FileText, Camera, FolderOpen, CreditCard, Mailbox, HeartHandshake } from 'lucide-react';
+import { Send, ClipboardList, Truck, Users, Building, Megaphone, Banknote, RefreshCw, MapPin, Check, AlertTriangle, FileText, Camera, FolderOpen, CreditCard, Mailbox, HeartHandshake } from 'lucide-react';
 import { api, requisitionsApi } from '../../services/api';
 import type { Project, ExpenseCategory, PartidaGasto, ExpenseReceipt, Requisition } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
