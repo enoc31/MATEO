@@ -16,7 +16,7 @@ import { ImportBankStatement } from './features/incomes/ImportBankStatement';
 import { TasasManager } from './features/tasas/TasasManager';
 
 const MainAppContent: React.FC = () => {
-  const { user, profile, loading, logout, refreshProfile } = useAuth();
+  const { user, profile, loading, authError, logout, refreshProfile } = useAuth();
   const [activeTab, setActiveTab] = useState<string>('');
 
   // Configurar la pestaña por defecto basada en el rol del usuario
@@ -74,6 +74,11 @@ const MainAppContent: React.FC = () => {
             Tu cuenta se ha autenticado, pero tu perfil en la base de datos no pudo ser cargado o creado. 
             Asegúrate de haber ejecutado el parche SQL en Supabase o contacta al administrador.
           </p>
+          {authError && (
+            <div style={{ background: '#ffeeee', padding: '1rem', borderRadius: '8px', color: '#cc0000', margin: '1rem auto', maxWidth: '500px', fontSize: '0.85rem', wordBreak: 'break-all' }}>
+              <strong>Detalle Técnico:</strong> {authError}
+            </div>
+          )}
           <button 
             onClick={() => { logout(); window.location.reload(); }} 
             style={{ padding: '0.75rem 1.5rem', background: 'var(--primary)', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}

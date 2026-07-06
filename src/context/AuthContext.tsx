@@ -18,6 +18,7 @@ interface AuthContextType {
   user: User | null;
   profile: UserProfile | null;
   loading: boolean;
+  authError: string | null;
   logout: () => Promise<void>;
   refreshProfile: () => Promise<void>;
 }
@@ -28,6 +29,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [authError, setAuthError] = useState<string | null>(null);
 
   const fetchProfile = async (userId: string) => {
     if (!isSimulationMode) {
@@ -61,19 +63,25 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 
               if (!insertError && insertedData) {
                 setProfile(insertedData as UserProfile);
+                setAuthError(null);
                 return;
               } else {
                 console.error('Error auto-creating profile:', insertError);
+                setAuthError(`No se pudo crear el perfil (Insert): ${insertError?.message || 'Error desconocido'}`);
               }
             }
+          } else {
+            setAuthError(`No se encontró el perfil (Fetch): ${error.message || 'Error desconocido'}`);
           }
           console.error('Error fetching user profile:', error);
           setProfile(null);
         } else {
           setProfile(data as UserProfile);
+          setAuthError(null);
         }
-      } catch (e) {
+      } catch (e: any) {
         console.error('Error in fetchProfile:', e);
+        setAuthError(`Excepción: ${e.message || 'Error desconocido'}`);
         setProfile(null);
       }
     } else {
@@ -159,7 +167,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   return (
-    <AuthContext.Provider value={{ user, profile, loading, logout, refreshProfile }}>
+    <AuthContext.Provider value={{ user, profile, loading, authError, logout, refreshProfile }}>
       {children}
     </AuthContext.Provider>
   );
