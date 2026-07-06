@@ -1,11 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Scale, Search, FileText, CreditCard, AlertTriangle, XCircle, CheckCircle } from 'lucide-react';
+import { Search, Scale } from 'lucide-react';
 import { api } from '../../services/api';
 import type { ExpenseReceipt, Project, ExpenseCategory, PartidaGasto } from '../../services/api';
-import { useAuth } from '../../context/AuthContext';
 
 export const Audit: React.FC = () => {
-  const { profile } = useAuth();
   const [loading, setLoading] = useState(true);
   const [expenses, setExpenses] = useState<ExpenseReceipt[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);

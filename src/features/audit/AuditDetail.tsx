@@ -1,11 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { FileText, CreditCard, AlertTriangle, Scale, Search, CheckCircle, XCircle } from 'lucide-react';
-import { api, ExpenseReceipt } from '../../services/api';
-import { getProjectName } from '../dashboard/Dashboard';
-import { getPartidaName } from '../dashboard/Dashboard';
+import { FileText, CreditCard, AlertTriangle, CheckCircle, XCircle } from 'lucide-react';
+import { api } from '../../services/api';
+import type { ExpenseReceipt, Project, PartidaGasto } from '../../services/api';
+import { useAuth } from '../../context/AuthContext';
 
 export const AuditDetail: React.FC = () => {
+  const { profile } = useAuth();
   const [expense, setExpense] = useState<ExpenseReceipt | null>(null);
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [partidas, setPartidas] = useState<PartidaGasto[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [activeDocTab, setActiveDocTab] = useState<'recibo' | 'pago'>('recibo');
@@ -18,7 +21,7 @@ export const AuditDetail: React.FC = () => {
   });
 
   useEffect(() => {
-    const fetchExpense = async () => {
+    const fetchData = async () => {
       const params = new URLSearchParams(window.location.search);
       const id = params.get('id');
       if (!id) {
@@ -27,7 +30,14 @@ export const AuditDetail: React.FC = () => {
         return;
       }
       try {
-        const exp = await api.getExpenseById(id);
+        const [exp, projList, partList] = await Promise.all([
+          api.getExpenseById(id),
+          api.getProjects(),
+          api.getPartidas()
+        ]);
+        setProjects(projList);
+        setPartidas(partList);
+        
         if (exp) {
           setExpense(exp);
           if (exp.comentarios_auditoria) {
@@ -42,8 +52,14 @@ export const AuditDetail: React.FC = () => {
         setLoading(false);
       }
     };
-    fetchExpense();
+    fetchData();
   }, []);
+
+  const getProjectName = (id: string) => projects.find(p => p.id === id)?.nombre || 'Proyecto Desconocido';
+  const getPartidaName = (id: string) => {
+    const p = partidas.find(x => x.id === id);
+    return p ? `${p.codigo} - ${p.nombre}` : 'Partida Desconocida';
+  };
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('es-VE', { style: 'currency', currency: 'USD' }).format(amount);
@@ -67,7 +83,7 @@ export const AuditDetail: React.FC = () => {
     }
 
     try {
-      await api.updateExpenseStatus(expense.id, newStatus, auditComment);
+      await api.updateExpenseStatus(expense.id, newStatus, auditComment, profile?.id || '');
       setExpense({ ...expense, estado: newStatus, comentarios_auditoria: auditComment });
       alert(`Gasto ${newStatus.toUpperCase()} exitosamente.`);
       
