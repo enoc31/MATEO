@@ -128,6 +128,7 @@ export const RequisitionsManager: React.FC = () => {
           <table className="table" style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
             <thead>
               <tr style={{ borderBottom: '1px solid #e2e8f0', backgroundColor: '#f8fafc' }}>
+                <th style={{ padding: '1rem 1.5rem', fontWeight: 600, fontSize: '0.85rem', opacity: 0.8 }}>Código</th>
                 <th style={{ padding: '1rem 1.5rem', fontWeight: 600, fontSize: '0.85rem', opacity: 0.8 }}>Fecha Solicitud</th>
                 <th style={{ padding: '1rem 1.5rem', fontWeight: 600, fontSize: '0.85rem', opacity: 0.8 }}>Proyecto</th>
                 <th style={{ padding: '1rem 1.5rem', fontWeight: 600, fontSize: '0.85rem', opacity: 0.8 }}>Categoría de Gasto</th>
@@ -140,6 +141,9 @@ export const RequisitionsManager: React.FC = () => {
             <tbody>
               {filteredList.map(req => (
                 <tr key={req.id} style={{ borderBottom: '1px solid #e2e8f0', transition: 'background 0.2s' }}>
+                  <td data-label="Código" style={{ padding: '1.2rem 1.5rem', fontWeight: 700, color: 'var(--primary)' }}>
+                    {req.codigo || 'S/N'}
+                  </td>
                   <td data-label="Fecha Solicitud" style={{ padding: '1.2rem 1.5rem', fontSize: '0.85rem', opacity: 0.8 }}>
                     {new Date(req.created_at).toLocaleDateString('es-VE', {
                       year: 'numeric',

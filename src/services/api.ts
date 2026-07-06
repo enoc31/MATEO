@@ -1067,6 +1067,7 @@ export type RequisitionStatus = 'pendiente_aprobacion_1' | 'pendiente_aprobacion
 
 export interface Requisition {
   id: string;
+  codigo?: string;
   solicitante_id: string;
   solicitante_nombre?: string;
   proyecto_id: string;
@@ -1104,6 +1105,8 @@ export const requisitionsApi = {
         .select(`
           *,
           solicitante:usuarios_perfiles!solicitante_id(nombre_completo),
+          validador_1:usuarios_perfiles!validador_1_id(nombre_completo),
+          validador_2:usuarios_perfiles!validador_2_id(nombre_completo),
           proyecto:proyectos(nombre),
           partida:partidas_gasto(
             nombre,
@@ -1118,6 +1121,8 @@ export const requisitionsApi = {
       return (data as any[]).map(row => ({
         ...row,
         solicitante_nombre: row.solicitante?.nombre_completo,
+        validador_1_nombre: row.validador_1?.nombre_completo,
+        validador_2_nombre: row.validador_2?.nombre_completo,
         proyecto_nombre: row.proyecto?.nombre,
         partida_nombre: row.partida?.nombre,
         partida_codigo: row.partida?.codigo,

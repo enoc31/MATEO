@@ -1,15 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { Download, CheckCircle, Clock, Upload, Scale } from 'lucide-react';
 import { api } from '../../services/api';
-import type { Project, ExpenseReceipt, Donation, Budget, ExpenseCategory, PartidaGasto } from '../../services/api';
+import type { ExpenseCategory } from '../../services/api';
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, Legend, PieChart, Pie, Cell } from 'recharts';
 
 export const Dashboard: React.FC = () => {
   const [loading, setLoading] = useState(true);
-  const [loading, setLoading] = useState(true);
   const [metrics, setMetrics] = useState<any>(null);
   const [categories, setCategories] = useState<ExpenseCategory[]>([]);
-  const [partidas, setPartidas] = useState<PartidaGasto[]>([]);
 
   useEffect(() => {
     const loadData = async () => {

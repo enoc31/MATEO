@@ -101,19 +101,19 @@ export const RequisitionDetailsModal: React.FC<ModalProps> = ({ req, onClose, on
         {/* Historial de Validación */}
         <div style={{ marginBottom: '1.5rem', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-sm)', padding: '1rem', backgroundColor: '#fdfdfd' }}>
           <h4 style={{ fontWeight: 700, fontSize: '0.9rem', marginBottom: '0.5rem', color: 'var(--primary)' }}>Seguimiento de Firmas (Doble Aprobación):</h4>
-          <ul style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', paddingLeft: '1.2rem', margin: 0, fontSize: '0.85rem' }}>
-            <li>
-              <span style={{display: 'flex', gap: '0.4rem', alignItems: 'center'}}><Shield size={14} /> <strong>Visto Bueno 1:</strong></span> {req.validador_1_id ? `Aprobado el ${new Date(req.validado_1_at!).toLocaleDateString()}` : <span style={{display: 'inline-flex', gap: '0.2rem', alignItems: 'center'}}><Clock size={14} /> Pendiente de Firma 1</span>}
-            </li>
-            <li>
-              <span style={{display: 'flex', gap: '0.4rem', alignItems: 'center'}}><Shield size={14} /> <strong>Visto Bueno 2:</strong></span> {req.validador_2_id ? `Aprobado el ${new Date(req.validado_2_at!).toLocaleDateString()}` : <span style={{display: 'inline-flex', gap: '0.2rem', alignItems: 'center'}}><Clock size={14} /> Pendiente de Firma 2</span>}
-            </li>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+            <p style={{ margin: '0 0 0.5rem 0', fontSize: '0.9rem', color: 'var(--neutral-dark)' }}>
+              <span style={{display: 'flex', gap: '0.4rem', alignItems: 'center'}}><Shield size={14} /> <strong>Visto Bueno 1:</strong></span> {req.validador_1_id ? `Aprobado por ${req.validador_1_nombre || 'Director'} el ${new Date(req.validado_1_at!).toLocaleDateString()}` : <span style={{display: 'inline-flex', gap: '0.2rem', alignItems: 'center'}}><Clock size={14} /> Pendiente de Firma 1</span>}
+            </p>
+            <p style={{ margin: 0, fontSize: '0.9rem', color: 'var(--neutral-dark)' }}>
+              <span style={{display: 'flex', gap: '0.4rem', alignItems: 'center'}}><Shield size={14} /> <strong>Visto Bueno 2:</strong></span> {req.validador_2_id ? `Aprobado por ${req.validador_2_nombre || 'Director'} el ${new Date(req.validado_2_at!).toLocaleDateString()}` : <span style={{display: 'inline-flex', gap: '0.2rem', alignItems: 'center'}}><Clock size={14} /> Pendiente de Firma 2</span>}
+            </p>
             {req.estado === 'rechazada' && (
-              <li style={{ color: 'var(--danger)', marginTop: '0.25rem' }}>
+              <div style={{ color: 'var(--danger)', marginTop: '0.25rem', fontSize: '0.85rem' }}>
                 <span style={{display: 'flex', gap: '0.4rem', alignItems: 'center'}}><XCircle size={14} /> <strong>Rechazada:</strong></span> {req.motivo_rechazo} {req.rechazado_por ? `(por ${req.rechazado_por})` : ''}
-              </li>
+              </div>
             )}
-          </ul>
+          </div>
         </div>
 
         {isAuditorOrAdmin && req.estado.startsWith('pendiente') && (

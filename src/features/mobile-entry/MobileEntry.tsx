@@ -246,7 +246,7 @@ export const MobileEntry: React.FC = () => {
                 <option value="">Gasto independiente (Sin solicitud previa)</option>
                 {approvedRequisitions.map(r => (
                   <option key={r.id} value={r.id}>
-                    {r.proyecto_nombre} - {r.categoria_nombre} (${r.monto_solicitado.toFixed(2)})
+                    {r.codigo ? `${r.codigo} - ` : ''}{r.proyecto_nombre} - {r.categoria_nombre} (${r.monto_solicitado.toFixed(2)})
                   </option>
                 ))}
               </select>

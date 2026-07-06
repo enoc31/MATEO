@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Hourglass, Megaphone, RefreshCw, ShieldAlert } from 'lucide-react';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { NotificationProvider } from './components/NotificationProvider';
 import { Login } from './features/auth/Login';
 import { Layout } from './components/Layout';
 import { Suspense, lazy } from 'react';
@@ -300,11 +301,13 @@ const AccessDenied: React.FC = () => {
   );
 };
 
-// Envolver la App en el AuthProvider
+// Envolver la App en el AuthProvider y NotificationProvider
 function App() {
   return (
     <AuthProvider>
-      <MainAppContent />
+      <NotificationProvider>
+        <MainAppContent />
+      </NotificationProvider>
     </AuthProvider>
   );
 }
