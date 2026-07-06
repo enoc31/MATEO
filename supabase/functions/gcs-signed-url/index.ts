@@ -127,6 +127,7 @@ serve(async (req) => {
     );
 
   } catch (error: any) {
+    console.error("GCS Edge Function Error Interno:", error);
     return new Response(
       JSON.stringify({ error: error.message }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }

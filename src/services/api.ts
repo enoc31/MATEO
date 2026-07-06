@@ -517,7 +517,11 @@ export const api = {
     };
 
     if (!isSimulationMode) {
-      const { data, error } = await supabase.from('comprobantes_gasto').insert([newExpense]).select().single();
+      // Remover solicitante_nombre porque no existe como columna en la BD
+      const dbExpense = { ...newExpense };
+      delete (dbExpense as any).solicitante_nombre;
+
+      const { data, error } = await supabase.from('comprobantes_gasto').insert([dbExpense]).select().single();
       if (error) throw error;
       return data as ExpenseReceipt;
     } else {
