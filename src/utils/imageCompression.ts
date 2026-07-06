@@ -1,5 +1,11 @@
 export const compressImage = (file: File, maxWidth = 1500, quality = 0.75): Promise<File> => {
   return new Promise((resolve, reject) => {
+    // Si el archivo no es una imagen (ej. PDF), lo devolvemos intacto
+    if (!file.type.startsWith('image/')) {
+      resolve(file);
+      return;
+    }
+
     const reader = new FileReader();
     reader.readAsDataURL(file);
     reader.onload = (event) => {
