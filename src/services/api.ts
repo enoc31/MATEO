@@ -485,19 +485,10 @@ export const api = {
 
     if (file) {
       if (!isSimulationMode) {
-        // Subida real a Supabase Storage
-        const fileExt = file.name.split('.').pop();
-        const fileName = `${Date.now()}_recibo.${fileExt}`;
-        const { error: uploadError } = await supabase.storage
-          .from('comprobantes')
-          .upload(fileName, file);
-
-        if (uploadError) throw uploadError;
-
-        const { data: { publicUrl } } = supabase.storage
-          .from('comprobantes')
-          .getPublicUrl(fileName);
-        fileUrl = publicUrl;
+        // Subida a GCS y registro en documentos_adjuntos (Fase 1)
+        const { uploadToGCS } = await import('./storage');
+        const uploadResponse = await uploadToGCS(file);
+        fileUrl = uploadResponse.url;
       } else {
         // En simulación convertimos a Base64 local o simulamos una URL
         fileUrl = URL.createObjectURL(file);
@@ -506,19 +497,10 @@ export const api = {
 
     if (pagoFile) {
       if (!isSimulationMode) {
-        // Subida real a Supabase Storage
-        const fileExt = pagoFile.name.split('.').pop();
-        const fileName = `${Date.now()}_pago.${fileExt}`;
-        const { error: uploadError } = await supabase.storage
-          .from('comprobantes')
-          .upload(fileName, pagoFile);
-
-        if (uploadError) throw uploadError;
-
-        const { data: { publicUrl } } = supabase.storage
-          .from('comprobantes')
-          .getPublicUrl(fileName);
-        pagoFileUrl = publicUrl;
+        // Subida a GCS
+        const { uploadToGCS } = await import('./storage');
+        const uploadResponse = await uploadToGCS(pagoFile);
+        pagoFileUrl = uploadResponse.url;
       } else {
         // En simulación convertimos a Base64 local o simulamos una URL
         pagoFileUrl = URL.createObjectURL(pagoFile);
