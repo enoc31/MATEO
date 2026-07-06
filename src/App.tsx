@@ -22,10 +22,11 @@ const TasasManager = lazy(() => import('./features/tasas/TasasManager').then(mod
 const MainAppContent: React.FC = () => {
   const { user, profile, loading, authError, logout, refreshProfile } = useAuth();
   const [activeTab, setActiveTab] = useState<string>('');
+  const [initialRouteSet, setInitialRouteSet] = useState(false);
 
-  // Configurar la pestaña por defecto basada en el rol del usuario
+  // Configurar la pestaña por defecto basada en el rol del usuario solo la primera vez
   useEffect(() => {
-    if (profile) {
+    if (profile && !initialRouteSet) {
       const params = new URLSearchParams(window.location.search);
       const page = params.get('page');
       if (page) {
@@ -35,8 +36,9 @@ const MainAppContent: React.FC = () => {
       } else {
         setActiveTab('dashboard');
       }
+      setInitialRouteSet(true);
     }
-  }, [profile]);
+  }, [profile, initialRouteSet]);
 
   if (loading) {
     return (

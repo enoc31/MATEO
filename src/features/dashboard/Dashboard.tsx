@@ -6,30 +6,20 @@ import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, Legend, PieC
 
 export const Dashboard: React.FC = () => {
   const [loading, setLoading] = useState(true);
-  const [projects, setProjects] = useState<Project[]>([]);
-  const [expenses, setExpenses] = useState<ExpenseReceipt[]>([]);
-  const [donations, setDonations] = useState<Donation[]>([]);
-  const [budgets, setBudgets] = useState<Budget[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [metrics, setMetrics] = useState<any>(null);
   const [categories, setCategories] = useState<ExpenseCategory[]>([]);
   const [partidas, setPartidas] = useState<PartidaGasto[]>([]);
 
   useEffect(() => {
     const loadData = async () => {
       try {
-        const [projList, expList, donList, bList, catList, partList] = await Promise.all([
-          api.getProjects(),
-          api.getExpenses(),
-          api.getDonations(),
-          api.getBudgets(),
+        const [catList, metricsData] = await Promise.all([
           api.getCategories(),
-          api.getPartidas()
+          api.getDashboardMetrics()
         ]);
-        setProjects(projList);
-        setExpenses(expList);
-        setDonations(donList);
-        setBudgets(bList);
         setCategories(catList);
-        setPartidas(partList);
+        setMetrics(metricsData);
       } catch (err) {
         console.error('Error loading dashboard data:', err);
       } finally {
@@ -47,60 +37,38 @@ export const Dashboard: React.FC = () => {
     );
   }
 
-  // --- 1. CÁLCULO DE MÉTRICAS GENERALES ---
-  const totalInflows = donations.reduce((sum, d) => sum + Number(d.monto_usd || d.monto), 0);
-  const reconciledInflows = donations
-    .filter(d => d.transaccion_id !== null)
-    .reduce((sum, d) => sum + Number(d.monto_usd || d.monto), 0);
-  const unreconciledInflows = donations
-    .filter(d => d.transaccion_id === null)
-    .reduce((sum, d) => sum + Number(d.monto_usd || d.monto), 0);
+  // Si falla la carga, usar fallbacks
+  const data = metrics || {
+    totalInflows: 0,
+    reconciledInflows: 0,
+    unreconciledInflows: 0,
+    totalOutflows: 0,
+    expensesByCategory: {},
+    projectExecution: []
+  };
 
-  // Consideramos egresos únicamente los gastos aprobados por auditoría
-  const approvedExpenses = expenses.filter(e => e.estado === 'aprobado');
-  const totalOutflows = approvedExpenses.reduce((sum, e) => sum + Number(e.monto), 0);
-
+  const { totalInflows, reconciledInflows, unreconciledInflows, totalOutflows, expensesByCategory, projectExecution } = data;
   const availableBalance = reconciledInflows - totalOutflows;
 
   // Ejecución Presupuestaria Total
-  const totalBudgeted = budgets.reduce((sum, b) => sum + Number(b.monto_asignado), 0);
-  const totalExecuted = budgets.reduce((sum, b) => sum + Number(b.monto_ejecutado), 0);
+  const totalBudgeted = projectExecution.reduce((sum: number, p: any) => sum + Number(p.Presupuesto || 0), 0);
+  const totalExecuted = projectExecution.reduce((sum: number, p: any) => sum + Number(p.Ejecutado || 0), 0);
   const budgetExecutionPercent = totalBudgeted > 0 ? (totalExecuted / totalBudgeted) * 100 : 0;
 
   // --- 2. PREPARACIÓN DE DATOS PARA GRÁFICOS ---
-
-  // A. Egresos por Categoría
-  const expensesByCategoryMap: { [key: string]: number } = {};
-  approvedExpenses.forEach(exp => {
-    const partObj = partidas.find(p => p.id === exp.partida_id);
-    const catId = partObj ? partObj.categoria_id : 'otros';
-    expensesByCategoryMap[catId] = (expensesByCategoryMap[catId] || 0) + exp.monto;
-  });
-
   const CATEGORY_COLORS = ['#2f5aae', '#073a11', '#008fa6', '#be574b', '#e2af13', '#64748b'];
 
-  const categoryData = Object.keys(expensesByCategoryMap).map((catId, index) => {
+  const categoryData = Object.keys(expensesByCategory).map((catId, index) => {
     const catObj = categories.find(c => c.id === catId);
     const catName = catObj ? catObj.nombre.split(' (')[0].replace(/^\d+\.\s+/, '') : 'Otros';
     return {
       name: catName,
-      value: expensesByCategoryMap[catId],
+      value: Number(expensesByCategory[catId] || 0),
       color: CATEGORY_COLORS[index % CATEGORY_COLORS.length]
     };
   });
 
-  // B. Ejecución Presupuestaria por Proyecto
-  const projectExecutionData = projects.map(proj => {
-    const projBudgets = budgets.filter(b => b.proyecto_id === proj.id);
-    const assigned = projBudgets.reduce((sum, b) => sum + b.monto_asignado, 0);
-    const executed = projBudgets.reduce((sum, b) => sum + b.monto_ejecutado, 0);
-    
-    return {
-      name: proj.nombre.length > 25 ? proj.nombre.substring(0, 25) + '...' : proj.nombre,
-      Presupuesto: assigned,
-      Ejecutado: executed
-    };
-  }).filter(p => p.Presupuesto > 0);
+  const projectExecutionData = projectExecution.filter((p: any) => p.Presupuesto > 0);
 
   // Formateador de moneda
   const formatCurrency = (amount: number) => {

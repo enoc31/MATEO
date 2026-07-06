@@ -422,7 +422,26 @@ export const api = {
     }
   },
 
-  // --- PRESUPUESTOS ---
+  // --- DASHBOARD METRICS (RPC) ---
+  getDashboardMetrics: async (): Promise<any> => {
+    if (!isSimulationMode) {
+      const { data, error } = await supabase.rpc('get_dashboard_metrics');
+      if (error) throw error;
+      return data;
+    } else {
+      // Retorno simulado si no hay BD
+      return {
+        totalInflows: 0,
+        reconciledInflows: 0,
+        unreconciledInflows: 0,
+        totalOutflows: 0,
+        expensesByCategory: {},
+        projectExecution: []
+      };
+    }
+  },
+
+  // --- REPORTES Y AUDITORÍA ---
   getBudgets: async (): Promise<Budget[]> => {
     if (!isSimulationMode) {
       const { data, error } = await supabase.from('presupuestos').select('*');
