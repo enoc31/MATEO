@@ -3,17 +3,20 @@ import { Hourglass, Megaphone, RefreshCw, ShieldAlert } from 'lucide-react';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { Login } from './features/auth/Login';
 import { Layout } from './components/Layout';
-import { Dashboard } from './features/dashboard/Dashboard';
-import { Reconciliation } from './features/reconciliation/Reconciliation';
-import { Audit } from './features/audit/Audit';
-import { BudgetsAndReports } from './features/budgets/BudgetsAndReports';
-import { MobileEntry } from './features/mobile-entry/MobileEntry';
-import { UserManagement } from './features/users/UserManagement';
-import { RequisitionsManager } from './features/requisitions/RequisitionsManager';
-import { IncomesManager } from './features/incomes/IncomesManager';
-import { IncomeRegistrationForm } from './features/incomes/IncomeRegistrationForm';
-import { ImportBankStatement } from './features/incomes/ImportBankStatement';
-import { TasasManager } from './features/tasas/TasasManager';
+import { Suspense, lazy } from 'react';
+
+// Lazy loaded features
+const Dashboard = lazy(() => import('./features/dashboard/Dashboard').then(module => ({ default: module.Dashboard })));
+const Reconciliation = lazy(() => import('./features/reconciliation/Reconciliation').then(module => ({ default: module.Reconciliation })));
+const Audit = lazy(() => import('./features/audit/Audit').then(module => ({ default: module.Audit })));
+const BudgetsAndReports = lazy(() => import('./features/budgets/BudgetsAndReports').then(module => ({ default: module.BudgetsAndReports })));
+const MobileEntry = lazy(() => import('./features/mobile-entry/MobileEntry').then(module => ({ default: module.MobileEntry })));
+const UserManagement = lazy(() => import('./features/users/UserManagement').then(module => ({ default: module.UserManagement })));
+const RequisitionsManager = lazy(() => import('./features/requisitions/RequisitionsManager').then(module => ({ default: module.RequisitionsManager })));
+const IncomesManager = lazy(() => import('./features/incomes/IncomesManager').then(module => ({ default: module.IncomesManager })));
+const IncomeRegistrationForm = lazy(() => import('./features/incomes/IncomeRegistrationForm').then(module => ({ default: module.IncomeRegistrationForm })));
+const ImportBankStatement = lazy(() => import('./features/incomes/ImportBankStatement').then(module => ({ default: module.ImportBankStatement })));
+const TasasManager = lazy(() => import('./features/tasas/TasasManager').then(module => ({ default: module.TasasManager })));
 
 const MainAppContent: React.FC = () => {
   const { user, profile, loading, authError, logout, refreshProfile } = useAuth();
@@ -130,9 +133,22 @@ const MainAppContent: React.FC = () => {
     return <ImportBankStatement />;
   }
 
+  const renderContentWithSuspense = () => (
+    <Suspense fallback={
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%', minHeight: '400px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem', color: 'var(--neutral-dark)' }}>
+          <Hourglass size={40} style={{ animation: 'spin 2s linear infinite', opacity: 0.5 }} />
+          <p>Cargando módulo...</p>
+        </div>
+      </div>
+    }>
+      {renderContent()}
+    </Suspense>
+  );
+
   return (
     <Layout activeTab={activeTab} setActiveTab={setActiveTab}>
-      {renderContent()}
+      {renderContentWithSuspense()}
     </Layout>
   );
 };

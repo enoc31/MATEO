@@ -444,6 +444,25 @@ export const api = {
     }
   },
 
+  getBankTransactionsPaginated: async (page: number = 1, pageSize: number = 50): Promise<{ data: BankTransaction[], count: number }> => {
+    if (!isSimulationMode) {
+      const from = (page - 1) * pageSize;
+      const to = from + pageSize - 1;
+      const { data, error, count } = await supabase
+        .from('transacciones_bancarias')
+        .select('*', { count: 'exact' })
+        .order('fecha', { ascending: false })
+        .range(from, to);
+      if (error) throw error;
+      return { data: data as BankTransaction[], count: count || 0 };
+    } else {
+      const all = JSON.parse(localStorage.getItem('cnbv_bank_transactions') || '[]');
+      const from = (page - 1) * pageSize;
+      const to = from + pageSize;
+      return { data: all.slice(from, to), count: all.length };
+    }
+  },
+
   importBankTransactions: async (txs: Omit<BankTransaction, 'id' | 'estado'>[]): Promise<BankTransaction[]> => {
     if (!isSimulationMode) {
       const { data, error } = await supabase.from('transacciones_bancarias').insert(
@@ -472,6 +491,25 @@ export const api = {
       return data as ExpenseReceipt[];
     } else {
       return JSON.parse(localStorage.getItem('cnbv_expenses') || '[]');
+    }
+  },
+
+  getExpensesPaginated: async (page: number = 1, pageSize: number = 50): Promise<{ data: ExpenseReceipt[], count: number }> => {
+    if (!isSimulationMode) {
+      const from = (page - 1) * pageSize;
+      const to = from + pageSize - 1;
+      const { data, error, count } = await supabase
+        .from('comprobantes_gasto')
+        .select('*', { count: 'exact' })
+        .order('fecha_gasto', { ascending: false })
+        .range(from, to);
+      if (error) throw error;
+      return { data: data as ExpenseReceipt[], count: count || 0 };
+    } else {
+      const all = JSON.parse(localStorage.getItem('cnbv_expenses') || '[]');
+      const from = (page - 1) * pageSize;
+      const to = from + pageSize;
+      return { data: all.slice(from, to), count: all.length };
     }
   },
 

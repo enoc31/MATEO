@@ -15,6 +15,11 @@ export const Audit: React.FC = () => {
   const [selectedExp, setSelectedExp] = useState<ExpenseReceipt | null>(null);
   const [activeDocTab, setActiveDocTab] = useState<'recibo' | 'pago'>('recibo');
   
+  // Pagination States
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+  const pageSize = 50;
+  
   // Auditoria States
   const [auditComment, setAuditComment] = useState('');
   const [checklist, setChecklist] = useState({
@@ -27,13 +32,11 @@ export const Audit: React.FC = () => {
   const loadData = async () => {
     setLoading(true);
     try {
-      const [expList, projList, catList, partList] = await Promise.all([
-        api.getExpenses(),
+      const [projList, catList, partList] = await Promise.all([
         api.getProjects(),
         api.getCategories(),
         api.getPartidas()
       ]);
-      setExpenses(expList);
       setProjects(projList);
       setCategories(catList);
       setPartidas(partList);
@@ -44,9 +47,26 @@ export const Audit: React.FC = () => {
     }
   };
 
+  const fetchExpenses = async (page: number) => {
+    setLoading(true);
+    try {
+      const expResponse = await api.getExpensesPaginated(page, pageSize);
+      setExpenses(expResponse.data);
+      setTotalCount(expResponse.count);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
     loadData();
   }, []);
+
+  useEffect(() => {
+    fetchExpenses(currentPage);
+  }, [currentPage]);
 
   const handleOpenAudit = (exp: ExpenseReceipt) => {
     setSelectedExp(exp);
@@ -198,6 +218,31 @@ export const Audit: React.FC = () => {
               ))}
             </tbody>
           </table>
+          
+          {/* Controles de Paginación */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '1rem', padding: '0 1rem' }}>
+            <div style={{ fontSize: '0.85rem', color: 'var(--neutral-dark)' }}>
+              Mostrando {filteredExpenses.length} de {totalCount} gastos (Página {currentPage})
+            </div>
+            <div style={{ display: 'flex', gap: '0.5rem' }}>
+              <button
+                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                disabled={currentPage === 1 || loading}
+                className="btn btn-outline"
+                style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem' }}
+              >
+                Anterior
+              </button>
+              <button
+                onClick={() => setCurrentPage(p => p + 1)}
+                disabled={currentPage * pageSize >= totalCount || loading}
+                className="btn btn-outline"
+                style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem' }}
+              >
+                Siguiente
+              </button>
+            </div>
+          </div>
         </div>
       )}
 
