@@ -513,6 +513,25 @@ export const api = {
     }
   },
 
+  getExpenseById: async (id: string): Promise<ExpenseReceipt | null> => {
+    if (!isSimulationMode) {
+      const { data, error } = await supabase
+        .from('comprobantes_gasto')
+        .select('*')
+        .eq('id', id)
+        .single();
+      
+      if (error) {
+        if (error.code === 'PGRST116') return null; // Not found
+        throw error;
+      }
+      return data as ExpenseReceipt;
+    } else {
+      const expenses = JSON.parse(localStorage.getItem('cnbv_expenses') || '[]');
+      return expenses.find((e: ExpenseReceipt) => e.id === id) || null;
+    }
+  },
+
   createExpense: async (
     expense: Omit<ExpenseReceipt, 'id' | 'estado' | 'comentarios_auditoria' | 'transaccion_id' | 'url_pago'>, 
     file?: File,

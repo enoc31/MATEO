@@ -9,6 +9,7 @@ import { Suspense, lazy } from 'react';
 const Dashboard = lazy(() => import('./features/dashboard/Dashboard').then(module => ({ default: module.Dashboard })));
 const Reconciliation = lazy(() => import('./features/reconciliation/Reconciliation').then(module => ({ default: module.Reconciliation })));
 const Audit = lazy(() => import('./features/audit/Audit').then(module => ({ default: module.Audit })));
+const AuditDetail = lazy(() => import('./features/audit/AuditDetail').then(module => ({ default: module.AuditDetail })));
 const BudgetsAndReports = lazy(() => import('./features/budgets/BudgetsAndReports').then(module => ({ default: module.BudgetsAndReports })));
 const MobileEntry = lazy(() => import('./features/mobile-entry/MobileEntry').then(module => ({ default: module.MobileEntry })));
 const UserManagement = lazy(() => import('./features/users/UserManagement').then(module => ({ default: module.UserManagement })));
@@ -131,6 +132,14 @@ const MainAppContent: React.FC = () => {
 
   if (activeTab === 'importar-extracto') {
     return <ImportBankStatement />;
+  }
+
+  if (activeTab === 'audit-detail') {
+    return (
+      <Suspense fallback={<div style={{ padding: '3rem', textAlign: 'center' }}>Cargando detalle de auditoría...</div>}>
+        <AuditDetail />
+      </Suspense>
+    );
   }
 
   const renderContentWithSuspense = () => (

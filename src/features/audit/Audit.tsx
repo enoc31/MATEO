@@ -12,23 +12,11 @@ export const Audit: React.FC = () => {
   const [categories, setCategories] = useState<ExpenseCategory[]>([]);
   const [partidas, setPartidas] = useState<PartidaGasto[]>([]);
   const [filterStatus, setFilterStatus] = useState<string>('todos');
-  const [selectedExp, setSelectedExp] = useState<ExpenseReceipt | null>(null);
-  const [activeDocTab, setActiveDocTab] = useState<'recibo' | 'pago'>('recibo');
-  
   // Pagination States
   const [currentPage, setCurrentPage] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
   const pageSize = 50;
   
-  // Auditoria States
-  const [auditComment, setAuditComment] = useState('');
-  const [checklist, setChecklist] = useState({
-    facturaValida: false,
-    conceptosCoinciden: false,
-    proyectoValido: false,
-    aprobacionCoordinador: false
-  });
-
   const loadData = async () => {
     setLoading(true);
     try {
@@ -62,6 +50,15 @@ export const Audit: React.FC = () => {
 
   useEffect(() => {
     loadData();
+
+    // Listen for messages from the AuditDetail tab to refresh data
+    const handleMessage = (event: MessageEvent) => {
+      if (event.data === 'RELOAD_AUDIT') {
+        fetchExpenses(currentPage);
+      }
+    };
+    window.addEventListener('message', handleMessage);
+    return () => window.removeEventListener('message', handleMessage);
   }, []);
 
   useEffect(() => {
@@ -69,41 +66,8 @@ export const Audit: React.FC = () => {
   }, [currentPage]);
 
   const handleOpenAudit = (exp: ExpenseReceipt) => {
-    setSelectedExp(exp);
-    setActiveDocTab('recibo');
-    setAuditComment(exp.comentarios_auditoria || '');
-    setChecklist({
-      facturaValida: exp.estado === 'aprobado',
-      conceptosCoinciden: exp.estado === 'aprobado',
-      proyectoValido: exp.estado === 'aprobado',
-      aprobacionCoordinador: exp.estado === 'aprobado'
-    });
-  };
-
-  const handleAuditAction = async (newStatus: 'aprobado' | 'rechazado') => {
-    if (!selectedExp || !profile) return;
-
-    if (newStatus === 'aprobado' && !Object.values(checklist).every(v => v)) {
-      alert('Para aprobar el gasto, todos los puntos de la lista de conformidad deben estar verificados.');
-      return;
-    }
-
-    if (newStatus === 'rechazado' && !auditComment.trim()) {
-      alert('Por favor, indica en las observaciones el motivo de rechazo del comprobante.');
-      return;
-    }
-
-    try {
-      setLoading(true);
-      await api.updateExpenseStatus(selectedExp.id, newStatus, auditComment, profile.id);
-      alert(`Gasto ${newStatus.toUpperCase()} exitosamente.`);
-      setSelectedExp(null);
-      await loadData();
-    } catch (err) {
-      console.error(err);
-      alert('Error al guardar la auditoría.');
-      setLoading(false);
-    }
+    // Abre el detalle en una nueva pestaña
+    window.open(`/?page=audit-detail&id=${exp.id}`, '_blank');
   };
 
   const formatCurrency = (amount: number) => {
@@ -241,288 +205,6 @@ export const Audit: React.FC = () => {
               >
                 Siguiente
               </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Modal de Auditoría Detallada */}
-      {selectedExp && (
-        <div style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          width: '100%',
-          height: '100%',
-          backgroundColor: 'rgba(0,0,0,0.6)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 1100,
-          padding: '1rem'
-        }}>
-          <div className="card" style={{ 
-            maxWidth: '1000px', 
-            width: '100%', 
-            maxHeight: '90vh', 
-            overflowY: 'auto',
-            padding: '2rem', 
-            borderRadius: 'var(--radius-lg)',
-            display: 'flex',
-            flexDirection: 'column'
-          }}>
-            {/* Header del Modal */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', borderBottom: '2px solid var(--neutral-light)', paddingBottom: '0.75rem' }}>
-              <div>
-                <h3 style={{ color: 'var(--primary)', fontWeight: 700 }}>Verificación de Soporte y Conformidad</h3>
-                <p style={{ fontSize: '0.8rem', color: 'var(--neutral-dark)', opacity: 0.7, marginTop: '0.1rem' }}>
-                  ID Gasto: {selectedExp.id.substring(0, 8).toUpperCase()} - Solicitante: {selectedExp.solicitante_nombre}
-                </p>
-              </div>
-              <button 
-                onClick={() => setSelectedExp(null)} 
-                style={{ background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer', color: 'var(--neutral-dark)' }}
-              >
-                &times;
-              </button>
-            </div>
-
-            {/* Contenido en Doble Columna */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '2rem', marginBottom: '1.5rem', flex: 1, minHeight: 0 }}>
-              
-              {/* Columna 1: Vista de Soportes (Factura / Pago) */}
-              <div style={{ display: 'flex', flexDirection: 'column' }}>
-                <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.75rem' }}>
-                  <button
-                    onClick={() => setActiveDocTab('recibo')}
-                    style={{
-                      flex: 1,
-                      padding: '0.5rem',
-                      borderRadius: 'var(--radius-sm)',
-                      border: '1px solid var(--border-color)',
-                      backgroundColor: activeDocTab === 'recibo' ? 'var(--primary)' : 'white',
-                      color: activeDocTab === 'recibo' ? 'white' : 'var(--neutral-dark)',
-                      cursor: 'pointer',
-                      fontWeight: 600,
-                      fontSize: '0.85rem',
-                      transition: 'all var(--transition-fast)'
-                    }}
-                  >
-                    <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}><FileText size={16} style={{ marginRight: '6px' }} /> Factura o Recibo</span>
-                  </button>
-                  <button
-                    onClick={() => setActiveDocTab('pago')}
-                    style={{
-                      flex: 1,
-                      padding: '0.5rem',
-                      borderRadius: 'var(--radius-sm)',
-                      border: '1px solid var(--border-color)',
-                      backgroundColor: activeDocTab === 'pago' ? 'var(--primary)' : 'white',
-                      color: activeDocTab === 'pago' ? 'white' : 'var(--neutral-dark)',
-                      cursor: 'pointer',
-                      fontWeight: 600,
-                      fontSize: '0.85rem',
-                      transition: 'all var(--transition-fast)'
-                    }}
-                  >
-                    <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}><CreditCard size={16} style={{ marginRight: '6px' }} /> Comprobante de Pago</span>
-                  </button>
-                </div>
-
-                {activeDocTab === 'recibo' ? (
-                  <>
-                    <span className="form-label" style={{ fontWeight: 600, marginBottom: '0.5rem', fontSize: '0.85rem' }}>Factura / Evidencia Digital de Compra:</span>
-                    {selectedExp.url_comprobante ? (
-                      <div style={{ 
-                        flex: 1, 
-                        border: '1px solid var(--border-color)', 
-                        borderRadius: 'var(--radius-md)', 
-                        overflow: 'hidden', 
-                        backgroundColor: '#000000',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        minHeight: '280px'
-                      }}>
-                        <img 
-                          src={selectedExp.url_comprobante} 
-                          alt="Factura o Recibo" 
-                          style={{ maxWidth: '100%', maxHeight: '400px', objectFit: 'contain' }}
-                        />
-                      </div>
-                    ) : (
-                      <div style={{ 
-                        flex: 1, 
-                        border: '1px dashed var(--border-color)', 
-                        borderRadius: 'var(--radius-md)', 
-                        display: 'flex', 
-                        alignItems: 'center', 
-                        justifyContent: 'center', 
-                        backgroundColor: 'var(--neutral-light)', 
-                        color: 'var(--neutral-dark)',
-                        opacity: 0.7,
-                        minHeight: '280px'
-                      }}>
-                        <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}><AlertTriangle size={18} color="var(--warning)" /> No se cargó ninguna foto del recibo físico.</span>
-                      </div>
-                    )}
-                  </>
-                ) : (
-                  <>
-                    <span className="form-label" style={{ fontWeight: 600, marginBottom: '0.5rem', fontSize: '0.85rem' }}>Comprobante de Pago (Transferencia / Captura):</span>
-                    {selectedExp.url_pago ? (
-                      <div style={{ 
-                        flex: 1, 
-                        border: '1px solid var(--border-color)', 
-                        borderRadius: 'var(--radius-md)', 
-                        overflow: 'hidden', 
-                        backgroundColor: '#000000',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        minHeight: '280px'
-                      }}>
-                        <img 
-                          src={selectedExp.url_pago} 
-                          alt="Comprobante de Pago" 
-                          style={{ maxWidth: '100%', maxHeight: '400px', objectFit: 'contain' }}
-                        />
-                      </div>
-                    ) : (
-                      <div style={{ 
-                        flex: 1, 
-                        border: '1px dashed var(--border-color)', 
-                        borderRadius: 'var(--radius-md)', 
-                        display: 'flex', 
-                        alignItems: 'center', 
-                        justifyContent: 'center', 
-                        backgroundColor: 'var(--neutral-light)', 
-                        color: 'var(--neutral-dark)',
-                        opacity: 0.7,
-                        minHeight: '280px'
-                      }}>
-                        <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}><AlertTriangle size={18} color="var(--warning)" /> No se cargó ninguna foto del comprobante de pago.</span>
-                      </div>
-                    )}
-                  </>
-                )}
-              </div>
-
-              {/* Columna 2: Lógica de Auditoría */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                {/* Detalles */}
-                <div style={{ backgroundColor: 'var(--neutral-light)', padding: '1rem', borderRadius: 'var(--radius-sm)', fontSize: '0.85rem' }}>
-                  <div style={{ marginBottom: '0.5rem' }}>
-                    <strong>Proyecto:</strong> {getProjectName(selectedExp.proyecto_id)}
-                  </div>
-                  <div style={{ marginBottom: '0.5rem' }}>
-                    <strong>Partida de Gasto:</strong> {getPartidaName(selectedExp.partida_id)}
-                  </div>
-                  <div style={{ marginBottom: '0.5rem' }}>
-                    <strong>Monto:</strong> <strong style={{ color: 'var(--primary)', fontSize: '1rem' }}>{formatCurrency(selectedExp.monto)}</strong>
-                  </div>
-                  <div>
-                    <strong>Descripción del Gasto:</strong> {selectedExp.descripcion}
-                  </div>
-                </div>
-
-                {/* Lista de Chequeo de Conformidad */}
-                <div className="card" style={{ padding: '1rem', boxShadow: 'none', borderColor: 'var(--border-color)' }}>
-                  <span className="form-label" style={{ fontWeight: 600, marginBottom: '0.75rem', display: 'block' }}>
-                    Lista de Chequeo de Auditoría:
-                  </span>
-                  
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
-                    <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.8rem', cursor: 'pointer' }}>
-                      <input 
-                        type="checkbox" 
-                        checked={checklist.facturaValida}
-                        onChange={e => setChecklist({ ...checklist, facturaValida: e.target.checked })}
-                        disabled={selectedExp.estado === 'aprobado'}
-                      />
-                      ¿Tiene factura, recibo o soporte físico válido?
-                    </label>
-
-                    <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.8rem', cursor: 'pointer' }}>
-                      <input 
-                        type="checkbox" 
-                        checked={checklist.conceptosCoinciden}
-                        onChange={e => setChecklist({ ...checklist, conceptosCoinciden: e.target.checked })}
-                        disabled={selectedExp.estado === 'aprobado'}
-                      />
-                      ¿Los conceptos y montos coinciden con lo reportado?
-                    </label>
-
-                    <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.8rem', cursor: 'pointer' }}>
-                      <input 
-                        type="checkbox" 
-                        checked={checklist.proyectoValido}
-                        onChange={e => setChecklist({ ...checklist, proyectoValido: e.target.checked })}
-                        disabled={selectedExp.estado === 'aprobado'}
-                      />
-                      ¿Corresponde a actividades aprobadas para el proyecto?
-                    </label>
-
-                    <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.8rem', cursor: 'pointer' }}>
-                      <input 
-                        type="checkbox" 
-                        checked={checklist.aprobacionCoordinador}
-                        onChange={e => setChecklist({ ...checklist, aprobacionCoordinador: e.target.checked })}
-                        disabled={selectedExp.estado === 'aprobado'}
-                      />
-                      ¿Cuenta con aprobación de la coordinación local?
-                    </label>
-                  </div>
-                </div>
-
-                {/* Comentarios */}
-                <div className="form-group">
-                  <label className="form-label" htmlFor="audit-comments">
-                    Observaciones de Auditoría * (Obligatorio en caso de rechazo)
-                  </label>
-                  <textarea
-                    id="audit-comments"
-                    className="form-input"
-                    rows={3}
-                    placeholder="Escribe comentarios de aprobación o notas explicando qué comprobantes faltan en caso de rechazo..."
-                    value={auditComment}
-                    onChange={e => setAuditComment(e.target.value)}
-                    disabled={selectedExp.estado === 'aprobado'}
-                  />
-                </div>
-              </div>
-
-            </div>
-
-            {/* Footer de Modal / Acciones */}
-            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', borderTop: '2px solid var(--neutral-light)', paddingTop: '1.25rem' }}>
-              <button 
-                onClick={() => setSelectedExp(null)} 
-                className="btn btn-outline"
-                style={{ padding: '0.5rem 1rem' }}
-              >
-                Volver
-              </button>
-
-              {selectedExp.estado !== 'aprobado' && (
-                <>
-                  <button 
-                    onClick={() => handleAuditAction('rechazado')} 
-                    className="btn btn-outline"
-                    style={{ padding: '0.5rem 1rem', borderColor: 'var(--danger)', color: 'var(--danger)' }}
-                  >
-                    <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}><XCircle size={18} style={{ marginRight: '6px' }} /> Rechazar Soporte</span>
-                  </button>
-
-                  <button 
-                    onClick={() => handleAuditAction('aprobado')} 
-                    className="btn btn-secondary"
-                    style={{ padding: '0.5rem 1.25rem' }}
-                  >
-                    <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}><CheckCircle size={18} style={{ marginRight: '6px' }} /> Aprobar Gasto y Comprobante</span>
-                  </button>
-                </>
-              )}
             </div>
           </div>
         </div>
