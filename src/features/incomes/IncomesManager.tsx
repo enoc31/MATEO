@@ -24,8 +24,10 @@ export const IncomesManager: React.FC = () => {
   const [donantes, setDonantes] = useState<Donante[]>([]);
   const [donations, setDonations] = useState<Donation[]>([]);
 
-  // Filters
+  // Filters & Pagination
   const [filterProject, setFilterProject] = useState('todos');
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 50;
 
   const loadData = async () => {
     setLoading(true);
@@ -102,6 +104,10 @@ export const IncomesManager: React.FC = () => {
   const unreconciledIngresosUsd = filteredDonations
     .filter(d => d.transaccion_id === null)
     .reduce((s, d) => s + (d.monto_usd || d.monto), 0);
+
+  // Pagination Slice
+  const startIndex = (currentPage - 1) * pageSize;
+  const paginatedDonations = filteredDonations.slice(startIndex, startIndex + pageSize);
 
   const getProjectName = (id: string | null) =>
     id ? (projects.find(p => p.id === id)?.nombre ?? 'Proyecto Desconocido') : 'Sin Proyecto';
@@ -258,7 +264,7 @@ export const IncomesManager: React.FC = () => {
                 </tr>
               </thead>
               <tbody>
-                {filteredDonations.map((d, i) => {
+                {paginatedDonations.map((d, i) => {
                   const { flag, tipo } = getDonanteInfo(d.donante);
                   const isVES = d.moneda === 'VES';
                   
@@ -336,6 +342,33 @@ export const IncomesManager: React.FC = () => {
                 })}
               </tbody>
             </table>
+          </div>
+        )}
+        
+        {/* Controles de Paginación */}
+        {filteredDonations.length > 0 && (
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '1rem', padding: '1rem 1.5rem', borderTop: '1px solid var(--border-color)' }}>
+            <div style={{ fontSize: '0.85rem', color: 'var(--neutral-dark)' }}>
+              Mostrando {paginatedDonations.length} de {filteredDonations.length} ingresos (Página {currentPage})
+            </div>
+            <div style={{ display: 'flex', gap: '0.5rem' }}>
+              <button
+                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                disabled={currentPage === 1}
+                className="btn btn-outline"
+                style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem' }}
+              >
+                Anterior
+              </button>
+              <button
+                onClick={() => setCurrentPage(p => p + 1)}
+                disabled={currentPage * pageSize >= filteredDonations.length}
+                className="btn btn-outline"
+                style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem' }}
+              >
+                Siguiente
+              </button>
+            </div>
           </div>
         )}
       </div>
