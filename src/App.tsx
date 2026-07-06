@@ -16,7 +16,7 @@ import { ImportBankStatement } from './features/incomes/ImportBankStatement';
 import { TasasManager } from './features/tasas/TasasManager';
 
 const MainAppContent: React.FC = () => {
-  const { profile, loading, logout, refreshProfile } = useAuth();
+  const { user, profile, loading, logout, refreshProfile } = useAuth();
   const [activeTab, setActiveTab] = useState<string>('');
 
   // Configurar la pestaña por defecto basada en el rol del usuario
@@ -64,6 +64,25 @@ const MainAppContent: React.FC = () => {
 
   // Si no está logueado, mostrar pantalla de Login
   if (!profile) {
+    if (user) {
+      // Autenticado pero sin perfil (posible error de DB)
+      return (
+        <div style={{ textAlign: 'center', padding: '3rem', fontFamily: 'sans-serif' }}>
+          <ShieldAlert size={64} color="red" />
+          <h2 style={{ marginTop: '1rem', color: '#333' }}>Error de Perfil de Usuario</h2>
+          <p style={{ color: '#666', maxWidth: '400px', margin: '1rem auto' }}>
+            Tu cuenta se ha autenticado, pero tu perfil en la base de datos no pudo ser cargado o creado. 
+            Asegúrate de haber ejecutado el parche SQL en Supabase o contacta al administrador.
+          </p>
+          <button 
+            onClick={() => { logout(); window.location.reload(); }} 
+            style={{ padding: '0.75rem 1.5rem', background: 'var(--primary)', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
+          >
+            Volver al Inicio y Cerrar Sesión
+          </button>
+        </div>
+      );
+    }
     return <Login />;
   }
 
