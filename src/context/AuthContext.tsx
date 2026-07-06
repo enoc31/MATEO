@@ -39,6 +39,34 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           .single();
 
         if (error) {
+          // Si el perfil no existe (ej. error PGRST116 o no se encontró fila),
+          // intentamos crearlo usando los metadatos del usuario de Auth (que se guardaron al registrarse)
+          if (error.code === 'PGRST116' || error.message?.includes('0 rows')) {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (session && session.user.id === userId) {
+              const meta = session.user.user_metadata;
+              const newProfile = {
+                id: userId,
+                email: session.user.email,
+                nombre_completo: meta?.nombre_completo || 'Usuario',
+                rol: meta?.rol || 'donante',
+                aprobado: false
+              };
+              
+              const { data: insertedData, error: insertError } = await supabase
+                .from('usuarios_perfiles')
+                .insert([newProfile])
+                .select()
+                .single();
+                
+              if (!insertError && insertedData) {
+                setProfile(insertedData as UserProfile);
+                return;
+              } else {
+                console.error('Error auto-creating profile:', insertError);
+              }
+            }
+          }
           console.error('Error fetching user profile:', error);
           setProfile(null);
         } else {
