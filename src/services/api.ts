@@ -513,6 +513,22 @@ export const api = {
     }
   },
 
+  getRecentExpensesByUserId: async (userId: string, limit: number = 20): Promise<ExpenseReceipt[]> => {
+    if (!isSimulationMode) {
+      const { data, error } = await supabase
+        .from('comprobantes_gasto')
+        .select('*')
+        .eq('solicitante_id', userId)
+        .order('fecha_gasto', { ascending: false })
+        .limit(limit);
+      if (error) throw error;
+      return data as ExpenseReceipt[];
+    } else {
+      const all: ExpenseReceipt[] = JSON.parse(localStorage.getItem('cnbv_expenses') || '[]');
+      return all.filter(e => e.solicitante_id === userId).slice(0, limit);
+    }
+  },
+
   getExpenseById: async (id: string): Promise<ExpenseReceipt | null> => {
     if (!isSimulationMode) {
       const { data, error } = await supabase
@@ -1109,6 +1125,39 @@ export const requisitionsApi = {
           solicitante_nombre: user ? user.nombre_completo : 'Coordinador'
         };
       });
+    }
+  },
+
+  getRecentRequisitionsByUserId: async (userId: string, limit: number = 30): Promise<Requisition[]> => {
+    if (!isSimulationMode) {
+      const { data, error } = await supabase
+        .from('solicitudes_gasto')
+        .select(`
+          *,
+          solicitante:usuarios_perfiles!solicitante_id(nombre_completo),
+          proyecto:proyectos(nombre),
+          partida:partidas_gasto(
+            nombre,
+            codigo,
+            categoria:categorias_gasto(nombre)
+          )
+        `)
+        .eq('solicitante_id', userId)
+        .order('created_at', { ascending: false })
+        .limit(limit);
+      
+      if (error) throw error;
+      
+      return (data as any[]).map(row => ({
+        ...row,
+        solicitante_nombre: row.solicitante?.nombre_completo,
+        proyecto_nombre: row.proyecto?.nombre,
+        partida_nombre: row.partida?.nombre,
+        partida_codigo: row.partida?.codigo,
+        categoria_nombre: row.partida?.categoria?.nombre
+      }));
+    } else {
+      return (await requisitionsApi.getRequisitions()).filter(r => r.solicitante_id === userId).slice(0, limit);
     }
   },
 

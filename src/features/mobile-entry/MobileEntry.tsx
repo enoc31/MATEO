@@ -51,12 +51,12 @@ export const MobileEntry: React.FC = () => {
     if (!profile) return;
     setLoading(true);
     try {
-      const [projList, catList, partList, expList, reqList, budgetList] = await Promise.all([
+      const [projList, catList, partList, myExpenses, myReqs, budgetList] = await Promise.all([
         api.getProjects(),
         api.getCategories(),
         api.getPartidas(),
-        api.getExpenses(),
-        requisitionsApi.getRequisitions(),
+        api.getRecentExpensesByUserId(profile.id, 20),
+        requisitionsApi.getRecentRequisitionsByUserId(profile.id, 30),
         api.getBudgets()
       ]);
       setProjects(projList.filter(p => p.activo));
@@ -64,15 +64,12 @@ export const MobileEntry: React.FC = () => {
       setPartidas(partList);
       setBudgets(budgetList);
       
-      // Filter expenses created by this coordinator
-      const myExpenses = expList.filter(e => e.solicitante_id === profile.id);
       setRecentExpenses(myExpenses);
 
       // Filter approved requisitions that do not have an executed expense yet
-      const activeReqs = reqList.filter(r => 
-        r.solicitante_id === profile.id && 
+      const activeReqs = myReqs.filter(r => 
         r.estado === 'aprobada_ejecucion' &&
-        !expList.some(e => e.solicitud_id === r.id)
+        !myExpenses.some(e => e.solicitud_id === r.id)
       );
       setApprovedRequisitions(activeReqs);
     } catch (err) {
