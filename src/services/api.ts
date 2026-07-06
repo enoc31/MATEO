@@ -517,9 +517,21 @@ export const api = {
     };
 
     if (!isSimulationMode) {
-      // Remover solicitante_nombre porque no existe como columna en la BD
-      const dbExpense = { ...newExpense };
-      delete (dbExpense as any).solicitante_nombre;
+      // Construcción estricta del payload para evitar cualquier propiedad fantasma (como solicitante_nombre)
+      const dbExpense = {
+        proyecto_id: newExpense.proyecto_id,
+        partida_id: newExpense.partida_id,
+        transaccion_id: newExpense.transaccion_id,
+        solicitante_id: newExpense.solicitante_id,
+        solicitud_id: newExpense.solicitud_id,
+        monto: newExpense.monto,
+        descripcion: newExpense.descripcion,
+        fecha_gasto: newExpense.fecha_gasto,
+        url_comprobante: newExpense.url_comprobante,
+        url_pago: newExpense.url_pago,
+        estado: newExpense.estado,
+        comentarios_auditoria: newExpense.comentarios_auditoria,
+      };
 
       const { data, error } = await supabase.from('comprobantes_gasto').insert([dbExpense]).select().single();
       if (error) throw error;
