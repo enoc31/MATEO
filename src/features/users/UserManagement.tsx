@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Plus, X, Eye, EyeOff } from 'lucide-react';
 import { api } from '../../services/api';
 import type { UserRole } from '../../context/AuthContext';
 
@@ -23,6 +24,17 @@ export const UserManagement: React.FC = () => {
 
   // Roles modificados localmente antes de guardar
   const [tempRoles, setTempRoles] = useState<{ [userId: string]: UserRole }>({});
+
+  // New User Modal State
+  const [showNewUserModal, setShowNewUserModal] = useState(false);
+  const [creatingUser, setCreatingUser] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [newUserData, setNewUserData] = useState({
+    nombre_completo: '',
+    email: '',
+    password: '',
+    rol: 'coordinador_terreno' as UserRole
+  });
 
   const loadUsers = async () => {
     setLoading(true);
@@ -96,6 +108,24 @@ export const UserManagement: React.FC = () => {
     }
   };
 
+  const handleCreateUser = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setCreatingUser(true);
+    setError(null);
+    setSuccess(null);
+    try {
+      await api.adminCreateUser(newUserData);
+      setSuccess('Usuario creado y aprobado exitosamente.');
+      setShowNewUserModal(false);
+      setNewUserData({ nombre_completo: '', email: '', password: '', rol: 'coordinador_terreno' });
+      await loadUsers();
+    } catch (err: any) {
+      setError(err.message || 'Error al crear el usuario. Asegúrate de configurar la Edge Function.');
+    } finally {
+      setCreatingUser(false);
+    }
+  };
+
   // Filtrado de usuarios
   const filteredUsers = users.filter(user => {
     const matchesSearch = 
@@ -145,6 +175,14 @@ export const UserManagement: React.FC = () => {
             <span>⏳</span> {pendingCount} Registro{pendingCount > 1 ? 's' : ''} Pendiente{pendingCount > 1 ? 's' : ''}
           </div>
         )}
+
+        <button 
+          className="btn btn-primary" 
+          style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 600 }}
+          onClick={() => setShowNewUserModal(true)}
+        >
+          <Plus size={18} /> Nuevo Usuario
+        </button>
       </div>
 
       {/* Alertas */}

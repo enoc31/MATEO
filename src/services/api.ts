@@ -1057,6 +1057,28 @@ export const api = {
       localStorage.setItem('cnbv_profiles', JSON.stringify(profiles));
       return updated;
     }
+  },
+
+  adminCreateUser: async (userData: { email: string, password: string, nombre_completo: string, rol: UserRole }): Promise<any> => {
+    if (!isSimulationMode) {
+      // Import { supabase } from '../supabaseClient'
+      // We will use supabase.functions.invoke
+      // To avoid circular dependency or import issues here, we can just use the global supabase client that api.ts already imports.
+      const { data, error } = await supabase.functions.invoke('create-user', {
+        body: userData
+      });
+      if (error) {
+        console.error('Edge Function Error:', error);
+        throw new Error(error.message || 'Error executing edge function');
+      }
+      if (data?.error) {
+        throw new Error(data.error);
+      }
+      return data;
+    } else {
+      // En modo simulación
+      throw new Error('Creación de usuario por administrador no soportada en modo simulación');
+    }
   }
 };
 
