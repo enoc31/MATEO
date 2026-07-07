@@ -106,6 +106,7 @@ export interface Beneficiary {
   sexo: string;
   fecha_nacimiento: string;
   url_firma: string | null;
+  ip_captura?: string;
   created_at: string;
 }
 

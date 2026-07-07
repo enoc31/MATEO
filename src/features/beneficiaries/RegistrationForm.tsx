@@ -74,13 +74,23 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({ onSuccess, j
 
       if (!signatureFile) throw new Error('No se pudo generar el archivo de la firma.');
 
+      let ip_captura = 'Desconocida';
+      try {
+        const res = await fetch('https://api.ipify.org?format=json');
+        const data = await res.json();
+        ip_captura = data.ip;
+      } catch (e) {
+        console.warn('No se pudo obtener la IP pública');
+      }
+
       const saved = await api.saveBeneficiary({
         nombre,
         apellido,
         cedula,
         sexo,
         fecha_nacimiento: fechaNacimiento,
-        jornada_id: jornadaId
+        jornada_id: jornadaId,
+        ip_captura
       }, signatureFile);
 
       onSuccess(saved.id);

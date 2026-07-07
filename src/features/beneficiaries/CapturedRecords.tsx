@@ -1,15 +1,19 @@
 import React, { useEffect, useState } from 'react';
 import { api } from '../../services/api';
 import type { Beneficiary, Jornada } from '../../services/api';
-import { Search, Calendar, Filter, CalendarDays } from 'lucide-react';
+import { Search, Calendar, Filter, CalendarDays, Download } from 'lucide-react';
+import { useNotifications } from '../../components/NotificationProvider';
+import { generateBeneficiariesReport } from '../../utils/pdfReport';
 
 export const CapturedRecords: React.FC = () => {
   const [records, setRecords] = useState<Beneficiary[]>([]);
   const [jornadas, setJornadas] = useState<Jornada[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [dateFilter, setDateFilter] = useState<'hoy' | 'ayer' | 'semana' | 'todos'>('todos');
   const [jornadaFilter, setJornadaFilter] = useState<string>('todas');
+  const { addNotification } = useNotifications();
 
   useEffect(() => {
     loadRecords();
@@ -88,6 +92,25 @@ export const CapturedRecords: React.FC = () => {
     return new Date(dateString).toLocaleDateString('es-VE');
   };
 
+  const handleExportPDF = async () => {
+    setIsGeneratingPdf(true);
+    try {
+      await generateBeneficiariesReport({
+        records: filteredRecords,
+        jornadas,
+        title: jornadaFilter !== 'todas' 
+          ? `Reporte de Beneficiarios: ${jornadas.find(j => j.id === jornadaFilter)?.nombre}`
+          : 'Reporte General de Beneficiarios'
+      });
+      addNotification('Reporte PDF generado correctamente', 'success');
+    } catch (e) {
+      console.error(e);
+      addNotification('Error al generar el reporte PDF');
+    } finally {
+      setIsGeneratingPdf(false);
+    }
+  };
+
   // Agrupamos visualmente
   let currentGroup = '';
 
@@ -145,6 +168,16 @@ export const CapturedRecords: React.FC = () => {
                   ))}
                 </select>
               </div>
+              
+              <button
+                className="btn btn-secondary"
+                onClick={handleExportPDF}
+                disabled={filteredRecords.length === 0 || isGeneratingPdf}
+                style={{ padding: '0.6rem 1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}
+              >
+                <Download size={18} />
+                {isGeneratingPdf ? 'Generando...' : 'Exportar PDF'}
+              </button>
             </div>
       </div>
 
