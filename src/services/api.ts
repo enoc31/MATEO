@@ -628,7 +628,6 @@ export const api = {
     if (file) {
       if (!isSimulationMode) {
         // Subida a GCS y registro en documentos_adjuntos (Fase 1)
-        const { uploadToGCS } = await import('./storage');
         const uploadResponse = await uploadToGCS(file);
         fileUrl = uploadResponse.url;
       } else {
@@ -640,7 +639,6 @@ export const api = {
     if (pagoFile) {
       if (!isSimulationMode) {
         // Subida a GCS
-        const { uploadToGCS } = await import('./storage');
         const uploadResponse = await uploadToGCS(pagoFile);
         pagoFileUrl = uploadResponse.url;
       } else {
