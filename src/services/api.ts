@@ -86,6 +86,16 @@ export interface Donation {
   created_at?: string;
 }
 
+export interface Beneficiary {
+  id: string;
+  nombre: string;
+  apellido: string;
+  cedula: string;
+  sexo: 'Masculino' | 'Femenino';
+  fecha_nacimiento: string;
+  url_firma: string | null;
+  created_at?: string;
+}
 
 export interface ExpenseReceipt {
   id: string;
@@ -283,6 +293,29 @@ const INITIAL_EXPENSES: ExpenseReceipt[] = [
   }
 ];
 
+const INITIAL_BENEFICIARIES: Beneficiary[] = [
+  {
+    id: 'ben-1',
+    nombre: 'Juan',
+    apellido: 'Pérez',
+    cedula: 'V-12345678',
+    sexo: 'Masculino',
+    fecha_nacimiento: '1980-05-15',
+    url_firma: null,
+    created_at: new Date().toISOString()
+  },
+  {
+    id: 'ben-2',
+    nombre: 'María',
+    apellido: 'Gómez',
+    cedula: 'V-87654321',
+    sexo: 'Femenino',
+    fecha_nacimiento: '1992-10-22',
+    url_firma: null,
+    created_at: new Date(Date.now() - 86400000).toISOString() // Ayer
+  }
+];
+
 const INITIAL_TASAS_BCV: TasaBCV[] = [
   { id: 'rate-1', fecha: '2026-07-04', tasa: 652.9726, fuente: 'bcv_api', created_at: new Date().toISOString() },
   { id: 'rate-2', fecha: '2026-07-03', tasa: 652.9726, fuente: 'bcv_api', created_at: new Date().toISOString() },
@@ -339,6 +372,9 @@ const initLocalStorage = () => {
   }
   if (!localStorage.getItem('cnbv_tasas_bcv')) {
     localStorage.setItem('cnbv_tasas_bcv', JSON.stringify(INITIAL_TASAS_BCV));
+  }
+  if (!localStorage.getItem('cnbv_beneficiaries')) {
+    localStorage.setItem('cnbv_beneficiaries', JSON.stringify(INITIAL_BENEFICIARIES));
   }
 };
 
@@ -1078,6 +1114,59 @@ export const api = {
     } else {
       // En modo simulación
       throw new Error('Creación de usuario por administrador no soportada en modo simulación');
+    }
+  },
+
+  getBeneficiaries: async (): Promise<Beneficiary[]> => {
+    if (!isSimulationMode) {
+      const { data, error } = await supabase
+        .from('beneficiarios')
+        .select('*')
+        .order('created_at', { ascending: false });
+      if (error && error.code !== '42P01') {
+        console.warn('Error getBeneficiaries', error);
+      }
+      return data || [];
+    } else {
+      return JSON.parse(localStorage.getItem('cnbv_beneficiaries') || '[]');
+    }
+  },
+
+  saveBeneficiary: async (
+    beneficiary: Omit<Beneficiary, 'id' | 'created_at' | 'url_firma'>,
+    signatureFile?: File
+  ): Promise<Beneficiary> => {
+    let url_firma: string | null = null;
+    if (signatureFile) {
+      if (!isSimulationMode) {
+        const { uploadToGCS } = await import('./storage');
+        const uploadResponse = await uploadToGCS(signatureFile);
+        url_firma = uploadResponse.url;
+      } else {
+        url_firma = URL.createObjectURL(signatureFile);
+      }
+    }
+
+    const newBen: Beneficiary = {
+      id: `ben-${Date.now()}`,
+      ...beneficiary,
+      url_firma,
+      created_at: new Date().toISOString()
+    };
+
+    if (!isSimulationMode) {
+      const { data, error } = await supabase
+        .from('beneficiarios')
+        .insert([newBen])
+        .select()
+        .single();
+      if (error && error.code !== '42P01') throw error;
+      return data as Beneficiary || newBen;
+    } else {
+      const all = JSON.parse(localStorage.getItem('cnbv_beneficiaries') || '[]');
+      const updated = [newBen, ...all];
+      localStorage.setItem('cnbv_beneficiaries', JSON.stringify(updated));
+      return newBen;
     }
   }
 };

@@ -13,7 +13,8 @@ import {
   Pin,
   PinOff,
   Menu,
-  Lightbulb
+  Lightbulb,
+  UserCheck
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { isSimulationMode } from '../services/api';
@@ -42,6 +43,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTa
     { id: 'audit', label: 'Auditoría', icon: <Search size={20} strokeWidth={1.5} />, roles: ['administrador', 'auditor'] },
     { id: 'budgets', label: 'Presupuestos', icon: <PieChart size={20} strokeWidth={1.5} />, roles: ['administrador', 'auditor', 'director'] },
     { id: 'field-entry', label: 'Cargar Gastos', icon: <Camera size={20} strokeWidth={1.5} />, roles: ['administrador', 'coordinador', 'director', 'auxiliar_campo'] },
+    { id: 'beneficiaries', label: 'Beneficiarios', icon: <UserCheck size={20} strokeWidth={1.5} />, roles: ['administrador', 'coordinador', 'director', 'auxiliar_campo'] },
     { id: 'users', label: 'Usuarios', icon: <Users size={20} strokeWidth={1.5} />, roles: ['administrador'] }
   ];
 
