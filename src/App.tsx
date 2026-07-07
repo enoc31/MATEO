@@ -306,6 +306,25 @@ const AccessDenied: React.FC = () => {
 
 // Envolver la App en el AuthProvider y NotificationProvider
 function App() {
+  const isPublicCapture = window.location.search.includes('captura_publica=true');
+
+  if (isPublicCapture) {
+    return (
+      <div style={{ backgroundColor: '#f4f5f7', minHeight: '100vh', padding: '1rem' }}>
+        <div style={{ textAlign: 'center', marginBottom: '1rem' }}>
+          <img 
+            src="https://cnbv.org/wp-content/uploads/2020/09/logo-cnbv.jpg" 
+            alt="Logo" 
+            style={{ height: '50px', objectFit: 'contain' }}
+          />
+        </div>
+        <Suspense fallback={<div style={{textAlign: 'center', padding: '2rem'}}>Cargando Módulo...</div>}>
+          <BeneficiaryRegistry />
+        </Suspense>
+      </div>
+    );
+  }
+
   return (
     <AuthProvider>
       <NotificationProvider>
