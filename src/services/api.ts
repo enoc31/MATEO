@@ -1219,13 +1219,12 @@ export const api = {
     };
 
     if (!isSimulationMode) {
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from('beneficiarios')
-        .insert([newBen])
-        .select()
-        .single();
+        .insert([newBen]);
+      
       if (error) throw error;
-      return data as Beneficiary || newBen;
+      return newBen;
     } else {
       const all = JSON.parse(localStorage.getItem('cnbv_beneficiaries') || '[]');
       const updated = [newBen, ...all];
