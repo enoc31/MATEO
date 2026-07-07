@@ -35,10 +35,32 @@ export const generateBeneficiariesReport = async ({ records, jornadas, title = '
     try {
       const response = await fetch(url);
       const blob = await response.blob();
+      
+      const imgUrl = URL.createObjectURL(blob);
       return new Promise((resolve) => {
-        const reader = new FileReader();
-        reader.onloadend = () => resolve(reader.result as string);
-        reader.readAsDataURL(blob);
+        const img = new Image();
+        img.crossOrigin = 'Anonymous'; // Just in case
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          canvas.width = img.width;
+          canvas.height = img.height;
+          const ctx = canvas.getContext('2d');
+          if (ctx) {
+            ctx.fillStyle = '#FFFFFF';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.drawImage(img, 0, 0);
+            resolve(canvas.toDataURL('image/png'));
+          } else {
+            resolve(null);
+          }
+          URL.revokeObjectURL(imgUrl);
+        };
+        img.onerror = () => {
+          console.warn("Error decoding image");
+          resolve(null);
+          URL.revokeObjectURL(imgUrl);
+        };
+        img.src = imgUrl;
       });
     } catch (err) {
       console.warn("Error cargando imagen", err);
