@@ -49,7 +49,7 @@ export const generateBeneficiariesReport = async ({ records, jornadas, title = '
             ctx.fillStyle = '#FFFFFF';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
             ctx.drawImage(img, 0, 0);
-            resolve(canvas.toDataURL('image/png'));
+            resolve(canvas.toDataURL('image/jpeg', 0.9));
           } else {
             resolve(null);
           }
@@ -144,7 +144,7 @@ export const generateBeneficiariesReport = async ({ records, jornadas, title = '
             doc.setFillColor(255, 255, 255);
             doc.rect(x, y, width, height, 'F');
 
-            doc.addImage(base64Img, 'PNG', x, y, width, height);
+            doc.addImage(base64Img, 'JPEG', x, y, width, height);
           } catch (e) {
             console.warn("No se pudo dibujar imagen", e);
           }
