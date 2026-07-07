@@ -62,7 +62,7 @@ BEGIN
       proyecto_id, 
       SUM(monto_asignado) as asignado, 
       SUM(monto_ejecutado) as ejecutado
-    FROM public.presupuestos_proyectos
+    FROM public.presupuestos
     GROUP BY proyecto_id
   ) b ON p.id = b.proyecto_id
   WHERE p.activo = true OR COALESCE(b.asignado, 0) > 0;

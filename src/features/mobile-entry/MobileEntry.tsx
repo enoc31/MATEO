@@ -223,40 +223,47 @@ export const MobileEntry: React.FC = () => {
       <div style={{ marginBottom: '2.5rem', padding: '0.5rem' }}>
         <form onSubmit={handleSubmit}>
           
-          {/* STEP 0: REQUISITION LINKING */}
-          {approvedRequisitions.length > 0 && (
-            <div style={{ 
-              marginBottom: '1.5rem', 
-              padding: '1rem', 
-              backgroundColor: 'rgba(0, 143, 166, 0.05)', 
-              border: '1px solid rgba(0, 143, 166, 0.2)', 
-              borderRadius: 'var(--radius-md)' 
-            }}>
-              <label htmlFor="select-solicitud" style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, color: 'var(--accent)', marginBottom: '0.5rem' }}>
-                <span style={{display: 'flex', alignItems: 'center', gap: '0.4rem'}}><ClipboardList size={16} /> ¿Esta compra proviene de una solicitud autorizada?</span>
-              </label>
-              <select
-                id="select-solicitud"
-                className="app-input"
-                value={solicitudId}
-                onChange={e => handleSelectRequisition(e.target.value)}
-                disabled={submitting}
-                style={{ borderColor: 'var(--accent)' }}
-              >
-                <option value="">Gasto independiente (Sin solicitud previa)</option>
-                {approvedRequisitions.map(r => (
-                  <option key={r.id} value={r.id}>
-                    {r.codigo ? `${r.codigo} - ` : ''}{r.proyecto_nombre} - {r.categoria_nombre} (${r.monto_solicitado.toFixed(2)})
-                  </option>
-                ))}
-              </select>
-              {solicitudId && (
-                <div style={{ fontSize: '0.75rem', color: 'var(--accent)', marginTop: '0.4rem', fontWeight: 500 }}>
-                  ✓ Proyecto, categoría y monto pre-cargados desde la solicitud.
-                </div>
-              )}
-            </div>
-          )}
+          {/* Requisition Selector (Always visible so users know the feature exists) */}
+          <div style={{ 
+            marginBottom: '1.5rem', 
+            padding: '1rem', 
+            backgroundColor: 'rgba(0, 143, 166, 0.05)', 
+            border: '1px solid rgba(0, 143, 166, 0.2)', 
+            borderRadius: 'var(--radius-md)' 
+          }}>
+            <label htmlFor="select-solicitud" style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, color: 'var(--accent)', marginBottom: '0.5rem' }}>
+              <span style={{display: 'flex', alignItems: 'center', gap: '0.4rem'}}><ClipboardList size={16} /> ¿Esta compra proviene de una solicitud autorizada?</span>
+            </label>
+            
+            {approvedRequisitions.length === 0 ? (
+              <div style={{ fontSize: '0.85rem', color: 'var(--neutral-dark)', opacity: 0.8 }}>
+                No tienes requisiciones aprobadas pendientes por ejecutar. Se registrará como un gasto independiente.
+              </div>
+            ) : (
+              <>
+                <select
+                  id="select-solicitud"
+                  className="app-input"
+                  value={solicitudId}
+                  onChange={e => handleSelectRequisition(e.target.value)}
+                  disabled={submitting}
+                  style={{ borderColor: 'var(--accent)' }}
+                >
+                  <option value="">Gasto independiente (Sin solicitud previa)</option>
+                  {approvedRequisitions.map(r => (
+                    <option key={r.id} value={r.id}>
+                      {r.codigo ? `${r.codigo} - ` : ''}{r.proyecto_nombre} - {r.categoria_nombre} (${r.monto_solicitado.toFixed(2)})
+                    </option>
+                  ))}
+                </select>
+                {solicitudId && (
+                  <div style={{ fontSize: '0.75rem', color: 'var(--accent)', marginTop: '0.4rem', fontWeight: 500 }}>
+                    ✓ Proyecto, categoría y monto pre-cargados desde la solicitud.
+                  </div>
+                )}
+              </>
+            )}
+          </div>
 
           {/* STEP 1: PROJECT SELECTION */}
           <div style={{ marginBottom: '1.5rem' }}>
