@@ -306,7 +306,7 @@ const AccessDenied: React.FC = () => {
 
 // Envolver la App en el AuthProvider y NotificationProvider
 function App() {
-  const isPublicCapture = window.location.search.includes('captura_publica=true');
+  const isPublicCapture = window.location.pathname === '/registro' || window.location.search.includes('registro=1');
 
   if (isPublicCapture) {
     return (
