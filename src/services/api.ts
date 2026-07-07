@@ -1,5 +1,6 @@
 import { supabase } from '../supabaseClient';
 import type { UserRole } from '../context/AuthContext';
+import { uploadToGCS } from './storage';
 
 // Interfaces del Dominio
 export interface Donante {
@@ -1139,7 +1140,6 @@ export const api = {
     let url_firma: string | null = null;
     if (signatureFile) {
       if (!isSimulationMode) {
-        const { uploadToGCS } = await import('./storage');
         const uploadResponse = await uploadToGCS(signatureFile);
         url_firma = uploadResponse.url;
       } else {
