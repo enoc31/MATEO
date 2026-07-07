@@ -455,7 +455,7 @@ export const api = {
   // --- TRANSACCIONES BANCARIAS ---
   getBankTransactions: async (): Promise<BankTransaction[]> => {
     if (!isSimulationMode) {
-      const { data, error } = await supabase.from('transacciones_bancarias').select('*').order('fecha', { ascending: false });
+      const { data, error } = await supabase.from('transacciones_bancarias').select('*').order('fecha', { ascending: false }).limit(300);
       if (error) throw error;
       return data as BankTransaction[];
     } else {
@@ -505,7 +505,7 @@ export const api = {
   // --- EGRESOS / COMPROBANTES DE GASTO ---
   getExpenses: async (): Promise<ExpenseReceipt[]> => {
     if (!isSimulationMode) {
-      const { data, error } = await supabase.from('comprobantes_gasto').select('*').order('fecha_gasto', { ascending: false });
+      const { data, error } = await supabase.from('comprobantes_gasto').select('*').order('fecha_gasto', { ascending: false }).limit(300);
       if (error) throw error;
       return data as ExpenseReceipt[];
     } else {
@@ -856,7 +856,7 @@ export const api = {
   // --- DONACIONES ---
   getDonations: async (): Promise<Donation[]> => {
     if (!isSimulationMode) {
-      const { data, error } = await supabase.from('donaciones').select('*').order('fecha', { ascending: false });
+      const { data, error } = await supabase.from('donaciones').select('*').order('fecha', { ascending: false }).limit(300);
       if (error) throw error;
       return data as Donation[];
     } else {
@@ -912,7 +912,7 @@ export const api = {
   // --- TASAS BCV ---
   getTasasBCV: async (): Promise<TasaBCV[]> => {
     if (!isSimulationMode) {
-      const { data, error } = await supabase.from('tasas_bcv').select('*').order('fecha', { ascending: false });
+      const { data, error } = await supabase.from('tasas_bcv').select('*').order('fecha', { ascending: false }).limit(100);
       if (error) throw error;
       return data as TasaBCV[];
     } else {
