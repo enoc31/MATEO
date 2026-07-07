@@ -16,8 +16,28 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({ onSuccess })
   
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [canvasSize, setCanvasSize] = useState({ width: 300, height: 200 });
   
   const sigCanvas = useRef<any>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  React.useEffect(() => {
+    const updateSize = () => {
+      if (containerRef.current) {
+        setCanvasSize({
+          width: containerRef.current.offsetWidth,
+          height: 200
+        });
+      }
+    };
+    
+    // Initial size
+    updateSize();
+
+    // Update size on window resize (debounced slightly or just direct)
+    window.addEventListener('resize', updateSize);
+    return () => window.removeEventListener('resize', updateSize);
+  }, []);
 
   const clearSignature = () => {
     sigCanvas.current?.clear();
@@ -155,20 +175,24 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({ onSuccess })
         <h3 style={{ fontSize: '1.1rem', color: 'var(--primary)', marginBottom: '1rem', borderBottom: '2px solid var(--neutral-light)', paddingBottom: '0.5rem' }}>
           FIRMA AUTÓGRAFA *
         </h3>
-        <div style={{ 
+        <div 
+          ref={containerRef}
+          style={{ 
           border: '2px dashed var(--border-color)', 
           borderRadius: 'var(--radius-md)', 
           backgroundColor: '#fff',
           position: 'relative',
-          overflow: 'hidden'
+          overflow: 'hidden',
+          width: '100%',
+          touchAction: 'none'
         }}>
           <SignatureCanvas 
             ref={sigCanvas} 
             canvasProps={{
-              width: 500, 
-              height: 200, 
+              width: canvasSize.width, 
+              height: canvasSize.height, 
               className: 'sigCanvas',
-              style: { width: '100%', height: '200px', cursor: 'crosshair' }
+              style: { cursor: 'crosshair', touchAction: 'none' }
             }} 
           />
         </div>
