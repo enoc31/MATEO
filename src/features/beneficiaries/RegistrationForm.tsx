@@ -69,7 +69,7 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({ onSuccess, j
 
     setSubmitting(true);
     try {
-      const dataUrl = sigCanvas.current.getTrimmedCanvas().toDataURL('image/png');
+      const dataUrl = sigCanvas.current.getCanvas().toDataURL('image/png');
       const signatureFile = dataURLtoFile(dataUrl, `firma_${cedula}_${Date.now()}.png`);
 
       if (!signatureFile) throw new Error('No se pudo generar el archivo de la firma.');
