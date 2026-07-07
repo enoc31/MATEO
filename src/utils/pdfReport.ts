@@ -118,6 +118,10 @@ export const generateBeneficiariesReport = async ({ records, jornadas, title = '
             const width = 40; // Ancho máximo
             const height = 11; // Alto máximo dentro de la celda de 15
 
+            // Evitar que las firmas transparentes se vean como un cuadro negro
+            doc.setFillColor(255, 255, 255);
+            doc.rect(x, y, width, height, 'F');
+
             doc.addImage(base64Img, 'PNG', x, y, width, height);
           } catch (e) {
             console.warn("No se pudo dibujar imagen", e);

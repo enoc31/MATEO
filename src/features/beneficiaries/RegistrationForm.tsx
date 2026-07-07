@@ -200,6 +200,7 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({ onSuccess, j
         }}>
           <SignatureCanvas 
             ref={sigCanvas} 
+            backgroundColor="rgb(255,255,255)"
             canvasProps={{
               width: canvasSize.width, 
               height: canvasSize.height, 
