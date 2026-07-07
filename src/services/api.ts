@@ -1160,7 +1160,7 @@ export const api = {
         .insert([newBen])
         .select()
         .single();
-      if (error && error.code !== '42P01') throw error;
+      if (error) throw error;
       return data as Beneficiary || newBen;
     } else {
       const all = JSON.parse(localStorage.getItem('cnbv_beneficiaries') || '[]');
