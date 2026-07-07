@@ -87,15 +87,26 @@ export interface Donation {
   created_at?: string;
 }
 
+export interface Jornada {
+  id: string;
+  nombre: string;
+  fecha: string;
+  beneficios_entregados: string;
+  proyecto_id: string;
+  activa: boolean;
+  created_at?: string;
+}
+
 export interface Beneficiary {
   id: string;
+  jornada_id: string;
   nombre: string;
   apellido: string;
   cedula: string;
-  sexo: 'Masculino' | 'Femenino';
+  sexo: string;
   fecha_nacimiento: string;
   url_firma: string | null;
-  created_at?: string;
+  created_at: string;
 }
 
 export interface ExpenseReceipt {
@@ -296,19 +307,21 @@ const INITIAL_EXPENSES: ExpenseReceipt[] = [
 
 const INITIAL_BENEFICIARIES: Beneficiary[] = [
   {
-    id: 'ben-1',
-    nombre: 'Juan',
-    apellido: 'Pérez',
-    cedula: 'V-12345678',
-    sexo: 'Masculino',
+    id: 'ben-001',
+    jornada_id: 'jor-mock',
+    nombre: 'Maria',
+    apellido: 'Gonzalez',
+    cedula: '12345678',
+    sexo: 'Femenino',
     fecha_nacimiento: '1980-05-15',
     url_firma: null,
     created_at: new Date().toISOString()
   },
   {
-    id: 'ben-2',
-    nombre: 'María',
-    apellido: 'Gómez',
+    id: 'ben-002',
+    jornada_id: 'jor-mock',
+    nombre: 'Jose',
+    apellido: 'Perez',
     cedula: 'V-87654321',
     sexo: 'Femenino',
     fecha_nacimiento: '1992-10-22',
@@ -1115,6 +1128,58 @@ export const api = {
     } else {
       // En modo simulación
       throw new Error('Creación de usuario por administrador no soportada en modo simulación');
+    }
+  },
+
+  getJornadas: async (): Promise<Jornada[]> => {
+    if (!isSimulationMode) {
+      const { data, error } = await supabase
+        .from('jornadas')
+        .select('*')
+        .order('fecha', { ascending: false });
+      if (error) console.warn('Error getJornadas', error);
+      return data || [];
+    } else {
+      return JSON.parse(localStorage.getItem('cnbv_jornadas') || '[]');
+    }
+  },
+
+  createJornada: async (jornada: Omit<Jornada, 'id' | 'created_at'>): Promise<Jornada> => {
+    const newJornada: Jornada = {
+      id: `jor-${Date.now()}`,
+      ...jornada,
+      created_at: new Date().toISOString()
+    };
+    if (!isSimulationMode) {
+      const { data, error } = await supabase
+        .from('jornadas')
+        .insert([newJornada])
+        .select()
+        .single();
+      if (error) throw error;
+      return data as Jornada;
+    } else {
+      const all = JSON.parse(localStorage.getItem('cnbv_jornadas') || '[]');
+      const updated = [newJornada, ...all];
+      localStorage.setItem('cnbv_jornadas', JSON.stringify(updated));
+      return newJornada;
+    }
+  },
+
+  updateJornadaStatus: async (id: string, activa: boolean): Promise<void> => {
+    if (!isSimulationMode) {
+      const { error } = await supabase
+        .from('jornadas')
+        .update({ activa })
+        .eq('id', id);
+      if (error) throw error;
+    } else {
+      const all = JSON.parse(localStorage.getItem('cnbv_jornadas') || '[]');
+      const index = all.findIndex((j: Jornada) => j.id === id);
+      if (index !== -1) {
+        all[index].activa = activa;
+        localStorage.setItem('cnbv_jornadas', JSON.stringify(all));
+      }
     }
   },
 

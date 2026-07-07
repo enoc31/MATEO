@@ -20,6 +20,7 @@ const IncomeRegistrationForm = lazy(() => import('./features/incomes/IncomeRegis
 const ImportBankStatement = lazy(() => import('./features/incomes/ImportBankStatement').then(module => ({ default: module.ImportBankStatement })));
 const TasasManager = lazy(() => import('./features/tasas/TasasManager').then(module => ({ default: module.TasasManager })));
 const BeneficiaryRegistry = lazy(() => import('./features/beneficiaries/BeneficiaryRegistry').then(module => ({ default: module.BeneficiaryRegistry })));
+const JornadasManager = lazy(() => import('./features/beneficiaries/JornadasManager').then(module => ({ default: module.JornadasManager })));
 
 const MainAppContent: React.FC = () => {
   const { user, profile, loading, authError, logout, refreshProfile } = useAuth();
@@ -119,6 +120,8 @@ const MainAppContent: React.FC = () => {
         return ['administrador', 'coordinador', 'director', 'auxiliar_campo'].includes(profile.rol) ? <MobileEntry /> : <AccessDenied />;
       case 'beneficiaries':
         return ['administrador', 'director', 'auxiliar_campo'].includes(profile.rol) ? <BeneficiaryRegistry /> : <AccessDenied />;
+      case 'jornadas':
+        return ['administrador', 'director'].includes(profile.rol) ? <JornadasManager /> : <AccessDenied />;
       case 'requisitions':
         return ['administrador', 'coordinador', 'director', 'auxiliar_campo'].includes(profile.rol) ? <RequisitionsManager /> : <AccessDenied />;
       case 'users':

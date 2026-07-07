@@ -1,13 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import { api } from '../../services/api';
-import type { Beneficiary } from '../../services/api';
-import { Search, Calendar, Filter } from 'lucide-react';
+import type { Beneficiary, Jornada } from '../../services/api';
+import { Search, Calendar, Filter, CalendarDays } from 'lucide-react';
 
 export const CapturedRecords: React.FC = () => {
   const [records, setRecords] = useState<Beneficiary[]>([]);
+  const [jornadas, setJornadas] = useState<Jornada[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [dateFilter, setDateFilter] = useState<'hoy' | 'ayer' | 'semana' | 'todos'>('todos');
+  const [jornadaFilter, setJornadaFilter] = useState<string>('todas');
 
   useEffect(() => {
     loadRecords();
@@ -16,8 +18,12 @@ export const CapturedRecords: React.FC = () => {
   const loadRecords = async () => {
     setLoading(true);
     try {
-      const data = await api.getBeneficiaries();
-      setRecords(data);
+      const [bData, jData] = await Promise.all([
+        api.getBeneficiaries(),
+        api.getJornadas()
+      ]);
+      setRecords(bData);
+      setJornadas(jData);
     } catch (err) {
       console.error(err);
     } finally {
@@ -61,8 +67,18 @@ export const CapturedRecords: React.FC = () => {
       if (dateFilter === 'semana') matchDate = isThisWeek(r.created_at);
     }
 
-    return matchSearch && matchDate;
+    // 3. Filtro de Jornada
+    let matchJornada = true;
+    if (jornadaFilter !== 'todas') {
+      matchJornada = r.jornada_id === jornadaFilter;
+    }
+
+    return matchSearch && matchDate && matchJornada;
   });
+
+  const getJornadaName = (id: string) => {
+    return jornadas.find(j => j.id === id)?.nombre || 'Jornada Desconocida';
+  };
 
   const getGroupTitle = (dateString?: string) => {
     if (!dateString) return 'Registros';
@@ -99,21 +115,37 @@ export const CapturedRecords: React.FC = () => {
             style={{ paddingLeft: '2.2rem', marginBottom: 0 }}
           />
         </div>
-        
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          <Filter size={16} color="var(--primary)" />
-          <select 
-            className="app-input" 
-            value={dateFilter} 
-            onChange={e => setDateFilter(e.target.value as any)}
-            style={{ marginBottom: 0, minWidth: '150px' }}
-          >
-            <option value="todos">Todas las Fechas</option>
-            <option value="hoy">Hoy</option>
-            <option value="ayer">Ayer</option>
-            <option value="semana">Esta Semana</option>
-          </select>
-        </div>
+        <div className="flex-1" style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+              <div style={{ flex: 1, minWidth: '150px', position: 'relative' }}>
+                <Filter size={16} color="var(--neutral-gray)" style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)' }} />
+                <select 
+                  className="app-input" 
+                  style={{ paddingLeft: '2rem', height: '100%' }}
+                  value={dateFilter}
+                  onChange={(e) => setDateFilter(e.target.value as any)}
+                >
+                  <option value="todos">Cualquier Fecha</option>
+                  <option value="hoy">Hoy</option>
+                  <option value="ayer">Ayer</option>
+                  <option value="semana">Esta Semana</option>
+                </select>
+              </div>
+
+              <div style={{ flex: 1, minWidth: '200px', position: 'relative' }}>
+                <CalendarDays size={16} color="var(--neutral-gray)" style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)' }} />
+                <select 
+                  className="app-input" 
+                  style={{ paddingLeft: '2rem', height: '100%' }}
+                  value={jornadaFilter}
+                  onChange={(e) => setJornadaFilter(e.target.value)}
+                >
+                  <option value="todas">Todas las Jornadas</option>
+                  {jornadas.map(j => (
+                    <option key={j.id} value={j.id}>{j.nombre}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
       </div>
 
       {/* Lista de Registros */}
@@ -155,10 +187,17 @@ export const CapturedRecords: React.FC = () => {
                       <div style={{ fontSize: '1.05rem', fontWeight: 600, color: 'var(--neutral-dark)' }}>
                         {record.nombre} {record.apellido}
                       </div>
-                      <div style={{ fontSize: '0.75rem', color: 'var(--neutral-dark)', opacity: 0.7, marginTop: '0.2rem' }}>
-                        Captura: {record.created_at ? new Date(record.created_at).toLocaleTimeString('es-VE', {hour: '2-digit', minute: '2-digit'}) : 'N/A'}
-                      </div>
+                      <div style={{ display: 'flex', gap: '1rem', marginTop: '0.25rem', fontSize: '0.85rem', color: 'var(--neutral-gray)' }}>
+                      <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                        <Calendar size={14} />
+                        {new Date(record.fecha_nacimiento).toLocaleDateString()}
+                      </span>
+                      <span>Sexo: {record.sexo}</span>
                     </div>
+                    <div style={{ marginTop: '0.75rem', padding: '0.5rem', backgroundColor: 'var(--neutral-light)', borderRadius: 'var(--radius-sm)', fontSize: '0.85rem', color: 'var(--primary)' }}>
+                  <strong>Jornada:</strong> {getJornadaName(record.jornada_id)}
+                </div>
+                  </div>
                     
                     {record.url_firma ? (
                       <div style={{ 

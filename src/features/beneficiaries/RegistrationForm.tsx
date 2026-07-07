@@ -5,9 +5,10 @@ import { Send, Eraser, Calendar, AlertCircle } from 'lucide-react';
 
 interface RegistrationFormProps {
   onSuccess: (id: string) => void;
+  jornadaId: string;
 }
 
-export const RegistrationForm: React.FC<RegistrationFormProps> = ({ onSuccess }) => {
+export const RegistrationForm: React.FC<RegistrationFormProps> = ({ onSuccess, jornadaId }) => {
   const [nombre, setNombre] = useState('');
   const [apellido, setApellido] = useState('');
   const [cedula, setCedula] = useState('');
@@ -78,7 +79,8 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({ onSuccess })
         apellido,
         cedula,
         sexo,
-        fecha_nacimiento: fechaNacimiento
+        fecha_nacimiento: fechaNacimiento,
+        jornada_id: jornadaId
       }, signatureFile);
 
       onSuccess(saved.id);
