@@ -12,6 +12,7 @@ const Reconciliation = lazy(() => import('./features/reconciliation/Reconciliati
 const Audit = lazy(() => import('./features/audit/Audit').then(module => ({ default: module.Audit })));
 const AuditDetail = lazy(() => import('./features/audit/AuditDetail').then(module => ({ default: module.AuditDetail })));
 const BudgetsAndReports = lazy(() => import('./features/budgets/BudgetsAndReports').then(module => ({ default: module.BudgetsAndReports })));
+const BudgetWizard = lazy(() => import('./features/budgets/BudgetWizard').then(module => ({ default: module.BudgetWizard })));
 const MobileEntry = lazy(() => import('./features/mobile-entry/MobileEntry').then(module => ({ default: module.MobileEntry })));
 const UserManagement = lazy(() => import('./features/users/UserManagement').then(module => ({ default: module.UserManagement })));
 const RequisitionsManager = lazy(() => import('./features/requisitions/RequisitionsManager').then(module => ({ default: module.RequisitionsManager })));
@@ -147,6 +148,14 @@ const MainAppContent: React.FC = () => {
     return (
       <Suspense fallback={<div style={{ padding: '3rem', textAlign: 'center' }}>Cargando detalle de auditoría...</div>}>
         <AuditDetail />
+      </Suspense>
+    );
+  }
+
+  if (activeTab === 'budget-wizard') {
+    return (
+      <Suspense fallback={<div style={{ padding: '3rem', textAlign: 'center' }}>Cargando asistente de presupuesto...</div>}>
+        <BudgetWizard isOpen={true} onClose={() => window.close()} onSuccess={() => { alert('Presupuesto guardado exitosamente.'); window.close(); }} />
       </Suspense>
     );
   }
