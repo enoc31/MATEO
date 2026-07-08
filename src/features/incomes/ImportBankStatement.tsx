@@ -3,6 +3,7 @@ import { Download, XCircle, DollarSign, FolderOpen, ClipboardList, Trash2 } from
 import { api } from '../../services/api';
 import type { BankTransaction, TasaBCV } from '../../services/api';
 import Papa from 'papaparse';
+import { formatDateForFrontEnd } from '../../utils/formatters';
 
 const formatCurrency = (amount: number) =>
   new Intl.NumberFormat('es-VE', { style: 'currency', currency: 'USD' }).format(amount);
@@ -349,7 +350,7 @@ export const ImportBankStatement: React.FC = () => {
                         const usdVal = importMoneda === 'VES' && rate ? tx.monto / rate : tx.monto;
                         return (
                           <tr key={idx} style={{ borderBottom: '1px solid var(--border-color)' }}>
-                            <td style={{ padding: '0.5rem 0.8rem', whiteSpace: 'nowrap' }}>{tx.fecha}</td>
+                            <td style={{ padding: '0.5rem 0.8rem', whiteSpace: 'nowrap' }}>{formatDateForFrontEnd(tx.fecha)}</td>
                             <td style={{ padding: '0.5rem 0.8rem' }}>{tx.descripcion}</td>
                             <td style={{ padding: '0.5rem 0.8rem', textAlign: 'right', fontWeight: 700 }}>
                               {importMoneda === 'VES' ? formatVesCurrency(tx.monto) : formatCurrency(tx.monto)}

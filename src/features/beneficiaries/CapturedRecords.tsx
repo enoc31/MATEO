@@ -223,7 +223,7 @@ export const CapturedRecords: React.FC = () => {
                       <div style={{ display: 'flex', gap: '1rem', marginTop: '0.25rem', fontSize: '0.85rem', color: 'var(--neutral-gray)' }}>
                       <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
                         <Calendar size={14} />
-                        {new Date(record.fecha_nacimiento).toLocaleDateString()}
+                        {new Date(record.fecha_nacimiento).toLocaleDateString('es-VE')}
                       </span>
                       <span>Sexo: {record.sexo}</span>
                     </div>

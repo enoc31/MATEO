@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Wallet, XCircle, Pencil, Landmark, CheckSquare, Square, Calendar, Save } from 'lucide-react';
 import { api } from '../../services/api';
 import type { Project, Donante, BankTransaction, TasaBCV } from '../../services/api';
+import { formatDateForFrontEnd } from '../../utils/formatters';
 
 const formatCurrency = (amount: number) =>
   new Intl.NumberFormat('es-VE', { style: 'currency', currency: 'USD' }).format(amount);
@@ -139,7 +140,7 @@ export const IncomeRegistrationForm: React.FC = () => {
         const ref = t.referencia ? ` [Ref: ${t.referencia.trim()}]` : '';
         const tRate = getRateForDateLocal(t.fecha);
         const rateInfo = tRate ? ` (Tasa BCV del día: ${tRate.toFixed(4)})` : '';
-        return `${t.fecha}${ref}: ${t.descripcion.trim()}${rateInfo}`;
+        return `${formatDateForFrontEnd(t.fecha)}${ref}: ${t.descripcion.trim()}${rateInfo}`;
       }).join('\n');
       setDescripcion(combinedDesc);
 
@@ -354,7 +355,7 @@ export const IncomeRegistrationForm: React.FC = () => {
                           />
                           <div style={{ flex: 1 }}>
                             <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 700 }}>
-                              <span style={{display:'flex', gap:'0.4rem', alignItems:'center'}}><Calendar size={14}/> {tx.fecha} — Ref: {tx.referencia}</span>
+                              <span style={{display:'flex', gap:'0.4rem', alignItems:'center'}}><Calendar size={14}/> {formatDateForFrontEnd(tx.fecha)} — Ref: {tx.referencia}</span>
                               <span style={{ color: 'var(--success)', fontSize: '0.85rem' }}>
                                 {isTxVes ? formatVesCurrency(tx.monto) : formatCurrency(tx.monto)}
                               </span>

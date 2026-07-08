@@ -209,7 +209,7 @@ export const JornadasManager: React.FC = () => {
                   <div style={{ fontSize: '0.9rem', color: 'var(--neutral-dark)' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
                       <CalendarDays size={16} color="var(--neutral-gray)" />
-                      {new Date(j.fecha).toLocaleDateString()}
+                      {new Date(j.fecha).toLocaleDateString('es-VE')}
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                       <Activity size={16} color="var(--neutral-gray)" />

@@ -103,10 +103,10 @@ export const RequisitionDetailsModal: React.FC<ModalProps> = ({ req, onClose, on
           <h4 style={{ fontWeight: 700, fontSize: '0.9rem', marginBottom: '0.5rem', color: 'var(--primary)' }}>Seguimiento de Firmas (Doble Aprobación):</h4>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
             <p style={{ margin: '0 0 0.5rem 0', fontSize: '0.9rem', color: 'var(--neutral-dark)' }}>
-              <span style={{display: 'flex', gap: '0.4rem', alignItems: 'center'}}><Shield size={14} /> <strong>Visto Bueno 1:</strong></span> {req.validador_1_id ? `Aprobado por ${req.validador_1_nombre || 'Director'} el ${new Date(req.validado_1_at!).toLocaleDateString()}` : <span style={{display: 'inline-flex', gap: '0.2rem', alignItems: 'center'}}><Clock size={14} /> Pendiente de Firma 1</span>}
+              <span style={{display: 'flex', gap: '0.4rem', alignItems: 'center'}}><Shield size={14} /> <strong>Visto Bueno 1:</strong></span> {req.validador_1_id ? `Aprobado por ${req.validador_1_nombre || 'Director'} el ${new Date(req.validado_1_at!).toLocaleDateString('es-VE')}` : <span style={{display: 'inline-flex', gap: '0.2rem', alignItems: 'center'}}><Clock size={14} /> Pendiente de Firma 1</span>}
             </p>
             <p style={{ margin: 0, fontSize: '0.9rem', color: 'var(--neutral-dark)' }}>
-              <span style={{display: 'flex', gap: '0.4rem', alignItems: 'center'}}><Shield size={14} /> <strong>Visto Bueno 2:</strong></span> {req.validador_2_id ? `Aprobado por ${req.validador_2_nombre || 'Director'} el ${new Date(req.validado_2_at!).toLocaleDateString()}` : <span style={{display: 'inline-flex', gap: '0.2rem', alignItems: 'center'}}><Clock size={14} /> Pendiente de Firma 2</span>}
+              <span style={{display: 'flex', gap: '0.4rem', alignItems: 'center'}}><Shield size={14} /> <strong>Visto Bueno 2:</strong></span> {req.validador_2_id ? `Aprobado por ${req.validador_2_nombre || 'Director'} el ${new Date(req.validado_2_at!).toLocaleDateString('es-VE')}` : <span style={{display: 'inline-flex', gap: '0.2rem', alignItems: 'center'}}><Clock size={14} /> Pendiente de Firma 2</span>}
             </p>
             {req.estado === 'rechazada' && (
               <div style={{ color: 'var(--danger)', marginTop: '0.25rem', fontSize: '0.85rem' }}>

@@ -89,7 +89,7 @@ export const BeneficiaryRegistry: React.FC = () => {
                 >
                   <span>{j.nombre}</span>
                   <span style={{ fontSize: '0.85rem', fontWeight: 'normal', color: 'var(--neutral-gray)' }}>
-                    Fecha: {new Date(j.fecha).toLocaleDateString()}
+                    Fecha: {new Date(j.fecha).toLocaleDateString('es-VE')}
                   </span>
                 </button>
               ))}

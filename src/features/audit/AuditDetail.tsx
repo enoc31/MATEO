@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { FileText, CreditCard, AlertTriangle, CheckCircle, XCircle } from 'lucide-react';
 import { api } from '../../services/api';
 import type { ExpenseReceipt, Project, PartidaGasto } from '../../services/api';
+import { formatDateForFrontEnd } from '../../utils/formatters';
 import { useAuth } from '../../context/AuthContext';
 
 export const AuditDetail: React.FC = () => {
@@ -277,7 +278,7 @@ export const AuditDetail: React.FC = () => {
                 <strong>Partida de Gasto:</strong> {getPartidaName(expense.partida_id)}
               </div>
               <div style={{ marginBottom: '0.75rem' }}>
-                <strong>Fecha del Gasto:</strong> {expense.fecha_gasto}
+                <strong>Fecha del Gasto:</strong> {formatDateForFrontEnd(expense.fecha_gasto)}
               </div>
               <div style={{ marginBottom: '0.75rem' }}>
                 <strong>Monto:</strong> <strong style={{ color: 'var(--primary)', fontSize: '1.2rem' }}>{formatCurrency(expense.monto)}</strong>

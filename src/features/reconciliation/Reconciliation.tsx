@@ -4,6 +4,7 @@ import type { BankTransaction, ExpenseReceipt, TasaBCV, Donation } from '../../s
 import Papa from 'papaparse';
 import { InternalControlModal } from '../../components/InternalControlModal';
 import { ProcessFlowchart } from '../../components/ProcessFlowchart';
+import { formatDateForFrontEnd } from '../../utils/formatters';
 
 const formatCurrency = (amount: number) => {
   return new Intl.NumberFormat('es-VE', { style: 'currency', currency: 'USD' }).format(amount);
@@ -357,7 +358,7 @@ export const Reconciliation: React.FC = () => {
                   >
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                       <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--neutral-dark)', opacity: 0.7 }}>
-                        {tx.fecha}
+                        {formatDateForFrontEnd(tx.fecha)}
                       </span>
                       <span style={{ fontWeight: 700, color: tx.monto < 0 ? 'var(--danger)' : 'var(--success)' }}>
                         {formatTxAmount(tx)}
@@ -415,7 +416,7 @@ export const Reconciliation: React.FC = () => {
                   >
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                       <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--neutral-dark)', opacity: 0.7 }}>
-                        {item.fecha}
+                        {formatDateForFrontEnd(item.fecha)}
                       </span>
                       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
                         <span style={{ fontWeight: 700, color: item.tipo === 'gasto' ? 'var(--danger)' : 'var(--success)' }}>
@@ -615,7 +616,7 @@ export const Reconciliation: React.FC = () => {
                   <tbody>
                     {csvDataRows.slice(0, 3).map((row, idx) => (
                       <tr key={idx} style={{ borderTop: '1px solid var(--border-color)' }}>
-                        <td style={{ padding: '4px 8px' }}>{row[mappings.fecha]}</td>
+                        <td style={{ padding: '4px 8px' }}>{formatDateForFrontEnd(row[mappings.fecha])}</td>
                         <td style={{ padding: '4px 8px' }}>{row[mappings.descripcion]?.substring(0, 25)}...</td>
                         <td style={{ padding: '4px 8px', fontWeight: 700, color: parseFloat(row[mappings.monto]) < 0 ? 'red' : 'green' }}>
                           {row[mappings.monto]}

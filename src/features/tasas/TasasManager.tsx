@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
+
 import { api } from '../../services/api';
 import type { TasaBCV } from '../../services/api';
+import { formatDateForFrontEnd } from '../../utils/formatters';
 import { useAuth } from '../../context/AuthContext';
 import Papa from 'papaparse';
 
@@ -211,7 +213,7 @@ export const TasasManager: React.FC = () => {
                   {tasaHoyRegistrada.tasa.toFixed(4)} <span style={{ fontSize: '1rem', fontWeight: 500 }}>Bs/$</span>
                 </div>
                 <div style={{ fontSize: '0.8rem', opacity: 0.7, marginTop: '0.5rem' }}>
-                  Aplica para la fecha: <strong>{tasaHoyRegistrada.fecha}</strong>
+                  Aplica para la fecha: <strong>{formatDateForFrontEnd(tasaHoyRegistrada.fecha)}</strong>
                 </div>
                 <div style={{ fontSize: '0.75rem', opacity: 0.5, marginTop: '0.2rem' }}>
                   Origen: {tasaHoyRegistrada.fuente === 'bcv_api' ? 'Sincronización Automática API' : 'Registro Manual'}
@@ -239,7 +241,7 @@ export const TasasManager: React.FC = () => {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
               {tasas.slice(0, 4).map((t, idx) => (
                 <div key={t.id || idx} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', paddingBottom: '0.4rem', borderBottom: idx < 3 ? '1px solid var(--border-color)' : 'none' }}>
-                  <span style={{ fontWeight: 600 }}>{t.fecha}</span>
+                  <span style={{ fontWeight: 600 }}>{formatDateForFrontEnd(t.fecha)}</span>
                   <span style={{ fontFamily: 'monospace', fontWeight: 700, color: 'var(--primary)' }}>{t.tasa.toFixed(4)} Bs.</span>
                 </div>
               ))}
@@ -332,7 +334,7 @@ export const TasasManager: React.FC = () => {
                   <div style={{ maxHeight: '100px', overflowY: 'auto', fontSize: '0.75rem', border: '1px solid var(--border-color)', borderRadius: '4px', backgroundColor: '#fff', padding: '0.25rem' }}>
                     {csvPreview.slice(0, 10).map((p, idx) => (
                       <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', padding: '0.2rem 0.5rem', borderBottom: idx < 9 ? '1px solid var(--border-color)' : 'none' }}>
-                        <span>{p.fecha}</span>
+                        <span>{formatDateForFrontEnd(p.fecha)}</span>
                         <span style={{ fontWeight: 600 }}>{p.tasa.toFixed(4)} Bs.</span>
                       </div>
                     ))}
@@ -387,7 +389,7 @@ export const TasasManager: React.FC = () => {
                   
                   return (
                     <tr key={t.id} style={{ borderBottom: '1px solid var(--border-color)' }}>
-                      <td style={{ padding: '0.85rem 1rem', fontWeight: 600 }}>{t.fecha}</td>
+                      <td style={{ padding: '0.85rem 1rem', fontWeight: 600 }}>{formatDateForFrontEnd(t.fecha)}</td>
                       <td style={{ padding: '0.85rem 1rem' }}>
                         {isEditing ? (
                           <input 

@@ -4,6 +4,7 @@ import { api } from '../../services/api';
 import type { ExpenseReceipt, Project, ExpenseCategory, PartidaGasto } from '../../services/api';
 import { InternalControlModal } from '../../components/InternalControlModal';
 import { ProcessFlowchart } from '../../components/ProcessFlowchart';
+import { formatDateForFrontEnd } from '../../utils/formatters';
 
 export const Audit: React.FC = () => {
   const [loading, setLoading] = useState(true);
@@ -157,7 +158,7 @@ export const Audit: React.FC = () => {
             <tbody>
               {filteredExpenses.map(exp => (
                 <tr key={exp.id}>
-                  <td style={{ fontWeight: 600, whiteSpace: 'nowrap' }}>{exp.fecha_gasto}</td>
+                  <td style={{ fontWeight: 600, whiteSpace: 'nowrap' }}>{formatDateForFrontEnd(exp.fecha_gasto)}</td>
                   <td style={{ fontSize: '0.85rem' }}>
                     <div style={{ fontWeight: 600, color: 'var(--primary)' }}>{getProjectName(exp.proyecto_id)}</div>
                     <div style={{ opacity: 0.6, fontSize: '0.75rem', marginTop: '0.1rem' }}>{getPartidaName(exp.partida_id)}</div>

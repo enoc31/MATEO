@@ -3,6 +3,7 @@ import { Send, ClipboardList, Truck, Users, Building, Megaphone, Banknote, Refre
 import { api, requisitionsApi } from '../../services/api';
 import type { Project, ExpenseCategory, PartidaGasto, ExpenseReceipt, Requisition } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
+import { formatDateForFrontEnd } from '../../utils/formatters';
 
 
 
@@ -658,7 +659,7 @@ export const MobileEntry: React.FC = () => {
             {recentExpenses.map(exp => (
               <div key={exp.id} className="card" style={{ padding: '1.2rem', borderRadius: 'var(--radius-md)', backgroundColor: '#fff', border: '1px solid var(--border-color)' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                  <span style={{ fontSize: '0.8rem', opacity: 0.6, fontWeight: 700 }}>{exp.fecha_gasto}</span>
+                  <span style={{ fontSize: '0.8rem', opacity: 0.6, fontWeight: 700 }}>{formatDateForFrontEnd(exp.fecha_gasto)}</span>
                   <span style={{ fontWeight: 800, color: 'var(--neutral-dark)', fontSize: '1.1rem' }}>
                     {formatCurrency(exp.monto)}
                   </span>

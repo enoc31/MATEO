@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Wallet, Download, CheckCircle, Clock, Mailbox, DollarSign, Landmark, Scale, ClipboardList } from 'lucide-react';
 import { api } from '../../services/api';
 import type { Project, Donation, Donante } from '../../services/api';
+import { formatDateForFrontEnd } from '../../utils/formatters';
 import { useAuth } from '../../context/AuthContext';
 
 const formatCurrency = (amount: number) =>
@@ -271,7 +272,7 @@ export const IncomesManager: React.FC = () => {
                   return (
                     <tr key={d.id} style={{ borderBottom: '1px solid var(--border-color)', backgroundColor: i % 2 === 0 ? 'transparent' : 'rgba(0,0,0,0.015)' }}>
                       <td style={{ padding: '0.85rem 1rem', whiteSpace: 'nowrap' }}>
-                        <div style={{ fontWeight: 600 }}>{d.fecha}</div>
+                        <div style={{ fontWeight: 600 }}>{formatDateForFrontEnd(d.fecha)}</div>
                         {d.created_at && (
                           <div style={{ fontSize: '0.7rem', opacity: 0.5, marginTop: '0.15rem' }} title="Fecha en que se procesó el registro">
                             Reg: {new Date(d.created_at).toLocaleDateString('es-VE')}

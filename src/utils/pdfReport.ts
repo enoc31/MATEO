@@ -23,7 +23,7 @@ export const generateBeneficiariesReport = async ({ records, jornadas, title = '
   
   doc.setFontSize(10);
   doc.setTextColor(100);
-  doc.text(`Fecha de Emisión: ${new Date().toLocaleDateString()}`, 14, 30);
+  doc.text(`Fecha de Emisión: ${new Date().toLocaleDateString('es-VE')}`, 14, 30);
   doc.text(`Total de Registros: ${records.length}`, 14, 35);
 
   const getJornadaName = (id: string) => {
@@ -89,7 +89,7 @@ export const generateBeneficiariesReport = async ({ records, jornadas, title = '
       record.nombre,
       record.apellido,
       cedulaFormatted,
-      new Date(record.fecha_nacimiento).toLocaleDateString(),
+      new Date(record.fecha_nacimiento).toLocaleDateString('es-VE'),
       record.sexo,
       record.tipo_donacion ? record.tipo_donacion.join(', ') : 'N/A',
       getJornadaName(record.jornada_id),
