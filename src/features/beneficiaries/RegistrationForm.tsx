@@ -1,7 +1,7 @@
 import React, { useRef, useState } from 'react';
 import SignatureCanvas from 'react-signature-canvas';
 import { api } from '../../services/api';
-import { Send, Eraser, Calendar, AlertCircle } from 'lucide-react';
+import { Send, Eraser, Calendar, AlertCircle, Apple, Pill, Shirt, Gamepad2, Bath, Droplet } from 'lucide-react';
 
 interface RegistrationFormProps {
   onSuccess: (id: string) => void;
@@ -16,7 +16,14 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({ onSuccess, j
   const [fechaNacimiento, setFechaNacimiento] = useState('');
   const [donaciones, setDonaciones] = useState<string[]>([]);
 
-  const TIPOS_DONACION = ['Comida', 'Medicamentos', 'Ropa', 'Juguetes', 'Higiene', 'Agua'];
+  const TIPOS_DONACION = [
+    { label: 'Comida', icon: <Apple size={16} /> },
+    { label: 'Medicamentos', icon: <Pill size={16} /> },
+    { label: 'Ropa', icon: <Shirt size={16} /> },
+    { label: 'Juguetes', icon: <Gamepad2 size={16} /> },
+    { label: 'Higiene', icon: <Bath size={16} /> },
+    { label: 'Agua', icon: <Droplet size={16} /> }
+  ];
   
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -198,14 +205,14 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({ onSuccess, j
         </h3>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem' }}>
           {TIPOS_DONACION.map(tipo => {
-            const isSelected = donaciones.includes(tipo);
+            const isSelected = donaciones.includes(tipo.label);
             return (
               <button
-                key={tipo}
+                key={tipo.label}
                 type="button"
                 onClick={() => {
                   setDonaciones(prev => 
-                    isSelected ? prev.filter(t => t !== tipo) : [...prev, tipo]
+                    isSelected ? prev.filter(t => t !== tipo.label) : [...prev, tipo.label]
                   );
                 }}
                 disabled={submitting}
@@ -224,8 +231,8 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({ onSuccess, j
                   gap: '0.5rem'
                 }}
               >
-                {isSelected && <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: 'var(--accent)' }} />}
-                {tipo}
+                {tipo.icon}
+                {tipo.label}
               </button>
             );
           })}
