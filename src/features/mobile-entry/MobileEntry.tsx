@@ -51,12 +51,12 @@ export const MobileEntry: React.FC = () => {
     if (!profile) return;
     setLoading(true);
     try {
-      const [projList, catList, partList, myExpenses, myReqs, budgetList] = await Promise.all([
+      const [projList, catList, partList, myExpenses, approvedReqs, budgetList] = await Promise.all([
         api.getProjects(),
         api.getCategories(),
         api.getPartidas(),
         api.getRecentExpensesByUserId(profile.id, 20),
-        requisitionsApi.getRecentRequisitionsByUserId(profile.id, 30),
+        requisitionsApi.getApprovedRequisitions(50),
         api.getBudgets()
       ]);
       setProjects(projList.filter(p => p.activo));
@@ -66,9 +66,9 @@ export const MobileEntry: React.FC = () => {
       
       setRecentExpenses(myExpenses);
 
-      // Filter approved requisitions that do not have an executed expense yet
-      const activeReqs = myReqs.filter(r => 
-        r.estado === 'aprobada_ejecucion' &&
+      // Filter approved requisitions that do not have an executed expense yet from this user
+      // Note: If someone else executed it, it might still appear here, but directors can see all open ones.
+      const activeReqs = approvedReqs.filter(r => 
         !myExpenses.some(e => e.solicitud_id === r.id)
       );
       setApprovedRequisitions(activeReqs);

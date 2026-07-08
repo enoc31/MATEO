@@ -1359,6 +1359,39 @@ export const requisitionsApi = {
     }
   },
 
+  getApprovedRequisitions: async (limit: number = 50): Promise<Requisition[]> => {
+    if (!isSimulationMode) {
+      const { data, error } = await supabase
+        .from('solicitudes_gasto')
+        .select(`
+          *,
+          solicitante:usuarios_perfiles!solicitante_id(nombre_completo),
+          proyecto:proyectos(nombre),
+          partida:partidas_gasto(
+            nombre,
+            codigo,
+            categoria:categorias_gasto(nombre)
+          )
+        `)
+        .eq('estado', 'aprobada_ejecucion')
+        .order('created_at', { ascending: false })
+        .limit(limit);
+      
+      if (error) throw error;
+      
+      return (data as any[]).map(row => ({
+        ...row,
+        solicitante_nombre: row.solicitante?.nombre_completo,
+        proyecto_nombre: row.proyecto?.nombre,
+        partida_nombre: row.partida?.nombre,
+        partida_codigo: row.partida?.codigo,
+        categoria_nombre: row.partida?.categoria?.nombre
+      }));
+    } else {
+      return (await requisitionsApi.getRequisitions()).filter(r => r.estado === 'aprobada_ejecucion').slice(0, limit);
+    }
+  },
+
   createRequisition: async (req: Omit<Requisition, 'id' | 'estado' | 'created_at' | 'updated_at' | 'validador_1_id' | 'validador_2_id' | 'validado_1_at' | 'validado_2_at' | 'rechazado_por' | 'rechazado_at' | 'motivo_rechazo'>): Promise<Requisition> => {
     if (!isSimulationMode) {
       const { data, error } = await supabase
