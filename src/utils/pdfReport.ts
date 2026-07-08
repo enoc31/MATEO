@@ -79,13 +79,19 @@ export const generateBeneficiariesReport = async ({ records, jornadas, title = '
 
   // Preparar datos de la tabla
   const tableData = records.map((record, index) => {
+    const numCedula = parseInt(record.cedula.replace(/\D/g, ''), 10);
+    const cedulaFormatted = isNaN(numCedula) 
+      ? record.cedula 
+      : (numCedula < 80000000 ? `V-${numCedula}` : `E-${numCedula}`);
+
     return [
       (index + 1).toString(),
       record.nombre,
       record.apellido,
-      record.cedula,
+      cedulaFormatted,
       new Date(record.fecha_nacimiento).toLocaleDateString(),
       record.sexo,
+      record.tipo_donacion ? record.tipo_donacion.join(', ') : 'N/A',
       getJornadaName(record.jornada_id),
       // Columna IP y Fecha
       `${record.ip_captura || 'N/A'}\n${new Date(record.created_at).toLocaleString()}`,
@@ -97,7 +103,7 @@ export const generateBeneficiariesReport = async ({ records, jornadas, title = '
   // Dibujar tabla
   autoTable(doc, {
     startY: 45,
-    head: [['Nro', 'Nombre', 'Apellido', 'Cédula', 'Nacimiento', 'Sexo', 'Jornada', 'IP y Captura', 'Firma Autógrafa']],
+    head: [['Nro', 'Nombre', 'Apellido', 'Cédula', 'Nacimiento', 'Sexo', 'Donación', 'Jornada', 'IP y Captura', 'Firma']],
     body: tableData,
     theme: 'grid',
     styles: {
@@ -112,23 +118,24 @@ export const generateBeneficiariesReport = async ({ records, jornadas, title = '
       fontStyle: 'bold'
     },
     columnStyles: {
-      0: { cellWidth: 10 },
-      1: { cellWidth: 25 },
-      2: { cellWidth: 25 },
-      3: { cellWidth: 22 },
-      4: { cellWidth: 20 },
+      0: { cellWidth: 8 },
+      1: { cellWidth: 22 },
+      2: { cellWidth: 22 },
+      3: { cellWidth: 18 },
+      4: { cellWidth: 18 },
       5: { cellWidth: 15 },
-      6: { cellWidth: 40 },
-      7: { cellWidth: 35 },
-      8: { cellWidth: 45 } // Celda de la firma
+      6: { cellWidth: 35 }, // Donación
+      7: { cellWidth: 35 }, // Jornada
+      8: { cellWidth: 30 }, // IP
+      9: { cellWidth: 40 }  // Celda de la firma
     },
     // Configurar para unas 30 líneas por hoja (ajustando la altura mínima de la celda)
     bodyStyles: {
       minCellHeight: 15 // Suficiente para que entren 30 líneas por página A4 Landscape y se vea la firma
     },
     didDrawCell: (data) => {
-      // Si estamos en la columna de la Firma (índice 8) y es del cuerpo (body)
-      if (data.column.index === 8 && data.cell.section === 'body') {
+      // Si estamos en la columna de la Firma (índice 9) y es del cuerpo (body)
+      if (data.column.index === 9 && data.cell.section === 'body') {
         const recordIndex = data.row.index;
         const record = records[recordIndex];
         const base64Img = imagesMap[record.id];

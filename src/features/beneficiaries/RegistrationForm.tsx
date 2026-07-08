@@ -14,6 +14,9 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({ onSuccess, j
   const [cedula, setCedula] = useState('');
   const [sexo, setSexo] = useState<'Masculino' | 'Femenino'>('Masculino');
   const [fechaNacimiento, setFechaNacimiento] = useState('');
+  const [donaciones, setDonaciones] = useState<string[]>([]);
+
+  const TIPOS_DONACION = ['Comida', 'Medicamentos', 'Ropa', 'Juguetes', 'Higiene', 'Agua'];
   
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -67,6 +70,11 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({ onSuccess, j
       return;
     }
 
+    if (donaciones.length === 0) {
+      setError('Debes seleccionar al menos un tipo de donación.');
+      return;
+    }
+
     setSubmitting(true);
     try {
       const dataUrl = sigCanvas.current.getCanvas().toDataURL('image/png');
@@ -89,6 +97,7 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({ onSuccess, j
         cedula,
         sexo,
         fecha_nacimiento: fechaNacimiento,
+        tipo_donacion: donaciones,
         jornada_id: jornadaId,
         ip_captura
       }, signatureFile);
@@ -118,13 +127,13 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({ onSuccess, j
         
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
           <div className="form-group" style={{ marginBottom: 0 }}>
-            <label className="form-label">Cédula de Identidad *</label>
+            <label className="form-label">Cédula de Identidad * (Solo números)</label>
             <input 
               type="text" 
               className="app-input" 
-              placeholder="Ej: V-12345678"
+              placeholder="Ej: 12345678"
               value={cedula}
-              onChange={e => setCedula(e.target.value)}
+              onChange={e => setCedula(e.target.value.replace(/\D/g, ''))}
               required
               disabled={submitting}
             />
@@ -180,6 +189,46 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({ onSuccess, j
               <Calendar size={18} style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', color: 'var(--neutral-dark)', opacity: 0.5 }} />
             </div>
           </div>
+        </div>
+      </div>
+
+      <div>
+        <h3 style={{ fontSize: '1.1rem', color: 'var(--primary)', marginBottom: '1rem', borderBottom: '2px solid var(--neutral-light)', paddingBottom: '0.5rem' }}>
+          TIPO DE DONACIÓN *
+        </h3>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem' }}>
+          {TIPOS_DONACION.map(tipo => {
+            const isSelected = donaciones.includes(tipo);
+            return (
+              <button
+                key={tipo}
+                type="button"
+                onClick={() => {
+                  setDonaciones(prev => 
+                    isSelected ? prev.filter(t => t !== tipo) : [...prev, tipo]
+                  );
+                }}
+                disabled={submitting}
+                style={{
+                  padding: '0.6rem 1.2rem',
+                  borderRadius: '20px',
+                  border: `2px solid ${isSelected ? 'var(--accent)' : 'var(--neutral-light)'}`,
+                  backgroundColor: isSelected ? 'rgba(0,143,166,0.1)' : '#fff',
+                  color: isSelected ? 'var(--accent)' : 'var(--neutral-dark)',
+                  fontWeight: 600,
+                  fontSize: '0.9rem',
+                  cursor: submitting ? 'not-allowed' : 'pointer',
+                  transition: 'all 0.2s ease',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem'
+                }}
+              >
+                {isSelected && <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: 'var(--accent)' }} />}
+                {tipo}
+              </button>
+            );
+          })}
         </div>
       </div>
 

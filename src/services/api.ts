@@ -105,6 +105,7 @@ export interface Beneficiary {
   cedula: string;
   sexo: string;
   fecha_nacimiento: string;
+  tipo_donacion?: string[];
   url_firma: string | null;
   ip_captura?: string;
   created_at: string;
