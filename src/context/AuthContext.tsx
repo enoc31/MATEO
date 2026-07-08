@@ -2,6 +2,7 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import type { User } from '@supabase/supabase-js';
 import { supabase } from '../supabaseClient';
 import { isSimulationMode } from '../services/api';
+import { checkAndSyncBCVRate } from '../utils/bcvSync';
 
 export type UserRole = 'administrador' | 'auditor' | 'coordinador' | 'director' | 'auxiliar_campo' | 'donante';
 
@@ -138,6 +139,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
 
     initializeAuth();
+    
+    // Intento de sincronización silenciosa (Lazy Sync) de tasa BCV
+    checkAndSyncBCVRate().catch(e => console.error("Error en Lazy Sync BCV", e));
 
     if (!isSimulationMode) {
       const { data } = supabase.auth.onAuthStateChange(async (event, session) => {
