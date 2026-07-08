@@ -18,7 +18,7 @@ import {
   CalendarDays
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import { isSimulationMode } from '../services/api';
+import { api, isSimulationMode } from '../services/api';
 import { InternalControlModal } from './InternalControlModal';
 
 interface LayoutProps {
@@ -32,6 +32,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTa
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isPinned, setIsPinned] = useState(window.innerWidth >= 1024);
   const [isCosoModalOpen, setIsCosoModalOpen] = useState(false);
+  const [currentRate, setCurrentRate] = useState<number | null>(null);
   
   if (!profile) return null;
   const role = profile.rol;
@@ -44,7 +45,20 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTa
         setIsCosoModalOpen(true);
       }
     }
-  }, [profile]);
+
+    // Obtener la tasa vigente
+    const fetchRate = async () => {
+      try {
+        const tasas = await api.getTasasBCV();
+        if (tasas && tasas.length > 0) {
+          setCurrentRate(tasas[0].tasa);
+        }
+      } catch (error) {
+        console.error("Error al obtener la tasa vigente:", error);
+      }
+    };
+    fetchRate();
+  }, [profile.id]);
 
   const handleCloseCosoModal = () => {
     if (profile && profile.id) {
@@ -173,6 +187,14 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTa
             borderLeft: '1px solid var(--border-color)',
             paddingLeft: '1.5rem'
           }}>
+            {currentRate && (
+              <div style={{ display: 'flex', alignItems: 'center', marginRight: '1rem', paddingRight: '1rem', borderRight: '1px solid var(--border-color)' }}>
+                <div style={{ textAlign: 'right' }}>
+                  <div style={{ fontSize: '0.65rem', color: 'var(--neutral-dark)', fontWeight: 600, letterSpacing: '0.5px' }}>TASA BCV VIGENTE</div>
+                  <div style={{ fontSize: '0.95rem', fontWeight: 700, color: '#16a34a' }}>{currentRate.toFixed(4)} Bs/$</div>
+                </div>
+              </div>
+            )}
             <div style={{ textAlign: 'right' }}>
               <div style={{ fontWeight: 600, fontSize: '0.85rem' }}>{profile.nombre_completo}</div>
               <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '0.1rem' }}>
@@ -200,6 +222,14 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTa
       <main className="main-content">
         {/* User Info Bar (Desktop Only) */}
         <div className="desktop-user-bar" style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: '1rem', marginBottom: '1.5rem', paddingBottom: '0.5rem', borderBottom: '1px solid var(--border-color)' }}>
+            {currentRate && (
+              <div style={{ display: 'flex', alignItems: 'center', marginRight: '0.5rem', paddingRight: '1.5rem', borderRight: '1px solid var(--border-color)' }}>
+                <div style={{ textAlign: 'right' }}>
+                  <div style={{ fontSize: '0.65rem', color: 'var(--neutral-dark)', fontWeight: 600, letterSpacing: '0.5px' }}>TASA BCV VIGENTE</div>
+                  <div style={{ fontSize: '0.95rem', fontWeight: 700, color: '#16a34a' }}>{currentRate.toFixed(4)} Bs/$</div>
+                </div>
+              </div>
+            )}
             <div style={{ textAlign: 'right' }}>
               <div style={{ fontWeight: 600, fontSize: '0.9rem', color: 'var(--neutral-dark)' }}>{profile.nombre_completo}</div>
               <span className="badge badge-info" style={{ fontSize: '0.65rem', padding: '0.1rem 0.5rem', marginTop: '2px', display: 'inline-block' }}>
