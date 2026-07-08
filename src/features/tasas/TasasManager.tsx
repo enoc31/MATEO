@@ -42,13 +42,26 @@ export const TasasManager: React.FC = () => {
     loadTasas();
   }, []);
 
-  // Calcular la fecha destino esperada hoy (próximo día hábil)
+  // Calcular la fecha destino esperada hoy (próximo día hábil o el mismo día si es temprano)
   const getExpectedFechaTasaHoy = () => {
     const ahoraVE = new Date(
       new Date().toLocaleString('en-US', { timeZone: 'America/Caracas' })
     );
     const diaSemana = ahoraVE.getDay(); // 0=Dom, 1=Lun, ..., 5=Vie, 6=Sáb
-    const diasASumar = diaSemana === 5 ? 3 : 1;
+    const hora = ahoraVE.getHours();
+
+    let diasASumar = 0;
+    // Si son más de las 3:00 PM (15:00), asumimos que el BCV ya publicó la tasa para el próximo día hábil.
+    if (hora >= 15) {
+      if (diaSemana === 5) diasASumar = 3; // Viernes -> Lunes
+      else if (diaSemana === 6) diasASumar = 2; // Sábado -> Lunes
+      else diasASumar = 1; // Lunes-Jueves -> Día siguiente
+    } else {
+      // Si es antes de las 3:00 PM, asumimos que el usuario está registrando la tasa rezagada para el día de HOY.
+      if (diaSemana === 0) diasASumar = 1; // Domingo -> Lunes
+      else if (diaSemana === 6) diasASumar = 2; // Sábado -> Lunes
+      else diasASumar = 0; // Hoy
+    }
     
     const fechaDest = new Date(ahoraVE);
     fechaDest.setDate(ahoraVE.getDate() + diasASumar);
