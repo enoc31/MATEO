@@ -217,7 +217,7 @@ export const Login: React.FC = () => {
             style={{ height: '70px', objectFit: 'contain', marginBottom: '1rem' }}
           />
           <h2 style={{ color: 'var(--primary)', fontFamily: 'var(--font-headings)', fontSize: '1.4rem' }}>
-            {isRegister ? 'Registro de Cuenta' : 'Auditoría de Recursos'}
+            {isRegister ? 'Registro de Cuenta' : 'Gestión Humanitaria'}
           </h2>
           <p style={{ fontSize: '0.85rem', color: 'var(--neutral-dark)', opacity: 0.8, marginTop: '0.25rem' }}>
             Convención Nacional Bautista de Venezuela
