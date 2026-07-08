@@ -19,8 +19,8 @@ export const checkAndSyncBCVRate = async () => {
     const existingRate = await api.getTasaByDate(fechaAplica);
     
     // getTasaByDate puede devolver una tasa anterior si no encuentra la exacta.
-    // Solo actualizamos si la tasa devuelta NO es exactamente para fechaAplica.
-    if (!existingRate || existingRate.fecha !== fechaAplica) {
+    // Actualizamos si no existe la exacta, o si el valor es diferente (para corregir errores manuales).
+    if (!existingRate || existingRate.fecha !== fechaAplica || existingRate.tasa !== rateValue) {
       console.log(`Sincronizando tasa BCV automática para ${fechaAplica}... Valor: ${rateValue}`);
       await api.upsertTasaBCV({
         fecha: fechaAplica,
