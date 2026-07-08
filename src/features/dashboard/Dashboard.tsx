@@ -66,7 +66,8 @@ export const Dashboard: React.FC = () => {
     };
   });
 
-  const projectExecutionData = projectExecution.filter((p: any) => p.Presupuesto > 0);
+  // Mostrar todos los proyectos que vienen de la base de datos (activos o con presupuesto)
+  const projectExecutionData = projectExecution;
 
   // Formateador de moneda
   const formatCurrency = (amount: number) => {
