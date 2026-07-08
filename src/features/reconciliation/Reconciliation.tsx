@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { api } from '../../services/api';
 import type { BankTransaction, ExpenseReceipt, TasaBCV, Donation } from '../../services/api';
 import Papa from 'papaparse';
+import { InternalControlModal } from '../../components/InternalControlModal';
 
 const formatCurrency = (amount: number) => {
   return new Intl.NumberFormat('es-VE', { style: 'currency', currency: 'USD' }).format(amount);
@@ -34,6 +35,7 @@ export const Reconciliation: React.FC = () => {
   // Tasas de cambio
   const [tasas, setTasas] = useState<TasaBCV[]>([]);
   const [latestRate, setLatestRate] = useState<number | null>(null);
+  const [isCosoModalOpen, setIsCosoModalOpen] = useState(false);
 
   // Estados para importación CSV
   const [csvFile, setCsvFile] = useState<File | null>(null);
@@ -291,7 +293,11 @@ export const Reconciliation: React.FC = () => {
           </p>
         </div>
         
-        <div style={{ display: 'flex', gap: '0.75rem' }}>
+        <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+          <button onClick={() => setIsCosoModalOpen(true)} className="btn btn-outline" style={{ fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--primary)', borderColor: 'var(--primary)' }}>
+            📖 Manual COSO
+          </button>
+          
           <button onClick={handleDownloadDemoCsv} className="btn btn-outline" style={{ fontSize: '0.85rem' }}>
             📥 Descargar CSV de Prueba
           </button>
@@ -634,6 +640,11 @@ export const Reconciliation: React.FC = () => {
           </div>
         </div>
       )}
+
+      <InternalControlModal 
+        isOpen={isCosoModalOpen} 
+        onClose={() => setIsCosoModalOpen(false)} 
+      />
     </div>
   );
 };

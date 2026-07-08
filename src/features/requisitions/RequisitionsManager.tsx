@@ -5,6 +5,7 @@ import { requisitionsApi } from '../../services/api';
 import type { Requisition } from '../../services/api';
 import { RequisitionForm } from './RequisitionForm';
 import { RequisitionDetailsModal } from './RequisitionDetailsModal';
+import { InternalControlModal } from '../../components/InternalControlModal';
 
 export const RequisitionsManager: React.FC = () => {
   const { profile } = useAuth();
@@ -13,6 +14,7 @@ export const RequisitionsManager: React.FC = () => {
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [selectedReq, setSelectedReq] = useState<Requisition | null>(null);
   const [filter, setFilter] = useState<'todas' | 'pendientes' | 'aprobadas'>('todas');
+  const [isCosoModalOpen, setIsCosoModalOpen] = useState(false);
 
   const fetchList = async () => {
     setLoading(true);
@@ -73,11 +75,16 @@ export const RequisitionsManager: React.FC = () => {
           </p>
         </div>
         
-        {['coordinador', 'auxiliar_campo', 'director'].includes(profile.rol) && (
-          <button className="btn btn-primary" onClick={() => setShowCreateForm(true)} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <Plus size={16} /> Nueva Solicitud
+        <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+          <button className="btn btn-outline" onClick={() => setIsCosoModalOpen(true)} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--primary)', borderColor: 'var(--primary)' }}>
+            📖 Manual COSO
           </button>
-        )}
+          {['coordinador', 'auxiliar_campo', 'director'].includes(profile.rol) && (
+            <button className="btn btn-primary" onClick={() => setShowCreateForm(true)} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <Plus size={16} /> Nueva Solicitud
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Controles de Filtros */}
@@ -196,6 +203,11 @@ export const RequisitionsManager: React.FC = () => {
           onSuccess={() => { setSelectedReq(null); fetchList(); }}
         />
       )}
+
+      <InternalControlModal 
+        isOpen={isCosoModalOpen} 
+        onClose={() => setIsCosoModalOpen(false)} 
+      />
     </div>
   );
 };

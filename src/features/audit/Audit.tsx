@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Search, Scale } from 'lucide-react';
 import { api } from '../../services/api';
 import type { ExpenseReceipt, Project, ExpenseCategory, PartidaGasto } from '../../services/api';
+import { InternalControlModal } from '../../components/InternalControlModal';
 
 export const Audit: React.FC = () => {
   const [loading, setLoading] = useState(true);
@@ -10,6 +11,7 @@ export const Audit: React.FC = () => {
   const [categories, setCategories] = useState<ExpenseCategory[]>([]);
   const [partidas, setPartidas] = useState<PartidaGasto[]>([]);
   const [filterStatus, setFilterStatus] = useState<string>('todos');
+  const [isCosoModalOpen, setIsCosoModalOpen] = useState(false);
   // Pagination States
   const [currentPage, setCurrentPage] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
@@ -96,8 +98,12 @@ export const Audit: React.FC = () => {
           </p>
         </div>
 
-        {/* Filtros */}
-        <div style={{ display: 'flex', gap: '0.5rem', backgroundColor: '#ffffff', padding: '0.25rem', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-color)' }}>
+        {/* Filtros y Opciones */}
+        <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', flexWrap: 'wrap' }}>
+          <button className="btn btn-outline" onClick={() => setIsCosoModalOpen(true)} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--primary)', borderColor: 'var(--primary)' }}>
+            📖 Manual COSO
+          </button>
+          <div style={{ display: 'flex', gap: '0.5rem', backgroundColor: '#ffffff', padding: '0.25rem', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-color)' }}>
           {['todos', 'pendiente_revision', 'aprobado', 'rechazado'].map(status => (
             <button
               key={status}
@@ -117,6 +123,7 @@ export const Audit: React.FC = () => {
               {status === 'todos' ? 'Todos' : status.replace('_', ' ').toUpperCase()}
             </button>
           ))}
+        </div>
         </div>
       </div>
 
@@ -207,6 +214,11 @@ export const Audit: React.FC = () => {
           </div>
         </div>
       )}
+
+      <InternalControlModal 
+        isOpen={isCosoModalOpen} 
+        onClose={() => setIsCosoModalOpen(false)} 
+      />
     </div>
   );
 };

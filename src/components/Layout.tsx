@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { isSimulationMode } from '../services/api';
+import { InternalControlModal } from './InternalControlModal';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -30,9 +31,27 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTa
   const { profile, logout } = useAuth();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isPinned, setIsPinned] = useState(window.innerWidth >= 1024);
+  const [isCosoModalOpen, setIsCosoModalOpen] = useState(false);
   
   if (!profile) return null;
   const role = profile.rol;
+
+  // Revisar si el usuario ya vio el modal COSO
+  React.useEffect(() => {
+    if (profile && profile.id) {
+      const hasSeen = localStorage.getItem(`has_seen_coso_${profile.id}`);
+      if (!hasSeen) {
+        setIsCosoModalOpen(true);
+      }
+    }
+  }, [profile]);
+
+  const handleCloseCosoModal = () => {
+    if (profile && profile.id) {
+      localStorage.setItem(`has_seen_coso_${profile.id}`, 'true');
+    }
+    setIsCosoModalOpen(false);
+  };
 
   // Configuración de menús basados en roles
   const menuItems = [
@@ -249,6 +268,11 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTa
           </button>
         </div>
       </aside>
+      {/* Modal de Control Interno (COSO) */}
+      <InternalControlModal 
+        isOpen={isCosoModalOpen} 
+        onClose={handleCloseCosoModal} 
+      />
     </div>
   );
 };
