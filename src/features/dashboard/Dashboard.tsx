@@ -166,7 +166,7 @@ export const Dashboard: React.FC = () => {
                   data={projectExecutionData}
                   margin={{ top: 20, right: 30, left: 10, bottom: 5 }}
                 >
-                  <XAxis dataKey="name" stroke="#64748b" fontSize={10} tickLine={false} />
+                  <XAxis dataKey="nombre" stroke="#64748b" fontSize={10} tickLine={false} />
                   <YAxis stroke="#64748b" fontSize={10} tickLine={false} />
                   <Tooltip formatter={(value) => formatCurrency(Number(value))} />
                   <Legend />
