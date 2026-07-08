@@ -46,12 +46,18 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTa
       }
     }
 
-    // Obtener la tasa vigente
+    // Obtener la tasa vigente para el día de HOY
     const fetchRate = async () => {
       try {
-        const tasas = await api.getTasasBCV();
-        if (tasas && tasas.length > 0) {
-          setCurrentRate(tasas[0].tasa);
+        const ahoraVE = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Caracas' }));
+        const yyyy = ahoraVE.getFullYear();
+        const mm = String(ahoraVE.getMonth() + 1).padStart(2, '0');
+        const dd = String(ahoraVE.getDate()).padStart(2, '0');
+        const fechaHoy = `${yyyy}-${mm}-${dd}`;
+
+        const tasaHoy = await api.getTasaByDate(fechaHoy);
+        if (tasaHoy) {
+          setCurrentRate(tasaHoy.tasa);
         }
       } catch (error) {
         console.error("Error al obtener la tasa vigente:", error);
