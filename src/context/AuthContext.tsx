@@ -31,47 +31,42 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [loading, setLoading] = useState(true);
   const [authError, setAuthError] = useState<string | null>(null);
 
-  const fetchProfile = async (userId: string) => {
+  const fetchProfile = async (currentUser: User) => {
     if (!isSimulationMode) {
       try {
         const { data, error } = await supabase
           .from('usuarios_perfiles')
           .select('*')
-          .eq('id', userId)
+          .eq('id', currentUser.id)
           .single();
 
         if (error) {
-          // Si el perfil no existe (ej. error PGRST116 o no se encontró fila),
-          // intentamos crearlo usando los metadatos del usuario de Auth (que se guardaron al registrarse)
           if (error.code === 'PGRST116' || error.message?.includes('0 rows')) {
-            const { data: { session } } = await supabase.auth.getSession();
-            if (session && session.user.id === userId) {
-              const meta = session.user.user_metadata;
-              const newProfile = {
-                id: userId,
-                email: session.user.email,
-                nombre_completo: meta?.nombre_completo || 'Usuario',
-                rol: meta?.rol || 'donante',
-                aprobado: false
-              };
+            const meta = currentUser.user_metadata;
+            const newProfile = {
+              id: currentUser.id,
+              email: currentUser.email,
+              nombre_completo: meta?.nombre_completo || 'Usuario',
+              rol: meta?.rol || 'donante',
+              aprobado: false
+            };
+            
+            const { data: insertedData, error: insertError } = await supabase
+              .from('usuarios_perfiles')
+              .insert([newProfile])
+              .select()
+              .single();
               
-              const { data: insertedData, error: insertError } = await supabase
-                .from('usuarios_perfiles')
-                .insert([newProfile])
-                .select()
-                .single();
-                
-              if (!insertError && insertedData) {
-                setProfile(insertedData as UserProfile);
-                setAuthError(null);
-                return;
-              } else {
-                console.error('Error auto-creating profile:', insertError);
-                setAuthError(`No se pudo crear el perfil (Insert): ${insertError?.message || 'Error desconocido'}`);
-              }
+            if (!insertError && insertedData) {
+              setProfile(insertedData as UserProfile);
+              setAuthError(null);
+              return;
+            } else {
+              console.error('Error auto-creating profile:', insertError);
+              setAuthError(`No se pudo crear el perfil: ${insertError?.message || 'Error desconocido'}`);
             }
           } else {
-            setAuthError(`No se encontró el perfil (Fetch): ${error.message || 'Error desconocido'}`);
+            setAuthError(`Error (Fetch): ${error.message || 'Error desconocido'}`);
           }
           console.error('Error fetching user profile:', error);
           setProfile(null);
@@ -85,9 +80,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setProfile(null);
       }
     } else {
-      // Simulación Local
       const profiles = JSON.parse(localStorage.getItem('cnbv_profiles') || '{}');
-      const mockProfile = profiles[userId];
+      const mockProfile = profiles[currentUser.id];
       if (mockProfile) {
         setProfile(mockProfile as UserProfile);
       } else {
@@ -98,38 +92,47 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const refreshProfile = async () => {
     if (user) {
-      await fetchProfile(user.id);
+      await fetchProfile(user);
     }
   };
 
   useEffect(() => {
+    let mounted = true;
+    let authSubscription: any = null;
+
     const initializeAuth = async () => {
       if (!isSimulationMode) {
-        // Inicialización Real
         try {
-          const { data: { session } } = await supabase.auth.getSession();
-          if (session) {
+          // Timeout de 10 segundos para evitar que la pantalla se quede colgada
+          const getSessionPromise = supabase.auth.getSession();
+          const timeoutPromise = new Promise((_, reject) => 
+            setTimeout(() => reject(new Error('Timeout de conexión a Supabase')), 10000)
+          );
+          
+          const { data: { session } } = await Promise.race([getSessionPromise, timeoutPromise]) as any;
+          
+          if (session && mounted) {
             setUser(session.user);
-            await fetchProfile(session.user.id);
+            await fetchProfile(session.user);
           }
         } catch (e) {
-          console.error('Error getting initial session:', e);
+          console.error('Error en inicialización de sesión:', e);
+          if (mounted) setAuthError('Error de red o conexión al servidor. Intente recargar.');
         } finally {
-          setLoading(false);
+          if (mounted) setLoading(false);
         }
       } else {
-        // Inicialización Simulación
         try {
           const mockSessionStr = localStorage.getItem('cnbv_mock_session');
           if (mockSessionStr) {
             const mockSession = JSON.parse(mockSessionStr);
             setUser(mockSession.user as User);
-            await fetchProfile(mockSession.user.id);
+            await fetchProfile(mockSession.user);
           }
         } catch (e) {
           console.error('Error getting mock session:', e);
         } finally {
-          setLoading(false);
+          if (mounted) setLoading(false);
         }
       }
     };
@@ -137,27 +140,39 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     initializeAuth();
 
     if (!isSimulationMode) {
-      // Suscribirse a cambios reales en Supabase Auth
-      const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
-        if (session) {
-          setUser(session.user);
-          await fetchProfile(session.user.id);
-        } else {
+      const { data } = supabase.auth.onAuthStateChange(async (event, session) => {
+        if (!mounted) return;
+        if (event === 'SIGNED_IN' || event === 'USER_UPDATED') {
+          if (session) {
+            setUser(session.user);
+            setLoading(true); // Mostrar loading mientras busca perfil
+            await fetchProfile(session.user);
+            setLoading(false);
+          }
+        } else if (event === 'SIGNED_OUT') {
           setUser(null);
           setProfile(null);
         }
       });
-
-      return () => {
-        subscription.unsubscribe();
-      };
+      authSubscription = data.subscription;
     }
+
+    return () => {
+      mounted = false;
+      if (authSubscription) {
+        authSubscription.unsubscribe();
+      }
+    };
   }, []);
 
   const logout = async () => {
     setLoading(true);
     if (!isSimulationMode) {
-      await supabase.auth.signOut();
+      try {
+        await supabase.auth.signOut();
+      } catch (e) {
+        console.error('Logout error:', e);
+      }
     } else {
       localStorage.removeItem('cnbv_mock_session');
     }
