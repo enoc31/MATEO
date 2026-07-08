@@ -6,6 +6,7 @@ import type { Requisition } from '../../services/api';
 import { RequisitionForm } from './RequisitionForm';
 import { RequisitionDetailsModal } from './RequisitionDetailsModal';
 import { InternalControlModal } from '../../components/InternalControlModal';
+import { ProcessFlowchart } from '../../components/ProcessFlowchart';
 
 export const RequisitionsManager: React.FC = () => {
   const { profile } = useAuth();
@@ -86,6 +87,11 @@ export const RequisitionsManager: React.FC = () => {
           )}
         </div>
       </div>
+
+      <ProcessFlowchart 
+        currentStep="requisicion" 
+        description="Las Requisiciones son el primer filtro del Control Interno. Al registrar la solicitud antes de comprar, prevenimos gastos no planificados y aseguramos que cada salida de dinero cumpla con el presupuesto y el propósito del proyecto antes de ser ejecutada."
+      />
 
       {/* Controles de Filtros */}
       <div className="card" style={{ padding: '1rem 1.5rem', marginBottom: '1.5rem' }}>

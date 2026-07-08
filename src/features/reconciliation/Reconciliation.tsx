@@ -3,6 +3,7 @@ import { api } from '../../services/api';
 import type { BankTransaction, ExpenseReceipt, TasaBCV, Donation } from '../../services/api';
 import Papa from 'papaparse';
 import { InternalControlModal } from '../../components/InternalControlModal';
+import { ProcessFlowchart } from '../../components/ProcessFlowchart';
 
 const formatCurrency = (amount: number) => {
   return new Intl.NumberFormat('es-VE', { style: 'currency', currency: 'USD' }).format(amount);
@@ -313,6 +314,11 @@ export const Reconciliation: React.FC = () => {
           </label>
         </div>
       </div>
+
+      <ProcessFlowchart 
+        currentStep="conciliacion" 
+        description="La Conciliación es el paso definitivo donde la realidad contable se encuentra con la realidad bancaria. Nos asegura de que cada movimiento registrado coincida exactamente con los fondos reales de la institución, sin que falte ni sobre un solo céntimo."
+      />
 
       {loading && transactions.length === 0 && reconciliationItems.length === 0 ? (
         <div style={{ textAlign: 'center', padding: '3rem' }}>Cargando datos de conciliación...</div>

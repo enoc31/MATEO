@@ -3,6 +3,7 @@ import { Search, Scale } from 'lucide-react';
 import { api } from '../../services/api';
 import type { ExpenseReceipt, Project, ExpenseCategory, PartidaGasto } from '../../services/api';
 import { InternalControlModal } from '../../components/InternalControlModal';
+import { ProcessFlowchart } from '../../components/ProcessFlowchart';
 
 export const Audit: React.FC = () => {
   const [loading, setLoading] = useState(true);
@@ -126,6 +127,11 @@ export const Audit: React.FC = () => {
         </div>
         </div>
       </div>
+
+      <ProcessFlowchart 
+        currentStep="auditoria" 
+        description="La Auditoría garantiza que cada centavo donado esté debidamente soportado por facturas legales y cumpla fielmente el propósito del proyecto. Es el paso esencial para asegurar la transparencia antes de la rendición de cuentas final."
+      />
 
       {/* Tabla de Registros */}
       {loading && expenses.length === 0 ? (
