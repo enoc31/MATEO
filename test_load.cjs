@@ -44,7 +44,7 @@ async function makeRequest(endpoint) {
           resolve();
         });
       })
-      .on('error', (err) => {
+      .on('error', (_err) => {
         failedRequests++;
         totalRequests++;
         resolve();

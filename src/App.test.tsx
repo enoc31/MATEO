@@ -42,11 +42,11 @@ describe('Security & Access Control (App.tsx)', () => {
     // pero `App` lee params. Para forzarlo en el test, podemos mockear `window.location`
     // solo con los props mínimos que `App` lee:
     Object.defineProperty(window, 'location', {
-      value: { 
+      value: {
         search: '',
         pathname: '/app/dashboard',
         href: 'http://localhost/app/dashboard',
-        origin: 'http://localhost'
+        origin: 'http://localhost',
       },
       writable: true,
     });

@@ -4,7 +4,7 @@ const fs = require('fs');
 const url = 'https://ydnylydulwjecdllbnev.supabase.co/rest/v1/donaciones?select=*&limit=300';
 const anonKey = 'sb_publishable_ir2UA-esQVx-wDlUKnsjbA_25EdKXU0';
 
-const instance = autocannon(
+const _instance = autocannon(
   {
     url,
     connections: 50,

@@ -7,7 +7,18 @@ import prettier from 'eslint-plugin-prettier';
 import eslintConfigPrettier from 'eslint-config-prettier';
 
 export default tseslint.config(
-  { ignores: ['dist', 'node_modules', 'coverage', '.vercel', 'scratch', '*.cjs', '*.js', 'check_users.js'] },
+  {
+    ignores: [
+      'dist',
+      'node_modules',
+      'coverage',
+      '.vercel',
+      'scratch',
+      '*.cjs',
+      '*.js',
+      'check_users.js',
+    ],
+  },
   {
     extends: [js.configs.recommended, ...tseslint.configs.recommended],
     files: ['**/*.{ts,tsx,js,jsx}'],

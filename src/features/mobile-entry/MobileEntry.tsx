@@ -121,6 +121,7 @@ export const MobileEntry: React.FC = () => {
 
   useEffect(() => {
     loadData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [profile]);
 
   // Handle Photo Capture/Upload helper

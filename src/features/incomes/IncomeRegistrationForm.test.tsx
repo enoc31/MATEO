@@ -13,15 +13,17 @@ vi.mock('../../services/api', () => ({
     getTasasBCV: vi.fn(),
     getTasaByDate: vi.fn(),
     saveDonacion: vi.fn(),
-  }
+  },
 }));
 
 describe('Income Math & Validation (IncomeRegistrationForm.tsx)', () => {
   beforeEach(() => {
     vi.resetAllMocks();
-    
+
     // Mocks por defecto
-    (api.getProjects as any).mockResolvedValue([{ id: 'p1', nombre: 'Proyecto Test', activo: true }]);
+    (api.getProjects as any).mockResolvedValue([
+      { id: 'p1', nombre: 'Proyecto Test', activo: true },
+    ]);
     (api.getDonantes as any).mockResolvedValue([{ id: 'd1', nombre_institucion: 'Donante Test' }]);
     (api.getBankTransactions as any).mockResolvedValue([]);
     (api.getTasasBCV as any).mockResolvedValue([{ fecha: '2023-01-01', tasa: 40 }]);
@@ -34,7 +36,7 @@ describe('Income Math & Validation (IncomeRegistrationForm.tsx)', () => {
     render(
       <MemoryRouter>
         <IncomeRegistrationForm />
-      </MemoryRouter>
+      </MemoryRouter>,
     );
 
     // Esperamos que termine de cargar
@@ -60,7 +62,11 @@ describe('Income Math & Validation (IncomeRegistrationForm.tsx)', () => {
   });
 
   it('blocks submission if required fields are missing', async () => {
-    render(<MemoryRouter><IncomeRegistrationForm /></MemoryRouter>);
+    render(
+      <MemoryRouter>
+        <IncomeRegistrationForm />
+      </MemoryRouter>,
+    );
 
     await waitFor(() => {
       expect(screen.queryByText(/Cargando datos/i)).not.toBeInTheDocument();

@@ -17,6 +17,7 @@ const NotificationContext = createContext<NotificationContextType>({
   addNotification: () => {},
 });
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const useNotifications = () => useContext(NotificationContext);
 
 export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {

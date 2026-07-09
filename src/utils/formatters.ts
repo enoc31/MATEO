@@ -17,7 +17,7 @@ export const formatDateForFrontEnd = (dateStr?: string | null): string => {
     if (!isNaN(d.getTime())) {
       return d.toLocaleDateString('es-VE');
     }
-  } catch (e) {
+  } catch {
     // ignore
   }
   return dateStr;

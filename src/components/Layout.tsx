@@ -150,6 +150,9 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
     ) {
       localStorage.clear();
       window.location.reload();
+    }
+  };
+
   return (
     <div className={`app-container ${isPinned ? 'sidebar-pinned' : ''}`}>
       {/* Banner de Simulación */}

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Hourglass, Megaphone, RefreshCw, ShieldAlert } from 'lucide-react';
 import { AuthProvider, useAuth } from './context/AuthContext';
@@ -124,7 +124,13 @@ const MainAppContent: React.FC = () => {
   }
 
   // Función de ayuda para proteger rutas basadas en roles
-  const ProtectedRoute = ({ element, allowedRoles }: { element: React.ReactNode, allowedRoles: string[] }) => {
+  const ProtectedRoute = ({
+    element,
+    allowedRoles,
+  }: {
+    element: React.ReactNode;
+    allowedRoles: string[];
+  }) => {
     if (allowedRoles.includes(profile.rol)) {
       return <>{element}</>;
     }
@@ -160,49 +166,137 @@ const MainAppContent: React.FC = () => {
     >
       <Routes>
         {/* Default route based on role */}
-        <Route 
-          path="/" 
-          element={<Navigate to={['coordinador', 'auxiliar_campo'].includes(profile.rol) ? 'field-entry' : 'dashboard'} replace />} 
+        <Route
+          path="/"
+          element={
+            <Navigate
+              to={
+                ['coordinador', 'auxiliar_campo'].includes(profile.rol)
+                  ? 'field-entry'
+                  : 'dashboard'
+              }
+              replace
+            />
+          }
         />
-        
+
         {/* Main features */}
-        <Route path="dashboard" element={<ProtectedRoute allowedRoles={['administrador', 'auditor', 'director', 'donante']} element={<Dashboard />} />} />
-        <Route path="reconciliation" element={<ProtectedRoute allowedRoles={['administrador', 'auditor']} element={<Reconciliation />} />} />
-        <Route path="audit" element={<ProtectedRoute allowedRoles={['administrador', 'auditor']} element={<Audit />} />} />
-        <Route path="budgets" element={<ProtectedRoute allowedRoles={['administrador', 'auditor', 'director']} element={<BudgetsAndReports />} />} />
-        <Route path="field-entry" element={<ProtectedRoute allowedRoles={['administrador', 'coordinador', 'director', 'auxiliar_campo']} element={<MobileEntry />} />} />
-        <Route path="beneficiaries" element={<ProtectedRoute allowedRoles={['administrador', 'director', 'auxiliar_campo']} element={<BeneficiaryRegistry />} />} />
-        <Route path="jornadas" element={<ProtectedRoute allowedRoles={['administrador', 'director']} element={<JornadasManager />} />} />
-        <Route path="requisitions" element={<ProtectedRoute allowedRoles={['administrador', 'coordinador', 'director', 'auxiliar_campo']} element={<RequisitionsManager />} />} />
-        <Route path="users" element={<ProtectedRoute allowedRoles={['administrador']} element={<UserManagement />} />} />
-        <Route path="incomes" element={<ProtectedRoute allowedRoles={['administrador', 'director', 'auditor']} element={<IncomesManager />} />} />
-        <Route path="tasas" element={<ProtectedRoute allowedRoles={['administrador', 'director']} element={<TasasManager />} />} />
+        <Route
+          path="dashboard"
+          element={
+            <ProtectedRoute
+              allowedRoles={['administrador', 'auditor', 'director', 'donante']}
+              element={<Dashboard />}
+            />
+          }
+        />
+        <Route
+          path="reconciliation"
+          element={
+            <ProtectedRoute
+              allowedRoles={['administrador', 'auditor']}
+              element={<Reconciliation />}
+            />
+          }
+        />
+        <Route
+          path="audit"
+          element={
+            <ProtectedRoute allowedRoles={['administrador', 'auditor']} element={<Audit />} />
+          }
+        />
+        <Route
+          path="budgets"
+          element={
+            <ProtectedRoute
+              allowedRoles={['administrador', 'auditor', 'director']}
+              element={<BudgetsAndReports />}
+            />
+          }
+        />
+        <Route
+          path="field-entry"
+          element={
+            <ProtectedRoute
+              allowedRoles={['administrador', 'coordinador', 'director', 'auxiliar_campo']}
+              element={<MobileEntry />}
+            />
+          }
+        />
+        <Route
+          path="beneficiaries"
+          element={
+            <ProtectedRoute
+              allowedRoles={['administrador', 'director', 'auxiliar_campo']}
+              element={<BeneficiaryRegistry />}
+            />
+          }
+        />
+        <Route
+          path="jornadas"
+          element={
+            <ProtectedRoute
+              allowedRoles={['administrador', 'director']}
+              element={<JornadasManager />}
+            />
+          }
+        />
+        <Route
+          path="requisitions"
+          element={
+            <ProtectedRoute
+              allowedRoles={['administrador', 'coordinador', 'director', 'auxiliar_campo']}
+              element={<RequisitionsManager />}
+            />
+          }
+        />
+        <Route
+          path="users"
+          element={<ProtectedRoute allowedRoles={['administrador']} element={<UserManagement />} />}
+        />
+        <Route
+          path="incomes"
+          element={
+            <ProtectedRoute
+              allowedRoles={['administrador', 'director', 'auditor']}
+              element={<IncomesManager />}
+            />
+          }
+        />
+        <Route
+          path="tasas"
+          element={
+            <ProtectedRoute
+              allowedRoles={['administrador', 'director']}
+              element={<TasasManager />}
+            />
+          }
+        />
 
         {/* Sub-screens that hide the layout or show over it */}
         <Route path="nuevo-ingreso" element={<IncomeRegistrationForm />} />
         <Route path="importar-extracto" element={<ImportBankStatement />} />
         <Route path="audit-detail" element={<AuditDetail />} />
-        <Route path="budget-wizard" element={
-          <BudgetWizard
-            isOpen={true}
-            onClose={() => window.history.back()}
-            onSuccess={() => {
-              alert('Presupuesto guardado exitosamente.');
-              window.history.back();
-            }}
-          />
-        } />
-        
+        <Route
+          path="budget-wizard"
+          element={
+            <BudgetWizard
+              isOpen={true}
+              onClose={() => window.history.back()}
+              onSuccess={() => {
+                alert('Presupuesto guardado exitosamente.');
+                window.history.back();
+              }}
+            />
+          }
+        />
+
         <Route path="*" element={<div>Página no encontrada</div>} />
       </Routes>
     </Suspense>
   );
 
-  return (
-    <Layout>
-      {renderContentWithSuspense()}
-    </Layout>
-  );
+  return <Layout>{renderContentWithSuspense()}</Layout>;
 };
 
 // Componente para Pantalla Intermedia: Pendiente de Aprobación
@@ -223,7 +317,7 @@ const PendingApproval: React.FC<PendingApprovalProps> = ({ logout, refreshProfil
       await new Promise((resolve) => setTimeout(resolve, 800));
       await refreshProfile();
       setFeedback('Tu cuenta aún está pendiente de aprobación por el Administrador.');
-    } catch (err) {
+    } catch {
       setFeedback('Error al verificar el estado del usuario.');
     } finally {
       setChecking(false);

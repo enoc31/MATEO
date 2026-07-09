@@ -24,7 +24,7 @@ vi.mock('../../services/api', () => ({
   api: {
     getCategories: vi.fn(),
     getDashboardMetrics: vi.fn(),
-  }
+  },
 }));
 
 describe('Financial Calculations (Dashboard.tsx)', () => {
@@ -41,12 +41,12 @@ describe('Financial Calculations (Dashboard.tsx)', () => {
       totalOutflows: 500,
       expensesByCategory: { 'cat-1': 500 },
       projectExecution: [
-        { id: 'proj-1', nombre: 'Proyecto Prueba', Presupuesto: 1000, Ejecutado: 500 }
-      ]
+        { id: 'proj-1', nombre: 'Proyecto Prueba', Presupuesto: 1000, Ejecutado: 500 },
+      ],
     });
 
     (api.getCategories as any).mockResolvedValue([
-      { id: 'cat-1', nombre: 'Comida', descripcion: '' }
+      { id: 'cat-1', nombre: 'Comida', descripcion: '' },
     ]);
 
     render(<Dashboard />);
@@ -79,7 +79,7 @@ describe('Financial Calculations (Dashboard.tsx)', () => {
       unreconciledInflows: 0,
       totalOutflows: 100,
       expensesByCategory: {},
-      projectExecution: [] // Sin presupuesto
+      projectExecution: [], // Sin presupuesto
     });
 
     (api.getCategories as any).mockResolvedValue([]);

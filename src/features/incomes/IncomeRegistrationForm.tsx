@@ -177,6 +177,7 @@ export const IncomeRegistrationForm: React.FC = () => {
       setTasaBcv(null);
       setCalculatedTotals({ usd: 0, ves: 0, avgRate: null });
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedTxIds, moneda, tipoRegistro, bankTxs]);
 
   const handleToggleTx = (txId: string) => {

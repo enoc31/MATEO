@@ -105,7 +105,7 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({ onSuccess, j
         const res = await fetch('https://api.ipify.org?format=json');
         const data = await res.json();
         ip_captura = data.ip;
-      } catch (e) {
+      } catch {
         console.warn('No se pudo obtener la IP pública');
       }
 
@@ -124,7 +124,7 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({ onSuccess, j
       );
 
       onSuccess(saved.id);
-    } catch (err: any) {
+    } catch {
       console.error(err);
       setError(err.message || 'Error al guardar el beneficiario.');
     } finally {

@@ -32,7 +32,7 @@ export const Login: React.FC = () => {
       const { error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) throw error;
       await refreshProfile();
-    } catch (err: any) {
+    } catch {
       const friendlyMessage =
         err.message === '{}'
           ? 'Error de conexión o del servidor (500). Verifica que el servicio de Supabase esté activo y configurado.'
@@ -69,7 +69,7 @@ export const Login: React.FC = () => {
       setIsRegister(false);
       setNombreCompleto('');
       setPassword('');
-    } catch (err: any) {
+    } catch {
       setError(err.message || 'Error al registrar usuario');
     } finally {
       setLoading(false);
@@ -114,7 +114,7 @@ export const Login: React.FC = () => {
       localStorage.setItem('cnbv_mock_session', JSON.stringify(mockSession));
 
       window.location.reload();
-    } catch (err: any) {
+    } catch {
       setError('Error al simular inicio de sesión');
     } finally {
       setLoading(false);
@@ -151,7 +151,7 @@ export const Login: React.FC = () => {
 
       localStorage.setItem('cnbv_mock_session', JSON.stringify(mockSession));
       window.location.reload();
-    } catch (err) {
+    } catch {
       setError('Error al iniciar sesión simulada');
     } finally {
       setLoading(false);
@@ -195,7 +195,7 @@ export const Login: React.FC = () => {
       setIsRegister(false);
       setNombreCompleto('');
       setPassword('');
-    } catch (err: any) {
+    } catch {
       setError('Error al simular registro');
     } finally {
       setLoading(false);
