@@ -82,7 +82,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
       id: 'requisitions',
       label: 'Requisiciones',
       icon: <ClipboardList size={20} strokeWidth={1.5} />,
-      roles: ['administrador', 'coordinador', 'director', 'auxiliar_campo'],
+      roles: ['administrador', 'coordinador', 'director'],
     },
     {
       id: 'incomes',
@@ -100,7 +100,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
       id: 'reconciliation',
       label: 'Conciliación',
       icon: <Scale size={20} strokeWidth={1.5} />,
-      roles: ['administrador', 'auditor'],
+      roles: ['administrador'],
     },
     {
       id: 'audit',
@@ -118,13 +118,13 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
       id: 'field-entry',
       label: 'Cargar Gastos',
       icon: <Camera size={20} strokeWidth={1.5} />,
-      roles: ['administrador', 'coordinador', 'director', 'auxiliar_campo'],
+      roles: ['administrador', 'coordinador', 'director'],
     },
     {
       id: 'jornadas',
       label: 'Jornadas',
       icon: <CalendarDays size={20} strokeWidth={1.5} />,
-      roles: ['administrador', 'director'],
+      roles: ['administrador', 'director', 'coordinador'],
     },
     {
       id: 'beneficiaries',

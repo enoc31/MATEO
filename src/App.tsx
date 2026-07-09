@@ -171,9 +171,11 @@ const MainAppContent: React.FC = () => {
           element={
             <Navigate
               to={
-                ['coordinador', 'auxiliar_campo'].includes(profile.rol)
-                  ? 'field-entry'
-                  : 'dashboard'
+                profile.rol === 'auxiliar_campo'
+                  ? 'beneficiaries'
+                  : profile.rol === 'coordinador'
+                    ? 'field-entry'
+                    : 'dashboard'
               }
               replace
             />
@@ -192,12 +194,7 @@ const MainAppContent: React.FC = () => {
         />
         <Route
           path="reconciliation"
-          element={
-            <ProtectedRoute
-              allowedRoles={['administrador', 'auditor']}
-              element={<Reconciliation />}
-            />
-          }
+          element={<ProtectedRoute allowedRoles={['administrador']} element={<Reconciliation />} />}
         />
         <Route
           path="audit"
@@ -218,7 +215,7 @@ const MainAppContent: React.FC = () => {
           path="field-entry"
           element={
             <ProtectedRoute
-              allowedRoles={['administrador', 'coordinador', 'director', 'auxiliar_campo']}
+              allowedRoles={['administrador', 'coordinador', 'director']}
               element={<MobileEntry />}
             />
           }
@@ -227,7 +224,7 @@ const MainAppContent: React.FC = () => {
           path="beneficiaries"
           element={
             <ProtectedRoute
-              allowedRoles={['administrador', 'director', 'auxiliar_campo']}
+              allowedRoles={['administrador', 'director', 'auxiliar_campo', 'coordinador']}
               element={<BeneficiaryRegistry />}
             />
           }
@@ -236,7 +233,7 @@ const MainAppContent: React.FC = () => {
           path="jornadas"
           element={
             <ProtectedRoute
-              allowedRoles={['administrador', 'director']}
+              allowedRoles={['administrador', 'director', 'coordinador']}
               element={<JornadasManager />}
             />
           }
@@ -245,7 +242,7 @@ const MainAppContent: React.FC = () => {
           path="requisitions"
           element={
             <ProtectedRoute
-              allowedRoles={['administrador', 'coordinador', 'director', 'auxiliar_campo']}
+              allowedRoles={['administrador', 'coordinador', 'director']}
               element={<RequisitionsManager />}
             />
           }
