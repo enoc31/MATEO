@@ -1006,7 +1006,7 @@ export const api = {
     if (!isSimulationMode) {
       const { data, error } = await supabase
         .from('tasas_bcv')
-        .upsert(tasa, { onConflict: 'ong_id, fecha' })
+        .upsert(tasa, { onConflict: 'ong_id,fecha' })
         .select()
         .single();
       if (error) throw error;
@@ -1039,7 +1039,7 @@ export const api = {
     if (!isSimulationMode) {
       const { data, error } = await supabase
         .from('tasas_bcv')
-        .upsert(formatted, { onConflict: 'ong_id, fecha' })
+        .upsert(formatted, { onConflict: 'ong_id,fecha' })
         .select();
       if (error) throw error;
       return data as TasaBCV[];
