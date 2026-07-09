@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Lightbulb, Shield, Briefcase, Scale, MapPin, Users, Gift } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import type { UserRole } from '../../context/AuthContext';
+import { Link } from 'react-router-dom';
 import { isSimulationMode } from '../../services/api';
 import { supabase } from '../../supabaseClient';
 

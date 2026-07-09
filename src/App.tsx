@@ -1,10 +1,14 @@
 import React, { useState, useEffect } from 'react';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Hourglass, Megaphone, RefreshCw, ShieldAlert } from 'lucide-react';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { NotificationProvider } from './components/NotificationProvider';
 import { Login } from './features/auth/Login';
+import { ForgotPassword } from './features/auth/ForgotPassword';
+import { UpdatePassword } from './features/auth/UpdatePassword';
 import { Layout } from './components/Layout';
 import { Suspense, lazy } from 'react';
+import { LandingPage } from './features/landing/LandingPage';
 
 // Lazy loaded features
 const Dashboard = lazy(() => import('./features/dashboard/Dashboard').then(module => ({ default: module.Dashboard })));
@@ -24,7 +28,7 @@ const BeneficiaryRegistry = lazy(() => import('./features/beneficiaries/Benefici
 const JornadasManager = lazy(() => import('./features/beneficiaries/JornadasManager').then(module => ({ default: module.JornadasManager })));
 
 const MainAppContent: React.FC = () => {
-  const { user, profile, loading, authError, logout, refreshProfile } = useAuth();
+  const { profile, loading, logout, refreshProfile } = useAuth();
   const [activeTab, setActiveTab] = useState<string>('');
   const [initialRouteSet, setInitialRouteSet] = useState(false);
 
@@ -72,34 +76,9 @@ const MainAppContent: React.FC = () => {
     );
   }
 
-  // Si no está logueado, mostrar pantalla de Login
-  if (!profile) {
-    if (user) {
-      // Autenticado pero sin perfil (posible error de DB)
-      return (
-        <div style={{ textAlign: 'center', padding: '3rem', fontFamily: 'sans-serif' }}>
-          <ShieldAlert size={64} color="red" />
-          <h2 style={{ marginTop: '1rem', color: '#333' }}>Error de Perfil de Usuario</h2>
-          <p style={{ color: '#666', maxWidth: '400px', margin: '1rem auto' }}>
-            Tu cuenta se ha autenticado, pero tu perfil en la base de datos no pudo ser cargado o creado. 
-            Asegúrate de haber ejecutado el parche SQL en Supabase o contacta al administrador.
-          </p>
-          {authError && (
-            <div style={{ background: '#ffeeee', padding: '1rem', borderRadius: '8px', color: '#cc0000', margin: '1rem auto', maxWidth: '500px', fontSize: '0.85rem', wordBreak: 'break-all' }}>
-              <strong>Detalle Técnico:</strong> {authError}
-            </div>
-          )}
-          <button 
-            onClick={() => { logout(); window.location.reload(); }} 
-            style={{ padding: '0.75rem 1.5rem', background: 'var(--primary)', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
-          >
-            Volver al Inicio y Cerrar Sesión
-          </button>
-        </div>
-      );
-    }
-    return <Login />;
-  }
+  // Si no hay sesión válida, se manejará con PrivateRoute en lugar de redirigir aquí.
+
+  if (!profile) return null; // Satisfy TypeScript since PrivateRoute already guards this
 
   // Si está logueado pero no ha sido aprobado por un administrador
   if (profile.aprobado === false) {
@@ -316,33 +295,75 @@ const AccessDenied: React.FC = () => {
   );
 };
 
+// Wrappers para control de acceso
+const PrivateRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { profile, loading, user, authError, logout } = useAuth();
+  
+  if (loading) return <div>Verificando...</div>;
+  if (!profile) {
+    if (user) {
+      return (
+        <div style={{ textAlign: 'center', padding: '3rem', fontFamily: 'sans-serif' }}>
+          <ShieldAlert size={64} color="red" />
+          <h2 style={{ marginTop: '1rem', color: '#333' }}>Error de Perfil de Usuario</h2>
+          <p style={{ color: '#666', maxWidth: '400px', margin: '1rem auto' }}>
+            Tu cuenta se ha autenticado, pero tu perfil en la base de datos no pudo ser cargado o creado. 
+          </p>
+          {authError && (
+            <div style={{ background: '#ffeeee', padding: '1rem', borderRadius: '8px', color: '#cc0000', margin: '1rem auto', maxWidth: '500px', fontSize: '0.85rem', wordBreak: 'break-all' }}>
+              <strong>Detalle Técnico:</strong> {authError}
+            </div>
+          )}
+          <button onClick={() => { logout(); window.location.reload(); }} style={{ padding: '0.75rem 1.5rem', background: 'var(--primary)', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>
+            Volver al Inicio y Cerrar Sesión
+          </button>
+        </div>
+      );
+    }
+    return <Navigate to="/login" replace />;
+  }
+  return <>{children}</>;
+};
+
+const PublicRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { profile, loading } = useAuth();
+  if (loading) return <div>Cargando...</div>;
+  if (profile) return <Navigate to="/app" replace />;
+  return <>{children}</>;
+};
+
 // Envolver la App en el AuthProvider y NotificationProvider
 function App() {
-  const isPublicCapture = window.location.pathname === '/registro' || window.location.search.includes('registro=1');
-
-  if (isPublicCapture) {
-    return (
-      <div style={{ backgroundColor: '#f4f5f7', minHeight: '100vh', padding: '1rem' }}>
-        <div style={{ textAlign: 'center', marginBottom: '1rem' }}>
-          <img 
-            src="https://cnbv.org/wp-content/uploads/2020/09/logo-cnbv.jpg" 
-            alt="Logo" 
-            style={{ height: '50px', objectFit: 'contain' }}
-          />
-        </div>
-        <Suspense fallback={<div style={{textAlign: 'center', padding: '2rem'}}>Cargando Módulo...</div>}>
-          <BeneficiaryRegistry />
-        </Suspense>
-      </div>
-    );
-  }
-
   return (
-    <AuthProvider>
-      <NotificationProvider>
-        <MainAppContent />
-      </NotificationProvider>
-    </AuthProvider>
+    <BrowserRouter>
+      <AuthProvider>
+        <NotificationProvider>
+          <Routes>
+            <Route path="/" element={<PublicRoute><LandingPage /></PublicRoute>} />
+            <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
+            <Route path="/forgot-password" element={<PublicRoute><ForgotPassword /></PublicRoute>} />
+            <Route path="/update-password" element={<UpdatePassword />} />
+            <Route path="/registro" element={
+              <div style={{ backgroundColor: '#f4f5f7', minHeight: '100vh', padding: '1rem' }}>
+                <div style={{ textAlign: 'center', marginBottom: '1rem' }}>
+                  <img 
+                    src="https://cnbv.org/wp-content/uploads/2020/09/logo-cnbv.jpg" 
+                    alt="Logo" 
+                    style={{ height: '50px', objectFit: 'contain' }}
+                  />
+                </div>
+                <Suspense fallback={<div style={{textAlign: 'center', padding: '2rem'}}>Cargando Módulo...</div>}>
+                  <BeneficiaryRegistry />
+                </Suspense>
+              </div>
+            } />
+            {/* Rutas Privadas */}
+            <Route path="/app/*" element={<PrivateRoute><MainAppContent /></PrivateRoute>} />
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </NotificationProvider>
+      </AuthProvider>
+    </BrowserRouter>
   );
 }
 
