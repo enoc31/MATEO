@@ -444,7 +444,12 @@ export const Login: React.FC = () => {
               </div>
 
               <div className="form-group" style={{ marginBottom: '2rem' }}>
-                <label className="form-label" htmlFor="password">Contraseña</label>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+                  <label className="form-label" htmlFor="password" style={{ marginBottom: 0 }}>Contraseña</label>
+                  <Link to="/forgot-password" style={{ color: '#3b82f6', fontSize: '0.85rem', textDecoration: 'none', fontWeight: 600 }}>
+                    ¿Olvidaste tu contraseña?
+                  </Link>
+                </div>
                 <input 
                   id="password"
                   type="password" 
