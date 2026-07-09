@@ -29,7 +29,7 @@ interface LayoutProps {
 }
 
 export const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab }) => {
-  const { profile, logout } = useAuth();
+  const { profile, logout, activeOng } = useAuth();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isPinned, setIsPinned] = useState(window.innerWidth >= 1024);
   const [isCosoModalOpen, setIsCosoModalOpen] = useState(false);
@@ -147,13 +147,13 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTa
             <Menu size={24} />
           </button>
           <img 
-            src="https://cnbv.org/wp-content/uploads/2020/09/logo-cnbv.jpg" 
-            alt="CNBV Logo" 
+            src={activeOng?.logo_url || '/mateo_logo.png'} 
+            alt={activeOng?.nombre || 'MATEO'} 
             className="header-logo"
           />
           <div className="header-title-wrap">
-            <span className="header-title">Auditoría Donaciones</span>
-            <span className="header-subtitle">Convención Nacional Bautista</span>
+            <span className="header-title">{activeOng?.nombre || 'MATEO'}</span>
+            <span className="header-subtitle">Gestión Humanitaria</span>
           </div>
         </div>
 
@@ -252,8 +252,8 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTa
         <div className="sidebar-header" style={{ flexDirection: 'column', alignItems: 'center', gap: '0.5rem' }}>
           <div style={{ display: 'flex', width: '100%', justifyContent: 'center', alignItems: 'center', position: 'relative', minHeight: '40px' }}>
             <img 
-              src="https://cnbv.org/wp-content/uploads/2020/09/logo-cnbv.jpg" 
-              alt="CNBV Logo" 
+              src={activeOng?.logo_url || '/mateo_logo.png'} 
+              alt={activeOng?.nombre || 'MATEO'} 
               className="sidebar-logo"
             />
             <button className="sidebar-close" onClick={() => setIsMobileMenuOpen(false)} style={{ position: 'absolute', right: 0 }}>×</button>

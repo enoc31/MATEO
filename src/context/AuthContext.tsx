@@ -12,12 +12,14 @@ export interface UserProfile {
   nombre_completo: string;
   rol: UserRole;
   aprobado: boolean;
+  ong_id: string;
   created_at: string;
 }
 
 interface AuthContextType {
   user: User | null;
   profile: UserProfile | null;
+  activeOng: { nombre: string; logo_url: string | null } | null;
   loading: boolean;
   authError: string | null;
   logout: () => Promise<void>;
@@ -29,6 +31,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [activeOng, setActiveOng] = useState<{ nombre: string; logo_url: string | null } | null>(null);
   const [loading, setLoading] = useState(true);
   const [authError, setAuthError] = useState<string | null>(null);
 
@@ -49,7 +52,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               email: currentUser.email,
               nombre_completo: meta?.nombre_completo || 'Usuario',
               rol: meta?.rol || 'donante',
-              aprobado: false
+              aprobado: false,
+              ong_id: '11111111-1111-1111-1111-111111111111'
             };
             
             const { data: insertedData, error: insertError } = await supabase
@@ -59,8 +63,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               .single();
               
             if (!insertError && insertedData) {
-              setProfile(insertedData as UserProfile);
+              const insertedProfile = insertedData as UserProfile;
+              setProfile(insertedProfile);
               setAuthError(null);
+              // Fetch active ONG for the newly created profile
+              const { data: ongData } = await supabase
+                .from('ongs')
+                .select('nombre, logo_url')
+                .eq('id', insertedProfile.ong_id)
+                .single();
+              if (ongData) {
+                setActiveOng(ongData);
+              }
               return;
             } else {
               console.error('Error auto-creating profile:', insertError);
@@ -71,22 +85,49 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           }
           console.error('Error fetching user profile:', error);
           setProfile(null);
+          setActiveOng(null);
         } else {
-          setProfile(data as UserProfile);
+          const profileData = data as UserProfile;
+          setProfile(profileData);
           setAuthError(null);
+          
+          // Fetch active ONG
+          if (profileData.ong_id) {
+            const { data: ongData, error: ongError } = await supabase
+              .from('ongs')
+              .select('nombre, logo_url')
+              .eq('id', profileData.ong_id)
+              .single();
+            if (!ongError && ongData) {
+              setActiveOng(ongData);
+            } else {
+              console.error('Error fetching active ONG:', ongError);
+              setActiveOng({
+                nombre: 'Convención Nacional Bautista de Venezuela',
+                logo_url: 'https://cnbv.org/wp-content/uploads/2020/09/logo-cnbv.jpg'
+              });
+            }
+          }
         }
       } catch (e: any) {
         console.error('Error in fetchProfile:', e);
         setAuthError(`Excepción: ${e.message || 'Error desconocido'}`);
         setProfile(null);
+        setActiveOng(null);
       }
     } else {
       const profiles = JSON.parse(localStorage.getItem('cnbv_profiles') || '{}');
       const mockProfile = profiles[currentUser.id];
       if (mockProfile) {
-        setProfile(mockProfile as UserProfile);
+        const profileData = mockProfile as UserProfile;
+        setProfile(profileData);
+        setActiveOng({
+          nombre: 'Convención Nacional Bautista de Venezuela (Simulado)',
+          logo_url: 'https://cnbv.org/wp-content/uploads/2020/09/logo-cnbv.jpg'
+        });
       } else {
         setProfile(null);
+        setActiveOng(null);
       }
     }
   };
@@ -186,7 +227,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   return (
-    <AuthContext.Provider value={{ user, profile, loading, authError, logout, refreshProfile }}>
+    <AuthContext.Provider value={{ user, profile, activeOng, loading, authError, logout, refreshProfile }}>
       {children}
     </AuthContext.Provider>
   );

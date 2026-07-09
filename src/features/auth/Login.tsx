@@ -210,19 +210,22 @@ export const Login: React.FC = () => {
         borderRadius: 'var(--radius-lg)',
         boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04)'
       }}>
-        {/* Header con imagen corporativa CNBV */}
+        {/* Header con imagen corporativa MATEO */}
         <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
-          <img 
-            src="https://cnbv.org/wp-content/uploads/2020/09/logo-cnbv.jpg" 
-            alt="Logo CNBV" 
-            style={{ height: '70px', objectFit: 'contain', marginBottom: '1rem' }}
-          />
-          <h2 style={{ color: 'var(--primary)', fontFamily: 'var(--font-headings)', fontSize: '1.4rem' }}>
-            {isRegister ? 'Registro de Cuenta' : 'Gestión Humanitaria'}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.75rem', marginBottom: '1rem' }}>
+            <img 
+              src="/mateo_logo.png" 
+              alt="Logo MATEO" 
+              style={{ height: '64px', width: '64px', objectFit: 'contain', borderRadius: '12px' }}
+            />
+            <div style={{ textAlign: 'left' }}>
+              <div style={{ fontSize: '2rem', fontWeight: 900, color: 'var(--primary)', letterSpacing: '-1px', lineHeight: 1 }}>MATEO</div>
+              <div style={{ fontSize: '0.7rem', color: 'var(--neutral-dark)', opacity: 0.7, letterSpacing: '2px', textTransform: 'uppercase' }}>Gestión Humanitaria</div>
+            </div>
+          </div>
+          <h2 style={{ color: 'var(--primary)', fontFamily: 'var(--font-headings)', fontSize: '1.1rem', fontWeight: 600, marginTop: '0.5rem' }}>
+            {isRegister ? 'Crea tu cuenta' : 'Bienvenido de nuevo'}
           </h2>
-          <p style={{ fontSize: '0.85rem', color: 'var(--neutral-dark)', opacity: 0.8, marginTop: '0.25rem' }}>
-            Convención Nacional Bautista de Venezuela
-          </p>
         </div>
 
         {error && (
