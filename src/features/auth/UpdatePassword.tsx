@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Shield, KeyRound } from 'lucide-react';
+import { KeyRound } from 'lucide-react';
 import { supabase } from '../../supabaseClient';
 import { isSimulationMode } from '../../services/api';
 
@@ -12,8 +12,7 @@ export const UpdatePassword: React.FC = () => {
   const [message, setMessage] = useState<{type: 'success' | 'error', text: string} | null>(null);
 
   useEffect(() => {
-    // Escuchar el cambio de auth de recuperación (Opcional si la sesión se establece por el enlace hash)
-    const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
+    const { data: authListener } = supabase.auth.onAuthStateChange(async (event) => {
       if (event === 'PASSWORD_RECOVERY') {
         // El usuario está listo para cambiar su contraseña
         console.log("Sesión de recuperación iniciada");
