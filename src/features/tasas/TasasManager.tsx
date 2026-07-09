@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 
 import { api } from '../../services/api';
 import type { TasaBCV } from '../../services/api';
-import { formatDateForFrontEnd } from '../../utils/formatters';
+import { formatDateForFrontEnd, getCaracasDateParts } from '../../utils/formatters';
 import { useAuth } from '../../context/AuthContext';
 import Papa from 'papaparse';
 
@@ -98,11 +98,12 @@ export const TasasManager: React.FC = () => {
 
   // Calcular la fecha destino esperada hoy (próximo día hábil o el mismo día si es temprano)
   const getExpectedFechaTasaHoy = () => {
-    const ahoraVE = new Date(
-      new Date().toLocaleString('en-US', { timeZone: 'America/Caracas' })
-    );
-    const diaSemana = ahoraVE.getDay(); // 0=Dom, 1=Lun, ..., 5=Vie, 6=Sáb
-    const hora = ahoraVE.getHours();
+    const { year, month, day, hour } = getCaracasDateParts();
+    
+    // Asignar los componentes a un objeto Date interpretado como UTC para calcular el getUTCDay
+    const ahoraVE = new Date(Date.UTC(year, month - 1, day, hour));
+    const diaSemana = ahoraVE.getUTCDay(); // 0=Dom, 1=Lun, ..., 6=Sáb
+    const hora = ahoraVE.getUTCHours();
 
     let diasASumar = 0;
     // Si son más de las 3:00 PM (15:00), asumimos que el BCV ya publicó la tasa para el próximo día hábil.
@@ -118,11 +119,11 @@ export const TasasManager: React.FC = () => {
     }
     
     const fechaDest = new Date(ahoraVE);
-    fechaDest.setDate(ahoraVE.getDate() + diasASumar);
+    fechaDest.setUTCDate(ahoraVE.getUTCDate() + diasASumar);
     
-    const yyyy = fechaDest.getFullYear();
-    const mm = String(fechaDest.getMonth() + 1).padStart(2, '0');
-    const dd = String(fechaDest.getDate()).padStart(2, '0');
+    const yyyy = fechaDest.getUTCFullYear();
+    const mm = String(fechaDest.getUTCMonth() + 1).padStart(2, '0');
+    const dd = String(fechaDest.getUTCDate()).padStart(2, '0');
     return `${yyyy}-${mm}-${dd}`;
   };
 

@@ -20,6 +20,7 @@ import {
 import { useAuth } from '../context/AuthContext';
 import { api, isSimulationMode } from '../services/api';
 import { InternalControlModal } from './InternalControlModal';
+import { getCaracasDateParts } from '../utils/formatters';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -49,13 +50,8 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTa
     // Obtener la tasa vigente para el día de HOY
     const fetchRate = async () => {
       try {
-        const ahoraVE = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Caracas' }));
-        const yyyy = ahoraVE.getFullYear();
-        const mm = String(ahoraVE.getMonth() + 1).padStart(2, '0');
-        const dd = String(ahoraVE.getDate()).padStart(2, '0');
-        const fechaHoy = `${yyyy}-${mm}-${dd}`;
-
-        const tasaHoy = await api.getTasaByDate(fechaHoy);
+        const { dateString } = getCaracasDateParts();
+        const tasaHoy = await api.getTasaByDate(dateString);
         if (tasaHoy) {
           setCurrentRate(tasaHoy.tasa);
         }
