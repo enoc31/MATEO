@@ -55,11 +55,21 @@ export const TasasManager: React.FC = () => {
       
       const parsed: { fecha: string; tasa: number; fuente: string }[] = [];
       
-      if (data && typeof data === 'object') {
-        Object.entries(data).forEach(([dateStr, item]: [string, any]) => {
-          if (item && item.usd) {
+      if (Array.isArray(data)) {
+        data.forEach((item: any) => {
+          if (item && item.date && item.usd) {
             parsed.push({
-              fecha: dateStr,
+              fecha: item.date,
+              tasa: item.usd,
+              fuente: 'bcv_api'
+            });
+          }
+        });
+      } else if (data && typeof data === 'object') {
+        Object.values(data).forEach((item: any) => {
+          if (item && item.date && item.usd) {
+            parsed.push({
+              fecha: item.date,
               tasa: item.usd,
               fuente: 'bcv_api'
             });
