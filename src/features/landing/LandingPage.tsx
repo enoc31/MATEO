@@ -113,8 +113,8 @@ export const LandingPage: React.FC = () => {
         boxShadow: '0 1px 3px rgba(0,0,0,0.06)'
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-          <img src="/mateo_logo.png" alt="MATEO" style={{ height: '38px', width: '38px', objectFit: 'contain', borderRadius: '8px' }} />
-          <span style={{ fontSize: '1.5rem', fontWeight: 900, color: '#1e293b', letterSpacing: '-0.5px' }}>
+          <img src="/mateo_logo.png" alt="MATEO" style={{ height: '48px', width: '48px', objectFit: 'contain', borderRadius: '10px' }} />
+          <span style={{ fontSize: '1.8rem', fontWeight: 900, color: '#1e3a8a', letterSpacing: '3px', fontFamily: '"Playfair Display", Georgia, serif', textTransform: 'uppercase' }}>
             MATEO
           </span>
         </div>
@@ -321,10 +321,10 @@ export const LandingPage: React.FC = () => {
         </section>
       </main>
 
-      <footer style={{ backgroundColor: '#0f172a', color: '#94a3b8', padding: '2rem', textAlign: 'center', fontSize: '0.9rem' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
-          <img src="/mateo_logo.png" alt="MATEO" style={{ height: '24px', width: '24px', objectFit: 'contain', borderRadius: '4px', opacity: 0.7 }} />
-          <span style={{ fontWeight: 700, color: '#cbd5e1' }}>MATEO</span>
+      <footer style={{ backgroundColor: '#0f172a', color: '#94a3b8', padding: '2.5rem 2rem', textAlign: 'center', fontSize: '0.9rem' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.6rem', marginBottom: '0.75rem' }}>
+          <img src="/mateo_logo.png" alt="MATEO" style={{ height: '32px', width: '32px', objectFit: 'contain', borderRadius: '6px', opacity: 0.8 }} />
+          <span style={{ fontWeight: 900, color: '#e2e8f0', letterSpacing: '3px', fontFamily: '"Playfair Display", Georgia, serif', fontSize: '1.1rem' }}>MATEO</span>
         </div>
         Sistema de Gestión Humanitaria © {new Date().getFullYear()} — Construido con transparencia.
       </footer>
