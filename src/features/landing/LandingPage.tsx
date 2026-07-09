@@ -72,7 +72,15 @@ export const LandingPage: React.FC = () => {
       </header>
 
       {/* Hero Section */}
-      <main style={{ flex: 1, backgroundColor: '#f8fafc', display: 'flex', flexDirection: 'column' }}>
+      <main style={{ 
+        flex: 1, 
+        backgroundImage: 'linear-gradient(rgba(248, 250, 252, 0.85), rgba(248, 250, 252, 0.95)), url("/humanitarian_aid_bg.png")', 
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundAttachment: 'fixed',
+        display: 'flex', 
+        flexDirection: 'column' 
+      }}>
         <section style={{
           textAlign: 'center',
           padding: '5rem 2rem',
