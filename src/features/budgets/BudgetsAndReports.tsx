@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Plus, Briefcase, FileSpreadsheet, FileText, AlertTriangle } from 'lucide-react';
 import { api } from '../../services/api';
 import type {
@@ -13,6 +14,7 @@ import * as XLSX from 'xlsx';
 import { jsPDF } from 'jspdf';
 
 export const BudgetsAndReports: React.FC = () => {
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [projects, setProjects] = useState<Project[]>([]);
   const [categories, setCategories] = useState<ExpenseCategory[]>([]);
