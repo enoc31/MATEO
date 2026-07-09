@@ -1,0 +1,30 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "ONG Donation Audit API",
+    "description": "API contracts and definitions for the donation audit system, connecting front-end modules with Supabase BaaS endpoints.",
+    "version": "1.0.0"
+  },
+  "paths": {
+    "/donations": {
+      "get": {
+        "summary": "Retrieve donations list",
+        "responses": {
+          "200": {
+            "description": "Successful retrieval of donation records."
+          }
+        }
+      }
+    },
+    "/auth/login": {
+      "post": {
+        "summary": "Simulate or run authentication session login",
+        "responses": {
+          "200": {
+            "description": "Successful login session."
+          }
+        }
+      }
+    }
+  }
+}

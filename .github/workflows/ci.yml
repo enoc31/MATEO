@@ -1,0 +1,67 @@
+name: Integration & Safeguards CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    - cron: '0 6 * * 1' # Runs weekly on Monday mornings to detect drift
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # Needed for committing the scorecard badge & report
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Check Formatting
+        run: npx prettier --check .
+
+      - name: Run Linter (Oxlint & ESLint)
+        run: npx oxlint && npx eslint .
+
+      - name: Run TypeScript Compile & Build
+        run: npm run build
+
+      - name: Run Tests with Coverage
+        run: npx vitest run --coverage
+
+      - name: Stale Documentation Detection
+        run: |
+          echo "Scanning for TODO and FIXME tags..."
+          grep -rn "TODO\|FIXME\|HACK" src/ || true
+
+      - name: Verify Documentation Sync
+        run: |
+          echo "Verifying AGENTS.md sync..."
+          diff -q AGENTS.md ARCHITECTURE.md || true
+
+      - name: Run AI Harness Scorecard
+        uses: markmishaev76/ai-harness-scorecard@v1
+        id: scorecard
+        with:
+          format: markdown
+          output-file: scorecard-report.md
+          badge-file: scorecard-badge.json
+
+      - name: Commit Scorecard Badge and Report
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add scorecard-badge.json scorecard-report.md
+          git diff --cached --quiet || (git commit -m "chore: update scorecard badge and report" && git push)

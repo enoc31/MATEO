@@ -1,0 +1,15 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`API Service > snapshot test: should match default simulated metrics format 1`] = `
+{
+  "administrativeOutflows": 0,
+  "operationalOutflows": 0,
+  "reconciledInflows": 0,
+  "reconciledOutflows": 0,
+  "reconciledPercent": 0,
+  "totalInflows": 0,
+  "totalOutflows": 0,
+  "unreconciledInflows": 0,
+  "unreconciledOutflows": 0,
+}
+`;

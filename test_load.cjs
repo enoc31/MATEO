@@ -7,7 +7,7 @@ const endpoints = [
   '/donaciones?select=*',
   '/proyectos?select=*',
   '/transacciones_bancarias?select=*',
-  '/comprobantes_gasto?select=*'
+  '/comprobantes_gasto?select=*',
 ];
 
 let totalRequests = 0;
@@ -20,33 +20,35 @@ const concurrency = 20;
 
 const requestOptions = {
   headers: {
-    'apikey': API_KEY,
-    'Authorization': `Bearer ${API_KEY}`
-  }
+    apikey: API_KEY,
+    Authorization: `Bearer ${API_KEY}`,
+  },
 };
 
 async function makeRequest(endpoint) {
   const start = Date.now();
   return new Promise((resolve) => {
-    https.get(`${SUPABASE_URL}${endpoint}`, requestOptions, (res) => {
-      let data = '';
-      res.on('data', chunk => data += chunk);
-      res.on('end', () => {
-        const time = Date.now() - start;
-        if (res.statusCode >= 200 && res.statusCode < 300) {
-          successRequests++;
-        } else {
-          failedRequests++;
-        }
-        totalTime += time;
+    https
+      .get(`${SUPABASE_URL}${endpoint}`, requestOptions, (res) => {
+        let data = '';
+        res.on('data', (chunk) => (data += chunk));
+        res.on('end', () => {
+          const time = Date.now() - start;
+          if (res.statusCode >= 200 && res.statusCode < 300) {
+            successRequests++;
+          } else {
+            failedRequests++;
+          }
+          totalTime += time;
+          totalRequests++;
+          resolve();
+        });
+      })
+      .on('error', (err) => {
+        failedRequests++;
         totalRequests++;
         resolve();
       });
-    }).on('error', (err) => {
-      failedRequests++;
-      totalRequests++;
-      resolve();
-    });
   });
 }
 
@@ -62,7 +64,7 @@ async function run() {
   console.log('Starting load test...');
   const workers = Array.from({ length: concurrency }, () => worker());
   await Promise.all(workers);
-  
+
   console.log('--- Test Results ---');
   console.log(`Total Requests: ${totalRequests}`);
   console.log(`Success: ${successRequests}`);

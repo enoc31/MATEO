@@ -14,18 +14,14 @@ export const BeneficiaryRegistry: React.FC = () => {
   const [selectedJornadaId, setSelectedJornadaId] = useState<string>('');
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    loadJornadas();
-  }, []);
-
   const loadJornadas = async () => {
     try {
       const allJornadas = await api.getJornadas();
-      const activas = allJornadas.filter(j => j.activa);
+      const activas = allJornadas.filter((j) => j.activa);
       setJornadas(activas);
-      
+
       const saved = sessionStorage.getItem('cnbv_active_jornada');
-      if (saved && activas.some(j => j.id === saved)) {
+      if (saved && activas.some((j) => j.id === saved)) {
         setSelectedJornadaId(saved);
       }
     } catch (err) {
@@ -34,6 +30,10 @@ export const BeneficiaryRegistry: React.FC = () => {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    loadJornadas();
+  }, []);
 
   const handleSelectJornada = (id: string) => {
     setSelectedJornadaId(id);
@@ -56,26 +56,40 @@ export const BeneficiaryRegistry: React.FC = () => {
     return (
       <div style={{ maxWidth: '600px', margin: '2rem auto', padding: '0 1rem' }}>
         <div className="card" style={{ padding: '2rem', textAlign: 'center' }}>
-          <CalendarDays size={48} color="var(--primary)" style={{ margin: '0 auto', marginBottom: '1rem' }} />
-          <h2 style={{ color: 'var(--neutral-dark)', marginBottom: '1.5rem' }}>Seleccionar Jornada Activa</h2>
-          
+          <CalendarDays
+            size={48}
+            color="var(--primary)"
+            style={{ margin: '0 auto', marginBottom: '1rem' }}
+          />
+          <h2 style={{ color: 'var(--neutral-dark)', marginBottom: '1.5rem' }}>
+            Seleccionar Jornada Activa
+          </h2>
+
           {jornadas.length === 0 ? (
-            <p style={{ color: 'var(--danger)', padding: '1rem', backgroundColor: '#ffebee', borderRadius: 'var(--radius-sm)' }}>
-              No hay jornadas activas en este momento. Por favor, solicita al administrador que habilite una jornada.
+            <p
+              style={{
+                color: 'var(--danger)',
+                padding: '1rem',
+                backgroundColor: '#ffebee',
+                borderRadius: 'var(--radius-sm)',
+              }}
+            >
+              No hay jornadas activas en este momento. Por favor, solicita al administrador que
+              habilite una jornada.
             </p>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
               <p style={{ color: 'var(--neutral-gray)', marginBottom: '1rem' }}>
                 Elige la jornada de ayuda social en la que vas a capturar datos.
               </p>
-              {jornadas.map(j => (
-                <button 
-                  key={j.id} 
+              {jornadas.map((j) => (
+                <button
+                  key={j.id}
                   className="btn"
-                  style={{ 
-                    padding: '1rem', 
-                    border: '2px solid var(--primary)', 
-                    backgroundColor: 'white', 
+                  style={{
+                    padding: '1rem',
+                    border: '2px solid var(--primary)',
+                    backgroundColor: 'white',
                     color: 'var(--primary)',
                     borderRadius: 'var(--radius-md)',
                     fontWeight: 'bold',
@@ -83,12 +97,18 @@ export const BeneficiaryRegistry: React.FC = () => {
                     textAlign: 'left',
                     display: 'flex',
                     flexDirection: 'column',
-                    gap: '0.25rem'
+                    gap: '0.25rem',
                   }}
                   onClick={() => handleSelectJornada(j.id)}
                 >
                   <span>{j.nombre}</span>
-                  <span style={{ fontSize: '0.85rem', fontWeight: 'normal', color: 'var(--neutral-gray)' }}>
+                  <span
+                    style={{
+                      fontSize: '0.85rem',
+                      fontWeight: 'normal',
+                      color: 'var(--neutral-gray)',
+                    }}
+                  >
                     Fecha: {new Date(j.fecha).toLocaleDateString('es-VE')}
                   </span>
                 </button>
@@ -100,19 +120,50 @@ export const BeneficiaryRegistry: React.FC = () => {
     );
   }
 
-  const selectedJornada = jornadas.find(j => j.id === selectedJornadaId);
+  const selectedJornada = jornadas.find((j) => j.id === selectedJornadaId);
 
   return (
-    <div className="animate-fade-in-up" style={{ maxWidth: '800px', margin: '0 auto', padding: '1rem' }}>
+    <div
+      className="animate-fade-in-up"
+      style={{ maxWidth: '800px', margin: '0 auto', padding: '1rem' }}
+    >
       {selectedJornada && (
-        <div style={{ backgroundColor: '#e8f5e9', padding: '0.75rem 1rem', borderRadius: 'var(--radius-md)', marginBottom: '1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#2e7d32', fontWeight: 600 }}>
+        <div
+          style={{
+            backgroundColor: '#e8f5e9',
+            padding: '0.75rem 1rem',
+            borderRadius: 'var(--radius-md)',
+            marginBottom: '1rem',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+          }}
+        >
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+              color: '#2e7d32',
+              fontWeight: 600,
+            }}
+          >
             <CalendarDays size={18} />
             Jornada Activa: {selectedJornada.nombre}
           </div>
-          <button 
-            onClick={() => { setSelectedJornadaId(''); sessionStorage.removeItem('cnbv_active_jornada'); }} 
-            style={{ background: 'none', border: 'none', color: '#1565c0', textDecoration: 'underline', cursor: 'pointer', fontSize: '0.9rem' }}
+          <button
+            onClick={() => {
+              setSelectedJornadaId('');
+              sessionStorage.removeItem('cnbv_active_jornada');
+            }}
+            style={{
+              background: 'none',
+              border: 'none',
+              color: '#1565c0',
+              textDecoration: 'underline',
+              cursor: 'pointer',
+              fontSize: '0.9rem',
+            }}
           >
             Cambiar
           </button>
@@ -123,19 +174,28 @@ export const BeneficiaryRegistry: React.FC = () => {
         <h2 style={{ color: 'var(--primary)', fontSize: '1.75rem', fontWeight: 700 }}>
           Módulo de Beneficiarios
         </h2>
-        <p style={{ color: 'var(--neutral-dark)', opacity: 0.8, fontSize: '0.9rem', marginTop: '0.25rem' }}>
+        <p
+          style={{
+            color: 'var(--neutral-dark)',
+            opacity: 0.8,
+            fontSize: '0.9rem',
+            marginTop: '0.25rem',
+          }}
+        >
           Captura de datos y firma autógrafa en campo.
         </p>
       </div>
 
-      <div style={{ 
-        display: 'flex', 
-        gap: '0.5rem', 
-        marginBottom: '1.5rem',
-        backgroundColor: 'var(--neutral-light)',
-        padding: '0.3rem',
-        borderRadius: 'var(--radius-lg)'
-      }}>
+      <div
+        style={{
+          display: 'flex',
+          gap: '0.5rem',
+          marginBottom: '1.5rem',
+          backgroundColor: 'var(--neutral-light)',
+          padding: '0.3rem',
+          borderRadius: 'var(--radius-lg)',
+        }}
+      >
         <button
           onClick={() => setActiveTab('form')}
           style={{
@@ -150,9 +210,14 @@ export const BeneficiaryRegistry: React.FC = () => {
             fontWeight: 700,
             cursor: 'pointer',
             transition: 'all 0.2s ease',
-            backgroundColor: (activeTab === 'form' || activeTab === 'success') ? '#fff' : 'transparent',
-            color: (activeTab === 'form' || activeTab === 'success') ? 'var(--primary)' : 'var(--neutral-dark)',
-            boxShadow: (activeTab === 'form' || activeTab === 'success') ? 'var(--shadow-sm)' : 'none'
+            backgroundColor:
+              activeTab === 'form' || activeTab === 'success' ? '#fff' : 'transparent',
+            color:
+              activeTab === 'form' || activeTab === 'success'
+                ? 'var(--primary)'
+                : 'var(--neutral-dark)',
+            boxShadow:
+              activeTab === 'form' || activeTab === 'success' ? 'var(--shadow-sm)' : 'none',
           }}
         >
           <UserCheck size={18} /> Registro
@@ -173,7 +238,7 @@ export const BeneficiaryRegistry: React.FC = () => {
             transition: 'all 0.2s ease',
             backgroundColor: activeTab === 'history' ? '#fff' : 'transparent',
             color: activeTab === 'history' ? 'var(--primary)' : 'var(--neutral-dark)',
-            boxShadow: activeTab === 'history' ? 'var(--shadow-sm)' : 'none'
+            boxShadow: activeTab === 'history' ? 'var(--shadow-sm)' : 'none',
           }}
         >
           <History size={18} /> Historial
@@ -181,7 +246,9 @@ export const BeneficiaryRegistry: React.FC = () => {
       </div>
 
       <div className="card" style={{ padding: '1.5rem', borderRadius: 'var(--radius-lg)' }}>
-        {activeTab === 'form' && <RegistrationForm onSuccess={handleSuccess} jornadaId={selectedJornadaId} />}
+        {activeTab === 'form' && (
+          <RegistrationForm onSuccess={handleSuccess} jornadaId={selectedJornadaId} />
+        )}
         {activeTab === 'history' && <CapturedRecords />}
         {activeTab === 'success' && <SuccessScreen onNewRegistration={handleNewRegistration} />}
       </div>

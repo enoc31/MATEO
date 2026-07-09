@@ -29,8 +29,8 @@ function calcularFechaDestino(hoy: Date): string {
 
   // Formato YYYY-MM-DD usando UTC para evitar desfases de zona horaria
   const yyyy = fechaDestino.getFullYear();
-  const mm   = String(fechaDestino.getMonth() + 1).padStart(2, '0');
-  const dd   = String(fechaDestino.getDate()).padStart(2, '0');
+  const mm = String(fechaDestino.getMonth() + 1).padStart(2, '0');
+  const dd = String(fechaDestino.getDate()).padStart(2, '0');
 
   return `${yyyy}-${mm}-${dd}`;
 }
@@ -39,13 +39,11 @@ serve(async (_req) => {
   try {
     // 1. Hora actual en Venezuela (UTC-4)
     //    Usamos toLocaleString para obtener la hora local correcta
-    const ahoraVE = new Date(
-      new Date().toLocaleString('en-US', { timeZone: 'America/Caracas' })
-    );
+    const ahoraVE = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Caracas' }));
 
     // 2. Obtener tasa oficial desde la API BCV via dolarapi.com
     const response = await fetch('https://ve.dolarapi.com/v1/dolares/oficial', {
-      headers: { 'Accept': 'application/json' },
+      headers: { Accept: 'application/json' },
       signal: AbortSignal.timeout(10000), // timeout 10 segundos
     });
 
@@ -66,7 +64,7 @@ serve(async (_req) => {
     // 4. Conectar a Supabase con service_role (bypasea RLS)
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL')!,
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
     );
 
     // 5. Insertar la tasa — ignorar si ya existe para esa fecha
@@ -75,7 +73,7 @@ serve(async (_req) => {
       .from('tasas_bcv')
       .upsert(
         { fecha: fechaDestino, tasa, fuente: 'bcv_api' },
-        { onConflict: 'fecha', ignoreDuplicates: true }
+        { onConflict: 'fecha', ignoreDuplicates: true },
       );
 
     if (error) throw error;
@@ -83,20 +81,19 @@ serve(async (_req) => {
     const mensaje = `[sync-tasa-bcv] ✅ OK → fecha: ${fechaDestino}, tasa: ${tasa} Bs/$`;
     console.log(mensaje);
 
-    return new Response(
-      JSON.stringify({ ok: true, fecha: fechaDestino, tasa }),
-      { status: 200, headers: { 'Content-Type': 'application/json' } }
-    );
-
+    return new Response(JSON.stringify({ ok: true, fecha: fechaDestino, tasa }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' },
+    });
   } catch (err) {
     // Retornamos HTTP 200 aunque haya error para que pg_cron
     // no deshabilite el job por fallos ocasionales (ej: sin internet)
     const errorMsg = err instanceof Error ? err.message : String(err);
     console.error(`[sync-tasa-bcv] ❌ ERROR: ${errorMsg}`);
 
-    return new Response(
-      JSON.stringify({ ok: false, error: errorMsg }),
-      { status: 200, headers: { 'Content-Type': 'application/json' } }
-    );
+    return new Response(JSON.stringify({ ok: false, error: errorMsg }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' },
+    });
   }
 });

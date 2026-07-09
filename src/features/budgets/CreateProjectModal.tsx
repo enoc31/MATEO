@@ -12,19 +12,23 @@ interface CreateProjectModalProps {
 }
 
 const FLAG_MAP: Record<string, string> = {
-  'Venezuela': '🇻🇪',
+  Venezuela: '🇻🇪',
   'Reino Unido': '🇬🇧',
   'Estados Unidos': '🇺🇸',
-  'Europa': '🇪🇺',
-  'Internacional': '🌐'
+  Europa: '🇪🇺',
+  Internacional: '🌐',
 };
 
-export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({ isOpen, onClose, onSuccess }) => {
+export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
+  isOpen,
+  onClose,
+  onSuccess,
+}) => {
   const [nombre, setNombre] = useState('');
   const [descripcion, setDescripcion] = useState('');
   const [fechaInicio, setFechaInicio] = useState(new Date().toISOString().split('T')[0]);
   const [fechaFin, setFechaFin] = useState(
-    new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString().split('T')[0]
+    new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString().split('T')[0],
   );
   const [overheadPct, setOverheadPct] = useState<number>(7.0);
   const [donanteId, setDonanteId] = useState('');
@@ -42,11 +46,11 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({ isOpen, 
 
   if (!isOpen) return null;
 
-  const donantesFiltrados = donantes.filter(d =>
-    tipoFiltro === 'todos' ? true : d.tipo === tipoFiltro
+  const donantesFiltrados = donantes.filter((d) =>
+    tipoFiltro === 'todos' ? true : d.tipo === tipoFiltro,
   );
 
-  const donanteSeleccionado = donantes.find(d => d.id === donanteId);
+  const donanteSeleccionado = donantes.find((d) => d.id === donanteId);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -69,7 +73,7 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({ isOpen, 
       fecha_inicio: fechaInicio,
       fecha_fin: fechaFin,
       overhead_porcentaje: overheadPct,
-      donante_id: donanteId
+      donante_id: donanteId,
     };
 
     try {
@@ -93,7 +97,11 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({ isOpen, 
       onSuccess(createdId);
       onClose();
       // Reset form
-      setNombre(''); setDescripcion(''); setDonanteId(''); setOverheadPct(7.0); setTipoFiltro('todos');
+      setNombre('');
+      setDescripcion('');
+      setDonanteId('');
+      setOverheadPct(7.0);
+      setTipoFiltro('todos');
     } catch (err: any) {
       console.error('Error creating project:', err);
       setError(err.message || 'Error al registrar el proyecto en el sistema.');
@@ -103,68 +111,134 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({ isOpen, 
   };
 
   return (
-    <div style={{
-      position: 'fixed', top: 0, left: 0, width: '100%', height: '100%',
-      backgroundColor: 'rgba(15, 23, 42, 0.78)', backdropFilter: 'blur(8px)',
-      display: 'flex', justifyContent: 'center', alignItems: 'center',
-      zIndex: 1200, padding: '1.5rem', overflowY: 'auto'
-    }}>
-      <div className="card" style={{
-        width: '100%', maxWidth: '560px', padding: '2rem',
-        boxShadow: '0 25px 50px -12px rgba(0,0,0,0.5)',
-        border: '1px solid rgba(255,255,255,0.08)',
-        backgroundColor: 'var(--card-bg, #ffffff)',
-        color: 'var(--neutral-dark, #1e293b)',
-        maxHeight: '90vh', overflowY: 'auto'
-      }}>
-
+    <div
+      style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        width: '100%',
+        height: '100%',
+        backgroundColor: 'rgba(15, 23, 42, 0.78)',
+        backdropFilter: 'blur(8px)',
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        zIndex: 1200,
+        padding: '1.5rem',
+        overflowY: 'auto',
+      }}
+    >
+      <div
+        className="card"
+        style={{
+          width: '100%',
+          maxWidth: '560px',
+          padding: '2rem',
+          boxShadow: '0 25px 50px -12px rgba(0,0,0,0.5)',
+          border: '1px solid rgba(255,255,255,0.08)',
+          backgroundColor: 'var(--card-bg, #ffffff)',
+          color: 'var(--neutral-dark, #1e293b)',
+          maxHeight: '90vh',
+          overflowY: 'auto',
+        }}
+      >
         {/* Header */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.5rem', borderBottom: '1px solid var(--border-color)', paddingBottom: '1rem' }}>
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'flex-start',
+            marginBottom: '1.5rem',
+            borderBottom: '1px solid var(--border-color)',
+            paddingBottom: '1rem',
+          }}
+        >
           <div>
             <h3 style={{ color: 'var(--primary)', fontSize: '1.2rem', fontWeight: 800, margin: 0 }}>
-              <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}><Plus size={18} /> Nuevo Proyecto</span>
+              <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <Plus size={18} /> Nuevo Proyecto
+              </span>
             </h3>
             <p style={{ margin: '0.25rem 0 0', fontSize: '0.78rem', opacity: 0.6 }}>
               Complete la ficha del proyecto y su fuente de financiamiento
             </p>
           </div>
-          <button onClick={onClose} style={{ background: 'transparent', border: 'none', fontSize: '1.5rem', cursor: 'pointer', opacity: 0.5 }}>×</button>
+          <button
+            onClick={onClose}
+            style={{
+              background: 'transparent',
+              border: 'none',
+              fontSize: '1.5rem',
+              cursor: 'pointer',
+              opacity: 0.5,
+            }}
+          >
+            ×
+          </button>
         </div>
 
         {error && (
-          <div style={{ background: 'var(--danger)', color: '#fff', padding: '0.75rem 1rem', borderRadius: '6px', marginBottom: '1rem', fontSize: '0.85rem' }}>
-            <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}><AlertTriangle size={16} /> {error}</span>
+          <div
+            style={{
+              background: 'var(--danger)',
+              color: '#fff',
+              padding: '0.75rem 1rem',
+              borderRadius: '6px',
+              marginBottom: '1rem',
+              fontSize: '0.85rem',
+            }}
+          >
+            <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <AlertTriangle size={16} /> {error}
+            </span>
           </div>
         )}
 
-        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.1rem' }}>
-
+        <form
+          onSubmit={handleSubmit}
+          style={{ display: 'flex', flexDirection: 'column', gap: '1.1rem' }}
+        >
           {/* ── SECCIÓN 1: DATOS DEL PROYECTO ─────────────────────────── */}
-          <div style={{ fontSize: '0.7rem', fontWeight: 700, letterSpacing: '0.1em', color: 'var(--primary)', textTransform: 'uppercase', opacity: 0.8 }}>
-            <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}><Folder size={18} /> Datos del Proyecto</span>
+          <div
+            style={{
+              fontSize: '0.7rem',
+              fontWeight: 700,
+              letterSpacing: '0.1em',
+              color: 'var(--primary)',
+              textTransform: 'uppercase',
+              opacity: 0.8,
+            }}
+          >
+            <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <Folder size={18} /> Datos del Proyecto
+            </span>
           </div>
 
           <div className="form-group" style={{ marginBottom: 0 }}>
-            <label className="form-label" style={{ fontWeight: 600 }}>Nombre del Proyecto *</label>
+            <label className="form-label" style={{ fontWeight: 600 }}>
+              Nombre del Proyecto *
+            </label>
             <input
               type="text"
               className="form-input"
               placeholder="Ej: Operación Frontera Zulia 2026"
               value={nombre}
-              onChange={e => setNombre(e.target.value)}
+              onChange={(e) => setNombre(e.target.value)}
               required
               disabled={isSubmitting}
             />
           </div>
 
           <div className="form-group" style={{ marginBottom: 0 }}>
-            <label className="form-label" style={{ fontWeight: 600 }}>Descripción del alcance *</label>
+            <label className="form-label" style={{ fontWeight: 600 }}>
+              Descripción del alcance *
+            </label>
             <textarea
               className="form-input"
               rows={3}
               placeholder="Describa el objetivo de la intervención y la población beneficiaria..."
               value={descripcion}
-              onChange={e => setDescripcion(e.target.value)}
+              onChange={(e) => setDescripcion(e.target.value)}
               required
               disabled={isSubmitting}
               style={{ resize: 'vertical' }}
@@ -173,23 +247,46 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({ isOpen, 
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
             <div className="form-group" style={{ marginBottom: 0 }}>
-              <label className="form-label" style={{ fontWeight: 600 }}>Fecha Inicio</label>
-              <input type="date" className="form-input" value={fechaInicio} onChange={e => setFechaInicio(e.target.value)} required disabled={isSubmitting} />
+              <label className="form-label" style={{ fontWeight: 600 }}>
+                Fecha Inicio
+              </label>
+              <input
+                type="date"
+                className="form-input"
+                value={fechaInicio}
+                onChange={(e) => setFechaInicio(e.target.value)}
+                required
+                disabled={isSubmitting}
+              />
             </div>
             <div className="form-group" style={{ marginBottom: 0 }}>
-              <label className="form-label" style={{ fontWeight: 600 }}>Fecha Fin</label>
-              <input type="date" className="form-input" value={fechaFin} onChange={e => setFechaFin(e.target.value)} required disabled={isSubmitting} />
+              <label className="form-label" style={{ fontWeight: 600 }}>
+                Fecha Fin
+              </label>
+              <input
+                type="date"
+                className="form-input"
+                value={fechaFin}
+                onChange={(e) => setFechaFin(e.target.value)}
+                required
+                disabled={isSubmitting}
+              />
             </div>
           </div>
 
           <div className="form-group" style={{ marginBottom: 0 }}>
-            <label className="form-label" style={{ fontWeight: 600 }}>% Gastos Indirectos (Overhead)</label>
+            <label className="form-label" style={{ fontWeight: 600 }}>
+              % Gastos Indirectos (Overhead)
+            </label>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
               <input
-                type="number" step="0.1" min="0" max="25"
+                type="number"
+                step="0.1"
+                min="0"
+                max="25"
                 className="form-input"
                 value={overheadPct}
-                onChange={e => setOverheadPct(Math.max(0, parseFloat(e.target.value) || 0))}
+                onChange={(e) => setOverheadPct(Math.max(0, parseFloat(e.target.value) || 0))}
                 disabled={isSubmitting}
                 style={{ width: '90px' }}
               />
@@ -200,17 +297,34 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({ isOpen, 
           </div>
 
           {/* ── SECCIÓN 2: DONANTE ─────────────────────────────────────── */}
-          <div style={{ fontSize: '0.7rem', fontWeight: 700, letterSpacing: '0.1em', color: 'var(--primary)', textTransform: 'uppercase', opacity: 0.8, marginTop: '0.5rem', borderTop: '1px solid var(--border-color)', paddingTop: '1rem' }}>
-            <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}><Handshake size={18} /> Fuente de Financiamiento</span>
+          <div
+            style={{
+              fontSize: '0.7rem',
+              fontWeight: 700,
+              letterSpacing: '0.1em',
+              color: 'var(--primary)',
+              textTransform: 'uppercase',
+              opacity: 0.8,
+              marginTop: '0.5rem',
+              borderTop: '1px solid var(--border-color)',
+              paddingTop: '1rem',
+            }}
+          >
+            <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <Handshake size={18} /> Fuente de Financiamiento
+            </span>
           </div>
 
           {/* Filtro de tipo */}
           <div style={{ display: 'flex', gap: '0.5rem' }}>
-            {(['todos', 'nacional', 'extranjero'] as const).map(t => (
+            {(['todos', 'nacional', 'extranjero'] as const).map((t) => (
               <button
                 key={t}
                 type="button"
-                onClick={() => { setTipoFiltro(t); setDonanteId(''); }}
+                onClick={() => {
+                  setTipoFiltro(t);
+                  setDonanteId('');
+                }}
                 style={{
                   padding: '0.3rem 0.85rem',
                   borderRadius: '20px',
@@ -221,7 +335,7 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({ isOpen, 
                   transition: 'all 0.2s',
                   borderColor: tipoFiltro === t ? 'var(--primary)' : 'var(--border-color)',
                   backgroundColor: tipoFiltro === t ? 'var(--primary)' : 'transparent',
-                  color: tipoFiltro === t ? '#fff' : 'var(--neutral-dark)'
+                  color: tipoFiltro === t ? '#fff' : 'var(--neutral-dark)',
                 }}
               >
                 {t === 'todos' ? '🌐 Todos' : t === 'nacional' ? '🇻🇪 Nacionales' : '✈️ Extranjeros'}
@@ -230,8 +344,17 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({ isOpen, 
           </div>
 
           {/* Grid de donantes */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem', maxHeight: '210px', overflowY: 'auto', padding: '0.25rem' }}>
-            {donantesFiltrados.map(d => (
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: '1fr 1fr',
+              gap: '0.5rem',
+              maxHeight: '210px',
+              overflowY: 'auto',
+              padding: '0.25rem',
+            }}
+          >
+            {donantesFiltrados.map((d) => (
               <button
                 key={d.id}
                 type="button"
@@ -244,13 +367,22 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({ isOpen, 
                   backgroundColor: donanteId === d.id ? 'rgba(47,90,174,0.08)' : 'transparent',
                   cursor: 'pointer',
                   textAlign: 'left',
-                  transition: 'all 0.15s'
+                  transition: 'all 0.15s',
                 }}
               >
                 <div style={{ fontSize: '1.3rem', marginBottom: '0.2rem' }}>
                   {FLAG_MAP[d.pais || ''] || '🏳️'}
                 </div>
-                <div style={{ fontWeight: 700, fontSize: '0.78rem', lineHeight: 1.2, color: 'var(--neutral-dark)' }}>{d.nombre}</div>
+                <div
+                  style={{
+                    fontWeight: 700,
+                    fontSize: '0.78rem',
+                    lineHeight: 1.2,
+                    color: 'var(--neutral-dark)',
+                  }}
+                >
+                  {d.nombre}
+                </div>
                 <div style={{ fontSize: '0.68rem', marginTop: '0.2rem', opacity: 0.55 }}>
                   {d.tipo === 'nacional' ? '🇻🇪 Nacional' : `✈️ ${d.pais}`}
                 </div>
@@ -259,27 +391,62 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({ isOpen, 
           </div>
 
           {donanteSeleccionado && (
-            <div style={{
-              display: 'flex', alignItems: 'center', gap: '0.5rem',
-              padding: '0.5rem 0.75rem', borderRadius: '6px',
-              backgroundColor: 'rgba(0,143,166,0.08)', border: '1px solid rgba(0,143,166,0.2)',
-              fontSize: '0.8rem', fontWeight: 600
-            }}>
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+                padding: '0.5rem 0.75rem',
+                borderRadius: '6px',
+                backgroundColor: 'rgba(0,143,166,0.08)',
+                border: '1px solid rgba(0,143,166,0.2)',
+                fontSize: '0.8rem',
+                fontWeight: 600,
+              }}
+            >
               <span>{FLAG_MAP[donanteSeleccionado.pais || ''] || '🤝'}</span>
-              <span>Financiado por: <strong>{donanteSeleccionado.nombre}</strong></span>
+              <span>
+                Financiado por: <strong>{donanteSeleccionado.nombre}</strong>
+              </span>
             </div>
           )}
 
           {/* Acciones */}
-          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', marginTop: '0.5rem', borderTop: '1px solid var(--border-color)', paddingTop: '1.25rem' }}>
-            <button type="button" onClick={onClose} className="btn btn-outline" disabled={isSubmitting}>
+          <div
+            style={{
+              display: 'flex',
+              justifyContent: 'flex-end',
+              gap: '0.75rem',
+              marginTop: '0.5rem',
+              borderTop: '1px solid var(--border-color)',
+              paddingTop: '1.25rem',
+            }}
+          >
+            <button
+              type="button"
+              onClick={onClose}
+              className="btn btn-outline"
+              disabled={isSubmitting}
+            >
               Cancelar
             </button>
             <button type="submit" className="btn btn-primary" disabled={isSubmitting || !donanteId}>
-              {isSubmitting ? 'Registrando...' : <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}><CheckCircle size={16} /> Registrar Proyecto</span>}
+              {isSubmitting ? (
+                'Registrando...'
+              ) : (
+                <span
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '0.5rem',
+                  }}
+                >
+                  <CheckCircle size={16} /> Registrar Proyecto
+                </span>
+              )}
             </button>
           </div>
-
         </form>
       </div>
     </div>

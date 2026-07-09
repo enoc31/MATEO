@@ -1,0 +1,9 @@
+# Global owners
+* @gerar
+
+# Security-critical paths requiring reviews
+/supabase/ @gerar
+/src/supabaseClient.ts @gerar
+/src/context/AuthContext.tsx @gerar
+/src/services/api.ts @gerar
+/src/services/storage.ts @gerar

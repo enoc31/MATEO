@@ -4,7 +4,8 @@ import { supabase } from '../supabaseClient';
 import { isSimulationMode } from '../services/api';
 import { checkAndSyncBCVRate } from '../utils/bcvSync';
 
-export type UserRole = 'administrador' | 'auditor' | 'coordinador' | 'director' | 'auxiliar_campo' | 'donante';
+export type UserRole =
+  'administrador' | 'auditor' | 'coordinador' | 'director' | 'auxiliar_campo' | 'donante';
 
 export interface UserProfile {
   id: string;
@@ -31,7 +32,9 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [activeOng, setActiveOng] = useState<{ nombre: string; logo_url: string | null } | null>(null);
+  const [activeOng, setActiveOng] = useState<{ nombre: string; logo_url: string | null } | null>(
+    null,
+  );
   const [loading, setLoading] = useState(true);
   const [authError, setAuthError] = useState<string | null>(null);
 
@@ -53,15 +56,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               nombre_completo: meta?.nombre_completo || 'Usuario',
               rol: meta?.rol || 'donante',
               aprobado: false,
-              ong_id: '11111111-1111-1111-1111-111111111111'
+              ong_id: '11111111-1111-1111-1111-111111111111',
             };
-            
+
             const { data: insertedData, error: insertError } = await supabase
               .from('usuarios_perfiles')
               .insert([newProfile])
               .select()
               .single();
-              
+
             if (!insertError && insertedData) {
               const insertedProfile = insertedData as UserProfile;
               setProfile(insertedProfile);
@@ -78,7 +81,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               return;
             } else {
               console.error('Error auto-creating profile:', insertError);
-              setAuthError(`No se pudo crear el perfil: ${insertError?.message || 'Error desconocido'}`);
+              setAuthError(
+                `No se pudo crear el perfil: ${insertError?.message || 'Error desconocido'}`,
+              );
             }
           } else {
             setAuthError(`Error (Fetch): ${error.message || 'Error desconocido'}`);
@@ -90,7 +95,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           const profileData = data as UserProfile;
           setProfile(profileData);
           setAuthError(null);
-          
+
           // Fetch active ONG
           if (profileData.ong_id) {
             const { data: ongData, error: ongError } = await supabase
@@ -104,7 +109,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               console.error('Error fetching active ONG:', ongError);
               setActiveOng({
                 nombre: 'Convención Nacional Bautista de Venezuela',
-                logo_url: 'https://cnbv.org/wp-content/uploads/2020/09/logo-cnbv.jpg'
+                logo_url: 'https://cnbv.org/wp-content/uploads/2020/09/logo-cnbv.jpg',
               });
             }
           }
@@ -123,7 +128,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setProfile(profileData);
         setActiveOng({
           nombre: 'Convención Nacional Bautista de Venezuela (Simulado)',
-          logo_url: 'https://cnbv.org/wp-content/uploads/2020/09/logo-cnbv.jpg'
+          logo_url: 'https://cnbv.org/wp-content/uploads/2020/09/logo-cnbv.jpg',
         });
       } else {
         setProfile(null);
@@ -147,12 +152,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         try {
           // Timeout de 10 segundos para evitar que la pantalla se quede colgada
           const getSessionPromise = supabase.auth.getSession();
-          const timeoutPromise = new Promise((_, reject) => 
-            setTimeout(() => reject(new Error('Timeout de conexión a Supabase')), 10000)
+          const timeoutPromise = new Promise((_, reject) =>
+            setTimeout(() => reject(new Error('Timeout de conexión a Supabase')), 10000),
           );
-          
-          const { data: { session } } = await Promise.race([getSessionPromise, timeoutPromise]) as any;
-          
+
+          const {
+            data: { session },
+          } = (await Promise.race([getSessionPromise, timeoutPromise])) as any;
+
           if (session && mounted) {
             setUser(session.user);
             await fetchProfile(session.user);
@@ -180,9 +187,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
 
     initializeAuth();
-    
+
     // Intento de sincronización silenciosa (Lazy Sync) de tasa BCV
-    checkAndSyncBCVRate().catch(e => console.error("Error en Lazy Sync BCV", e));
+    checkAndSyncBCVRate().catch((e) => console.error('Error en Lazy Sync BCV', e));
 
     if (!isSimulationMode) {
       const { data } = supabase.auth.onAuthStateChange(async (event, session) => {
@@ -227,7 +234,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   return (
-    <AuthContext.Provider value={{ user, profile, activeOng, loading, authError, logout, refreshProfile }}>
+    <AuthContext.Provider
+      value={{ user, profile, activeOng, loading, authError, logout, refreshProfile }}
+    >
       {children}
     </AuthContext.Provider>
   );

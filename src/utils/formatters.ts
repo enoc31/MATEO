@@ -32,12 +32,12 @@ export const getCaracasDateParts = () => {
     hour: '2-digit',
     minute: '2-digit',
     second: '2-digit',
-    hour12: false
+    hour12: false,
   });
-  
+
   const parts = formatter.formatToParts(new Date());
-  const partMap = Object.fromEntries(parts.map(p => [p.type, p.value]));
-  
+  const partMap = Object.fromEntries(parts.map((p) => [p.type, p.value]));
+
   return {
     year: parseInt(partMap.year),
     month: parseInt(partMap.month),
@@ -45,6 +45,6 @@ export const getCaracasDateParts = () => {
     hour: parseInt(partMap.hour),
     minute: parseInt(partMap.minute),
     second: parseInt(partMap.second),
-    dateString: `${partMap.year}-${partMap.month}-${partMap.day}`
+    dateString: `${partMap.year}-${partMap.month}-${partMap.day}`,
   };
 };

@@ -14,7 +14,7 @@ interface NotificationContextType {
 }
 
 const NotificationContext = createContext<NotificationContextType>({
-  addNotification: () => {}
+  addNotification: () => {},
 });
 
 export const useNotifications = () => useContext(NotificationContext);
@@ -25,45 +25,59 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
   const addNotification = (message: string, type: 'info' | 'success' | 'warning' = 'info') => {
     const id = Math.random().toString(36).substr(2, 9);
-    setNotifications(prev => [...prev, { id, message, type }]);
-    
+    setNotifications((prev) => [...prev, { id, message, type }]);
+
     // Auto-remove after 5 seconds
     setTimeout(() => {
-      setNotifications(prev => prev.filter(n => n.id !== id));
+      setNotifications((prev) => prev.filter((n) => n.id !== id));
     }, 5000);
   };
 
   const removeNotification = (id: string) => {
-    setNotifications(prev => prev.filter(n => n.id !== id));
+    setNotifications((prev) => prev.filter((n) => n.id !== id));
   };
 
   useEffect(() => {
     if (!profile) return;
 
     // Supabase Realtime Subscription for Requisitions
-    const reqChannel = supabase.channel('requisitions-channel')
-      .on('postgres_changes', { 
-        event: 'UPDATE', 
-        schema: 'public', 
-        table: 'solicitudes_gasto',
-        filter: `solicitante_id=eq.${profile.id}`
-      }, (payload: any) => {
-        const newData = payload.new;
-        const oldData = payload.old;
+    const reqChannel = supabase
+      .channel('requisitions-channel')
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'solicitudes_gasto',
+          filter: `solicitante_id=eq.${profile.id}`,
+        },
+        (payload: any) => {
+          const newData = payload.new;
+          const oldData = payload.old;
 
-        // Check if it got fully approved
-        if (newData.estado === 'aprobada_ejecucion' && oldData.estado !== 'aprobada_ejecucion') {
-          addNotification(`¡Tu requisición ${newData.codigo || ''} ha sido aprobada por los Directores!`, 'success');
-        }
-        // Check if it got rejected
-        else if (newData.estado === 'rechazada' && oldData.estado !== 'rechazada') {
-          addNotification(`Tu requisición ${newData.codigo || ''} ha sido rechazada.`, 'warning');
-        }
-        // Check first approval
-        else if (newData.estado === 'pendiente_aprobacion_2' && oldData.estado === 'pendiente_aprobacion_1') {
-          addNotification(`Tu requisición ${newData.codigo || ''} ha recibido su primera firma.`, 'info');
-        }
-      })
+          // Check if it got fully approved
+          if (newData.estado === 'aprobada_ejecucion' && oldData.estado !== 'aprobada_ejecucion') {
+            addNotification(
+              `¡Tu requisición ${newData.codigo || ''} ha sido aprobada por los Directores!`,
+              'success',
+            );
+          }
+          // Check if it got rejected
+          else if (newData.estado === 'rechazada' && oldData.estado !== 'rechazada') {
+            addNotification(`Tu requisición ${newData.codigo || ''} ha sido rechazada.`, 'warning');
+          }
+          // Check first approval
+          else if (
+            newData.estado === 'pendiente_aprobacion_2' &&
+            oldData.estado === 'pendiente_aprobacion_1'
+          ) {
+            addNotification(
+              `Tu requisición ${newData.codigo || ''} ha recibido su primera firma.`,
+              'info',
+            );
+          }
+        },
+      )
       .subscribe();
 
     return () => {
@@ -74,19 +88,21 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
   return (
     <NotificationContext.Provider value={{ addNotification }}>
       {children}
-      
+
       {/* Toast Container */}
-      <div style={{
-        position: 'fixed',
-        bottom: '20px',
-        right: '20px',
-        zIndex: 9999,
-        display: 'flex',
-        flexDirection: 'column',
-        gap: '10px'
-      }}>
-        {notifications.map(notif => (
-          <div 
+      <div
+        style={{
+          position: 'fixed',
+          bottom: '20px',
+          right: '20px',
+          zIndex: 9999,
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '10px',
+        }}
+      >
+        {notifications.map((notif) => (
+          <div
             key={notif.id}
             className="animate-fade-in"
             style={{
@@ -99,16 +115,31 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
               alignItems: 'center',
               gap: '12px',
               minWidth: '300px',
-              maxWidth: '400px'
+              maxWidth: '400px',
             }}
           >
-            <Bell size={18} color={notif.type === 'success' ? '#10b981' : notif.type === 'warning' ? '#f59e0b' : '#3b82f6'} />
+            <Bell
+              size={18}
+              color={
+                notif.type === 'success'
+                  ? '#10b981'
+                  : notif.type === 'warning'
+                    ? '#f59e0b'
+                    : '#3b82f6'
+              }
+            />
             <div style={{ flex: 1, fontSize: '0.9rem', color: '#374151', fontWeight: 500 }}>
               {notif.message}
             </div>
-            <button 
+            <button
               onClick={() => removeNotification(notif.id)}
-              style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '2px', color: '#9ca3af' }}
+              style={{
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                padding: '2px',
+                color: '#9ca3af',
+              }}
             >
               <X size={16} />
             </button>

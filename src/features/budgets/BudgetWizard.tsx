@@ -14,7 +14,7 @@ export const BudgetWizard: React.FC<BudgetWizardProps> = ({ isOpen, onClose, onS
   const [projects, setProjects] = useState<Project[]>([]);
   const [categories, setCategories] = useState<ExpenseCategory[]>([]);
   const [partidas, setPartidas] = useState<PartidaGasto[]>([]);
-  
+
   // Selection
   const [selectedProjectId, setSelectedProjectId] = useState('');
   const [periodo, setPeriodo] = useState('2026-ANUAL');
@@ -30,7 +30,7 @@ export const BudgetWizard: React.FC<BudgetWizardProps> = ({ isOpen, onClose, onS
         const [projList, catList, partList] = await Promise.all([
           api.getProjects(),
           api.getCategories(),
-          api.getPartidas()
+          api.getPartidas(),
         ]);
         setProjects(projList);
         setCategories(catList);
@@ -51,18 +51,22 @@ export const BudgetWizard: React.FC<BudgetWizardProps> = ({ isOpen, onClose, onS
       return;
     }
 
-    const selectedProj = projects.find(p => p.id === selectedProjectId);
+    const selectedProj = projects.find((p) => p.id === selectedProjectId);
     if (selectedProj) {
-      setOverheadPct(selectedProj.overhead_porcentaje !== undefined ? selectedProj.overhead_porcentaje : 7.0);
+      setOverheadPct(
+        selectedProj.overhead_porcentaje !== undefined ? selectedProj.overhead_porcentaje : 7.0,
+      );
     }
 
     // Prepopulate existing budget figures
     const loadExistingBudgets = async () => {
       try {
         const allBudgets = await api.getBudgets();
-        const filtered = allBudgets.filter(b => b.proyecto_id === selectedProjectId && b.periodo === periodo);
+        const filtered = allBudgets.filter(
+          (b) => b.proyecto_id === selectedProjectId && b.periodo === periodo,
+        );
         const mapped: Record<string, number> = {};
-        filtered.forEach(b => {
+        filtered.forEach((b) => {
           mapped[b.partida_id] = b.monto_asignado;
         });
         setAmounts(mapped);
@@ -78,15 +82,15 @@ export const BudgetWizard: React.FC<BudgetWizardProps> = ({ isOpen, onClose, onS
   // Handle amount change
   const handleAmountChange = (partidaId: string, val: string) => {
     const num = parseFloat(val) || 0;
-    setAmounts(prev => ({
+    setAmounts((prev) => ({
       ...prev,
-      [partidaId]: num >= 0 ? num : 0
+      [partidaId]: num >= 0 ? num : 0,
     }));
   };
 
   // Helper to get all items under a category
   const getPartidasByCategory = (catId: string) => {
-    return partidas.filter(p => p.categoria_id === catId);
+    return partidas.filter((p) => p.categoria_id === catId);
   };
 
   // Autocalculate values
@@ -95,7 +99,7 @@ export const BudgetWizard: React.FC<BudgetWizardProps> = ({ isOpen, onClose, onS
   // Overhead is calculated by multiplying (Category 1 + Category 2 + Category 3 + Category 5) * (overheadPct / 100)
   const calculateDirectCostsSum = () => {
     let sum = 0;
-    partidas.forEach(p => {
+    partidas.forEach((p) => {
       // Exclude Category 4 from the direct costs base calculation
       if (p.categoria_id !== 'c4000000-0000-0000-0000-000000000004' && p.categoria_id !== 'cat-4') {
         sum += amounts[p.id] || 0;
@@ -110,11 +114,12 @@ export const BudgetWizard: React.FC<BudgetWizardProps> = ({ isOpen, onClose, onS
   // Get total for Category 4: 4.1 + 4.2 + (Overhead 4.3)
   const getCategory4Total = () => {
     let sum = 0;
-    const cat4Partidas = getPartidasByCategory('c4000000-0000-0000-0000-000000000004').length > 0 
-      ? getPartidasByCategory('c4000000-0000-0000-0000-000000000004')
-      : getPartidasByCategory('cat-4');
-      
-    cat4Partidas.forEach(p => {
+    const cat4Partidas =
+      getPartidasByCategory('c4000000-0000-0000-0000-000000000004').length > 0
+        ? getPartidasByCategory('c4000000-0000-0000-0000-000000000004')
+        : getPartidasByCategory('cat-4');
+
+    cat4Partidas.forEach((p) => {
       if (p.codigo === '4.3') {
         sum += calculatedOverhead;
       } else {
@@ -130,7 +135,7 @@ export const BudgetWizard: React.FC<BudgetWizardProps> = ({ isOpen, onClose, onS
       return getCategory4Total();
     }
     let sum = 0;
-    getPartidasByCategory(catId).forEach(p => {
+    getPartidasByCategory(catId).forEach((p) => {
       sum += amounts[p.id] || 0;
     });
     return sum;
@@ -147,7 +152,7 @@ export const BudgetWizard: React.FC<BudgetWizardProps> = ({ isOpen, onClose, onS
     setIsSubmitting(true);
     try {
       // 1. Update project's overhead percentage if it changed
-      const currentProj = projects.find(p => p.id === selectedProjectId);
+      const currentProj = projects.find((p) => p.id === selectedProjectId);
       if (currentProj && currentProj.overhead_porcentaje !== overheadPct) {
         if (!isSimulationMode) {
           const { error } = await supabase
@@ -166,15 +171,15 @@ export const BudgetWizard: React.FC<BudgetWizardProps> = ({ isOpen, onClose, onS
       }
 
       // 2. Prepare budget rows for saving
-      const budgetsToSave = partidas.map(p => {
+      const budgetsToSave = partidas.map((p) => {
         const isOverhead = p.codigo === '4.3';
-        const finalMonto = isOverhead ? calculatedOverhead : (amounts[p.id] || 0);
+        const finalMonto = isOverhead ? calculatedOverhead : amounts[p.id] || 0;
 
         return {
           proyecto_id: selectedProjectId,
           partida_id: p.id,
           monto_asignado: finalMonto,
-          periodo: periodo
+          periodo: periodo,
         };
       });
 
@@ -182,27 +187,29 @@ export const BudgetWizard: React.FC<BudgetWizardProps> = ({ isOpen, onClose, onS
       if (!isSimulationMode) {
         // Real database operation
         for (const b of budgetsToSave) {
-          const { error } = await supabase
-            .from('presupuestos')
-            .upsert({
+          const { error } = await supabase.from('presupuestos').upsert(
+            {
               proyecto_id: b.proyecto_id,
               partida_id: b.partida_id,
               monto_asignado: b.monto_asignado,
-              periodo: b.periodo
-            }, {
-              onConflict: 'proyecto_id,partida_id,periodo'
-            });
+              periodo: b.periodo,
+            },
+            {
+              onConflict: 'proyecto_id,partida_id,periodo',
+            },
+          );
           if (error) throw error;
         }
       } else {
         // Simulated local storage
-        let mockBudgets = JSON.parse(localStorage.getItem('cnbv_budgets') || '[]');
-        
-        budgetsToSave.forEach(bToSave => {
-          const idx = mockBudgets.findIndex((mb: Budget) => 
-            mb.proyecto_id === bToSave.proyecto_id && 
-            mb.partida_id === bToSave.partida_id && 
-            mb.periodo === bToSave.periodo
+        const mockBudgets = JSON.parse(localStorage.getItem('cnbv_budgets') || '[]');
+
+        budgetsToSave.forEach((bToSave) => {
+          const idx = mockBudgets.findIndex(
+            (mb: Budget) =>
+              mb.proyecto_id === bToSave.proyecto_id &&
+              mb.partida_id === bToSave.partida_id &&
+              mb.periodo === bToSave.periodo,
           );
 
           if (idx !== -1) {
@@ -215,7 +222,7 @@ export const BudgetWizard: React.FC<BudgetWizardProps> = ({ isOpen, onClose, onS
               monto_asignado: bToSave.monto_asignado,
               monto_ejecutado: 0,
               monto_comprometido: 0,
-              periodo: bToSave.periodo
+              periodo: bToSave.periodo,
             });
           }
         });
@@ -239,87 +246,114 @@ export const BudgetWizard: React.FC<BudgetWizardProps> = ({ isOpen, onClose, onS
   };
 
   return (
-    <div style={{
-      position: 'fixed',
-      top: 0,
-      left: 0,
-      width: '100%',
-      height: '100%',
-      backgroundColor: 'rgba(15, 23, 42, 0.75)',
-      backdropFilter: 'blur(8px)',
-      display: 'flex',
-      justifyContent: 'center',
-      alignItems: 'center',
-      zIndex: 999,
-      padding: '1.5rem',
-      overflowY: 'auto'
-    }}>
-      <div className="card animate-scale-in" style={{
+    <div
+      style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
         width: '100%',
-        maxWidth: '960px',
-        maxHeight: '90vh',
+        height: '100%',
+        backgroundColor: 'rgba(15, 23, 42, 0.75)',
+        backdropFilter: 'blur(8px)',
         display: 'flex',
-        flexDirection: 'column',
-        padding: '2rem',
-        boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)',
-        border: '1px solid rgba(255, 255, 255, 0.1)',
-        backgroundColor: 'var(--card-bg, #ffffff)',
-        color: 'var(--neutral-dark, #1e293b)',
-        overflow: 'hidden'
-      }}>
-        
+        justifyContent: 'center',
+        alignItems: 'center',
+        zIndex: 999,
+        padding: '1.5rem',
+        overflowY: 'auto',
+      }}
+    >
+      <div
+        className="card animate-scale-in"
+        style={{
+          width: '100%',
+          maxWidth: '960px',
+          maxHeight: '90vh',
+          display: 'flex',
+          flexDirection: 'column',
+          padding: '2rem',
+          boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)',
+          border: '1px solid rgba(255, 255, 255, 0.1)',
+          backgroundColor: 'var(--card-bg, #ffffff)',
+          color: 'var(--neutral-dark, #1e293b)',
+          overflow: 'hidden',
+        }}
+      >
         {/* Header */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', borderBottom: '1px solid var(--border-color)', paddingBottom: '1rem' }}>
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginBottom: '1.5rem',
+            borderBottom: '1px solid var(--border-color)',
+            paddingBottom: '1rem',
+          }}
+        >
           <div>
             <h3 style={{ color: 'var(--primary)', fontSize: '1.5rem', fontWeight: 700, margin: 0 }}>
               Asistente de Presupuesto UNDG
             </h3>
             <p style={{ fontSize: '0.85rem', opacity: 0.7, margin: '0.25rem 0 0 0' }}>
-              Inicializa y distribuye los fondos del proyecto a través de las categorías estándar de Naciones Unidas.
+              Inicializa y distribuye los fondos del proyecto a través de las categorías estándar de
+              Naciones Unidas.
             </p>
           </div>
-          <button onClick={onClose} style={{
-            background: 'transparent',
-            border: 'none',
-            color: 'var(--neutral-dark)',
-            fontSize: '1.5rem',
-            cursor: 'pointer',
-            opacity: 0.7
-          }}>
+          <button
+            onClick={onClose}
+            style={{
+              background: 'transparent',
+              border: 'none',
+              color: 'var(--neutral-dark)',
+              fontSize: '1.5rem',
+              cursor: 'pointer',
+              opacity: 0.7,
+            }}
+          >
             &times;
           </button>
         </div>
 
         {/* Project & Params Header Selector */}
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-          gap: '1.5rem',
-          padding: '1rem',
-          backgroundColor: 'rgba(255,255,255,0.03)',
-          borderRadius: '8px',
-          marginBottom: '1.5rem',
-          border: '1px solid var(--border-color)'
-        }}>
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+            gap: '1.5rem',
+            padding: '1rem',
+            backgroundColor: 'rgba(255,255,255,0.03)',
+            borderRadius: '8px',
+            marginBottom: '1.5rem',
+            border: '1px solid var(--border-color)',
+          }}
+        >
           <div>
-            <label className="form-label" style={{ fontWeight: 600 }}>Seleccionar Proyecto</label>
+            <label className="form-label" style={{ fontWeight: 600 }}>
+              Seleccionar Proyecto
+            </label>
             <select
               className="form-input form-select"
               value={selectedProjectId}
-              onChange={e => setSelectedProjectId(e.target.value)}
+              onChange={(e) => setSelectedProjectId(e.target.value)}
               disabled={isSubmitting}
             >
               <option value="">-- Eliga Proyecto --</option>
-              {projects.map(p => <option key={p.id} value={p.id}>{p.nombre}</option>)}
+              {projects.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.nombre}
+                </option>
+              ))}
             </select>
           </div>
 
           <div>
-            <label className="form-label" style={{ fontWeight: 600 }}>Período Financiero</label>
+            <label className="form-label" style={{ fontWeight: 600 }}>
+              Período Financiero
+            </label>
             <select
               className="form-input form-select"
               value={periodo}
-              onChange={e => setPeriodo(e.target.value)}
+              onChange={(e) => setPeriodo(e.target.value)}
               disabled={isSubmitting}
             >
               <option value="2026-ANUAL">2026 - Presupuesto Anual</option>
@@ -329,7 +363,9 @@ export const BudgetWizard: React.FC<BudgetWizardProps> = ({ isOpen, onClose, onS
           </div>
 
           <div>
-            <label className="form-label" style={{ fontWeight: 600 }}>Tasa de Indirectos (Overhead %)</label>
+            <label className="form-label" style={{ fontWeight: 600 }}>
+              Tasa de Indirectos (Overhead %)
+            </label>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
               <input
                 type="number"
@@ -338,7 +374,7 @@ export const BudgetWizard: React.FC<BudgetWizardProps> = ({ isOpen, onClose, onS
                 max="25"
                 className="form-input"
                 value={overheadPct}
-                onChange={e => setOverheadPct(Math.max(0, parseFloat(e.target.value) || 0))}
+                onChange={(e) => setOverheadPct(Math.max(0, parseFloat(e.target.value) || 0))}
                 disabled={isSubmitting || !selectedProjectId}
                 style={{ width: '80px' }}
               />
@@ -351,71 +387,136 @@ export const BudgetWizard: React.FC<BudgetWizardProps> = ({ isOpen, onClose, onS
         {/* Wizard Table / Form */}
         <div style={{ flex: 1, overflowY: 'auto', marginBottom: '1.5rem', paddingRight: '0.5rem' }}>
           {!selectedProjectId ? (
-            <div style={{ padding: '4rem 2rem', textAlign: 'center', opacity: 0.6, fontSize: '0.95rem' }}>
-              <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}><AlertTriangle size={18} color="var(--warning)" /> Seleccione un proyecto en el panel superior para desplegar la matriz presupuestaria UNDG.</span>
+            <div
+              style={{
+                padding: '4rem 2rem',
+                textAlign: 'center',
+                opacity: 0.6,
+                fontSize: '0.95rem',
+              }}
+            >
+              <span
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '0.5rem',
+                }}
+              >
+                <AlertTriangle size={18} color="var(--warning)" /> Seleccione un proyecto en el
+                panel superior para desplegar la matriz presupuestaria UNDG.
+              </span>
             </div>
           ) : (
             <div>
-              {categories.map(cat => {
+              {categories.map((cat) => {
                 const catPartidas = getPartidasByCategory(cat.id);
                 return (
                   <div key={cat.id} style={{ marginBottom: '2rem' }}>
-                    <div style={{
-                      backgroundColor: 'rgba(var(--primary-rgb), 0.15)',
-                      padding: '0.6rem 1rem',
-                      borderRadius: '6px 6px 0 0',
-                      borderLeft: '4px solid var(--primary)',
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'center'
-                    }}>
-                      <span style={{ fontWeight: 700, color: 'var(--primary)', fontSize: '0.95rem' }}>
+                    <div
+                      style={{
+                        backgroundColor: 'rgba(var(--primary-rgb), 0.15)',
+                        padding: '0.6rem 1rem',
+                        borderRadius: '6px 6px 0 0',
+                        borderLeft: '4px solid var(--primary)',
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                      }}
+                    >
+                      <span
+                        style={{ fontWeight: 700, color: 'var(--primary)', fontSize: '0.95rem' }}
+                      >
                         {cat.nombre}
                       </span>
-                      <span style={{ fontWeight: 700, color: 'var(--primary-dark)', fontSize: '0.95rem' }}>
+                      <span
+                        style={{
+                          fontWeight: 700,
+                          color: 'var(--primary-dark)',
+                          fontSize: '0.95rem',
+                        }}
+                      >
                         Subtotal: {formatCurrency(getCategoryTotal(cat.id))}
                       </span>
                     </div>
 
-                    <div style={{
-                      border: '1px solid var(--border-color)',
-                      borderTop: 'none',
-                      borderRadius: '0 0 6px 6px',
-                      overflow: 'hidden'
-                    }}>
+                    <div
+                      style={{
+                        border: '1px solid var(--border-color)',
+                        borderTop: 'none',
+                        borderRadius: '0 0 6px 6px',
+                        overflow: 'hidden',
+                      }}
+                    >
                       {catPartidas.map((partida, pIdx) => {
                         const isOverhead = partida.codigo === '4.3';
-                        const displayVal = isOverhead 
-                          ? calculatedOverhead 
-                          : (amounts[partida.id] !== undefined ? amounts[partida.id] : '');
+                        const displayVal = isOverhead
+                          ? calculatedOverhead
+                          : amounts[partida.id] !== undefined
+                            ? amounts[partida.id]
+                            : '';
 
                         return (
-                          <div key={partida.id} style={{
-                            display: 'grid',
-                            gridTemplateColumns: '80px 1fr 180px',
-                            alignItems: 'center',
-                            padding: '0.75rem 1rem',
-                            borderBottom: pIdx === catPartidas.length - 1 ? 'none' : '1px solid var(--border-color)',
-                            backgroundColor: isOverhead ? 'rgba(var(--success-rgb), 0.05)' : 'transparent',
-                            gap: '1rem'
-                          }}>
+                          <div
+                            key={partida.id}
+                            style={{
+                              display: 'grid',
+                              gridTemplateColumns: '80px 1fr 180px',
+                              alignItems: 'center',
+                              padding: '0.75rem 1rem',
+                              borderBottom:
+                                pIdx === catPartidas.length - 1
+                                  ? 'none'
+                                  : '1px solid var(--border-color)',
+                              backgroundColor: isOverhead
+                                ? 'rgba(var(--success-rgb), 0.05)'
+                                : 'transparent',
+                              gap: '1rem',
+                            }}
+                          >
                             {/* Code */}
-                            <span style={{ fontWeight: 700, color: 'var(--primary)', fontSize: '0.85rem' }}>
+                            <span
+                              style={{
+                                fontWeight: 700,
+                                color: 'var(--primary)',
+                                fontSize: '0.85rem',
+                              }}
+                            >
                               Cód. {partida.codigo}
                             </span>
-                            
+
                             {/* Name & Desc */}
                             <div>
-                              <span style={{ fontWeight: 600, fontSize: '0.85rem', color: 'var(--neutral-dark)' }}>
+                              <span
+                                style={{
+                                  fontWeight: 600,
+                                  fontSize: '0.85rem',
+                                  color: 'var(--neutral-dark)',
+                                }}
+                              >
                                 {partida.nombre}
                               </span>
-                              <p style={{ margin: '0.15rem 0 0 0', fontSize: '0.75rem', opacity: 0.6, lineHeight: '1.2' }}>
+                              <p
+                                style={{
+                                  margin: '0.15rem 0 0 0',
+                                  fontSize: '0.75rem',
+                                  opacity: 0.6,
+                                  lineHeight: '1.2',
+                                }}
+                              >
                                 {partida.descripcion}
                               </p>
                             </div>
 
                             {/* Input */}
-                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '0.5rem' }}>
+                            <div
+                              style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'flex-end',
+                                gap: '0.5rem',
+                              }}
+                            >
                               <span style={{ opacity: 0.6, fontSize: '0.9rem' }}>$</span>
                               {isOverhead ? (
                                 <input
@@ -427,7 +528,7 @@ export const BudgetWizard: React.FC<BudgetWizardProps> = ({ isOpen, onClose, onS
                                     fontWeight: 700,
                                     backgroundColor: 'rgba(0,0,0,0.05)',
                                     color: 'var(--success)',
-                                    maxWidth: '120px'
+                                    maxWidth: '120px',
                                   }}
                                   value={calculatedOverhead}
                                 />
@@ -440,7 +541,7 @@ export const BudgetWizard: React.FC<BudgetWizardProps> = ({ isOpen, onClose, onS
                                   placeholder="0.00"
                                   style={{ textAlign: 'right', maxWidth: '120px' }}
                                   value={displayVal}
-                                  onChange={e => handleAmountChange(partida.id, e.target.value)}
+                                  onChange={(e) => handleAmountChange(partida.id, e.target.value)}
                                   disabled={isSubmitting}
                                 />
                               )}
@@ -458,23 +559,38 @@ export const BudgetWizard: React.FC<BudgetWizardProps> = ({ isOpen, onClose, onS
         </div>
 
         {/* Footer Summary & Action Panel */}
-        <div style={{
-          borderTop: '1px solid var(--border-color)',
-          paddingTop: '1.5rem',
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          flexWrap: 'wrap',
-          gap: '1.5rem'
-        }}>
+        <div
+          style={{
+            borderTop: '1px solid var(--border-color)',
+            paddingTop: '1.5rem',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            flexWrap: 'wrap',
+            gap: '1.5rem',
+          }}
+        >
           <div>
             <div style={{ fontSize: '0.8rem', opacity: 0.7 }}>
-              Costos Directos Subtotal: <strong style={{ color: 'var(--neutral-dark)' }}>{formatCurrency(directCostsTotal)}</strong>
+              Costos Directos Subtotal:{' '}
+              <strong style={{ color: 'var(--neutral-dark)' }}>
+                {formatCurrency(directCostsTotal)}
+              </strong>
             </div>
             <div style={{ fontSize: '0.8rem', opacity: 0.7 }}>
-              Costos Indirectos (Overhead {overheadPct}%): <strong style={{ color: 'var(--success)' }}>{formatCurrency(calculatedOverhead)}</strong>
+              Costos Indirectos (Overhead {overheadPct}%):{' '}
+              <strong style={{ color: 'var(--success)' }}>
+                {formatCurrency(calculatedOverhead)}
+              </strong>
             </div>
-            <div style={{ fontSize: '1.2rem', fontWeight: 800, color: 'var(--primary)', marginTop: '0.25rem' }}>
+            <div
+              style={{
+                fontSize: '1.2rem',
+                fontWeight: 800,
+                color: 'var(--primary)',
+                marginTop: '0.25rem',
+              }}
+            >
               Presupuesto Total: {formatCurrency(totalBudget)}
             </div>
           </div>
@@ -493,7 +609,6 @@ export const BudgetWizard: React.FC<BudgetWizardProps> = ({ isOpen, onClose, onS
             </button>
           </div>
         </div>
-
       </div>
     </div>
   );

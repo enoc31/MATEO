@@ -9,9 +9,7 @@ async function test() {
   try {
     // 1. Obtener todas las tasas actuales
     console.log('Listando tasas actuales...');
-    const { data: tasas, error: err1 } = await supabase
-      .from('tasas_bcv')
-      .select('*');
+    const { data: tasas, error: err1 } = await supabase.from('tasas_bcv').select('*');
 
     if (err1) {
       console.error('Error listando:', err1);
@@ -23,9 +21,7 @@ async function test() {
     console.log('Probando upsert en fecha...');
     const { data: d2, error: err2 } = await supabase
       .from('tasas_bcv')
-      .upsert([
-        { fecha: '2026-07-10', tasa: 690.50 }
-      ], { onConflict: 'fecha' });
+      .upsert([{ fecha: '2026-07-10', tasa: 690.5 }], { onConflict: 'fecha' });
 
     if (err2) {
       console.error('Error upsert fecha:', err2);

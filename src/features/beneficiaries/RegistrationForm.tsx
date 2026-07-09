@@ -1,7 +1,18 @@
 import React, { useRef, useState } from 'react';
 import SignatureCanvas from 'react-signature-canvas';
 import { api } from '../../services/api';
-import { Send, Eraser, Calendar, AlertCircle, Apple, Pill, Shirt, Gamepad2, Bath, Droplet } from 'lucide-react';
+import {
+  Send,
+  Eraser,
+  Calendar,
+  AlertCircle,
+  Apple,
+  Pill,
+  Shirt,
+  Gamepad2,
+  Bath,
+  Droplet,
+} from 'lucide-react';
 
 interface RegistrationFormProps {
   onSuccess: (id: string) => void;
@@ -22,13 +33,13 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({ onSuccess, j
     { label: 'Ropa', icon: <Shirt size={16} /> },
     { label: 'Juguetes', icon: <Gamepad2 size={16} /> },
     { label: 'Higiene', icon: <Bath size={16} /> },
-    { label: 'Agua', icon: <Droplet size={16} /> }
+    { label: 'Agua', icon: <Droplet size={16} /> },
   ];
-  
+
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [canvasSize, setCanvasSize] = useState({ width: 300, height: 200 });
-  
+
   const sigCanvas = useRef<any>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -37,11 +48,11 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({ onSuccess, j
       if (containerRef.current) {
         setCanvasSize({
           width: containerRef.current.offsetWidth,
-          height: 200
+          height: 200,
         });
       }
     };
-    
+
     // Initial size
     updateSize();
 
@@ -71,7 +82,7 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({ onSuccess, j
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
-    
+
     if (sigCanvas.current?.isEmpty()) {
       setError('La firma es obligatoria.');
       return;
@@ -98,16 +109,19 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({ onSuccess, j
         console.warn('No se pudo obtener la IP pública');
       }
 
-      const saved = await api.saveBeneficiary({
-        nombre,
-        apellido,
-        cedula,
-        sexo,
-        fecha_nacimiento: fechaNacimiento,
-        tipo_donacion: donaciones,
-        jornada_id: jornadaId,
-        ip_captura
-      }, signatureFile);
+      const saved = await api.saveBeneficiary(
+        {
+          nombre,
+          apellido,
+          cedula,
+          sexo,
+          fecha_nacimiento: fechaNacimiento,
+          tipo_donacion: donaciones,
+          jornada_id: jornadaId,
+          ip_captura,
+        },
+        signatureFile,
+      );
 
       onSuccess(saved.id);
     } catch (err: any) {
@@ -119,63 +133,98 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({ onSuccess, j
   };
 
   return (
-    <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-      
+    <form
+      onSubmit={handleSubmit}
+      style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}
+    >
       {error && (
-        <div style={{ padding: '0.8rem', backgroundColor: 'var(--danger-light, #fee2e2)', color: 'var(--danger)', borderRadius: 'var(--radius-sm)', display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 600, fontSize: '0.9rem' }}>
+        <div
+          style={{
+            padding: '0.8rem',
+            backgroundColor: 'var(--danger-light, #fee2e2)',
+            color: 'var(--danger)',
+            borderRadius: 'var(--radius-sm)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.5rem',
+            fontWeight: 600,
+            fontSize: '0.9rem',
+          }}
+        >
           <AlertCircle size={18} /> {error}
         </div>
       )}
 
       <div>
-        <h3 style={{ fontSize: '1.1rem', color: 'var(--primary)', marginBottom: '1rem', borderBottom: '2px solid var(--neutral-light)', paddingBottom: '0.5rem' }}>
+        <h3
+          style={{
+            fontSize: '1.1rem',
+            color: 'var(--primary)',
+            marginBottom: '1rem',
+            borderBottom: '2px solid var(--neutral-light)',
+            paddingBottom: '0.5rem',
+          }}
+        >
           DATOS PERSONALES
         </h3>
-        
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
+
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+            gap: '1rem',
+          }}
+        >
           <div className="form-group" style={{ marginBottom: 0 }}>
             <label className="form-label">Cédula de Identidad * (Solo números)</label>
-            <input 
-              type="text" 
-              className="app-input" 
+            <input
+              type="text"
+              className="app-input"
               placeholder="Ej: 12345678"
               value={cedula}
-              onChange={e => setCedula(e.target.value.replace(/\D/g, ''))}
+              onChange={(e) => setCedula(e.target.value.replace(/\D/g, ''))}
               required
               disabled={submitting}
             />
           </div>
           <div className="form-group" style={{ marginBottom: 0 }}>
             <label className="form-label">Nombre *</label>
-            <input 
-              type="text" 
-              className="app-input" 
+            <input
+              type="text"
+              className="app-input"
               value={nombre}
-              onChange={e => setNombre(e.target.value)}
+              onChange={(e) => setNombre(e.target.value)}
               required
               disabled={submitting}
             />
           </div>
           <div className="form-group" style={{ marginBottom: 0 }}>
             <label className="form-label">Apellido *</label>
-            <input 
-              type="text" 
-              className="app-input" 
+            <input
+              type="text"
+              className="app-input"
               value={apellido}
-              onChange={e => setApellido(e.target.value)}
+              onChange={(e) => setApellido(e.target.value)}
               required
               disabled={submitting}
             />
           </div>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', marginTop: '1rem' }}>
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+            gap: '1rem',
+            marginTop: '1rem',
+          }}
+        >
           <div className="form-group" style={{ marginBottom: 0 }}>
             <label className="form-label">Sexo *</label>
-            <select 
-              className="app-input" 
-              value={sexo} 
-              onChange={e => setSexo(e.target.value as any)}
+            <select
+              className="app-input"
+              value={sexo}
+              onChange={(e) => setSexo(e.target.value as any)}
               disabled={submitting}
             >
               <option value="Masculino">Masculino</option>
@@ -185,34 +234,53 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({ onSuccess, j
           <div className="form-group" style={{ marginBottom: 0 }}>
             <label className="form-label">Fecha de Nacimiento *</label>
             <div style={{ position: 'relative' }}>
-              <input 
-                type="date" 
-                className="app-input" 
+              <input
+                type="date"
+                className="app-input"
                 value={fechaNacimiento}
-                onChange={e => setFechaNacimiento(e.target.value)}
+                onChange={(e) => setFechaNacimiento(e.target.value)}
                 required
                 disabled={submitting}
               />
-              <Calendar size={18} style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', color: 'var(--neutral-dark)', opacity: 0.5 }} />
+              <Calendar
+                size={18}
+                style={{
+                  position: 'absolute',
+                  right: '10px',
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  pointerEvents: 'none',
+                  color: 'var(--neutral-dark)',
+                  opacity: 0.5,
+                }}
+              />
             </div>
           </div>
         </div>
       </div>
 
       <div>
-        <h3 style={{ fontSize: '1.1rem', color: 'var(--primary)', marginBottom: '1rem', borderBottom: '2px solid var(--neutral-light)', paddingBottom: '0.5rem' }}>
+        <h3
+          style={{
+            fontSize: '1.1rem',
+            color: 'var(--primary)',
+            marginBottom: '1rem',
+            borderBottom: '2px solid var(--neutral-light)',
+            paddingBottom: '0.5rem',
+          }}
+        >
           TIPO DE DONACIÓN *
         </h3>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem' }}>
-          {TIPOS_DONACION.map(tipo => {
+          {TIPOS_DONACION.map((tipo) => {
             const isSelected = donaciones.includes(tipo.label);
             return (
               <button
                 key={tipo.label}
                 type="button"
                 onClick={() => {
-                  setDonaciones(prev => 
-                    isSelected ? prev.filter(t => t !== tipo.label) : [...prev, tipo.label]
+                  setDonaciones((prev) =>
+                    isSelected ? prev.filter((t) => t !== tipo.label) : [...prev, tipo.label],
                   );
                 }}
                 disabled={submitting}
@@ -228,7 +296,7 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({ onSuccess, j
                   transition: 'all 0.2s ease',
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '0.5rem'
+                  gap: '0.5rem',
                 }}
               >
                 {tipo.icon}
@@ -240,42 +308,56 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({ onSuccess, j
       </div>
 
       <div>
-        <h3 style={{ fontSize: '1.1rem', color: 'var(--primary)', marginBottom: '1rem', borderBottom: '2px solid var(--neutral-light)', paddingBottom: '0.5rem' }}>
+        <h3
+          style={{
+            fontSize: '1.1rem',
+            color: 'var(--primary)',
+            marginBottom: '1rem',
+            borderBottom: '2px solid var(--neutral-light)',
+            paddingBottom: '0.5rem',
+          }}
+        >
           FIRMA AUTÓGRAFA *
         </h3>
-        <div 
+        <div
           ref={containerRef}
-          style={{ 
-          border: '2px dashed var(--border-color)', 
-          borderRadius: 'var(--radius-md)', 
-          backgroundColor: '#fff',
-          position: 'relative',
-          overflow: 'hidden',
-          width: '100%',
-          touchAction: 'none'
-        }}>
-          <SignatureCanvas 
-            ref={sigCanvas} 
+          style={{
+            border: '2px dashed var(--border-color)',
+            borderRadius: 'var(--radius-md)',
+            backgroundColor: '#fff',
+            position: 'relative',
+            overflow: 'hidden',
+            width: '100%',
+            touchAction: 'none',
+          }}
+        >
+          <SignatureCanvas
+            ref={sigCanvas}
             backgroundColor="rgb(255,255,255)"
             canvasProps={{
-              width: canvasSize.width, 
-              height: canvasSize.height, 
+              width: canvasSize.width,
+              height: canvasSize.height,
               className: 'sigCanvas',
-              style: { cursor: 'crosshair', touchAction: 'none' }
-            }} 
+              style: { cursor: 'crosshair', touchAction: 'none' },
+            }}
           />
         </div>
-        
+
         <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '0.5rem' }}>
-          <button 
-            type="button" 
+          <button
+            type="button"
             onClick={clearSignature}
             className="btn"
-            style={{ 
-              display: 'flex', alignItems: 'center', gap: '0.4rem', 
-              fontSize: '0.8rem', padding: '0.4rem 0.8rem', 
-              backgroundColor: 'var(--neutral-light)', color: 'var(--neutral-dark)',
-              border: '1px solid var(--border-color)', borderRadius: 'var(--radius-sm)'
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.4rem',
+              fontSize: '0.8rem',
+              padding: '0.4rem 0.8rem',
+              backgroundColor: 'var(--neutral-light)',
+              color: 'var(--neutral-dark)',
+              border: '1px solid var(--border-color)',
+              borderRadius: 'var(--radius-sm)',
             }}
             disabled={submitting}
           >
@@ -285,16 +367,30 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({ onSuccess, j
       </div>
 
       <div style={{ marginTop: '1rem' }}>
-        <button 
-          type="submit" 
-          className="btn btn-secondary" 
+        <button
+          type="submit"
+          className="btn btn-secondary"
           disabled={submitting}
-          style={{ width: '100%', padding: '1rem', fontSize: '1.1rem', fontWeight: 700, display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.5rem' }}
+          style={{
+            width: '100%',
+            padding: '1rem',
+            fontSize: '1.1rem',
+            fontWeight: 700,
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            gap: '0.5rem',
+          }}
         >
-          {submitting ? 'Guardando...' : <><Send size={20} /> ENVIAR REGISTRO</>}
+          {submitting ? (
+            'Guardando...'
+          ) : (
+            <>
+              <Send size={20} /> ENVIAR REGISTRO
+            </>
+          )}
         </button>
       </div>
-
     </form>
   );
 };

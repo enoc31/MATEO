@@ -23,7 +23,7 @@ describe('Login Component', () => {
     render(
       <MemoryRouter>
         <Login />
-      </MemoryRouter>
+      </MemoryRouter>,
     );
 
     // Verificar que los campos de correo y contraseña están presentes
@@ -37,7 +37,7 @@ describe('Login Component', () => {
     render(
       <MemoryRouter>
         <Login />
-      </MemoryRouter>
+      </MemoryRouter>,
     );
 
     const emailInput = screen.getByLabelText(/Correo Electrónico/i) as HTMLInputElement;
@@ -54,10 +54,12 @@ describe('Login Component', () => {
     render(
       <MemoryRouter>
         <Login />
-      </MemoryRouter>
+      </MemoryRouter>,
     );
 
-    const toggleButton = screen.getByRole('button', { name: /¿No tienes una cuenta\? Regístrate aquí/i });
+    const toggleButton = screen.getByRole('button', {
+      name: /¿No tienes una cuenta\? Regístrate aquí/i,
+    });
     fireEvent.click(toggleButton);
 
     // Ahora deberíamos ver el campo de Nombre Completo y el botón de crear cuenta

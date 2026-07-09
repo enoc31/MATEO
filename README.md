@@ -33,7 +33,8 @@ La aplicación implementa rutas protegidas y menús dinámicos para tres perfile
 
 ## 💡 Modo Demostración (Simulación Local)
 
-El sistema cuenta con un **Modo Simulación automático**. Si la aplicación no detecta las variables de entorno de Supabase, activará un banner superior de prueba. 
+El sistema cuenta con un **Modo Simulación automático**. Si la aplicación no detecta las variables de entorno de Supabase, activará un banner superior de prueba.
+
 - Permite iniciar sesión con cualquiera de los tres roles predeterminados con un solo clic.
 - Guarda todos los cambios de manera local y persistente en el `localStorage` del navegador.
 - Cuenta con datos semilla realistas preconfigurados.
@@ -43,24 +44,28 @@ El sistema cuenta con un **Modo Simulación automático**. Si la aplicación no 
 ## 🔧 Configuración e Instalación
 
 1. **Clonar el repositorio**:
+
    ```bash
    git clone <url-del-repositorio>
    cd ONG-DONATION-AUDIT
    ```
 
 2. **Instalar dependencias**:
+
    ```bash
    npm install
    ```
 
 3. **Configurar variables de entorno (Opcional para modo Real)**:
    Crea un archivo `.env` en la raíz del proyecto basándote en [.env.example](file:///.env.example):
+
    ```env
    VITE_SUPABASE_URL=https://tu-proyecto.supabase.co
    VITE_SUPABASE_ANON_KEY=tu-clave-anonima-de-supabase
    ```
 
 4. **Correr en desarrollo**:
+
    ```bash
    npm run dev
    ```

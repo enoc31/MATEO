@@ -7,7 +7,7 @@ vi.mock('../supabaseClient', () => ({
   supabase: {
     from: vi.fn(),
     rpc: vi.fn(),
-  }
+  },
 }));
 
 describe('API Service', () => {
@@ -36,7 +36,7 @@ describe('API Service', () => {
     // En caso de que estemos en SimulationMode (CI sin .env), api.ts usa mocks internos
     // Si no lo estamos, usa supabase. Verificaremos que devuelve algo.
     const donations = await api.getDonations();
-    
+
     expect(Array.isArray(donations)).toBe(true);
     if (!isSimulationMode) {
       expect(supabase.from).toHaveBeenCalledWith('donaciones');
@@ -56,5 +56,20 @@ describe('API Service', () => {
     } else {
       expect(metrics.totalInflows).toBe(0); // simulation mode default
     }
+  });
+
+  it('snapshot test: should match default simulated metrics format', () => {
+    const defaultMetricsFormat = {
+      totalInflows: 0,
+      reconciledInflows: 0,
+      totalOutflows: 0,
+      reconciledOutflows: 0,
+      administrativeOutflows: 0,
+      operationalOutflows: 0,
+      reconciledPercent: 0,
+      unreconciledInflows: 0,
+      unreconciledOutflows: 0,
+    };
+    expect(defaultMetricsFormat).toMatchSnapshot();
   });
 });

@@ -1,5 +1,5 @@
 config:
-  target: "https://ydnylydulwjecdllbnev.supabase.co/rest/v1"
+  target: 'https://ydnylydulwjecdllbnev.supabase.co/rest/v1'
   phases:
     - duration: 10
       arrivalRate: 5
@@ -9,16 +9,16 @@ config:
       name: Sustained load
   defaults:
     headers:
-      apikey: "sb_publishable_ir2UA-esQVx-wDlUKnsjbA_25EdKXU0"
-      Authorization: "Bearer sb_publishable_ir2UA-esQVx-wDlUKnsjbA_25EdKXU0"
+      apikey: 'sb_publishable_ir2UA-esQVx-wDlUKnsjbA_25EdKXU0'
+      Authorization: 'Bearer sb_publishable_ir2UA-esQVx-wDlUKnsjbA_25EdKXU0'
 scenarios:
-  - name: "Read core tables"
+  - name: 'Read core tables'
     flow:
       - get:
-          url: "/donaciones?select=*"
+          url: '/donaciones?select=*'
       - get:
-          url: "/proyectos?select=*"
+          url: '/proyectos?select=*'
       - get:
-          url: "/transacciones_bancarias?select=*"
+          url: '/transacciones_bancarias?select=*'
       - get:
-          url: "/comprobantes_gasto?select=*"
+          url: '/comprobantes_gasto?select=*'

@@ -1,0 +1,6 @@
+{
+  "entryPoints": ["src/main.tsx"],
+  "out": "docs/api",
+  "cleanOutputDir": true,
+  "exclude": ["node_modules", "dist", "coverage", "**/*.test.ts"]
+}

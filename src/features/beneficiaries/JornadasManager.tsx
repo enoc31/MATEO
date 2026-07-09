@@ -18,16 +18,9 @@ export const JornadasManager: React.FC = () => {
   const [proyectoId, setProyectoId] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
-  useEffect(() => {
-    loadData();
-  }, []);
-
   const loadData = async () => {
     try {
-      const [jData, pData] = await Promise.all([
-        api.getJornadas(),
-        api.getProjects()
-      ]);
+      const [jData, pData] = await Promise.all([api.getJornadas(), api.getProjects()]);
       setJornadas(jData);
       setProjects(pData.filter((p: Project) => p.activo));
     } catch (err) {
@@ -37,6 +30,10 @@ export const JornadasManager: React.FC = () => {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    loadData();
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -52,12 +49,12 @@ export const JornadasManager: React.FC = () => {
         fecha,
         beneficios_entregados: beneficios,
         proyecto_id: proyectoId,
-        activa: true
+        activa: true,
       });
       addNotification('Jornada creada exitosamente', 'success');
       setShowForm(false);
       loadData();
-      
+
       // Reset form
       setNombre('');
       setFecha('');
@@ -74,8 +71,13 @@ export const JornadasManager: React.FC = () => {
   const toggleStatus = async (jornada: Jornada) => {
     try {
       await api.updateJornadaStatus(jornada.id, !jornada.activa);
-      setJornadas(prev => prev.map(j => j.id === jornada.id ? { ...j, activa: !j.activa } : j));
-      addNotification(jornada.activa ? 'Jornada desactivada' : 'Jornada habilitada para captura', 'success');
+      setJornadas((prev) =>
+        prev.map((j) => (j.id === jornada.id ? { ...j, activa: !j.activa } : j)),
+      );
+      addNotification(
+        jornada.activa ? 'Jornada desactivada' : 'Jornada habilitada para captura',
+        'success',
+      );
     } catch (err) {
       console.error(err);
       addNotification('Error al cambiar el estado', 'warning');
@@ -94,72 +96,109 @@ export const JornadasManager: React.FC = () => {
 
   return (
     <div style={{ padding: '1rem', maxWidth: '1000px', margin: '0 auto' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          marginBottom: '2rem',
+        }}
+      >
         <div>
-          <h2 style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--neutral-dark)' }}>Jornadas Sociales</h2>
-          <p style={{ color: 'var(--neutral-gray)', margin: 0 }}>Administra los eventos de ayuda para la captura de firmas</p>
+          <h2 style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--neutral-dark)' }}>
+            Jornadas Sociales
+          </h2>
+          <p style={{ color: 'var(--neutral-gray)', margin: 0 }}>
+            Administra los eventos de ayuda para la captura de firmas
+          </p>
         </div>
-        <button 
+        <button
           onClick={() => setShowForm(!showForm)}
           className="btn btn-primary"
           style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}
         >
-          {showForm ? 'Volver a la Lista' : <><Plus size={18} /> Nueva Jornada</>}
+          {showForm ? (
+            'Volver a la Lista'
+          ) : (
+            <>
+              <Plus size={18} /> Nueva Jornada
+            </>
+          )}
         </button>
       </div>
 
       {showForm ? (
         <div className="card" style={{ padding: '2rem' }}>
-          <h3 style={{ marginTop: 0, marginBottom: '1.5rem', borderBottom: '1px solid var(--border-color)', paddingBottom: '1rem' }}>Crear Nueva Jornada</h3>
-          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1rem' }}>
+          <h3
+            style={{
+              marginTop: 0,
+              marginBottom: '1.5rem',
+              borderBottom: '1px solid var(--border-color)',
+              paddingBottom: '1rem',
+            }}
+          >
+            Crear Nueva Jornada
+          </h3>
+          <form
+            onSubmit={handleSubmit}
+            style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}
+          >
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
+                gap: '1rem',
+              }}
+            >
               <div>
                 <label className="form-label">Nombre del Evento</label>
-                <input 
-                  type="text" 
-                  className="app-input" 
-                  placeholder="Ej. Gran Jornada Medica Sur" 
+                <input
+                  type="text"
+                  className="app-input"
+                  placeholder="Ej. Gran Jornada Medica Sur"
                   value={nombre}
-                  onChange={e => setNombre(e.target.value)}
-                  required 
+                  onChange={(e) => setNombre(e.target.value)}
+                  required
                 />
               </div>
               <div>
                 <label className="form-label">Fecha de Ejecución</label>
-                <input 
-                  type="date" 
-                  className="app-input" 
+                <input
+                  type="date"
+                  className="app-input"
                   value={fecha}
-                  onChange={e => setFecha(e.target.value)}
-                  required 
+                  onChange={(e) => setFecha(e.target.value)}
+                  required
                 />
               </div>
             </div>
 
             <div>
               <label className="form-label">Proyecto Asociado</label>
-              <select 
-                className="app-input" 
+              <select
+                className="app-input"
                 value={proyectoId}
-                onChange={e => setProyectoId(e.target.value)}
+                onChange={(e) => setProyectoId(e.target.value)}
                 required
               >
                 <option value="">-- Selecciona el Proyecto --</option>
-                {projects.map(p => (
-                  <option key={p.id} value={p.id}>{p.nombre}</option>
+                {projects.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.nombre}
+                  </option>
                 ))}
               </select>
             </div>
 
             <div>
               <label className="form-label">Beneficios a Entregar (Descripción)</label>
-              <textarea 
-                className="app-input" 
-                placeholder="Describe qué se entregará (Ej. 100 Mercados, 50 Kits de Medicina General...)" 
+              <textarea
+                className="app-input"
+                placeholder="Describe qué se entregará (Ej. 100 Mercados, 50 Kits de Medicina General...)"
                 value={beneficios}
-                onChange={e => setBeneficios(e.target.value)}
+                onChange={(e) => setBeneficios(e.target.value)}
                 rows={3}
-                required 
+                required
               />
             </div>
 
@@ -172,60 +211,164 @@ export const JornadasManager: React.FC = () => {
         </div>
       ) : (
         <>
-          <div style={{ backgroundColor: '#e3f2fd', padding: '1rem', borderRadius: 'var(--radius-md)', marginBottom: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div
+            style={{
+              backgroundColor: '#e3f2fd',
+              padding: '1rem',
+              borderRadius: 'var(--radius-md)',
+              marginBottom: '1.5rem',
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+            }}
+          >
             <div>
-              <strong style={{ color: '#1565c0', display: 'block', marginBottom: '0.25rem' }}>URL Pública para Capturistas</strong>
-              <span style={{ fontSize: '0.9rem', color: '#1e88e5' }}>Comparte este enlace a tu equipo. Ellos solo verán el formulario de captura.</span>
+              <strong style={{ color: '#1565c0', display: 'block', marginBottom: '0.25rem' }}>
+                URL Pública para Capturistas
+              </strong>
+              <span style={{ fontSize: '0.9rem', color: '#1e88e5' }}>
+                Comparte este enlace a tu equipo. Ellos solo verán el formulario de captura.
+              </span>
             </div>
-            <button onClick={copyLink} className="btn" style={{ backgroundColor: '#1976d2', color: 'white', display: 'flex', alignItems: 'center', gap: '0.5rem', border: 'none', cursor: 'pointer', padding: '0.5rem 1rem', borderRadius: 'var(--radius-sm)' }}>
+            <button
+              onClick={copyLink}
+              className="btn"
+              style={{
+                backgroundColor: '#1976d2',
+                color: 'white',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+                border: 'none',
+                cursor: 'pointer',
+                padding: '0.5rem 1rem',
+                borderRadius: 'var(--radius-sm)',
+              }}
+            >
               <LinkIcon size={16} /> Copiar Enlace
             </button>
           </div>
 
           {jornadas.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: '3rem', backgroundColor: '#fff', borderRadius: 'var(--radius-md)', border: '1px dashed var(--border-color)' }}>
-              <CalendarDays size={48} color="var(--neutral-gray)" style={{ margin: '0 auto', opacity: 0.5, marginBottom: '1rem' }} />
-              <h3 style={{ color: 'var(--neutral-dark)', marginBottom: '0.5rem' }}>No hay jornadas creadas</h3>
-              <p style={{ color: 'var(--neutral-gray)' }}>Crea tu primera jornada para empezar a capturar beneficiarios.</p>
+            <div
+              style={{
+                textAlign: 'center',
+                padding: '3rem',
+                backgroundColor: '#fff',
+                borderRadius: 'var(--radius-md)',
+                border: '1px dashed var(--border-color)',
+              }}
+            >
+              <CalendarDays
+                size={48}
+                color="var(--neutral-gray)"
+                style={{ margin: '0 auto', opacity: 0.5, marginBottom: '1rem' }}
+              />
+              <h3 style={{ color: 'var(--neutral-dark)', marginBottom: '0.5rem' }}>
+                No hay jornadas creadas
+              </h3>
+              <p style={{ color: 'var(--neutral-gray)' }}>
+                Crea tu primera jornada para empezar a capturar beneficiarios.
+              </p>
             </div>
           ) : (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '1rem' }}>
-              {jornadas.map(j => (
-                <div key={j.id} className="card" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                    <h3 style={{ margin: 0, fontSize: '1.1rem', color: 'var(--primary)' }}>{j.nombre}</h3>
-                    <span style={{ 
-                      padding: '0.25rem 0.5rem', 
-                      borderRadius: '1rem', 
-                      fontSize: '0.75rem', 
-                      fontWeight: 600,
-                      backgroundColor: j.activa ? '#e8f5e9' : '#ffebee',
-                      color: j.activa ? '#2e7d32' : '#c62828'
-                    }}>
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))',
+                gap: '1rem',
+              }}
+            >
+              {jornadas.map((j) => (
+                <div
+                  key={j.id}
+                  className="card"
+                  style={{
+                    padding: '1.5rem',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '1rem',
+                  }}
+                >
+                  <div
+                    style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'flex-start',
+                    }}
+                  >
+                    <h3 style={{ margin: 0, fontSize: '1.1rem', color: 'var(--primary)' }}>
+                      {j.nombre}
+                    </h3>
+                    <span
+                      style={{
+                        padding: '0.25rem 0.5rem',
+                        borderRadius: '1rem',
+                        fontSize: '0.75rem',
+                        fontWeight: 600,
+                        backgroundColor: j.activa ? '#e8f5e9' : '#ffebee',
+                        color: j.activa ? '#2e7d32' : '#c62828',
+                      }}
+                    >
                       {j.activa ? 'ACTIVA' : 'CERRADA'}
                     </span>
                   </div>
-                  
+
                   <div style={{ fontSize: '0.9rem', color: 'var(--neutral-dark)' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                    <div
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.5rem',
+                        marginBottom: '0.5rem',
+                      }}
+                    >
                       <CalendarDays size={16} color="var(--neutral-gray)" />
                       {new Date(j.fecha).toLocaleDateString('es-VE')}
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                       <Activity size={16} color="var(--neutral-gray)" />
-                      {projects.find(p => p.id === j.proyecto_id)?.nombre || 'Proyecto Desconocido'}
+                      {projects.find((p) => p.id === j.proyecto_id)?.nombre ||
+                        'Proyecto Desconocido'}
                     </div>
                   </div>
 
-                  <div style={{ backgroundColor: 'var(--neutral-light)', padding: '0.75rem', borderRadius: 'var(--radius-sm)', fontSize: '0.85rem' }}>
+                  <div
+                    style={{
+                      backgroundColor: 'var(--neutral-light)',
+                      padding: '0.75rem',
+                      borderRadius: 'var(--radius-sm)',
+                      fontSize: '0.85rem',
+                    }}
+                  >
                     <strong>Beneficios:</strong> {j.beneficios_entregados}
                   </div>
 
-                  <div style={{ marginTop: 'auto', paddingTop: '1rem', borderTop: '1px solid var(--border-color)', display: 'flex', gap: '0.5rem' }}>
-                    <button 
+                  <div
+                    style={{
+                      marginTop: 'auto',
+                      paddingTop: '1rem',
+                      borderTop: '1px solid var(--border-color)',
+                      display: 'flex',
+                      gap: '0.5rem',
+                    }}
+                  >
+                    <button
                       onClick={() => toggleStatus(j)}
                       className="btn"
-                      style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', backgroundColor: j.activa ? '#ffebee' : '#e8f5e9', color: j.activa ? '#c62828' : '#2e7d32', border: 'none', cursor: 'pointer', padding: '0.5rem', borderRadius: 'var(--radius-sm)' }}
+                      style={{
+                        flex: 1,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '0.5rem',
+                        backgroundColor: j.activa ? '#ffebee' : '#e8f5e9',
+                        color: j.activa ? '#c62828' : '#2e7d32',
+                        border: 'none',
+                        cursor: 'pointer',
+                        padding: '0.5rem',
+                        borderRadius: 'var(--radius-sm)',
+                      }}
                     >
                       <Power size={16} />
                       {j.activa ? 'Desactivar' : 'Activar'}

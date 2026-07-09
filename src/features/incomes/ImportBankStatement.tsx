@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Download, XCircle, DollarSign, FolderOpen, ClipboardList, Trash2 } from 'lucide-react';
 import { api } from '../../services/api';
 import type { BankTransaction, TasaBCV } from '../../services/api';
@@ -35,6 +36,7 @@ const parseRobustAmount = (amountStr: string): number => {
 export const ImportBankStatement: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [importingFile, setImportingFile] = useState(false);
+  const navigate = useNavigate();
 
   const [tasas, setTasas] = useState<TasaBCV[]>([]);
   const [latestRate, setLatestRate] = useState<number | null>(null);
@@ -59,13 +61,17 @@ export const ImportBankStatement: React.FC = () => {
     }
   };
 
-  useEffect(() => { loadData(); }, []);
+  useEffect(() => {
+    loadData();
+  }, []);
 
   const getRateForDateLocal = (dateStr: string) => {
     if (!tasas || tasas.length === 0) return latestRate;
-    const exacta = tasas.find(t => t.fecha === dateStr);
+    const exacta = tasas.find((t) => t.fecha === dateStr);
     if (exacta) return exacta.tasa;
-    const anteriores = tasas.filter(t => t.fecha < dateStr).sort((a, b) => b.fecha.localeCompare(a.fecha));
+    const anteriores = tasas
+      .filter((t) => t.fecha < dateStr)
+      .sort((a, b) => b.fecha.localeCompare(a.fecha));
     return anteriores[0]?.tasa || latestRate;
   };
 
@@ -93,20 +99,36 @@ export const ImportBankStatement: React.FC = () => {
             const keys = Object.keys(row);
             if (keys.length === 0) return;
 
-            const fechaKey = keys.find(k => {
-              const ck = k.replace(/^\uFEFF/, '').replace(/"/g, '').trim().toLowerCase();
+            const fechaKey = keys.find((k) => {
+              const ck = k
+                .replace(/^\uFEFF/, '')
+                .replace(/"/g, '')
+                .trim()
+                .toLowerCase();
               return ck.includes('fecha') || ck.includes('date');
             });
-            const refKey = keys.find(k => {
-              const ck = k.replace(/^\uFEFF/, '').replace(/"/g, '').trim().toLowerCase();
+            const refKey = keys.find((k) => {
+              const ck = k
+                .replace(/^\uFEFF/, '')
+                .replace(/"/g, '')
+                .trim()
+                .toLowerCase();
               return ck.includes('ref');
             });
-            const descKey = keys.find(k => {
-              const ck = k.replace(/^\uFEFF/, '').replace(/"/g, '').trim().toLowerCase();
+            const descKey = keys.find((k) => {
+              const ck = k
+                .replace(/^\uFEFF/, '')
+                .replace(/"/g, '')
+                .trim()
+                .toLowerCase();
               return ck.includes('desc');
             });
-            const amountKey = keys.find(k => {
-              const ck = k.replace(/^\uFEFF/, '').replace(/"/g, '').trim().toLowerCase();
+            const amountKey = keys.find((k) => {
+              const ck = k
+                .replace(/^\uFEFF/, '')
+                .replace(/"/g, '')
+                .trim()
+                .toLowerCase();
               return ck.includes('importe') || ck.includes('amount') || ck.includes('monto');
             });
 
@@ -115,10 +137,14 @@ export const ImportBankStatement: React.FC = () => {
             const dKey = descKey || keys[2];
             const aKey = amountKey || keys[3];
 
-            const rawDate = (fKey && row[fKey] !== undefined && row[fKey] !== null) ? String(row[fKey]) : '';
-            const rawRef = (rKey && row[rKey] !== undefined && row[rKey] !== null) ? String(row[rKey]) : '';
-            const rawDesc = (dKey && row[dKey] !== undefined && row[dKey] !== null) ? String(row[dKey]) : '';
-            const rawAmount = (aKey && row[aKey] !== undefined && row[aKey] !== null) ? String(row[aKey]) : '';
+            const rawDate =
+              fKey && row[fKey] !== undefined && row[fKey] !== null ? String(row[fKey]) : '';
+            const rawRef =
+              rKey && row[rKey] !== undefined && row[rKey] !== null ? String(row[rKey]) : '';
+            const rawDesc =
+              dKey && row[dKey] !== undefined && row[dKey] !== null ? String(row[dKey]) : '';
+            const rawAmount =
+              aKey && row[aKey] !== undefined && row[aKey] !== null ? String(row[aKey]) : '';
 
             const dateStr = rawDate.replace(/"/g, '').trim();
             const refStr = rawRef.replace(/"/g, '').trim();
@@ -129,7 +155,7 @@ export const ImportBankStatement: React.FC = () => {
               const dateStrClean = dateStr.replace(/\//g, '-');
               const dateParts = dateStrClean.split('-');
               if (dateParts.length === 3) {
-                let formattedDate = '';
+                let formattedDate: string;
                 if (dateParts[0].length === 4) {
                   formattedDate = `${dateParts[0]}-${dateParts[1]}-${dateParts[2]}`;
                 } else {
@@ -142,13 +168,14 @@ export const ImportBankStatement: React.FC = () => {
                 if (!isNaN(amountVal) && amountVal > 0) {
                   parsedTxs.push({
                     fecha: formattedDate,
-                    referencia: refStr || `REF-${Math.random().toString(36).substr(2, 6).toUpperCase()}`,
+                    referencia:
+                      refStr || `REF-${Math.random().toString(36).substr(2, 6).toUpperCase()}`,
                     descripcion: descStr,
                     monto: amountVal,
                     csv_metadata: {
                       fileName: file.name,
-                      moneda: importMoneda
-                    }
+                      moneda: importMoneda,
+                    },
                   });
                 }
               }
@@ -158,7 +185,9 @@ export const ImportBankStatement: React.FC = () => {
           if (parsedTxs.length === 0) {
             const firstRow = results.data[0] || {};
             const detectedHeaders = Object.keys(firstRow).join(', ');
-            alert(`No se encontraron transacciones de ingreso válidas en el archivo.\n\nCabeceras detectadas: [${detectedHeaders || 'Ninguna'}]\n\nAsegúrese de que el archivo tenga columnas para Fecha, Referencia, Descripción e Importe.`);
+            alert(
+              `No se encontraron transacciones de ingreso válidas en el archivo.\n\nCabeceras detectadas: [${detectedHeaders || 'Ninguna'}]\n\nAsegúrese de que el archivo tenga columnas para Fecha, Referencia, Descripción e Importe.`,
+            );
             setCsvTxs([]);
             setImportFileName('');
           } else {
@@ -174,7 +203,7 @@ export const ImportBankStatement: React.FC = () => {
       error: (err) => {
         target.value = '';
         alert('Error al leer el archivo CSV: ' + err.message);
-      }
+      },
     });
   };
 
@@ -186,11 +215,13 @@ export const ImportBankStatement: React.FC = () => {
       alert(`✅ Se importaron exitosamente ${csvTxs.length} transacciones de ingreso.`);
       window.close();
       setTimeout(() => {
-        window.location.href = '/app?page=incomes';
+        navigate('/app/incomes');
       }, 100);
     } catch (err: any) {
       console.error('Error al registrar transacciones:', err);
-      alert('Error al registrar las transacciones. Por favor, intente de nuevo o comuníquese con el administrador del sistema.');
+      alert(
+        'Error al registrar las transacciones. Por favor, intente de nuevo o comuníquese con el administrador del sistema.',
+      );
     } finally {
       setImportingFile(false);
     }
@@ -208,9 +239,27 @@ export const ImportBankStatement: React.FC = () => {
 
   if (loading) {
     return (
-      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh', backgroundColor: '#f8fafc', color: 'var(--primary)' }}>
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          minHeight: '100vh',
+          backgroundColor: '#f8fafc',
+          color: 'var(--primary)',
+        }}
+      >
         <div style={{ textAlign: 'center' }}>
-          <div style={{ marginBottom: '1rem', color: 'var(--primary)', display: 'flex', justifyContent: 'center' }}><Download size={40} /></div>
+          <div
+            style={{
+              marginBottom: '1rem',
+              color: 'var(--primary)',
+              display: 'flex',
+              justifyContent: 'center',
+            }}
+          >
+            <Download size={40} />
+          </div>
           <strong>Cargando importador bancario...</strong>
         </div>
       </div>
@@ -220,42 +269,67 @@ export const ImportBankStatement: React.FC = () => {
   return (
     <div style={{ minHeight: '100vh', backgroundColor: '#f1f5f9', padding: '2rem 1.5rem' }}>
       <div style={{ maxWidth: '780px', margin: '0 auto' }}>
-        
         {/* Cabecera */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginBottom: '1.5rem',
+          }}
+        >
           <div>
             <h1 style={{ color: 'var(--primary)', fontWeight: 800, margin: 0, fontSize: '1.8rem' }}>
-              <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}><Download size={18} /> Importar Extracto Bancario (CSV)</span>
+              <span
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '0.5rem',
+                }}
+              >
+                <Download size={18} /> Importar Extracto Bancario (CSV)
+              </span>
             </h1>
             <p style={{ margin: '0.25rem 0 0', opacity: 0.6, fontSize: '0.85rem' }}>
               Cargue los depósitos o transferencias del banco para conciliación.
             </p>
           </div>
-          <button 
-            type="button" 
-            className="btn btn-outline" 
+          <button
+            type="button"
+            className="btn btn-outline"
             onClick={() => {
               window.close();
               setTimeout(() => {
-                window.location.href = '/app?page=incomes';
+                navigate('/app/incomes');
               }, 100);
             }}
             style={{ fontWeight: 700 }}
           >
-            <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}><XCircle size={18} /> Cerrar Ventana</span>
+            <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <XCircle size={18} /> Cerrar Ventana
+            </span>
           </button>
         </div>
 
         {/* Card */}
-        <div className="card" style={{ padding: '2.5rem', boxShadow: '0 10px 25px -5px rgba(0,0,0,0.1)', backgroundColor: '#fff', borderRadius: 'var(--radius-lg)' }}>
-          
+        <div
+          className="card"
+          style={{
+            padding: '2.5rem',
+            boxShadow: '0 10px 25px -5px rgba(0,0,0,0.1)',
+            backgroundColor: '#fff',
+            borderRadius: 'var(--radius-lg)',
+          }}
+        >
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-            
             {/* Moneda */}
             <div className="form-group" style={{ marginBottom: 0 }}>
-              <label className="form-label" style={{ fontWeight: 700 }}>Seleccione la moneda del Extracto Bancario *</label>
+              <label className="form-label" style={{ fontWeight: 700 }}>
+                Seleccione la moneda del Extracto Bancario *
+              </label>
               <div style={{ display: 'flex', gap: '0.4rem' }}>
-                {(['USD', 'VES'] as const).map(m => (
+                {(['USD', 'VES'] as const).map((m) => (
                   <button
                     key={m}
                     type="button"
@@ -266,21 +340,34 @@ export const ImportBankStatement: React.FC = () => {
                       if (importFileInputRef.current) importFileInputRef.current.value = '';
                     }}
                     style={{
-                      flex: 1, padding: '0.8rem', borderRadius: '8px', fontWeight: 700,
-                      fontSize: '0.9rem', border: '2px solid', cursor: 'pointer', transition: 'all 0.2s',
+                      flex: 1,
+                      padding: '0.8rem',
+                      borderRadius: '8px',
+                      fontWeight: 700,
+                      fontSize: '0.9rem',
+                      border: '2px solid',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s',
                       borderColor: importMoneda === m ? 'var(--primary)' : 'var(--border-color)',
                       backgroundColor: importMoneda === m ? 'var(--primary)' : 'transparent',
-                      color: importMoneda === m ? '#fff' : 'var(--neutral-dark)'
+                      color: importMoneda === m ? '#fff' : 'var(--neutral-dark)',
                     }}
                   >
-                    {m === 'USD' ? <span style={{display: 'flex', gap: '0.5rem', alignItems: 'center'}}><DollarSign size={16}/> Dólares (USD)</span> : '🇻🇪 Bolívares (VES)'}
+                    {m === 'USD' ? (
+                      <span style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                        <DollarSign size={16} /> Dólares (USD)
+                      </span>
+                    ) : (
+                      '🇻🇪 Bolívares (VES)'
+                    )}
                   </button>
                 ))}
               </div>
             </div>
 
             <p style={{ fontSize: '0.85rem', opacity: 0.7, lineHeight: 1.5, margin: '0.5rem 0' }}>
-              Seleccione el archivo <strong>CSV</strong> del banco. Solo se considerarán los depósitos o transferencias recibidos (importes positivos mayores a 0).
+              Seleccione el archivo <strong>CSV</strong> del banco. Solo se considerarán los
+              depósitos o transferencias recibidos (importes positivos mayores a 0).
             </p>
 
             {/* Input archivo oculto */}
@@ -297,15 +384,25 @@ export const ImportBankStatement: React.FC = () => {
               type="button"
               className="btn btn-outline"
               style={{
-                borderStyle: 'dashed', borderWidth: '2px', display: 'flex', 
-                flexDirection: 'column', justifyContent: 'center', alignItems: 'center', 
-                gap: '0.75rem', padding: '2.5rem', backgroundColor: '#f8fafc',
-                borderRadius: '8px', transition: 'all 0.2s', cursor: 'pointer'
+                borderStyle: 'dashed',
+                borderWidth: '2px',
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'center',
+                alignItems: 'center',
+                gap: '0.75rem',
+                padding: '2.5rem',
+                backgroundColor: '#f8fafc',
+                borderRadius: '8px',
+                transition: 'all 0.2s',
+                cursor: 'pointer',
               }}
               onClick={() => importFileInputRef.current?.click()}
               disabled={importingFile}
             >
-              <div style={{ display: 'flex', justifyContent: 'center' }}><FolderOpen size={40} color="var(--primary)" /></div>
+              <div style={{ display: 'flex', justifyContent: 'center' }}>
+                <FolderOpen size={40} color="var(--primary)" />
+              </div>
               <strong style={{ fontSize: '0.95rem', color: 'var(--primary)' }}>
                 {importFileName || 'Haga clic aquí para seleccionar el archivo CSV'}
               </strong>
@@ -316,30 +413,128 @@ export const ImportBankStatement: React.FC = () => {
 
             {/* Vista previa de transacciones */}
             {csvTxs.length > 0 && (
-              <div style={{ backgroundColor: 'rgba(47,90,174,0.05)', padding: '1.25rem', borderRadius: 'var(--radius-md)', display: 'flex', flexDirection: 'column', gap: '1rem', border: '1px solid rgba(47,90,174,0.1)' }}>
-                
-                <div style={{ fontSize: '0.88rem', fontWeight: 700, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span style={{ color: 'var(--primary)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}><ClipboardList size={18} /> Movimientos de Ingreso Detectados ({csvTxs.length})</span>
+              <div
+                style={{
+                  backgroundColor: 'rgba(47,90,174,0.05)',
+                  padding: '1.25rem',
+                  borderRadius: 'var(--radius-md)',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '1rem',
+                  border: '1px solid rgba(47,90,174,0.1)',
+                }}
+              >
+                <div
+                  style={{
+                    fontSize: '0.88rem',
+                    fontWeight: 700,
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                  }}
+                >
+                  <span
+                    style={{
+                      color: 'var(--primary)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.5rem',
+                    }}
+                  >
+                    <ClipboardList size={18} /> Movimientos de Ingreso Detectados ({csvTxs.length})
+                  </span>
                   <button
                     type="button"
-                    onClick={() => { setCsvTxs([]); setImportFileName(''); if (importFileInputRef.current) importFileInputRef.current.value = ''; }}
-                    style={{ background: 'none', border: 'none', color: 'var(--danger)', cursor: 'pointer', fontSize: '0.8rem', fontWeight: 700 }}
+                    onClick={() => {
+                      setCsvTxs([]);
+                      setImportFileName('');
+                      if (importFileInputRef.current) importFileInputRef.current.value = '';
+                    }}
+                    style={{
+                      background: 'none',
+                      border: 'none',
+                      color: 'var(--danger)',
+                      cursor: 'pointer',
+                      fontSize: '0.8rem',
+                      fontWeight: 700,
+                    }}
                   >
-                    <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}><Trash2 size={16} /> Limpiar Archivo</span>
+                    <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <Trash2 size={16} /> Limpiar Archivo
+                    </span>
                   </button>
                 </div>
 
-                <div style={{ maxHeight: '240px', overflowY: 'auto', fontSize: '0.8rem', border: '1px solid var(--border-color)', borderRadius: '6px', backgroundColor: '#fff' }}>
+                <div
+                  style={{
+                    maxHeight: '240px',
+                    overflowY: 'auto',
+                    fontSize: '0.8rem',
+                    border: '1px solid var(--border-color)',
+                    borderRadius: '6px',
+                    backgroundColor: '#fff',
+                  }}
+                >
                   <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                     <thead>
                       <tr style={{ position: 'sticky', top: 0, zIndex: 10 }}>
-                        <th style={{ padding: '0.6rem 0.8rem', textAlign: 'left', fontWeight: 700, backgroundColor: '#f1f5f9', borderBottom: '1px solid var(--border-color)' }}>Fecha</th>
-                        <th style={{ padding: '0.6rem 0.8rem', textAlign: 'left', fontWeight: 700, backgroundColor: '#f1f5f9', borderBottom: '1px solid var(--border-color)' }}>Descripción</th>
-                        <th style={{ padding: '0.6rem 0.8rem', textAlign: 'right', fontWeight: 700, backgroundColor: '#f1f5f9', borderBottom: '1px solid var(--border-color)' }}>Monto Original</th>
+                        <th
+                          style={{
+                            padding: '0.6rem 0.8rem',
+                            textAlign: 'left',
+                            fontWeight: 700,
+                            backgroundColor: '#f1f5f9',
+                            borderBottom: '1px solid var(--border-color)',
+                          }}
+                        >
+                          Fecha
+                        </th>
+                        <th
+                          style={{
+                            padding: '0.6rem 0.8rem',
+                            textAlign: 'left',
+                            fontWeight: 700,
+                            backgroundColor: '#f1f5f9',
+                            borderBottom: '1px solid var(--border-color)',
+                          }}
+                        >
+                          Descripción
+                        </th>
+                        <th
+                          style={{
+                            padding: '0.6rem 0.8rem',
+                            textAlign: 'right',
+                            fontWeight: 700,
+                            backgroundColor: '#f1f5f9',
+                            borderBottom: '1px solid var(--border-color)',
+                          }}
+                        >
+                          Monto Original
+                        </th>
                         {importMoneda === 'VES' && (
                           <>
-                            <th style={{ padding: '0.6rem 0.8rem', textAlign: 'right', fontWeight: 700, backgroundColor: '#f1f5f9', borderBottom: '1px solid var(--border-color)' }}>Tasa BCV</th>
-                            <th style={{ padding: '0.6rem 0.8rem', textAlign: 'right', fontWeight: 700, backgroundColor: '#f1f5f9', borderBottom: '1px solid var(--border-color)' }}>Equiv. USD</th>
+                            <th
+                              style={{
+                                padding: '0.6rem 0.8rem',
+                                textAlign: 'right',
+                                fontWeight: 700,
+                                backgroundColor: '#f1f5f9',
+                                borderBottom: '1px solid var(--border-color)',
+                              }}
+                            >
+                              Tasa BCV
+                            </th>
+                            <th
+                              style={{
+                                padding: '0.6rem 0.8rem',
+                                textAlign: 'right',
+                                fontWeight: 700,
+                                backgroundColor: '#f1f5f9',
+                                borderBottom: '1px solid var(--border-color)',
+                              }}
+                            >
+                              Equiv. USD
+                            </th>
                           </>
                         )}
                       </tr>
@@ -350,17 +545,41 @@ export const ImportBankStatement: React.FC = () => {
                         const usdVal = importMoneda === 'VES' && rate ? tx.monto / rate : tx.monto;
                         return (
                           <tr key={idx} style={{ borderBottom: '1px solid var(--border-color)' }}>
-                            <td style={{ padding: '0.5rem 0.8rem', whiteSpace: 'nowrap' }}>{formatDateForFrontEnd(tx.fecha)}</td>
+                            <td style={{ padding: '0.5rem 0.8rem', whiteSpace: 'nowrap' }}>
+                              {formatDateForFrontEnd(tx.fecha)}
+                            </td>
                             <td style={{ padding: '0.5rem 0.8rem' }}>{tx.descripcion}</td>
-                            <td style={{ padding: '0.5rem 0.8rem', textAlign: 'right', fontWeight: 700 }}>
-                              {importMoneda === 'VES' ? formatVesCurrency(tx.monto) : formatCurrency(tx.monto)}
+                            <td
+                              style={{
+                                padding: '0.5rem 0.8rem',
+                                textAlign: 'right',
+                                fontWeight: 700,
+                              }}
+                            >
+                              {importMoneda === 'VES'
+                                ? formatVesCurrency(tx.monto)
+                                : formatCurrency(tx.monto)}
                             </td>
                             {importMoneda === 'VES' && (
                               <>
-                                <td style={{ padding: '0.5rem 0.8rem', textAlign: 'right', fontFamily: 'monospace', opacity: rate ? 1 : 0.4 }}>
+                                <td
+                                  style={{
+                                    padding: '0.5rem 0.8rem',
+                                    textAlign: 'right',
+                                    fontFamily: 'monospace',
+                                    opacity: rate ? 1 : 0.4,
+                                  }}
+                                >
                                   {rate ? `${rate.toFixed(4)}` : 'Sin Tasa'}
                                 </td>
-                                <td style={{ padding: '0.5rem 0.8rem', textAlign: 'right', fontWeight: 700, color: 'var(--success)' }}>
+                                <td
+                                  style={{
+                                    padding: '0.5rem 0.8rem',
+                                    textAlign: 'right',
+                                    fontWeight: 700,
+                                    color: 'var(--success)',
+                                  }}
+                                >
                                   {formatCurrency(usdVal)}
                                 </td>
                               </>
@@ -373,16 +592,48 @@ export const ImportBankStatement: React.FC = () => {
                 </div>
 
                 {/* Resumen de totales */}
-                <div style={{ display: 'grid', gridTemplateColumns: importMoneda === 'VES' ? '1fr 1fr' : '1fr', gap: '1rem', backgroundColor: '#fff', padding: '1rem', borderRadius: '6px', border: '1px solid var(--border-color)' }}>
+                <div
+                  style={{
+                    display: 'grid',
+                    gridTemplateColumns: importMoneda === 'VES' ? '1fr 1fr' : '1fr',
+                    gap: '1rem',
+                    backgroundColor: '#fff',
+                    padding: '1rem',
+                    borderRadius: '6px',
+                    border: '1px solid var(--border-color)',
+                  }}
+                >
                   <div>
-                    <span style={{ opacity: 0.6, display: 'block', fontSize: '0.7rem', textTransform: 'uppercase', fontWeight: 700 }}>Total Depósitos Detectados ({importMoneda})</span>
+                    <span
+                      style={{
+                        opacity: 0.6,
+                        display: 'block',
+                        fontSize: '0.7rem',
+                        textTransform: 'uppercase',
+                        fontWeight: 700,
+                      }}
+                    >
+                      Total Depósitos Detectados ({importMoneda})
+                    </span>
                     <strong style={{ fontSize: '1.2rem', color: 'var(--neutral-dark)' }}>
-                      {importMoneda === 'VES' ? formatVesCurrency(sumOriginal) : formatCurrency(sumOriginal)}
+                      {importMoneda === 'VES'
+                        ? formatVesCurrency(sumOriginal)
+                        : formatCurrency(sumOriginal)}
                     </strong>
                   </div>
                   {importMoneda === 'VES' && (
                     <div>
-                      <span style={{ opacity: 0.6, display: 'block', fontSize: '0.7rem', textTransform: 'uppercase', fontWeight: 700 }}>Total Equivalente (USD)</span>
+                      <span
+                        style={{
+                          opacity: 0.6,
+                          display: 'block',
+                          fontSize: '0.7rem',
+                          textTransform: 'uppercase',
+                          fontWeight: 700,
+                        }}
+                      >
+                        Total Equivalente (USD)
+                      </span>
                       <strong style={{ fontSize: '1.2rem', color: 'var(--success)' }}>
                         {formatCurrency(sumUsdEquivalent)}
                       </strong>
@@ -397,32 +648,51 @@ export const ImportBankStatement: React.FC = () => {
                   onClick={handleConfirmImport}
                   disabled={importingFile}
                 >
-                  {importingFile ? 'Procesando importación...' : <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}><Download size={18} /> Confirmar e Importar {csvTxs.length} Transacciones</span>}
+                  {importingFile ? (
+                    'Procesando importación...'
+                  ) : (
+                    <span
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '0.5rem',
+                      }}
+                    >
+                      <Download size={18} /> Confirmar e Importar {csvTxs.length} Transacciones
+                    </span>
+                  )}
                 </button>
               </div>
             )}
 
             {/* Cancelar */}
-            <div style={{ display: 'flex', justifyContent: 'flex-end', borderTop: '1px solid var(--border-color)', paddingTop: '1.25rem', marginTop: '0.5rem' }}>
-              <button 
-                type="button" 
-                className="btn btn-outline" 
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'flex-end',
+                borderTop: '1px solid var(--border-color)',
+                paddingTop: '1.25rem',
+                marginTop: '0.5rem',
+              }}
+            >
+              <button
+                type="button"
+                className="btn btn-outline"
                 onClick={() => {
-               window.close();
-               setTimeout(() => {
-                 window.location.href = '/app?page=incomes';
-               }, 100);
-             }} 
+                  window.close();
+                  setTimeout(() => {
+                    navigate('/app/incomes');
+                  }, 100);
+                }}
                 disabled={importingFile}
                 style={{ fontWeight: 700 }}
               >
                 Cancelar
               </button>
             </div>
-
           </div>
         </div>
-
       </div>
     </div>
   );

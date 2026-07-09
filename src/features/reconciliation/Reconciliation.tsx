@@ -33,7 +33,7 @@ export const Reconciliation: React.FC = () => {
   const [reconciliationItems, setReconciliationItems] = useState<ReconciliationItem[]>([]);
   const [selectedTx, setSelectedTx] = useState<BankTransaction | null>(null);
   const [selectedItem, setSelectedItem] = useState<ReconciliationItem | null>(null);
-  
+
   // Tasas de cambio
   const [tasas, setTasas] = useState<TasaBCV[]>([]);
   const [latestRate, setLatestRate] = useState<number | null>(null);
@@ -48,14 +48,16 @@ export const Reconciliation: React.FC = () => {
     fecha: '',
     referencia: '',
     descripcion: '',
-    monto: ''
+    monto: '',
   });
 
   const getRateForDateLocal = (dateStr: string) => {
     if (!tasas || tasas.length === 0) return latestRate;
-    const exacta = tasas.find(t => t.fecha === dateStr);
+    const exacta = tasas.find((t) => t.fecha === dateStr);
     if (exacta) return exacta.tasa;
-    const anteriores = tasas.filter(t => t.fecha < dateStr).sort((a, b) => b.fecha.localeCompare(a.fecha));
+    const anteriores = tasas
+      .filter((t) => t.fecha < dateStr)
+      .sort((a, b) => b.fecha.localeCompare(a.fecha));
     return anteriores[0]?.tasa || latestRate;
   };
 
@@ -87,28 +89,28 @@ export const Reconciliation: React.FC = () => {
         api.getBankTransactions(),
         api.getExpenses(),
         api.getTasasBCV(),
-        api.getDonations()
+        api.getDonations(),
       ]);
       // Mostrar solo transacciones pendientes
-      setTransactions(txList.filter(t => t.estado === 'pendiente'));
-      
+      setTransactions(txList.filter((t) => t.estado === 'pendiente'));
+
       // Mapear gastos pendientes
       const mappedExpenses: ReconciliationItem[] = expList
-        .filter(e => !e.transaccion_id && e.estado !== 'rechazado')
-        .map(e => ({
+        .filter((e) => !e.transaccion_id && e.estado !== 'rechazado')
+        .map((e) => ({
           id: e.id,
           tipo: 'gasto',
           monto: e.monto,
           descripcion: `[EGRESO] ${e.descripcion}`,
           fecha: e.fecha_gasto,
           transaccion_id: e.transaccion_id,
-          reference_object: e
+          reference_object: e,
         }));
 
       // Mapear donaciones pendientes
       const mappedDonations: ReconciliationItem[] = donationList
-        .filter(d => !d.transaccion_id)
-        .map(d => ({
+        .filter((d) => !d.transaccion_id)
+        .map((d) => ({
           id: d.id,
           tipo: 'donacion',
           monto: d.monto_usd || d.monto,
@@ -118,11 +120,13 @@ export const Reconciliation: React.FC = () => {
           descripcion: `[INGRESO] Donación de: ${d.donante} - ${d.descripcion || 'Sin descripción'}`,
           fecha: d.fecha,
           transaccion_id: d.transaccion_id,
-          reference_object: d
+          reference_object: d,
         }));
 
       // Unificar y ordenar por fecha (más reciente primero)
-      const unified = [...mappedExpenses, ...mappedDonations].sort((a, b) => b.fecha.localeCompare(a.fecha));
+      const unified = [...mappedExpenses, ...mappedDonations].sort((a, b) =>
+        b.fecha.localeCompare(a.fecha),
+      );
       setReconciliationItems(unified);
 
       setTasas(ratesList);
@@ -154,19 +158,17 @@ export const Reconciliation: React.FC = () => {
           const headers = Object.keys(firstRow);
           setCsvHeaders(headers);
           setCsvDataRows(results.data);
-          
+
           // Mapeo automático inteligente por similitud de nombres
           const findHeader = (keywords: string[]) => {
-            return headers.find(h => 
-              keywords.some(k => h.toLowerCase().includes(k))
-            ) || '';
+            return headers.find((h) => keywords.some((k) => h.toLowerCase().includes(k))) || '';
           };
 
           setMappings({
             fecha: findHeader(['fech', 'date', 'day']),
             referencia: findHeader(['ref', 'num', 'id', 'comprobante']),
             descripcion: findHeader(['desc', 'concep', 'glosa', 'detalle']),
-            monto: findHeader(['mont', 'amou', 'valor', 'ingreso', 'egreso'])
+            monto: findHeader(['mont', 'amou', 'valor', 'ingreso', 'egreso']),
           });
 
           setShowMappingModal(true);
@@ -176,7 +178,7 @@ export const Reconciliation: React.FC = () => {
       },
       error: (error) => {
         alert('Error al leer el archivo CSV: ' + error.message);
-      }
+      },
     });
   };
 
@@ -198,7 +200,7 @@ export const Reconciliation: React.FC = () => {
           referencia: row[mappings.referencia] || `CSV-${idx}-${Date.now().toString().slice(-4)}`,
           descripcion: row[mappings.descripcion] || 'Transacción CSV',
           monto: monto,
-          csv_metadata: { rowNumber: idx + 1, fileName: csvFile?.name }
+          csv_metadata: { rowNumber: idx + 1, fileName: csvFile?.name },
         };
       });
 
@@ -220,7 +222,7 @@ export const Reconciliation: React.FC = () => {
     // Validación de montos aproximados o exactos
     const isVES = selectedTx.csv_metadata?.moneda === 'VES';
     let txMontoUsd = Math.abs(selectedTx.monto);
-    
+
     if (isVES) {
       const rate = getRateForDateLocal(selectedTx.fecha);
       if (rate) {
@@ -230,12 +232,12 @@ export const Reconciliation: React.FC = () => {
 
     const diff = Math.abs(txMontoUsd - selectedItem.monto);
     if (diff > 0.01) {
-      const formattedTxVal = isVES 
+      const formattedTxVal = isVES
         ? `${formatVesCurrency(Math.abs(selectedTx.monto))} [Equiv: ${formatCurrency(txMontoUsd)}]`
         : formatCurrency(txMontoUsd);
 
       const confirmDiff = window.confirm(
-        `Atención: El monto del extracto bancario (${formattedTxVal}) no coincide exactamente con el monto del comprobante cargado (${formatCurrency(selectedItem.monto)}).\n\n¿Desea forzar la conciliación de todas formas?`
+        `Atención: El monto del extracto bancario (${formattedTxVal}) no coincide exactamente con el monto del comprobante cargado (${formatCurrency(selectedItem.monto)}).\n\n¿Desea forzar la conciliación de todas formas?`,
       );
       if (!confirmDiff) return;
     }
@@ -247,11 +249,11 @@ export const Reconciliation: React.FC = () => {
       } else {
         await api.reconcileDonation(selectedItem.id, selectedTx.id);
       }
-      
+
       // Limpiar selección
       setSelectedTx(null);
       setSelectedItem(null);
-      
+
       // Recargar datos
       await loadData();
       alert('Conciliación realizada con éxito.');
@@ -269,7 +271,7 @@ export const Reconciliation: React.FC = () => {
       '2026-06-08,REF-92011,PAGO ALIMENTOS POLAR COMEDOR MARACAIBO,-4850.00',
       '2026-06-04,REF-33412,PAGO FARMA-SALUD SUMINISTROS MEDICOS,-12500.00',
       '2026-06-25,REF-09881,DONACION ESPECIAL ALIANZA INTERNACIONAL,5000.00',
-      '2026-06-28,REF-22910,PAGO LOGISTICA TRANSPORTE TACHIRA,-850.00'
+      '2026-06-28,REF-22910,PAGO LOGISTICA TRANSPORTE TACHIRA,-850.00',
     ].join('\n');
 
     const blob = new Blob([headers + rows], { type: 'text/csv;charset=utf-8;' });
@@ -282,101 +284,205 @@ export const Reconciliation: React.FC = () => {
     document.body.removeChild(link);
   };
 
-
-
   return (
     <div className="animate-fade-in-up">
       {/* Encabezado y Herramientas */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem', marginBottom: '2rem' }}>
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          flexWrap: 'wrap',
+          gap: '1rem',
+          marginBottom: '2rem',
+        }}
+      >
         <div>
-          <h2 style={{ color: 'var(--primary)', fontSize: '1.75rem', fontWeight: 700 }}>Conciliación Bancaria</h2>
-          <p style={{ color: 'var(--neutral-dark)', opacity: 0.8, fontSize: '0.9rem', marginTop: '0.25rem' }}>
-            Importa el extracto bancario CSV y vincula las transacciones con los comprobantes de gastos.
+          <h2 style={{ color: 'var(--primary)', fontSize: '1.75rem', fontWeight: 700 }}>
+            Conciliación Bancaria
+          </h2>
+          <p
+            style={{
+              color: 'var(--neutral-dark)',
+              opacity: 0.8,
+              fontSize: '0.9rem',
+              marginTop: '0.25rem',
+            }}
+          >
+            Importa el extracto bancario CSV y vincula las transacciones con los comprobantes de
+            gastos.
           </p>
         </div>
-        
+
         <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
-          <button onClick={() => setIsCosoModalOpen(true)} className="btn btn-outline" style={{ fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--primary)', borderColor: 'var(--primary)' }}>
+          <button
+            onClick={() => setIsCosoModalOpen(true)}
+            className="btn btn-outline"
+            style={{
+              fontSize: '0.85rem',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+              color: 'var(--primary)',
+              borderColor: 'var(--primary)',
+            }}
+          >
             📖 Manual COSO
           </button>
-          
-          <button onClick={handleDownloadDemoCsv} className="btn btn-outline" style={{ fontSize: '0.85rem' }}>
+
+          <button
+            onClick={handleDownloadDemoCsv}
+            className="btn btn-outline"
+            style={{ fontSize: '0.85rem' }}
+          >
             📥 Descargar CSV de Prueba
           </button>
-          
+
           <label className="btn btn-primary" style={{ fontSize: '0.85rem', cursor: 'pointer' }}>
             📂 Subir Extracto Bancario (CSV)
-            <input 
-              type="file" 
-              accept=".csv" 
-              onChange={handleCsvFileChange} 
-              style={{ display: 'none' }} 
+            <input
+              type="file"
+              accept=".csv"
+              onChange={handleCsvFileChange}
+              style={{ display: 'none' }}
             />
           </label>
         </div>
       </div>
 
-      <ProcessFlowchart 
-        currentStep="conciliacion" 
+      <ProcessFlowchart
+        currentStep="conciliacion"
         description="La Conciliación es el paso definitivo donde la realidad contable se encuentra con la realidad bancaria. Nos asegura de que cada movimiento registrado coincida exactamente con los fondos reales de la institución, sin que falte ni sobre un solo céntimo."
       />
 
       {loading && transactions.length === 0 && reconciliationItems.length === 0 ? (
-        <div style={{ textAlign: 'center', padding: '3rem' }}>Cargando datos de conciliación...</div>
+        <div style={{ textAlign: 'center', padding: '3rem' }}>
+          Cargando datos de conciliación...
+        </div>
       ) : (
         /* Grid Principal de Conciliación */
         <div className="reconciliation-grid">
-          
           {/* Columna Izquierda: Extracto Bancario (Transacciones) */}
           <div className="reconciliation-column">
-            <div className="card-title" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div
+              className="card-title"
+              style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
+            >
               <span>Extracto Bancario ({transactions.length} pendientes)</span>
-              <span style={{ fontSize: '0.8rem', fontWeight: 400, color: 'var(--neutral-dark)' }}>Selecciona una salida (-)</span>
+              <span style={{ fontSize: '0.8rem', fontWeight: 400, color: 'var(--neutral-dark)' }}>
+                Selecciona una salida (-)
+              </span>
             </div>
-            
+
             <div className="reconciliation-list">
               {transactions.length === 0 ? (
-                <div className="card" style={{ textAlign: 'center', color: 'var(--neutral-dark)', opacity: 0.7, padding: '3rem' }}>
+                <div
+                  className="card"
+                  style={{
+                    textAlign: 'center',
+                    color: 'var(--neutral-dark)',
+                    opacity: 0.7,
+                    padding: '3rem',
+                  }}
+                >
                   <p style={{ fontSize: '2.5rem' }}>🏦</p>
-                  <p style={{ fontWeight: 600, marginTop: '1rem' }}>No hay transacciones bancarias pendientes</p>
-                  <p style={{ fontSize: '0.8rem', marginTop: '0.25rem' }}>Sube un archivo CSV de tu banco para iniciar.</p>
+                  <p style={{ fontWeight: 600, marginTop: '1rem' }}>
+                    No hay transacciones bancarias pendientes
+                  </p>
+                  <p style={{ fontSize: '0.8rem', marginTop: '0.25rem' }}>
+                    Sube un archivo CSV de tu banco para iniciar.
+                  </p>
                 </div>
               ) : (
-                transactions.map(tx => (
-                  <div 
+                transactions.map((tx) => (
+                  <div
                     key={tx.id}
                     onClick={() => setSelectedTx(selectedTx?.id === tx.id ? null : tx)}
                     className="card"
                     style={{
                       padding: '1rem',
                       cursor: 'pointer',
-                      borderColor: selectedTx?.id === tx.id ? 'var(--primary)' : 'var(--border-color)',
+                      borderColor:
+                        selectedTx?.id === tx.id ? 'var(--primary)' : 'var(--border-color)',
                       borderLeft: `5px solid ${tx.monto < 0 ? 'var(--danger)' : 'var(--success)'}`,
-                      backgroundColor: selectedTx?.id === tx.id ? 'rgba(47, 90, 174, 0.03)' : '#ffffff',
-                      transition: 'all var(--transition-fast)'
+                      backgroundColor:
+                        selectedTx?.id === tx.id ? 'rgba(47, 90, 174, 0.03)' : '#ffffff',
+                      transition: 'all var(--transition-fast)',
                     }}
                   >
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                      <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--neutral-dark)', opacity: 0.7 }}>
+                    <div
+                      style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'flex-start',
+                      }}
+                    >
+                      <span
+                        style={{
+                          fontSize: '0.8rem',
+                          fontWeight: 700,
+                          color: 'var(--neutral-dark)',
+                          opacity: 0.7,
+                        }}
+                      >
                         {formatDateForFrontEnd(tx.fecha)}
                       </span>
-                      <span style={{ fontWeight: 700, color: tx.monto < 0 ? 'var(--danger)' : 'var(--success)' }}>
+                      <span
+                        style={{
+                          fontWeight: 700,
+                          color: tx.monto < 0 ? 'var(--danger)' : 'var(--success)',
+                        }}
+                      >
                         {formatTxAmount(tx)}
                       </span>
                     </div>
-                    {tx.csv_metadata?.moneda === 'VES' && (() => {
-                      const rate = getRateForDateLocal(tx.fecha);
-                      const usdVal = rate ? tx.monto / rate : 0;
-                      return (
-                        <div style={{ fontSize: '0.72rem', opacity: 0.85, textAlign: 'right', marginTop: '0.15rem', color: 'var(--primary)' }}>
-                          Equiv: <strong style={{ color: tx.monto < 0 ? 'var(--danger)' : 'var(--success)' }}>{formatCurrency(usdVal)}</strong> <span style={{ fontSize: '0.65rem', opacity: 0.6 }}>(Tasa: {rate ? rate.toFixed(4) : '—'})</span>
-                        </div>
-                      );
-                    })()}
-                    <p style={{ fontWeight: 500, fontSize: '0.9rem', marginTop: '0.5rem', wordBreak: 'break-word' }}>
+                    {tx.csv_metadata?.moneda === 'VES' &&
+                      (() => {
+                        const rate = getRateForDateLocal(tx.fecha);
+                        const usdVal = rate ? tx.monto / rate : 0;
+                        return (
+                          <div
+                            style={{
+                              fontSize: '0.72rem',
+                              opacity: 0.85,
+                              textAlign: 'right',
+                              marginTop: '0.15rem',
+                              color: 'var(--primary)',
+                            }}
+                          >
+                            Equiv:{' '}
+                            <strong
+                              style={{ color: tx.monto < 0 ? 'var(--danger)' : 'var(--success)' }}
+                            >
+                              {formatCurrency(usdVal)}
+                            </strong>{' '}
+                            <span style={{ fontSize: '0.65rem', opacity: 0.6 }}>
+                              (Tasa: {rate ? rate.toFixed(4) : '—'})
+                            </span>
+                          </div>
+                        );
+                      })()}
+                    <p
+                      style={{
+                        fontWeight: 500,
+                        fontSize: '0.9rem',
+                        marginTop: '0.5rem',
+                        wordBreak: 'break-word',
+                      }}
+                    >
                       {tx.descripcion}
                     </p>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '0.5rem', fontSize: '0.75rem', color: 'var(--neutral-dark)', opacity: 0.6 }}>
+                    <div
+                      style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        marginTop: '0.5rem',
+                        fontSize: '0.75rem',
+                        color: 'var(--neutral-dark)',
+                        opacity: 0.6,
+                      }}
+                    >
                       <span>Ref: {tx.referencia || 'N/A'}</span>
                     </div>
                   </div>
@@ -387,40 +493,92 @@ export const Reconciliation: React.FC = () => {
 
           {/* Columna Derecha: Comprobantes de Campo */}
           <div className="reconciliation-column">
-            <div className="card-title" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div
+              className="card-title"
+              style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
+            >
               <span>Gastos y Donaciones Cargados ({reconciliationItems.length} sin conciliar)</span>
-              <span style={{ fontSize: '0.8rem', fontWeight: 400, color: 'var(--neutral-dark)' }}>Selecciona un registro</span>
+              <span style={{ fontSize: '0.8rem', fontWeight: 400, color: 'var(--neutral-dark)' }}>
+                Selecciona un registro
+              </span>
             </div>
 
             <div className="reconciliation-list">
               {reconciliationItems.length === 0 ? (
-                <div className="card" style={{ textAlign: 'center', color: 'var(--neutral-dark)', opacity: 0.7, padding: '3rem' }}>
+                <div
+                  className="card"
+                  style={{
+                    textAlign: 'center',
+                    color: 'var(--neutral-dark)',
+                    opacity: 0.7,
+                    padding: '3rem',
+                  }}
+                >
                   <p style={{ fontSize: '2.5rem' }}>📸</p>
-                  <p style={{ fontWeight: 600, marginTop: '1rem' }}>No hay gastos o donaciones pendientes por conciliar</p>
-                  <p style={{ fontSize: '0.8rem', marginTop: '0.25rem' }}>Los registros del sistema aparecerán aquí de forma automática.</p>
+                  <p style={{ fontWeight: 600, marginTop: '1rem' }}>
+                    No hay gastos o donaciones pendientes por conciliar
+                  </p>
+                  <p style={{ fontSize: '0.8rem', marginTop: '0.25rem' }}>
+                    Los registros del sistema aparecerán aquí de forma automática.
+                  </p>
                 </div>
               ) : (
-                reconciliationItems.map(item => (
-                  <div 
+                reconciliationItems.map((item) => (
+                  <div
                     key={`${item.tipo}-${item.id}`}
-                    onClick={() => setSelectedItem(selectedItem?.id === item.id && selectedItem?.tipo === item.tipo ? null : item)}
+                    onClick={() =>
+                      setSelectedItem(
+                        selectedItem?.id === item.id && selectedItem?.tipo === item.tipo
+                          ? null
+                          : item,
+                      )
+                    }
                     className="card"
                     style={{
                       padding: '1rem',
                       cursor: 'pointer',
-                      borderColor: selectedItem?.id === item.id && selectedItem?.tipo === item.tipo ? 'var(--primary)' : 'var(--border-color)',
+                      borderColor:
+                        selectedItem?.id === item.id && selectedItem?.tipo === item.tipo
+                          ? 'var(--primary)'
+                          : 'var(--border-color)',
                       borderLeft: `5px solid ${item.tipo === 'gasto' ? 'var(--danger)' : 'var(--success)'}`,
-                      backgroundColor: selectedItem?.id === item.id && selectedItem?.tipo === item.tipo ? 'rgba(47, 90, 174, 0.03)' : '#ffffff',
-                      transition: 'all var(--transition-fast)'
+                      backgroundColor:
+                        selectedItem?.id === item.id && selectedItem?.tipo === item.tipo
+                          ? 'rgba(47, 90, 174, 0.03)'
+                          : '#ffffff',
+                      transition: 'all var(--transition-fast)',
                     }}
                   >
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                      <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--neutral-dark)', opacity: 0.7 }}>
+                    <div
+                      style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'flex-start',
+                      }}
+                    >
+                      <span
+                        style={{
+                          fontSize: '0.8rem',
+                          fontWeight: 700,
+                          color: 'var(--neutral-dark)',
+                          opacity: 0.7,
+                        }}
+                      >
                         {formatDateForFrontEnd(item.fecha)}
                       </span>
-                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
-                        <span style={{ fontWeight: 700, color: item.tipo === 'gasto' ? 'var(--danger)' : 'var(--success)' }}>
-                          {item.tipo === 'gasto' ? '-' : '+'}{item.moneda === 'VES' ? formatVesCurrency(item.monto_original || item.monto) : formatCurrency(item.monto)}
+                      <div
+                        style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}
+                      >
+                        <span
+                          style={{
+                            fontWeight: 700,
+                            color: item.tipo === 'gasto' ? 'var(--danger)' : 'var(--success)',
+                          }}
+                        >
+                          {item.tipo === 'gasto' ? '-' : '+'}
+                          {item.moneda === 'VES'
+                            ? formatVesCurrency(item.monto_original || item.monto)
+                            : formatCurrency(item.monto)}
                         </span>
                         {item.moneda === 'VES' && (
                           <span style={{ fontSize: '0.7rem', opacity: 0.6 }}>
@@ -429,17 +587,33 @@ export const Reconciliation: React.FC = () => {
                         )}
                       </div>
                     </div>
-                    <p style={{ fontWeight: 500, fontSize: '0.9rem', marginTop: '0.5rem', wordBreak: 'break-word' }}>
+                    <p
+                      style={{
+                        fontWeight: 500,
+                        fontSize: '0.9rem',
+                        marginTop: '0.5rem',
+                        wordBreak: 'break-word',
+                      }}
+                    >
                       {item.descripcion}
                     </p>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '0.5rem', fontSize: '0.75rem' }}>
+                    <div
+                      style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        marginTop: '0.5rem',
+                        fontSize: '0.75rem',
+                      }}
+                    >
                       <span style={{ color: 'var(--neutral-dark)', opacity: 0.6 }}>
-                        {item.tipo === 'gasto' 
-                          ? `Solicitante: ${(item.reference_object as ExpenseReceipt).solicitante_nombre || 'N/A'}` 
-                          : `Donante: ${(item.reference_object as Donation).donante}`
-                        }
+                        {item.tipo === 'gasto'
+                          ? `Solicitante: ${(item.reference_object as ExpenseReceipt).solicitante_nombre || 'N/A'}`
+                          : `Donante: ${(item.reference_object as Donation).donante}`}
                       </span>
-                      <span className={`badge ${item.tipo === 'gasto' ? 'badge-warning' : 'badge-success'}`}>
+                      <span
+                        className={`badge ${item.tipo === 'gasto' ? 'badge-warning' : 'badge-success'}`}
+                      >
                         {item.tipo === 'gasto' ? '💸 Egreso' : '🤝 Donación'}
                       </span>
                     </div>
@@ -448,74 +622,100 @@ export const Reconciliation: React.FC = () => {
               )}
             </div>
           </div>
-
         </div>
       )}
 
       {/* Barra Flotante de Conciliación */}
       {(selectedTx || selectedItem) && (
-        <div style={{
-          position: 'fixed',
-          bottom: '2rem',
-          left: '50%',
-          transform: 'translateX(-50%)',
-          backgroundColor: '#ffffff',
-          boxShadow: '0 10px 25px rgba(0,0,0,0.15)',
-          padding: '1.25rem 2rem',
-          borderRadius: 'var(--radius-md)',
-          border: '2px solid var(--primary)',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '2.5rem',
-          zIndex: 1000,
-          width: '90%',
-          maxWidth: '900px',
-          justifyContent: 'space-between',
-          flexWrap: 'wrap'
-        }}>
+        <div
+          style={{
+            position: 'fixed',
+            bottom: '2rem',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            backgroundColor: '#ffffff',
+            boxShadow: '0 10px 25px rgba(0,0,0,0.15)',
+            padding: '1.25rem 2rem',
+            borderRadius: 'var(--radius-md)',
+            border: '2px solid var(--primary)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '2.5rem',
+            zIndex: 1000,
+            width: '90%',
+            maxWidth: '900px',
+            justifyContent: 'space-between',
+            flexWrap: 'wrap',
+          }}
+        >
           <div style={{ display: 'flex', gap: '2rem', flex: 1, flexWrap: 'wrap' }}>
             {/* Resumen Tx */}
             <div style={{ flex: 1, minWidth: '200px' }}>
-              <div style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--neutral-dark)', opacity: 0.6 }}>BANCO:</div>
+              <div
+                style={{
+                  fontSize: '0.75rem',
+                  fontWeight: 600,
+                  color: 'var(--neutral-dark)',
+                  opacity: 0.6,
+                }}
+              >
+                BANCO:
+              </div>
               {selectedTx ? (
                 <div style={{ fontSize: '0.85rem', marginTop: '0.25rem' }}>
-                  <strong style={{ color: 'var(--primary)' }}>{getSelectedTxDescription(selectedTx)}</strong> - {selectedTx.descripcion.substring(0, 45)}...
+                  <strong style={{ color: 'var(--primary)' }}>
+                    {getSelectedTxDescription(selectedTx)}
+                  </strong>{' '}
+                  - {selectedTx.descripcion.substring(0, 45)}...
                 </div>
               ) : (
-                <div style={{ fontSize: '0.85rem', color: 'red', marginTop: '0.25rem' }}>Seleccione transacción bancaria</div>
+                <div style={{ fontSize: '0.85rem', color: 'red', marginTop: '0.25rem' }}>
+                  Seleccione transacción bancaria
+                </div>
               )}
             </div>
-            
+
             {/* Símbolo de Enlace */}
             <div style={{ display: 'flex', alignItems: 'center', fontSize: '1.5rem' }}>🔗</div>
 
             {/* Resumen Exp */}
             <div style={{ flex: 1, minWidth: '200px' }}>
-              <div style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--neutral-dark)', opacity: 0.6 }}>REGISTRO DEL SISTEMA:</div>
+              <div
+                style={{
+                  fontSize: '0.75rem',
+                  fontWeight: 600,
+                  color: 'var(--neutral-dark)',
+                  opacity: 0.6,
+                }}
+              >
+                REGISTRO DEL SISTEMA:
+              </div>
               {selectedItem ? (
                 <div style={{ fontSize: '0.85rem', marginTop: '0.25rem' }}>
                   <strong>
-                    {selectedItem.moneda === 'VES' 
-                      ? formatVesCurrency(selectedItem.monto_original || selectedItem.monto) 
-                      : formatCurrency(selectedItem.monto)
-                    }
-                  </strong> - {selectedItem.descripcion.substring(0, 45)}...
+                    {selectedItem.moneda === 'VES'
+                      ? formatVesCurrency(selectedItem.monto_original || selectedItem.monto)
+                      : formatCurrency(selectedItem.monto)}
+                  </strong>{' '}
+                  - {selectedItem.descripcion.substring(0, 45)}...
                 </div>
               ) : (
-                <div style={{ fontSize: '0.85rem', color: 'red', marginTop: '0.25rem' }}>Seleccione comprobante o donación</div>
+                <div style={{ fontSize: '0.85rem', color: 'red', marginTop: '0.25rem' }}>
+                  Seleccione comprobante o donación
+                </div>
               )}
             </div>
           </div>
 
           <div>
-            <button 
+            <button
               disabled={!selectedTx || !selectedItem}
               onClick={handleReconcile}
               className="btn btn-secondary animate-fade-in-up"
               style={{
                 opacity: selectedTx && selectedItem ? 1 : 0.5,
                 cursor: selectedTx && selectedItem ? 'pointer' : 'not-allowed',
-                padding: '0.75rem 1.5rem'
+                padding: '0.75rem 1.5rem',
               }}
             >
               Conciliar Movimiento ⚖️
@@ -526,85 +726,137 @@ export const Reconciliation: React.FC = () => {
 
       {/* Modal de Mapeo Dinámico de Columnas */}
       {showMappingModal && (
-        <div style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          width: '100%',
-          height: '100%',
-          backgroundColor: 'rgba(0,0,0,0.5)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 1100,
-          padding: '1rem'
-        }}>
-          <div className="card" style={{ maxWidth: '600px', width: '100%', padding: '2rem', borderRadius: 'var(--radius-md)' }}>
-            <h3 style={{ color: 'var(--primary)', marginBottom: '1rem' }}>Mapeador Dinámico de Columnas CSV</h3>
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            width: '100%',
+            height: '100%',
+            backgroundColor: 'rgba(0,0,0,0.5)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1100,
+            padding: '1rem',
+          }}
+        >
+          <div
+            className="card"
+            style={{
+              maxWidth: '600px',
+              width: '100%',
+              padding: '2rem',
+              borderRadius: 'var(--radius-md)',
+            }}
+          >
+            <h3 style={{ color: 'var(--primary)', marginBottom: '1rem' }}>
+              Mapeador Dinámico de Columnas CSV
+            </h3>
             <p style={{ fontSize: '0.85rem', opacity: 0.8, marginBottom: '1.5rem' }}>
-              Hemos detectado la estructura del archivo. Por favor, asocia cada campo requerido con la columna correspondiente en tu archivo CSV:
+              Hemos detectado la estructura del archivo. Por favor, asocia cada campo requerido con
+              la columna correspondiente en tu archivo CSV:
             </p>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.5rem' }}>
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: '1fr 1fr',
+                gap: '1rem',
+                marginBottom: '1.5rem',
+              }}
+            >
               {/* Fecha */}
               <div className="form-group">
                 <label className="form-label">Fecha de la Transacción *</label>
-                <select 
+                <select
                   className="form-input form-select"
                   value={mappings.fecha}
-                  onChange={e => setMappings({ ...mappings, fecha: e.target.value })}
+                  onChange={(e) => setMappings({ ...mappings, fecha: e.target.value })}
                 >
                   <option value="">-- Seleccionar columna --</option>
-                  {csvHeaders.map(h => <option key={h} value={h}>{h}</option>)}
+                  {csvHeaders.map((h) => (
+                    <option key={h} value={h}>
+                      {h}
+                    </option>
+                  ))}
                 </select>
               </div>
 
               {/* Referencia */}
               <div className="form-group">
                 <label className="form-label">Referencia / ID (Opcional)</label>
-                <select 
+                <select
                   className="form-input form-select"
                   value={mappings.referencia}
-                  onChange={e => setMappings({ ...mappings, referencia: e.target.value })}
+                  onChange={(e) => setMappings({ ...mappings, referencia: e.target.value })}
                 >
                   <option value="">-- Seleccionar columna --</option>
-                  {csvHeaders.map(h => <option key={h} value={h}>{h}</option>)}
+                  {csvHeaders.map((h) => (
+                    <option key={h} value={h}>
+                      {h}
+                    </option>
+                  ))}
                 </select>
               </div>
 
               {/* Descripción */}
               <div className="form-group">
                 <label className="form-label">Concepto / Descripción *</label>
-                <select 
+                <select
                   className="form-input form-select"
                   value={mappings.descripcion}
-                  onChange={e => setMappings({ ...mappings, descripcion: e.target.value })}
+                  onChange={(e) => setMappings({ ...mappings, descripcion: e.target.value })}
                 >
                   <option value="">-- Seleccionar columna --</option>
-                  {csvHeaders.map(h => <option key={h} value={h}>{h}</option>)}
+                  {csvHeaders.map((h) => (
+                    <option key={h} value={h}>
+                      {h}
+                    </option>
+                  ))}
                 </select>
               </div>
 
               {/* Monto */}
               <div className="form-group">
                 <label className="form-label">Monto (USD/Monto) *</label>
-                <select 
+                <select
                   className="form-input form-select"
                   value={mappings.monto}
-                  onChange={e => setMappings({ ...mappings, monto: e.target.value })}
+                  onChange={(e) => setMappings({ ...mappings, monto: e.target.value })}
                 >
                   <option value="">-- Seleccionar columna --</option>
-                  {csvHeaders.map(h => <option key={h} value={h}>{h}</option>)}
+                  {csvHeaders.map((h) => (
+                    <option key={h} value={h}>
+                      {h}
+                    </option>
+                  ))}
                 </select>
               </div>
             </div>
 
             {/* Previsualización rápida */}
             <div style={{ marginBottom: '2rem' }}>
-              <div style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--neutral-dark)', opacity: 0.6, marginBottom: '0.5rem' }}>
+              <div
+                style={{
+                  fontSize: '0.75rem',
+                  fontWeight: 600,
+                  color: 'var(--neutral-dark)',
+                  opacity: 0.6,
+                  marginBottom: '0.5rem',
+                }}
+              >
                 Previsualización de los primeros registros mapeados:
               </div>
-              <div style={{ maxHeight: '120px', overflowY: 'auto', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-sm)', fontSize: '0.75rem' }}>
+              <div
+                style={{
+                  maxHeight: '120px',
+                  overflowY: 'auto',
+                  border: '1px solid var(--border-color)',
+                  borderRadius: 'var(--radius-sm)',
+                  fontSize: '0.75rem',
+                }}
+              >
                 <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
                   <thead>
                     <tr style={{ backgroundColor: 'var(--neutral-light)' }}>
@@ -616,9 +868,19 @@ export const Reconciliation: React.FC = () => {
                   <tbody>
                     {csvDataRows.slice(0, 3).map((row, idx) => (
                       <tr key={idx} style={{ borderTop: '1px solid var(--border-color)' }}>
-                        <td style={{ padding: '4px 8px' }}>{formatDateForFrontEnd(row[mappings.fecha])}</td>
-                        <td style={{ padding: '4px 8px' }}>{row[mappings.descripcion]?.substring(0, 25)}...</td>
-                        <td style={{ padding: '4px 8px', fontWeight: 700, color: parseFloat(row[mappings.monto]) < 0 ? 'red' : 'green' }}>
+                        <td style={{ padding: '4px 8px' }}>
+                          {formatDateForFrontEnd(row[mappings.fecha])}
+                        </td>
+                        <td style={{ padding: '4px 8px' }}>
+                          {row[mappings.descripcion]?.substring(0, 25)}...
+                        </td>
+                        <td
+                          style={{
+                            padding: '4px 8px',
+                            fontWeight: 700,
+                            color: parseFloat(row[mappings.monto]) < 0 ? 'red' : 'green',
+                          }}
+                        >
                           {row[mappings.monto]}
                         </td>
                       </tr>
@@ -629,14 +891,17 @@ export const Reconciliation: React.FC = () => {
             </div>
 
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem' }}>
-              <button 
-                onClick={() => { setShowMappingModal(false); setCsvFile(null); }}
+              <button
+                onClick={() => {
+                  setShowMappingModal(false);
+                  setCsvFile(null);
+                }}
                 className="btn btn-outline"
                 style={{ padding: '0.5rem 1rem' }}
               >
                 Cancelar
               </button>
-              <button 
+              <button
                 onClick={handleImportMappedCsv}
                 className="btn btn-primary"
                 style={{ padding: '0.5rem 1rem' }}
@@ -648,10 +913,7 @@ export const Reconciliation: React.FC = () => {
         </div>
       )}
 
-      <InternalControlModal 
-        isOpen={isCosoModalOpen} 
-        onClose={() => setIsCosoModalOpen(false)} 
-      />
+      <InternalControlModal isOpen={isCosoModalOpen} onClose={() => setIsCosoModalOpen(false)} />
     </div>
   );
 };

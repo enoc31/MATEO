@@ -9,13 +9,13 @@ export const UpdatePassword: React.FC = () => {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState<{type: 'success' | 'error', text: string} | null>(null);
+  const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   useEffect(() => {
     const { data: authListener } = supabase.auth.onAuthStateChange(async (event) => {
       if (event === 'PASSWORD_RECOVERY') {
         // El usuario está listo para cambiar su contraseña
-        console.log("Sesión de recuperación iniciada");
+        console.log('Sesión de recuperación iniciada');
       }
     });
 
@@ -30,7 +30,7 @@ export const UpdatePassword: React.FC = () => {
       setMessage({ type: 'error', text: 'Las contraseñas no coinciden.' });
       return;
     }
-    
+
     if (password.length < 6) {
       setMessage({ type: 'error', text: 'La contraseña debe tener al menos 6 caracteres.' });
       return;
@@ -42,54 +42,68 @@ export const UpdatePassword: React.FC = () => {
     try {
       if (isSimulationMode) {
         setTimeout(() => {
-          setMessage({ type: 'success', text: 'Simulación: Contraseña actualizada correctamente. Redirigiendo...' });
+          setMessage({
+            type: 'success',
+            text: 'Simulación: Contraseña actualizada correctamente. Redirigiendo...',
+          });
           setTimeout(() => navigate('/login'), 2000);
         }, 1000);
         return;
       }
 
       const { error } = await supabase.auth.updateUser({
-        password: password
+        password: password,
       });
 
       if (error) throw error;
-      
-      setMessage({ type: 'success', text: '¡Contraseña actualizada correctamente! Redirigiendo al inicio de sesión...' });
-      
+
+      setMessage({
+        type: 'success',
+        text: '¡Contraseña actualizada correctamente! Redirigiendo al inicio de sesión...',
+      });
+
       // Cerrar la sesión de recuperación para forzar el inicio de sesión con la nueva contraseña
       await supabase.auth.signOut();
-      
+
       setTimeout(() => {
         navigate('/login');
       }, 3000);
-
     } catch (error: any) {
-      setMessage({ type: 'error', text: error.message || 'Ocurrió un error al intentar actualizar la contraseña.' });
+      setMessage({
+        type: 'error',
+        text: error.message || 'Ocurrió un error al intentar actualizar la contraseña.',
+      });
     } finally {
       if (!isSimulationMode) setLoading(false);
     }
   };
 
   return (
-    <div style={{
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      minHeight: '100vh',
-      backgroundColor: '#f4f5f7',
-      fontFamily: 'Inter, sans-serif'
-    }}>
-      <div style={{
-        background: 'white',
-        padding: '3rem 2.5rem',
-        borderRadius: '12px',
-        boxShadow: '0 10px 25px rgba(0,0,0,0.05)',
-        width: '100%',
-        maxWidth: '450px',
-        textAlign: 'center'
-      }}>
+    <div
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        minHeight: '100vh',
+        backgroundColor: '#f4f5f7',
+        fontFamily: 'Inter, sans-serif',
+      }}
+    >
+      <div
+        style={{
+          background: 'white',
+          padding: '3rem 2.5rem',
+          borderRadius: '12px',
+          boxShadow: '0 10px 25px rgba(0,0,0,0.05)',
+          width: '100%',
+          maxWidth: '450px',
+          textAlign: 'center',
+        }}
+      >
         <KeyRound size={48} color="#10b981" style={{ margin: '0 auto 1.5rem auto' }} />
-        <h2 style={{ color: '#1e293b', marginBottom: '0.5rem', fontSize: '1.5rem', fontWeight: 700 }}>
+        <h2
+          style={{ color: '#1e293b', marginBottom: '0.5rem', fontSize: '1.5rem', fontWeight: 700 }}
+        >
           Establecer Nueva Contraseña
         </h2>
         <p style={{ color: '#64748b', marginBottom: '2rem', fontSize: '0.95rem' }}>
@@ -97,22 +111,32 @@ export const UpdatePassword: React.FC = () => {
         </p>
 
         {message && (
-          <div style={{
-            padding: '1rem',
-            borderRadius: '8px',
-            marginBottom: '1.5rem',
-            backgroundColor: message.type === 'success' ? '#ecfdf5' : '#fef2f2',
-            color: message.type === 'success' ? '#065f46' : '#991b1b',
-            fontSize: '0.9rem',
-            textAlign: 'left'
-          }}>
+          <div
+            style={{
+              padding: '1rem',
+              borderRadius: '8px',
+              marginBottom: '1.5rem',
+              backgroundColor: message.type === 'success' ? '#ecfdf5' : '#fef2f2',
+              color: message.type === 'success' ? '#065f46' : '#991b1b',
+              fontSize: '0.9rem',
+              textAlign: 'left',
+            }}
+          >
             {message.text}
           </div>
         )}
 
         <form onSubmit={handleSubmit} style={{ textAlign: 'left' }}>
           <div style={{ marginBottom: '1rem' }}>
-            <label style={{ display: 'block', marginBottom: '0.5rem', color: '#334155', fontWeight: 600, fontSize: '0.9rem' }}>
+            <label
+              style={{
+                display: 'block',
+                marginBottom: '0.5rem',
+                color: '#334155',
+                fontWeight: 600,
+                fontSize: '0.9rem',
+              }}
+            >
               Nueva Contraseña
             </label>
             <input
@@ -127,13 +151,21 @@ export const UpdatePassword: React.FC = () => {
                 border: '1px solid #cbd5e1',
                 borderRadius: '6px',
                 fontSize: '1rem',
-                outline: 'none'
+                outline: 'none',
               }}
             />
           </div>
-          
+
           <div style={{ marginBottom: '2rem' }}>
-            <label style={{ display: 'block', marginBottom: '0.5rem', color: '#334155', fontWeight: 600, fontSize: '0.9rem' }}>
+            <label
+              style={{
+                display: 'block',
+                marginBottom: '0.5rem',
+                color: '#334155',
+                fontWeight: 600,
+                fontSize: '0.9rem',
+              }}
+            >
               Confirmar Contraseña
             </label>
             <input
@@ -148,7 +180,7 @@ export const UpdatePassword: React.FC = () => {
                 border: '1px solid #cbd5e1',
                 borderRadius: '6px',
                 fontSize: '1rem',
-                outline: 'none'
+                outline: 'none',
               }}
             />
           </div>

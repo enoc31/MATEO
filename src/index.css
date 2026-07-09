@@ -5,30 +5,30 @@
    ========================================================================= */
 :root {
   /* Colores Corporativos */
-  --primary: #2f5aae;       /* Azul Bautista */
+  --primary: #2f5aae; /* Azul Bautista */
   --primary-hover: #1e3f82;
-  --secondary: #073a11;     /* Verde Iglesia */
+  --secondary: #073a11; /* Verde Iglesia */
   --secondary-hover: #04250a;
-  --accent: #008fa6;        /* Teal/Turquesa */
+  --accent: #008fa6; /* Teal/Turquesa */
   --accent-hover: #007082;
-  --neutral-dark: #272626;  /* Gris Oscuro / Texto */
+  --neutral-dark: #272626; /* Gris Oscuro / Texto */
   --neutral-light: #f4f5f7; /* Fondo del sitio */
   --border-color: #e2e8f0;
-  
+
   /* Estados de Auditoría */
-  --success: #10b981;       /* Aprobado */
-  --warning: #f59e0b;       /* Pendiente revisión */
-  --danger: #ef4444;        /* Rechazado */
-  --info: #3b82f6;          /* Pendiente soporte */
+  --success: #10b981; /* Aprobado */
+  --warning: #f59e0b; /* Pendiente revisión */
+  --danger: #ef4444; /* Rechazado */
+  --info: #3b82f6; /* Pendiente soporte */
 
   /* Tipografías */
   --font-headings: 'Sora', 'Arial', sans-serif;
   --font-body: 'Roboto', 'Helvetica Neue', sans-serif;
 
   /* Sombras y Bordes */
-  --shadow-sm: 0 1px 3px rgba(0,0,0,0.1);
-  --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -1px rgba(0,0,0,0.03);
-  --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.05), 0 4px 6px -2px rgba(0,0,0,0.03);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.03);
   --radius-sm: 6px;
   --radius-md: 12px;
   --radius-lg: 20px;
@@ -60,7 +60,12 @@ html {
   overflow-x: hidden;
 }
 
-h1, h2, h3, h4, h5, h6 {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
   font-family: var(--font-headings);
   font-weight: 600;
   line-height: 1.25;
@@ -76,7 +81,10 @@ a:hover {
   color: var(--primary-hover);
 }
 
-button, input, select, textarea {
+button,
+input,
+select,
+textarea {
   font-family: inherit;
   font-size: inherit;
   outline: none;
@@ -162,7 +170,8 @@ button, input, select, textarea {
   transition: all var(--transition-fast);
 }
 
-.nav-link:hover, .nav-link.active {
+.nav-link:hover,
+.nav-link.active {
   color: var(--primary);
   background-color: rgba(47, 90, 174, 0.05);
 }
@@ -174,7 +183,9 @@ button, input, select, textarea {
   border: 1px solid var(--border-color);
   box-shadow: var(--shadow-md);
   padding: 1.5rem;
-  transition: transform var(--transition-normal), box-shadow var(--transition-normal);
+  transition:
+    transform var(--transition-normal),
+    box-shadow var(--transition-normal);
 }
 
 .card:hover {
@@ -273,7 +284,9 @@ button, input, select, textarea {
   border-radius: var(--radius-sm);
   background-color: #ffffff;
   color: var(--neutral-dark);
-  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+  transition:
+    border-color var(--transition-fast),
+    box-shadow var(--transition-fast);
   min-height: 44px;
 }
 
@@ -443,20 +456,20 @@ button, input, select, textarea {
   .header-bar {
     padding: 0.75rem 1rem;
   }
-  
+
   .header-logo {
     height: 40px;
   }
-  
+
   .header-title {
     font-size: 1rem;
   }
-  
+
   .main-content {
     padding: 1rem;
     padding-bottom: 6rem !important; /* Space for sticky bottom bar */
   }
-  
+
   .reconciliation-grid {
     grid-template-columns: 1fr;
     height: auto;
@@ -468,7 +481,8 @@ button, input, select, textarea {
     background-color: transparent;
     box-shadow: none;
   }
-  .table-responsive table, .table-responsive tbody {
+  .table-responsive table,
+  .table-responsive tbody {
     display: block;
     width: 100%;
   }
@@ -533,8 +547,11 @@ button, input, select, textarea {
 /* Sidebar Navigation */
 .sidebar-overlay {
   position: fixed;
-  top: 0; left: 0; width: 100vw; height: 100vh;
-  background: rgba(0,0,0,0.5);
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.5);
   backdrop-filter: blur(2px);
   z-index: 2000;
   opacity: 0;
@@ -548,10 +565,11 @@ button, input, select, textarea {
 
 .sidebar-container {
   position: fixed;
-  top: 0; height: 100vh;
+  top: 0;
+  height: 100vh;
   background: #ffffff;
   z-index: 2001;
-  box-shadow: 4px 0 15px rgba(0,0,0,0.1);
+  box-shadow: 4px 0 15px rgba(0, 0, 0, 0.1);
   display: flex;
   flex-direction: column;
   transition: all var(--transition-normal);
@@ -604,7 +622,7 @@ button, input, select, textarea {
     transition: opacity 0.2s ease;
     pointer-events: none;
   }
-  
+
   .sidebar-container:hover .sidebar-link span:nth-child(2),
   .sidebar-container.pinned .sidebar-link span:nth-child(2),
   .sidebar-container:hover .sidebar-header .user-info,
@@ -614,19 +632,19 @@ button, input, select, textarea {
     opacity: 1;
     pointer-events: auto;
   }
-  
+
   .sidebar-logo {
     max-width: 40px; /* Version mini por defecto */
     height: auto;
     transition: max-width 0.3s ease;
     border-radius: 4px;
   }
-  
+
   .sidebar-container:hover .sidebar-logo,
   .sidebar-container.pinned .sidebar-logo {
     max-width: 130px; /* Expandido */
   }
-  
+
   /* Main app container spacing */
   .app-container {
     padding-left: 72px; /* Base padding for mini sidebar */
@@ -654,7 +672,11 @@ button, input, select, textarea {
 }
 
 .sidebar-close {
-  background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--neutral-dark);
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: var(--neutral-dark);
 }
 
 .sidebar-nav {
@@ -683,7 +705,8 @@ button, input, select, textarea {
   white-space: nowrap;
 }
 
-.sidebar-link.active, .sidebar-link:hover {
+.sidebar-link.active,
+.sidebar-link:hover {
   background: rgba(47, 90, 174, 0.08);
   color: var(--primary);
 }
@@ -704,7 +727,7 @@ button, input, select, textarea {
   font-weight: 500;
   color: var(--neutral-dark);
   transition: all var(--transition-fast);
-  box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.02);
 }
 .app-input:focus {
   background-color: #ffffff;
@@ -728,15 +751,17 @@ button, input, select, textarea {
 @media (max-width: 768px) {
   .sticky-bottom-bar {
     position: fixed;
-    bottom: 0; left: 0; width: 100%;
+    bottom: 0;
+    left: 0;
+    width: 100%;
     padding: 1rem;
     background: #ffffff;
     border-top: 1px solid var(--border-color);
-    box-shadow: 0 -10px 20px rgba(0,0,0,0.05);
+    box-shadow: 0 -10px 20px rgba(0, 0, 0, 0.05);
     z-index: 1000;
     margin-top: 0;
   }
-  
+
   .sticky-bottom-bar .btn {
     width: 100%;
     padding: 1rem;
@@ -750,8 +775,10 @@ button, input, select, textarea {
 @media (max-width: 768px) {
   .app-fullscreen-modal {
     position: fixed !important;
-    top: 0 !important; left: 0 !important;
-    width: 100vw !important; height: 100vh !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100vw !important;
+    height: 100vh !important;
     max-width: none !important;
     border-radius: 0 !important;
     padding: 1.5rem !important;

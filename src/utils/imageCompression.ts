@@ -18,12 +18,12 @@ export const compressImage = (file: File, maxWidth = 1500, quality = 0.75): Prom
 
         if (width > height) {
           if (width > maxWidth) {
-            height = Math.round((height *= maxWidth / width));
+            height = Math.round(height * (maxWidth / width));
             width = maxWidth;
           }
         } else {
           if (height > maxWidth) {
-            width = Math.round((width *= maxWidth / height));
+            width = Math.round(width * (maxWidth / height));
             height = maxWidth;
           }
         }
@@ -32,7 +32,7 @@ export const compressImage = (file: File, maxWidth = 1500, quality = 0.75): Prom
         canvas.height = height;
         const ctx = canvas.getContext('2d');
         if (!ctx) {
-          reject(new Error("No se pudo obtener el contexto 2d del canvas"));
+          reject(new Error('No se pudo obtener el contexto 2d del canvas'));
           return;
         }
         ctx.drawImage(img, 0, 0, width, height);
@@ -40,18 +40,18 @@ export const compressImage = (file: File, maxWidth = 1500, quality = 0.75): Prom
         canvas.toBlob(
           (blob) => {
             if (!blob) {
-              reject(new Error("Error al comprimir la imagen"));
+              reject(new Error('Error al comprimir la imagen'));
               return;
             }
             // Retornamos el blob como un nuevo objeto File
-            const newFile = new File([blob], file.name.replace(/\.[^/.]+$/, ".webp"), {
-              type: "image/webp",
+            const newFile = new File([blob], file.name.replace(/\.[^/.]+$/, '.webp'), {
+              type: 'image/webp',
               lastModified: Date.now(),
             });
             resolve(newFile);
           },
           'image/webp',
-          quality
+          quality,
         );
       };
       img.onerror = (error) => reject(error);

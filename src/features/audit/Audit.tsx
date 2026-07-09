@@ -18,14 +18,14 @@ export const Audit: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
   const pageSize = 50;
-  
+
   const loadData = async () => {
     setLoading(true);
     try {
       const [projList, catList, partList] = await Promise.all([
         api.getProjects(),
         api.getCategories(),
-        api.getPartidas()
+        api.getPartidas(),
       ]);
       setProjects(projList);
       setCategories(catList);
@@ -69,22 +69,23 @@ export const Audit: React.FC = () => {
 
   const handleOpenAudit = (exp: ExpenseReceipt) => {
     // Abre el detalle en una nueva pestaña
-    window.open(`/app?page=audit-detail&id=${exp.id}`, '_blank');
+    window.open(`/app/audit-detail?id=${exp.id}`, '_blank');
   };
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('es-VE', { style: 'currency', currency: 'USD' }).format(amount);
   };
 
-  const getProjectName = (id: string) => projects.find(p => p.id === id)?.nombre || 'Proyecto Desconocido';
+  const getProjectName = (id: string) =>
+    projects.find((p) => p.id === id)?.nombre || 'Proyecto Desconocido';
   const getPartidaName = (id: string) => {
-    const p = partidas.find(x => x.id === id);
+    const p = partidas.find((x) => x.id === id);
     if (!p) return 'Partida Desconocida';
-    const cat = categories.find(c => c.id === p.categoria_id);
+    const cat = categories.find((c) => c.id === p.categoria_id);
     return `[Partida ${p.codigo}] ${p.nombre} (${cat ? cat.nombre.split(' (')[0].replace(/^\d+\.\s+/, '') : ''})`;
   };
 
-  const filteredExpenses = expenses.filter(exp => {
+  const filteredExpenses = expenses.filter((exp) => {
     if (filterStatus === 'todos') return true;
     return exp.estado === filterStatus;
   });
@@ -92,45 +93,83 @@ export const Audit: React.FC = () => {
   return (
     <div className="animate-fade-in-up">
       {/* Encabezado */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem', marginBottom: '2rem' }}>
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          flexWrap: 'wrap',
+          gap: '1rem',
+          marginBottom: '2rem',
+        }}
+      >
         <div>
-          <h2 style={{ color: 'var(--primary)', fontSize: '1.75rem', fontWeight: 700 }}>Auditoría y Conformidad de Gastos</h2>
-          <p style={{ color: 'var(--neutral-dark)', opacity: 0.8, fontSize: '0.9rem', marginTop: '0.25rem' }}>
-            Bandeja de comprobantes de egresos. Evalúa su conformidad y aprueba o rechaza los soportes.
+          <h2 style={{ color: 'var(--primary)', fontSize: '1.75rem', fontWeight: 700 }}>
+            Auditoría y Conformidad de Gastos
+          </h2>
+          <p
+            style={{
+              color: 'var(--neutral-dark)',
+              opacity: 0.8,
+              fontSize: '0.9rem',
+              marginTop: '0.25rem',
+            }}
+          >
+            Bandeja de comprobantes de egresos. Evalúa su conformidad y aprueba o rechaza los
+            soportes.
           </p>
         </div>
 
         {/* Filtros y Opciones */}
         <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', flexWrap: 'wrap' }}>
-          <button className="btn btn-outline" onClick={() => setIsCosoModalOpen(true)} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--primary)', borderColor: 'var(--primary)' }}>
+          <button
+            className="btn btn-outline"
+            onClick={() => setIsCosoModalOpen(true)}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+              color: 'var(--primary)',
+              borderColor: 'var(--primary)',
+            }}
+          >
             📖 Manual COSO
           </button>
-          <div style={{ display: 'flex', gap: '0.5rem', backgroundColor: '#ffffff', padding: '0.25rem', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-color)' }}>
-          {['todos', 'pendiente_revision', 'aprobado', 'rechazado'].map(status => (
-            <button
-              key={status}
-              onClick={() => setFilterStatus(status)}
-              style={{
-                border: 'none',
-                backgroundColor: filterStatus === status ? 'var(--primary)' : 'transparent',
-                color: filterStatus === status ? '#ffffff' : 'var(--neutral-dark)',
-                padding: '0.4rem 0.8rem',
-                borderRadius: '4px',
-                cursor: 'pointer',
-                fontSize: '0.8rem',
-                fontWeight: 600,
-                transition: 'all var(--transition-fast)'
-              }}
-            >
-              {status === 'todos' ? 'Todos' : status.replace('_', ' ').toUpperCase()}
-            </button>
-          ))}
-        </div>
+          <div
+            style={{
+              display: 'flex',
+              gap: '0.5rem',
+              backgroundColor: '#ffffff',
+              padding: '0.25rem',
+              borderRadius: 'var(--radius-sm)',
+              border: '1px solid var(--border-color)',
+            }}
+          >
+            {['todos', 'pendiente_revision', 'aprobado', 'rechazado'].map((status) => (
+              <button
+                key={status}
+                onClick={() => setFilterStatus(status)}
+                style={{
+                  border: 'none',
+                  backgroundColor: filterStatus === status ? 'var(--primary)' : 'transparent',
+                  color: filterStatus === status ? '#ffffff' : 'var(--neutral-dark)',
+                  padding: '0.4rem 0.8rem',
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                  fontSize: '0.8rem',
+                  fontWeight: 600,
+                  transition: 'all var(--transition-fast)',
+                }}
+              >
+                {status === 'todos' ? 'Todos' : status.replace('_', ' ').toUpperCase()}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
-      <ProcessFlowchart 
-        currentStep="auditoria" 
+      <ProcessFlowchart
+        currentStep="auditoria"
         description="La Auditoría garantiza que cada centavo donado esté debidamente soportado por facturas legales y cumpla fielmente el propósito del proyecto. Es el paso esencial para asegurar la transparencia antes de la rendición de cuentas final."
       />
 
@@ -138,7 +177,15 @@ export const Audit: React.FC = () => {
       {loading && expenses.length === 0 ? (
         <div style={{ textAlign: 'center', padding: '3rem' }}>Cargando bandeja de auditoría...</div>
       ) : filteredExpenses.length === 0 ? (
-        <div className="card" style={{ textAlign: 'center', padding: '3rem', color: 'var(--neutral-dark)', opacity: 0.6 }}>
+        <div
+          className="card"
+          style={{
+            textAlign: 'center',
+            padding: '3rem',
+            color: 'var(--neutral-dark)',
+            opacity: 0.6,
+          }}
+        >
           No se encontraron gastos en este estado.
         </div>
       ) : (
@@ -156,28 +203,54 @@ export const Audit: React.FC = () => {
               </tr>
             </thead>
             <tbody>
-              {filteredExpenses.map(exp => (
+              {filteredExpenses.map((exp) => (
                 <tr key={exp.id}>
-                  <td style={{ fontWeight: 600, whiteSpace: 'nowrap' }}>{formatDateForFrontEnd(exp.fecha_gasto)}</td>
+                  <td style={{ fontWeight: 600, whiteSpace: 'nowrap' }}>
+                    {formatDateForFrontEnd(exp.fecha_gasto)}
+                  </td>
                   <td style={{ fontSize: '0.85rem' }}>
-                    <div style={{ fontWeight: 600, color: 'var(--primary)' }}>{getProjectName(exp.proyecto_id)}</div>
-                    <div style={{ opacity: 0.6, fontSize: '0.75rem', marginTop: '0.1rem' }}>{getPartidaName(exp.partida_id)}</div>
+                    <div style={{ fontWeight: 600, color: 'var(--primary)' }}>
+                      {getProjectName(exp.proyecto_id)}
+                    </div>
+                    <div style={{ opacity: 0.6, fontSize: '0.75rem', marginTop: '0.1rem' }}>
+                      {getPartidaName(exp.partida_id)}
+                    </div>
                   </td>
                   <td>
                     <div style={{ fontWeight: 500 }}>{exp.descripcion}</div>
                     {exp.transaccion_id && (
-                      <span style={{ fontSize: '0.7rem', color: 'var(--success)', fontWeight: 600, display: 'inline-flex', gap: '0.25rem', marginTop: '0.25rem' }}>
-                        <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}><Scale size={14} /> Conciliado con extracto bancario</span>
+                      <span
+                        style={{
+                          fontSize: '0.7rem',
+                          color: 'var(--success)',
+                          fontWeight: 600,
+                          display: 'inline-flex',
+                          gap: '0.25rem',
+                          marginTop: '0.25rem',
+                        }}
+                      >
+                        <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                          <Scale size={14} /> Conciliado con extracto bancario
+                        </span>
                       </span>
                     )}
                   </td>
-                  <td style={{ fontWeight: 700, whiteSpace: 'nowrap' }}>{formatCurrency(exp.monto)}</td>
-                  <td style={{ fontSize: '0.8rem', opacity: 0.8 }}>{exp.solicitante_nombre || 'Coordinador'}</td>
+                  <td style={{ fontWeight: 700, whiteSpace: 'nowrap' }}>
+                    {formatCurrency(exp.monto)}
+                  </td>
+                  <td style={{ fontSize: '0.8rem', opacity: 0.8 }}>
+                    {exp.solicitante_nombre || 'Coordinador'}
+                  </td>
                   <td>
-                    <span className={`badge ${
-                      exp.estado === 'aprobado' ? 'badge-success' : 
-                      exp.estado === 'pendiente_revision' ? 'badge-warning' : 'badge-danger'
-                    }`}>
+                    <span
+                      className={`badge ${
+                        exp.estado === 'aprobado'
+                          ? 'badge-success'
+                          : exp.estado === 'pendiente_revision'
+                            ? 'badge-warning'
+                            : 'badge-danger'
+                      }`}
+                    >
                       {exp.estado.replace('_', ' ')}
                     </span>
                   </td>
@@ -187,22 +260,34 @@ export const Audit: React.FC = () => {
                       className="btn btn-outline"
                       style={{ padding: '0.35rem 0.75rem', fontSize: '0.75rem' }}
                     >
-                      <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>Auditar Gasto <Search size={14} style={{ marginLeft: '4px' }} /></span>
+                      <span
+                        style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                      >
+                        Auditar Gasto <Search size={14} style={{ marginLeft: '4px' }} />
+                      </span>
                     </button>
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
-          
+
           {/* Controles de Paginación */}
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '1rem', padding: '0 1rem' }}>
+          <div
+            style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              marginTop: '1rem',
+              padding: '0 1rem',
+            }}
+          >
             <div style={{ fontSize: '0.85rem', color: 'var(--neutral-dark)' }}>
               Mostrando {filteredExpenses.length} de {totalCount} gastos (Página {currentPage})
             </div>
             <div style={{ display: 'flex', gap: '0.5rem' }}>
               <button
-                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
                 disabled={currentPage === 1 || loading}
                 className="btn btn-outline"
                 style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem' }}
@@ -210,7 +295,7 @@ export const Audit: React.FC = () => {
                 Anterior
               </button>
               <button
-                onClick={() => setCurrentPage(p => p + 1)}
+                onClick={() => setCurrentPage((p) => p + 1)}
                 disabled={currentPage * pageSize >= totalCount || loading}
                 className="btn btn-outline"
                 style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem' }}
@@ -222,10 +307,7 @@ export const Audit: React.FC = () => {
         </div>
       )}
 
-      <InternalControlModal 
-        isOpen={isCosoModalOpen} 
-        onClose={() => setIsCosoModalOpen(false)} 
-      />
+      <InternalControlModal isOpen={isCosoModalOpen} onClose={() => setIsCosoModalOpen(false)} />
     </div>
   );
 };

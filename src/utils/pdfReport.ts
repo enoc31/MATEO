@@ -8,26 +8,30 @@ interface ReportOptions {
   title?: string;
 }
 
-export const generateBeneficiariesReport = async ({ records, jornadas, title = 'Reporte de Beneficiarios' }: ReportOptions) => {
+export const generateBeneficiariesReport = async ({
+  records,
+  jornadas,
+  title = 'Reporte de Beneficiarios',
+}: ReportOptions) => {
   // Crear documento PDF, orientación Landscape (apaisado) para que quepan bien todas las columnas
   const doc = new jsPDF({
     orientation: 'landscape',
     unit: 'mm',
-    format: 'a4'
+    format: 'a4',
   });
 
   // Título
   doc.setFontSize(18);
   doc.setTextColor(21, 101, 192); // Color primario
   doc.text(title, 14, 22);
-  
+
   doc.setFontSize(10);
   doc.setTextColor(100);
   doc.text(`Fecha de Emisión: ${new Date().toLocaleDateString('es-VE')}`, 14, 30);
   doc.text(`Total de Registros: ${records.length}`, 14, 35);
 
   const getJornadaName = (id: string) => {
-    return jornadas.find(j => j.id === id)?.nombre || 'Desconocida';
+    return jornadas.find((j) => j.id === id)?.nombre || 'Desconocida';
   };
 
   const getUrlBase64 = async (url: string | null): Promise<string | null> => {
@@ -35,7 +39,7 @@ export const generateBeneficiariesReport = async ({ records, jornadas, title = '
     try {
       const response = await fetch(url);
       const blob = await response.blob();
-      
+
       const imgUrl = URL.createObjectURL(blob);
       return new Promise((resolve) => {
         const img = new Image();
@@ -56,14 +60,14 @@ export const generateBeneficiariesReport = async ({ records, jornadas, title = '
           URL.revokeObjectURL(imgUrl);
         };
         img.onerror = () => {
-          console.warn("Error decoding image");
+          console.warn('Error decoding image');
           resolve(null);
           URL.revokeObjectURL(imgUrl);
         };
         img.src = imgUrl;
       });
     } catch (err) {
-      console.warn("Error cargando imagen", err);
+      console.warn('Error cargando imagen', err);
       return null;
     }
   };
@@ -80,9 +84,11 @@ export const generateBeneficiariesReport = async ({ records, jornadas, title = '
   // Preparar datos de la tabla
   const tableData = records.map((record, index) => {
     const numCedula = parseInt(record.cedula.replace(/\D/g, ''), 10);
-    const cedulaFormatted = isNaN(numCedula) 
-      ? record.cedula 
-      : (numCedula < 80000000 ? `V-${numCedula}` : `E-${numCedula}`);
+    const cedulaFormatted = isNaN(numCedula)
+      ? record.cedula
+      : numCedula < 80000000
+        ? `V-${numCedula}`
+        : `E-${numCedula}`;
 
     return [
       (index + 1).toString(),
@@ -96,26 +102,39 @@ export const generateBeneficiariesReport = async ({ records, jornadas, title = '
       // Columna IP y Fecha
       `${record.ip_captura || 'N/A'}\n${new Date(record.created_at).toLocaleString()}`,
       // Espacio para la firma (texto en blanco)
-      ''
+      '',
     ];
   });
 
   // Dibujar tabla
   autoTable(doc, {
     startY: 45,
-    head: [['Nro', 'Nombre', 'Apellido', 'Cédula', 'Nacimiento', 'Sexo', 'Donación', 'Jornada', 'IP y Captura', 'Firma']],
+    head: [
+      [
+        'Nro',
+        'Nombre',
+        'Apellido',
+        'Cédula',
+        'Nacimiento',
+        'Sexo',
+        'Donación',
+        'Jornada',
+        'IP y Captura',
+        'Firma',
+      ],
+    ],
     body: tableData,
     theme: 'grid',
     styles: {
       fontSize: 8,
       cellPadding: 3,
       valign: 'middle',
-      halign: 'center'
+      halign: 'center',
     },
     headStyles: {
       fillColor: [21, 101, 192],
       textColor: 255,
-      fontStyle: 'bold'
+      fontStyle: 'bold',
     },
     columnStyles: {
       0: { cellWidth: 8 },
@@ -127,11 +146,11 @@ export const generateBeneficiariesReport = async ({ records, jornadas, title = '
       6: { cellWidth: 35 }, // Donación
       7: { cellWidth: 35 }, // Jornada
       8: { cellWidth: 30 }, // IP
-      9: { cellWidth: 40 }  // Celda de la firma
+      9: { cellWidth: 40 }, // Celda de la firma
     },
     // Configurar para unas 30 líneas por hoja (ajustando la altura mínima de la celda)
     bodyStyles: {
-      minCellHeight: 15 // Suficiente para que entren 30 líneas por página A4 Landscape y se vea la firma
+      minCellHeight: 15, // Suficiente para que entren 30 líneas por página A4 Landscape y se vea la firma
     },
     didDrawCell: (data) => {
       // Si estamos en la columna de la Firma (índice 9) y es del cuerpo (body)
@@ -153,13 +172,13 @@ export const generateBeneficiariesReport = async ({ records, jornadas, title = '
 
             doc.addImage(base64Img, 'JPEG', x, y, width, height);
           } catch (e) {
-            console.warn("No se pudo dibujar imagen", e);
+            console.warn('No se pudo dibujar imagen', e);
           }
         } else {
-          doc.text("Sin firma", data.cell.x + 10, data.cell.y + 10);
+          doc.text('Sin firma', data.cell.x + 10, data.cell.y + 10);
         }
       }
-    }
+    },
   });
 
   // Descargar PDF

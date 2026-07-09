@@ -134,7 +134,9 @@ export interface ExpenseReceipt {
 const isSupabaseConfigured = () => {
   const url = import.meta.env.VITE_SUPABASE_URL;
   const key = import.meta.env.VITE_SUPABASE_ANON_KEY;
-  return url && url !== 'https://placeholder-url.supabase.co' && key && key !== 'placeholder-anon-key';
+  return (
+    url && url !== 'https://placeholder-url.supabase.co' && key && key !== 'placeholder-anon-key'
+  );
 };
 
 export const isSimulationMode = !isSupabaseConfigured();
@@ -144,104 +146,373 @@ export const isSimulationMode = !isSupabaseConfigured();
 // =========================================================================
 const INITIAL_DONANTES: Donante[] = [
   // Nacionales
-  { id: 'don-nac-1', nombre: 'Fondo Lazos de Amor', tipo: 'nacional', pais: 'Venezuela', contacto: '', email: '', activo: true },
+  {
+    id: 'don-nac-1',
+    nombre: 'Fondo Lazos de Amor',
+    tipo: 'nacional',
+    pais: 'Venezuela',
+    contacto: '',
+    email: '',
+    activo: true,
+  },
   // Extranjeros
-  { id: 'don-ext-1', nombre: 'Alianza Bautista Mundial', tipo: 'extranjero', pais: 'Internacional', contacto: '', email: '', activo: true },
-  { id: 'don-ext-2', nombre: 'Tearfund', tipo: 'extranjero', pais: 'Reino Unido', contacto: '', email: '', activo: true },
-  { id: 'don-ext-3', nombre: 'Junta Misionera Internacional', tipo: 'extranjero', pais: 'Estados Unidos', contacto: '', email: '', activo: true },
-  { id: 'don-ext-4', nombre: 'Convención Bautista Europea', tipo: 'extranjero', pais: 'Europa', contacto: '', email: '', activo: true }
+  {
+    id: 'don-ext-1',
+    nombre: 'Alianza Bautista Mundial',
+    tipo: 'extranjero',
+    pais: 'Internacional',
+    contacto: '',
+    email: '',
+    activo: true,
+  },
+  {
+    id: 'don-ext-2',
+    nombre: 'Tearfund',
+    tipo: 'extranjero',
+    pais: 'Reino Unido',
+    contacto: '',
+    email: '',
+    activo: true,
+  },
+  {
+    id: 'don-ext-3',
+    nombre: 'Junta Misionera Internacional',
+    tipo: 'extranjero',
+    pais: 'Estados Unidos',
+    contacto: '',
+    email: '',
+    activo: true,
+  },
+  {
+    id: 'don-ext-4',
+    nombre: 'Convención Bautista Europea',
+    tipo: 'extranjero',
+    pais: 'Europa',
+    contacto: '',
+    email: '',
+    activo: true,
+  },
 ];
 
 const INITIAL_PROJECTS: Project[] = [
   {
     id: 'proj-1',
     nombre: 'Proyecto Alimentación Infantil Zulia',
-    descripcion: 'Programa de comedores comunitarios para niños en comunidades vulnerables de Maracaibo y San Francisco.',
+    descripcion:
+      'Programa de comedores comunitarios para niños en comunidades vulnerables de Maracaibo y San Francisco.',
     activo: true,
     fecha_inicio: '2026-01-01',
     fecha_fin: '2026-12-31',
-    overhead_porcentaje: 7.00,
-    donante_id: 'don-ext-1'
+    overhead_porcentaje: 7.0,
+    donante_id: 'don-ext-1',
   },
   {
     id: 'proj-2',
     nombre: 'Operación Ayuda Médica Apure',
-    descripcion: 'Distribución de insumos médicos básicos, medicinas de control y jornadas médicas gratuitas en zonas fronterizas.',
+    descripcion:
+      'Distribución de insumos médicos básicos, medicinas de control y jornadas médicas gratuitas en zonas fronterizas.',
     activo: true,
     fecha_inicio: '2026-02-15',
     fecha_fin: '2026-08-31',
-    overhead_porcentaje: 8.50,
-    donante_id: 'don-ext-3'
+    overhead_porcentaje: 8.5,
+    donante_id: 'don-ext-3',
   },
   {
     id: 'proj-3',
     nombre: 'Logística y Refugios Táchira',
-    descripcion: 'Apoyo con albergues temporales, mantas, agua potable y enseres para familias damnificadas por lluvias.',
+    descripcion:
+      'Apoyo con albergues temporales, mantas, agua potable y enseres para familias damnificadas por lluvias.',
     activo: true,
     fecha_inicio: '2026-03-01',
     fecha_fin: '2026-09-30',
-    overhead_porcentaje: 10.00,
-    donante_id: 'don-nac-1'
-  }
+    overhead_porcentaje: 10.0,
+    donante_id: 'don-nac-1',
+  },
 ];
 
 const INITIAL_CATEGORIES: ExpenseCategory[] = [
-  { id: 'cat-1', nombre: '1. Costos Directos de Intervención (Bienes y Servicios)', descripcion: 'Compra y distribución de bienes de ayuda y atención humanitaria directa.' },
-  { id: 'cat-2', nombre: '2. Costos de Transporte, Logística y Almacenamiento', descripcion: 'Fletes, almacenamiento y movilización local de suministros de ayuda.' },
-  { id: 'cat-3', nombre: '3. Costos de Personal (Recursos Humanos)', descripcion: 'Salarios, honorarios y pólizas de seguros del personal asignado.' },
-  { id: 'cat-4', nombre: '4. Gastos de Oficina y Funcionamiento (Costos Indirectos y Operativos)', descripcion: 'Costos operativos de bases de campo, seguridad y gastos indirectos (overhead).' },
-  { id: 'cat-5', nombre: '5. Visibilidad, Monitoreo y Evaluación', descripcion: 'Reportes obligatorios, rendición de cuentas, auditorías y material de visibilidad de donantes.' }
+  {
+    id: 'cat-1',
+    nombre: '1. Costos Directos de Intervención (Bienes y Servicios)',
+    descripcion: 'Compra y distribución de bienes de ayuda y atención humanitaria directa.',
+  },
+  {
+    id: 'cat-2',
+    nombre: '2. Costos de Transporte, Logística y Almacenamiento',
+    descripcion: 'Fletes, almacenamiento y movilización local de suministros de ayuda.',
+  },
+  {
+    id: 'cat-3',
+    nombre: '3. Costos de Personal (Recursos Humanos)',
+    descripcion: 'Salarios, honorarios y pólizas de seguros del personal asignado.',
+  },
+  {
+    id: 'cat-4',
+    nombre: '4. Gastos de Oficina y Funcionamiento (Costos Indirectos y Operativos)',
+    descripcion: 'Costos operativos de bases de campo, seguridad y gastos indirectos (overhead).',
+  },
+  {
+    id: 'cat-5',
+    nombre: '5. Visibilidad, Monitoreo y Evaluación',
+    descripcion:
+      'Reportes obligatorios, rendición de cuentas, auditorías y material de visibilidad de donantes.',
+  },
 ];
 
 const INITIAL_PARTIDAS: PartidaGasto[] = [
   // Categoría 1
-  { id: 'part-11', categoria_id: 'cat-1', codigo: '1.1', nombre: 'Artículos No Alimentarios (NFI)', descripcion: 'Compra y distribución de kits de emergencia, lonas, carpas, mantas, utensilios.' },
-  { id: 'part-12', categoria_id: 'cat-1', codigo: '1.2', nombre: 'Agua, Saneamiento e Higiene (WASH)', descripcion: 'Letrinas de emergencia, pastillas potabilizadoras, camiones cisterna, kits de higiene.' },
-  { id: 'part-13', categoria_id: 'cat-1', codigo: '1.3', nombre: 'Asistencia Sanitaria de Urgencia', descripcion: 'Medicamentos esenciales, clínicas móviles, insumos de trauma, generadores de clínicas.' },
-  { id: 'part-14', categoria_id: 'cat-1', codigo: '1.4', nombre: 'Seguridad Alimentaria y Nutrición', descripcion: 'Alimentos de primera necesidad y suplementos nutricionales.' },
-  { id: 'part-15', categoria_id: 'cat-1', codigo: '1.5', nombre: 'Programas de Transferencias Monetarias (PTM)', descripcion: 'Dinero en efectivo o vales entregados directamente a beneficiarios.' },
+  {
+    id: 'part-11',
+    categoria_id: 'cat-1',
+    codigo: '1.1',
+    nombre: 'Artículos No Alimentarios (NFI)',
+    descripcion: 'Compra y distribución de kits de emergencia, lonas, carpas, mantas, utensilios.',
+  },
+  {
+    id: 'part-12',
+    categoria_id: 'cat-1',
+    codigo: '1.2',
+    nombre: 'Agua, Saneamiento e Higiene (WASH)',
+    descripcion:
+      'Letrinas de emergencia, pastillas potabilizadoras, camiones cisterna, kits de higiene.',
+  },
+  {
+    id: 'part-13',
+    categoria_id: 'cat-1',
+    codigo: '1.3',
+    nombre: 'Asistencia Sanitaria de Urgencia',
+    descripcion:
+      'Medicamentos esenciales, clínicas móviles, insumos de trauma, generadores de clínicas.',
+  },
+  {
+    id: 'part-14',
+    categoria_id: 'cat-1',
+    codigo: '1.4',
+    nombre: 'Seguridad Alimentaria y Nutrición',
+    descripcion: 'Alimentos de primera necesidad y suplementos nutricionales.',
+  },
+  {
+    id: 'part-15',
+    categoria_id: 'cat-1',
+    codigo: '1.5',
+    nombre: 'Programas de Transferencias Monetarias (PTM)',
+    descripcion: 'Dinero en efectivo o vales entregados directamente a beneficiarios.',
+  },
 
   // Categoría 2
-  { id: 'part-21', categoria_id: 'cat-2', codigo: '2.1', nombre: 'Transporte y Envíos', descripcion: 'Fletes terrestres, marítimos o aéreos para movilizar la ayuda.' },
-  { id: 'part-22', categoria_id: 'cat-2', codigo: '2.2', nombre: 'Almacenamiento', descripcion: 'Alquiler de bodegas, almacenes temporales y costos de estiba.' },
-  { id: 'part-23', categoria_id: 'cat-2', codigo: '2.3', nombre: 'Logística Local', descripcion: 'Combustible local, peajes, alquiler de vehículos 4x4 de operación.' },
+  {
+    id: 'part-21',
+    categoria_id: 'cat-2',
+    codigo: '2.1',
+    nombre: 'Transporte y Envíos',
+    descripcion: 'Fletes terrestres, marítimos o aéreos para movilizar la ayuda.',
+  },
+  {
+    id: 'part-22',
+    categoria_id: 'cat-2',
+    codigo: '2.2',
+    nombre: 'Almacenamiento',
+    descripcion: 'Alquiler de bodegas, almacenes temporales y costos de estiba.',
+  },
+  {
+    id: 'part-23',
+    categoria_id: 'cat-2',
+    codigo: '2.3',
+    nombre: 'Logística Local',
+    descripcion: 'Combustible local, peajes, alquiler de vehículos 4x4 de operación.',
+  },
 
   // Categoría 3
-  { id: 'part-31', categoria_id: 'cat-3', codigo: '3.1', nombre: 'Personal Local e Internacional', descripcion: 'Salarios y dietas de coordinadores, médicos, ingenieros WASH y logistas.' },
-  { id: 'part-32', categoria_id: 'cat-3', codigo: '3.2', nombre: 'Seguridad Social y Seguros', descripcion: 'Pólizas de seguro médico y accidentes de riesgo especial para zonas de desastre.' },
+  {
+    id: 'part-31',
+    categoria_id: 'cat-3',
+    codigo: '3.1',
+    nombre: 'Personal Local e Internacional',
+    descripcion: 'Salarios y dietas de coordinadores, médicos, ingenieros WASH y logistas.',
+  },
+  {
+    id: 'part-32',
+    categoria_id: 'cat-3',
+    codigo: '3.2',
+    nombre: 'Seguridad Social y Seguros',
+    descripcion: 'Pólizas de seguro médico y accidentes de riesgo especial para zonas de desastre.',
+  },
 
   // Categoría 4
-  { id: 'part-41', categoria_id: 'cat-4', codigo: '4.1', nombre: 'Costos de Oficina sobre el Terreno', descripcion: 'Alquiler de oficinas/bases, internet satelital, luz, agua y papelería contable.' },
-  { id: 'part-42', categoria_id: 'cat-4', codigo: '4.2', nombre: 'Gestión de Seguridad', descripcion: 'Equipamiento de comunicación (radios VHF), personal de vigilancia, kits de evacuación.' },
-  { id: 'part-43', categoria_id: 'cat-4', codigo: '4.3', nombre: 'Costos Indirectos (Overhead)', descripcion: 'Porcentaje destinado a gastos centrales de administración contable de la sede.' },
+  {
+    id: 'part-41',
+    categoria_id: 'cat-4',
+    codigo: '4.1',
+    nombre: 'Costos de Oficina sobre el Terreno',
+    descripcion: 'Alquiler de oficinas/bases, internet satelital, luz, agua y papelería contable.',
+  },
+  {
+    id: 'part-42',
+    categoria_id: 'cat-4',
+    codigo: '4.2',
+    nombre: 'Gestión de Seguridad',
+    descripcion:
+      'Equipamiento de comunicación (radios VHF), personal de vigilancia, kits de evacuación.',
+  },
+  {
+    id: 'part-43',
+    categoria_id: 'cat-4',
+    codigo: '4.3',
+    nombre: 'Costos Indirectos (Overhead)',
+    descripcion: 'Porcentaje destinado a gastos centrales de administración contable de la sede.',
+  },
 
   // Categoría 5
-  { id: 'part-51', categoria_id: 'cat-5', codigo: '5.1', nombre: 'Visibilidad', descripcion: 'Banners, chalecos identificadores de personal, y calcomanías para logos de donantes.' },
-  { id: 'part-52', categoria_id: 'cat-5', codigo: '5.2', nombre: 'Monitoreo, Evaluación y Rendición de Cuentas', descripcion: 'Viajes de control de hitos, auditorías del proyecto y elaboración de reportes.' }
+  {
+    id: 'part-51',
+    categoria_id: 'cat-5',
+    codigo: '5.1',
+    nombre: 'Visibilidad',
+    descripcion:
+      'Banners, chalecos identificadores de personal, y calcomanías para logos de donantes.',
+  },
+  {
+    id: 'part-52',
+    categoria_id: 'cat-5',
+    codigo: '5.2',
+    nombre: 'Monitoreo, Evaluación y Rendición de Cuentas',
+    descripcion: 'Viajes de control de hitos, auditorías del proyecto y elaboración de reportes.',
+  },
 ];
 
 const INITIAL_BUDGETS: Budget[] = [
   // Proyecto 1
-  { id: 'b-1', proyecto_id: 'proj-1', partida_id: 'part-14', monto_asignado: 15000.00, monto_ejecutado: 4850.00, monto_comprometido: 0, periodo: '2026-ANUAL' },
-  { id: 'b-2', proyecto_id: 'proj-1', partida_id: 'part-23', monto_asignado: 3000.00, monto_ejecutado: 1200.00, monto_comprometido: 0, periodo: '2026-ANUAL' },
-  { id: 'b-3', proyecto_id: 'proj-1', partida_id: 'part-41', monto_asignado: 1000.00, monto_ejecutado: 350.00, monto_comprometido: 0, periodo: '2026-ANUAL' },
+  {
+    id: 'b-1',
+    proyecto_id: 'proj-1',
+    partida_id: 'part-14',
+    monto_asignado: 15000.0,
+    monto_ejecutado: 4850.0,
+    monto_comprometido: 0,
+    periodo: '2026-ANUAL',
+  },
+  {
+    id: 'b-2',
+    proyecto_id: 'proj-1',
+    partida_id: 'part-23',
+    monto_asignado: 3000.0,
+    monto_ejecutado: 1200.0,
+    monto_comprometido: 0,
+    periodo: '2026-ANUAL',
+  },
+  {
+    id: 'b-3',
+    proyecto_id: 'proj-1',
+    partida_id: 'part-41',
+    monto_asignado: 1000.0,
+    monto_ejecutado: 350.0,
+    monto_comprometido: 0,
+    periodo: '2026-ANUAL',
+  },
   // Proyecto 2
-  { id: 'b-4', proyecto_id: 'proj-2', partida_id: 'part-13', monto_asignado: 25000.00, monto_ejecutado: 12500.00, monto_comprometido: 0, periodo: '2026-ANUAL' },
-  { id: 'b-5', proyecto_id: 'proj-2', partida_id: 'part-23', monto_asignado: 4000.00, monto_ejecutado: 890.00, monto_comprometido: 0, periodo: '2026-ANUAL' },
+  {
+    id: 'b-4',
+    proyecto_id: 'proj-2',
+    partida_id: 'part-13',
+    monto_asignado: 25000.0,
+    monto_ejecutado: 12500.0,
+    monto_comprometido: 0,
+    periodo: '2026-ANUAL',
+  },
+  {
+    id: 'b-5',
+    proyecto_id: 'proj-2',
+    partida_id: 'part-23',
+    monto_asignado: 4000.0,
+    monto_ejecutado: 890.0,
+    monto_comprometido: 0,
+    periodo: '2026-ANUAL',
+  },
   // Proyecto 3
-  { id: 'b-6', proyecto_id: 'proj-3', partida_id: 'part-22', monto_asignado: 10000.00, monto_ejecutado: 6200.00, monto_comprometido: 0, periodo: '2026-ANUAL' }
+  {
+    id: 'b-6',
+    proyecto_id: 'proj-3',
+    partida_id: 'part-22',
+    monto_asignado: 10000.0,
+    monto_ejecutado: 6200.0,
+    monto_comprometido: 0,
+    periodo: '2026-ANUAL',
+  },
 ];
 
 const INITIAL_BANK_TRANSACTIONS: BankTransaction[] = [
-  { id: 'tx-1', fecha: '2026-06-01', referencia: 'REF-82910', descripcion: 'TRANSFERENCIA RECIBIDA DONANTE ALIANZA BAUTISTA', monto: 35000.00, estado: 'pendiente' },
-  { id: 'tx-2', fecha: '2026-06-02', referencia: 'REF-33412', descripcion: 'DONACION OFRENDA TEMPLO METROPOLITANO CARACAS', monto: 12000.00, estado: 'pendiente' },
-  { id: 'tx-3', fecha: '2026-06-05', referencia: 'PAGO-88122', descripcion: 'COMPRA DROGUERIA FARMA-SALUD SUMINISTROS', monto: -12500.00, estado: 'pendiente' },
-  { id: 'tx-4', fecha: '2026-06-10', referencia: 'REF-92011', descripcion: 'PAGO ALIMENTOS POLAR COMEDOR MARACAIBO', monto: -4850.00, estado: 'pendiente' },
-  { id: 'tx-5', fecha: '2026-06-12', referencia: 'PAGO-00129', descripcion: 'COMPRA COLCHONES REFUGIO SAN CRISTOBAL', monto: -6200.00, estado: 'pendiente' },
-  { id: 'tx-6', fecha: '2026-06-15', referencia: 'RET-33100', descripcion: 'PAGO RECTIFICACION FLETE CAMIONES VALENCIA', monto: -1200.00, estado: 'pendiente' },
-  { id: 'tx-7', fecha: '2026-06-18', referencia: 'PAGO-55291', descripcion: 'FACTURA ESTACION SERVICIO EL PACIFICO COMB', monto: -890.00, estado: 'pendiente' },
-  { id: 'tx-8', fecha: '2026-06-20', referencia: 'REF-11928', descripcion: 'TRANSFERENCIA RECIBIDA IGLESIA LAS ACACIAS', monto: 5000.00, estado: 'pendiente' },
-  { id: 'tx-9', fecha: '2026-06-22', referencia: 'PAGO-38190', descripcion: 'COMPRA MATERIAL SANITARIO FARMACIA SOCIAL', monto: -820.00, estado: 'pendiente' }
+  {
+    id: 'tx-1',
+    fecha: '2026-06-01',
+    referencia: 'REF-82910',
+    descripcion: 'TRANSFERENCIA RECIBIDA DONANTE ALIANZA BAUTISTA',
+    monto: 35000.0,
+    estado: 'pendiente',
+  },
+  {
+    id: 'tx-2',
+    fecha: '2026-06-02',
+    referencia: 'REF-33412',
+    descripcion: 'DONACION OFRENDA TEMPLO METROPOLITANO CARACAS',
+    monto: 12000.0,
+    estado: 'pendiente',
+  },
+  {
+    id: 'tx-3',
+    fecha: '2026-06-05',
+    referencia: 'PAGO-88122',
+    descripcion: 'COMPRA DROGUERIA FARMA-SALUD SUMINISTROS',
+    monto: -12500.0,
+    estado: 'pendiente',
+  },
+  {
+    id: 'tx-4',
+    fecha: '2026-06-10',
+    referencia: 'REF-92011',
+    descripcion: 'PAGO ALIMENTOS POLAR COMEDOR MARACAIBO',
+    monto: -4850.0,
+    estado: 'pendiente',
+  },
+  {
+    id: 'tx-5',
+    fecha: '2026-06-12',
+    referencia: 'PAGO-00129',
+    descripcion: 'COMPRA COLCHONES REFUGIO SAN CRISTOBAL',
+    monto: -6200.0,
+    estado: 'pendiente',
+  },
+  {
+    id: 'tx-6',
+    fecha: '2026-06-15',
+    referencia: 'RET-33100',
+    descripcion: 'PAGO RECTIFICACION FLETE CAMIONES VALENCIA',
+    monto: -1200.0,
+    estado: 'pendiente',
+  },
+  {
+    id: 'tx-7',
+    fecha: '2026-06-18',
+    referencia: 'PAGO-55291',
+    descripcion: 'FACTURA ESTACION SERVICIO EL PACIFICO COMB',
+    monto: -890.0,
+    estado: 'pendiente',
+  },
+  {
+    id: 'tx-8',
+    fecha: '2026-06-20',
+    referencia: 'REF-11928',
+    descripcion: 'TRANSFERENCIA RECIBIDA IGLESIA LAS ACACIAS',
+    monto: 5000.0,
+    estado: 'pendiente',
+  },
+  {
+    id: 'tx-9',
+    fecha: '2026-06-22',
+    referencia: 'PAGO-38190',
+    descripcion: 'COMPRA MATERIAL SANITARIO FARMACIA SOCIAL',
+    monto: -820.0,
+    estado: 'pendiente',
+  },
 ];
 
 const INITIAL_EXPENSES: ExpenseReceipt[] = [
@@ -252,13 +523,14 @@ const INITIAL_EXPENSES: ExpenseReceipt[] = [
     transaccion_id: null,
     solicitante_id: 'coord-1',
     solicitante_nombre: 'José Rodríguez (Coordinador Zulia)',
-    monto: 4850.00,
-    descripcion: 'Compra de víveres, arroz, granos y harina para el comedor infantil Maracaibo Oeste.',
+    monto: 4850.0,
+    descripcion:
+      'Compra de víveres, arroz, granos y harina para el comedor infantil Maracaibo Oeste.',
     fecha_gasto: '2026-06-08',
     url_comprobante: 'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?q=80&w=600',
     url_pago: 'https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?q=80&w=600',
     estado: 'pendiente_revision',
-    comentarios_auditoria: null
+    comentarios_auditoria: null,
   },
   {
     id: 'exp-2',
@@ -267,13 +539,14 @@ const INITIAL_EXPENSES: ExpenseReceipt[] = [
     transaccion_id: null,
     solicitante_id: 'coord-2',
     solicitante_nombre: 'Hna. María Gómez (Coordinadora Médica)',
-    monto: 12500.00,
-    descripcion: 'Compra de antibióticos y analgésicos para las jornadas de salud en el Alto Apure.',
+    monto: 12500.0,
+    descripcion:
+      'Compra de antibióticos y analgésicos para las jornadas de salud en el Alto Apure.',
     fecha_gasto: '2026-06-04',
     url_comprobante: 'https://images.unsplash.com/photo-1576091160550-2173dba999ef?q=80&w=600',
     url_pago: null,
     estado: 'pendiente_revision',
-    comentarios_auditoria: null
+    comentarios_auditoria: null,
   },
   {
     id: 'exp-3',
@@ -282,13 +555,14 @@ const INITIAL_EXPENSES: ExpenseReceipt[] = [
     transaccion_id: 'tx-5', // Pre-conciliado en el mock
     solicitante_id: 'coord-3',
     solicitante_nombre: 'Carlos Silva (Logística Táchira)',
-    monto: 6200.00,
-    descripcion: 'Adquisición de 40 colchonetas y mantas térmicas para el Refugio Bautista San Cristóbal.',
+    monto: 6200.0,
+    descripcion:
+      'Adquisición de 40 colchonetas y mantas térmicas para el Refugio Bautista San Cristóbal.',
     fecha_gasto: '2026-06-11',
     url_comprobante: 'https://images.unsplash.com/photo-1595246140625-573b715d11dc?q=80&w=600',
     url_pago: 'https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?q=80&w=600',
     estado: 'aprobado',
-    comentarios_auditoria: 'Soporte y factura fiscal adjuntos. Conciliación automática correcta.'
+    comentarios_auditoria: 'Soporte y factura fiscal adjuntos. Conciliación automática correcta.',
   },
   {
     id: 'exp-4',
@@ -297,14 +571,14 @@ const INITIAL_EXPENSES: ExpenseReceipt[] = [
     transaccion_id: 'tx-6',
     solicitante_id: 'coord-1',
     solicitante_nombre: 'José Rodríguez (Coordinador Zulia)',
-    monto: 1200.00,
+    monto: 1200.0,
     descripcion: 'Pago de flete camión con comida desde el Centro Bautista en Caracas a Maracaibo.',
     fecha_gasto: '2026-06-14',
     url_comprobante: 'https://images.unsplash.com/photo-1601584115197-04ecc0da31d7?q=80&w=600',
     url_pago: null,
     estado: 'aprobado',
-    comentarios_auditoria: 'Recibo de flete verificado.'
-  }
+    comentarios_auditoria: 'Recibo de flete verificado.',
+  },
 ];
 
 const INITIAL_BENEFICIARIES: Beneficiary[] = [
@@ -317,7 +591,7 @@ const INITIAL_BENEFICIARIES: Beneficiary[] = [
     sexo: 'Femenino',
     fecha_nacimiento: '1980-05-15',
     url_firma: null,
-    created_at: new Date().toISOString()
+    created_at: new Date().toISOString(),
   },
   {
     id: 'ben-002',
@@ -328,15 +602,39 @@ const INITIAL_BENEFICIARIES: Beneficiary[] = [
     sexo: 'Femenino',
     fecha_nacimiento: '1992-10-22',
     url_firma: null,
-    created_at: new Date(Date.now() - 86400000).toISOString() // Ayer
-  }
+    created_at: new Date(Date.now() - 86400000).toISOString(), // Ayer
+  },
 ];
 
 const INITIAL_TASAS_BCV: TasaBCV[] = [
-  { id: 'rate-1', fecha: '2026-07-04', tasa: 652.9726, fuente: 'bcv_api', created_at: new Date().toISOString() },
-  { id: 'rate-2', fecha: '2026-07-03', tasa: 652.9726, fuente: 'bcv_api', created_at: new Date().toISOString() },
-  { id: 'rate-3', fecha: '2026-07-02', tasa: 651.5000, fuente: 'bcv_api', created_at: new Date().toISOString() },
-  { id: 'rate-4', fecha: '2026-07-01', tasa: 650.1200, fuente: 'bcv_api', created_at: new Date().toISOString() }
+  {
+    id: 'rate-1',
+    fecha: '2026-07-04',
+    tasa: 652.9726,
+    fuente: 'bcv_api',
+    created_at: new Date().toISOString(),
+  },
+  {
+    id: 'rate-2',
+    fecha: '2026-07-03',
+    tasa: 652.9726,
+    fuente: 'bcv_api',
+    created_at: new Date().toISOString(),
+  },
+  {
+    id: 'rate-3',
+    fecha: '2026-07-02',
+    tasa: 651.5,
+    fuente: 'bcv_api',
+    created_at: new Date().toISOString(),
+  },
+  {
+    id: 'rate-4',
+    fecha: '2026-07-01',
+    tasa: 650.12,
+    fuente: 'bcv_api',
+    created_at: new Date().toISOString(),
+  },
 ];
 
 const INITIAL_DONATIONS: Donation[] = [
@@ -345,16 +643,16 @@ const INITIAL_DONATIONS: Donation[] = [
     proyecto_id: 'proj-1',
     transaccion_id: null,
     donante: 'Alianza Bautista Internacional',
-    monto: 35000.00,
+    monto: 35000.0,
     descripcion: 'Fondo internacional etiquetado para Zulia.',
     fecha: '2026-06-01',
     moneda: 'USD',
     medio_pago: 'transferencia',
-    monto_original: 35000.00,
+    monto_original: 35000.0,
     tasa_bcv: null,
-    monto_usd: 35000.00,
-    monto_ves: null
-  }
+    monto_usd: 35000.0,
+    monto_ves: null,
+  },
 ];
 
 // Helper para inicializar LocalStorage en modo simulación
@@ -488,7 +786,7 @@ export const api = {
         unreconciledInflows: 0,
         totalOutflows: 0,
         expensesByCategory: {},
-        projectExecution: []
+        projectExecution: [],
       };
     }
   },
@@ -507,7 +805,11 @@ export const api = {
   // --- TRANSACCIONES BANCARIAS ---
   getBankTransactions: async (): Promise<BankTransaction[]> => {
     if (!isSimulationMode) {
-      const { data, error } = await supabase.from('transacciones_bancarias').select('*').order('fecha', { ascending: false }).limit(300);
+      const { data, error } = await supabase
+        .from('transacciones_bancarias')
+        .select('*')
+        .order('fecha', { ascending: false })
+        .limit(300);
       if (error) throw error;
       return data as BankTransaction[];
     } else {
@@ -515,7 +817,10 @@ export const api = {
     }
   },
 
-  getBankTransactionsPaginated: async (page: number = 1, pageSize: number = 50): Promise<{ data: BankTransaction[], count: number }> => {
+  getBankTransactionsPaginated: async (
+    page: number = 1,
+    pageSize: number = 50,
+  ): Promise<{ data: BankTransaction[]; count: number }> => {
     if (!isSimulationMode) {
       const from = (page - 1) * pageSize;
       const to = from + pageSize - 1;
@@ -534,19 +839,22 @@ export const api = {
     }
   },
 
-  importBankTransactions: async (txs: Omit<BankTransaction, 'id' | 'estado'>[]): Promise<BankTransaction[]> => {
+  importBankTransactions: async (
+    txs: Omit<BankTransaction, 'id' | 'estado'>[],
+  ): Promise<BankTransaction[]> => {
     if (!isSimulationMode) {
-      const { data, error } = await supabase.from('transacciones_bancarias').insert(
-        txs.map(tx => ({ ...tx, estado: 'pendiente' }))
-      ).select();
+      const { data, error } = await supabase
+        .from('transacciones_bancarias')
+        .insert(txs.map((tx) => ({ ...tx, estado: 'pendiente' })))
+        .select();
       if (error) throw error;
       return data as BankTransaction[];
     } else {
       const current = JSON.parse(localStorage.getItem('cnbv_bank_transactions') || '[]');
-      const newTxs = txs.map(tx => ({
+      const newTxs = txs.map((tx) => ({
         ...tx,
         id: `tx-${Math.random().toString(36).substr(2, 9)}`,
-        estado: 'pendiente' as const
+        estado: 'pendiente' as const,
       }));
       const updated = [...newTxs, ...current];
       localStorage.setItem('cnbv_bank_transactions', JSON.stringify(updated));
@@ -557,7 +865,11 @@ export const api = {
   // --- EGRESOS / COMPROBANTES DE GASTO ---
   getExpenses: async (): Promise<ExpenseReceipt[]> => {
     if (!isSimulationMode) {
-      const { data, error } = await supabase.from('comprobantes_gasto').select('*').order('fecha_gasto', { ascending: false }).limit(300);
+      const { data, error } = await supabase
+        .from('comprobantes_gasto')
+        .select('*')
+        .order('fecha_gasto', { ascending: false })
+        .limit(300);
       if (error) throw error;
       return data as ExpenseReceipt[];
     } else {
@@ -565,7 +877,10 @@ export const api = {
     }
   },
 
-  getExpensesPaginated: async (page: number = 1, pageSize: number = 50): Promise<{ data: ExpenseReceipt[], count: number }> => {
+  getExpensesPaginated: async (
+    page: number = 1,
+    pageSize: number = 50,
+  ): Promise<{ data: ExpenseReceipt[]; count: number }> => {
     if (!isSimulationMode) {
       const from = (page - 1) * pageSize;
       const to = from + pageSize - 1;
@@ -584,7 +899,10 @@ export const api = {
     }
   },
 
-  getRecentExpensesByUserId: async (userId: string, limit: number = 20): Promise<ExpenseReceipt[]> => {
+  getRecentExpensesByUserId: async (
+    userId: string,
+    limit: number = 20,
+  ): Promise<ExpenseReceipt[]> => {
     if (!isSimulationMode) {
       const { data, error } = await supabase
         .from('comprobantes_gasto')
@@ -596,7 +914,7 @@ export const api = {
       return data as ExpenseReceipt[];
     } else {
       const all: ExpenseReceipt[] = JSON.parse(localStorage.getItem('cnbv_expenses') || '[]');
-      return all.filter(e => e.solicitante_id === userId).slice(0, limit);
+      return all.filter((e) => e.solicitante_id === userId).slice(0, limit);
     }
   },
 
@@ -607,7 +925,7 @@ export const api = {
         .select('*')
         .eq('id', id)
         .single();
-      
+
       if (error) {
         if (error.code === 'PGRST116') return null; // Not found
         throw error;
@@ -620,9 +938,12 @@ export const api = {
   },
 
   createExpense: async (
-    expense: Omit<ExpenseReceipt, 'id' | 'estado' | 'comentarios_auditoria' | 'transaccion_id' | 'url_pago'>, 
+    expense: Omit<
+      ExpenseReceipt,
+      'id' | 'estado' | 'comentarios_auditoria' | 'transaccion_id' | 'url_pago'
+    >,
     file?: File,
-    pagoFile?: File
+    pagoFile?: File,
   ): Promise<ExpenseReceipt> => {
     let fileUrl: string | null = null;
     let pagoFileUrl: string | null = null;
@@ -655,7 +976,7 @@ export const api = {
       estado: 'pendiente_revision',
       comentarios_auditoria: null,
       url_comprobante: fileUrl || expense.url_comprobante,
-      url_pago: pagoFileUrl || null
+      url_pago: pagoFileUrl || null,
     };
 
     if (!isSimulationMode) {
@@ -675,7 +996,11 @@ export const api = {
         comentarios_auditoria: newExpense.comentarios_auditoria,
       };
 
-      const { data, error } = await supabase.from('comprobantes_gasto').insert([dbExpense]).select().single();
+      const { data, error } = await supabase
+        .from('comprobantes_gasto')
+        .insert([dbExpense])
+        .select()
+        .single();
       if (error) throw error;
       return data as ExpenseReceipt;
     } else {
@@ -683,7 +1008,7 @@ export const api = {
       const created = {
         ...newExpense,
         id: `exp-${Date.now()}`,
-        solicitante_nombre: expense.solicitante_nombre || 'Coordinador de Campo'
+        solicitante_nombre: expense.solicitante_nombre || 'Coordinador de Campo',
       };
       expenses.unshift(created);
       localStorage.setItem('cnbv_expenses', JSON.stringify(expenses));
@@ -691,7 +1016,12 @@ export const api = {
     }
   },
 
-  updateExpenseStatus: async (expenseId: string, estado: ExpenseReceipt['estado'], comentarios: string | null, auditorId: string): Promise<ExpenseReceipt> => {
+  updateExpenseStatus: async (
+    expenseId: string,
+    estado: ExpenseReceipt['estado'],
+    comentarios: string | null,
+    auditorId: string,
+  ): Promise<ExpenseReceipt> => {
     if (!isSimulationMode) {
       const { data, error } = await supabase
         .from('comprobantes_gasto')
@@ -700,7 +1030,7 @@ export const api = {
           comentarios_auditoria: comentarios,
           auditado_por: auditorId,
           auditado_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
+          updated_at: new Date().toISOString(),
         })
         .eq('id', expenseId)
         .select()
@@ -717,22 +1047,31 @@ export const api = {
         estado,
         comentarios_auditoria: comentarios,
         auditado_por: auditorId,
-        auditado_at: new Date().toISOString()
+        auditado_at: new Date().toISOString(),
       };
 
       // Si se aprueba el gasto en modo simulación, actualizar la ejecución presupuestaria
       if (estado === 'aprobado' && expenses[index].estado !== 'aprobado') {
         const budgets = JSON.parse(localStorage.getItem('cnbv_budgets') || '[]');
-        const bIndex = budgets.findIndex((b: Budget) => b.proyecto_id === updated.proyecto_id && b.partida_id === updated.partida_id);
+        const bIndex = budgets.findIndex(
+          (b: Budget) =>
+            b.proyecto_id === updated.proyecto_id && b.partida_id === updated.partida_id,
+        );
         if (bIndex !== -1) {
           budgets[bIndex].monto_ejecutado += updated.monto;
           localStorage.setItem('cnbv_budgets', JSON.stringify(budgets));
         }
       } else if (estado !== 'aprobado' && expenses[index].estado === 'aprobado') {
         const budgets = JSON.parse(localStorage.getItem('cnbv_budgets') || '[]');
-        const bIndex = budgets.findIndex((b: Budget) => b.proyecto_id === updated.proyecto_id && b.partida_id === updated.partida_id);
+        const bIndex = budgets.findIndex(
+          (b: Budget) =>
+            b.proyecto_id === updated.proyecto_id && b.partida_id === updated.partida_id,
+        );
         if (bIndex !== -1) {
-          budgets[bIndex].monto_ejecutado = Math.max(0, budgets[bIndex].monto_ejecutado - updated.monto);
+          budgets[bIndex].monto_ejecutado = Math.max(
+            0,
+            budgets[bIndex].monto_ejecutado - updated.monto,
+          );
           localStorage.setItem('cnbv_budgets', JSON.stringify(budgets));
         }
       }
@@ -744,7 +1083,10 @@ export const api = {
   },
 
   // --- CONCILIACIÓN BANCARIA ---
-  reconcileExpense: async (expenseId: string, transactionId: string): Promise<{ expense: ExpenseReceipt; transaction: BankTransaction }> => {
+  reconcileExpense: async (
+    expenseId: string,
+    transactionId: string,
+  ): Promise<{ expense: ExpenseReceipt; transaction: BankTransaction }> => {
     if (!isSimulationMode) {
       // 1. Vincular el gasto con la transacción
       const { data: expenseData, error: expError } = await supabase
@@ -766,7 +1108,7 @@ export const api = {
 
       return {
         expense: expenseData as ExpenseReceipt,
-        transaction: txData as BankTransaction
+        transaction: txData as BankTransaction,
       };
     } else {
       const expenses = JSON.parse(localStorage.getItem('cnbv_expenses') || '[]');
@@ -785,12 +1127,15 @@ export const api = {
 
       return {
         expense: expenses[expIndex],
-        transaction: transactions[txIndex]
+        transaction: transactions[txIndex],
       };
     }
   },
 
-  reconcileDonation: async (donationId: string, transactionId: string): Promise<{ donation: Donation; transaction: BankTransaction }> => {
+  reconcileDonation: async (
+    donationId: string,
+    transactionId: string,
+  ): Promise<{ donation: Donation; transaction: BankTransaction }> => {
     if (!isSimulationMode) {
       // 1. Vincular la donación con la transacción
       const { data: donationData, error: donError } = await supabase
@@ -812,7 +1157,7 @@ export const api = {
 
       return {
         donation: donationData as Donation,
-        transaction: txData as BankTransaction
+        transaction: txData as BankTransaction,
       };
     } else {
       const donations = JSON.parse(localStorage.getItem('cnbv_donations') || '[]');
@@ -831,7 +1176,7 @@ export const api = {
 
       return {
         donation: donations[donIndex],
-        transaction: transactions[txIndex]
+        transaction: transactions[txIndex],
       };
     }
   },
@@ -850,14 +1195,16 @@ export const api = {
       // 2. Crear una transacción bancaria virtual (de tipo caja efectivo)
       const { data: virtualTx, error: txError } = await supabase
         .from('transacciones_bancarias')
-        .insert([{
-          fecha: donation.fecha,
-          referencia: 'CAJA-' + donationId.split('-')[0].toUpperCase(),
-          descripcion: `[CAJA EFECTIVO] Recepción de Aporte - ${donation.donante}`,
-          monto: donation.monto_original || donation.monto,
-          estado: 'conciliado',
-          csv_metadata: { moneda: donation.moneda, tipo: 'efectivo_caja' }
-        }])
+        .insert([
+          {
+            fecha: donation.fecha,
+            referencia: 'CAJA-' + donationId.split('-')[0].toUpperCase(),
+            descripcion: `[CAJA EFECTIVO] Recepción de Aporte - ${donation.donante}`,
+            monto: donation.monto_original || donation.monto,
+            estado: 'conciliado',
+            csv_metadata: { moneda: donation.moneda, tipo: 'efectivo_caja' },
+          },
+        ])
         .select()
         .single();
       if (txError) throw txError;
@@ -890,7 +1237,7 @@ export const api = {
         descripcion: `[CAJA EFECTIVO] Recepción de Aporte - ${donation.donante}`,
         monto: donation.monto_original || donation.monto,
         estado: 'conciliado',
-        csv_metadata: { moneda: donation.moneda, tipo: 'efectivo_caja' }
+        csv_metadata: { moneda: donation.moneda, tipo: 'efectivo_caja' },
       };
 
       transactions.push(virtualTx);
@@ -906,7 +1253,11 @@ export const api = {
   // --- DONACIONES ---
   getDonations: async (): Promise<Donation[]> => {
     if (!isSimulationMode) {
-      const { data, error } = await supabase.from('donaciones').select('*').order('fecha', { ascending: false }).limit(300);
+      const { data, error } = await supabase
+        .from('donaciones')
+        .select('*')
+        .order('fecha', { ascending: false })
+        .limit(300);
       if (error) throw error;
       return data as Donation[];
     } else {
@@ -914,15 +1265,23 @@ export const api = {
     }
   },
 
-  createDonation: async (donation: Omit<Donation, 'id'> & { vinculo_transaccion_ids?: string[] }): Promise<Donation> => {
+  createDonation: async (
+    donation: Omit<Donation, 'id'> & { vinculo_transaccion_ids?: string[] },
+  ): Promise<Donation> => {
     const { vinculo_transaccion_ids, ...donationData } = donation;
 
     if (!isSimulationMode) {
-      const { data, error } = await supabase.from('donaciones').insert([donationData]).select().single();
+      const { data, error } = await supabase
+        .from('donaciones')
+        .insert([donationData])
+        .select()
+        .single();
       if (error) throw error;
 
       // Conciliar las transacciones vinculadas
-      const targetIds = vinculo_transaccion_ids || (donationData.transaccion_id ? [donationData.transaccion_id] : []);
+      const targetIds =
+        vinculo_transaccion_ids ||
+        (donationData.transaccion_id ? [donationData.transaccion_id] : []);
       if (targetIds.length > 0) {
         const { error: txError } = await supabase
           .from('transacciones_bancarias')
@@ -934,16 +1293,22 @@ export const api = {
       return data as Donation;
     } else {
       const donations = JSON.parse(localStorage.getItem('cnbv_donations') || '[]');
-      const created = { ...donationData, id: `don-${Date.now()}`, created_at: new Date().toISOString() };
+      const created = {
+        ...donationData,
+        id: `don-${Date.now()}`,
+        created_at: new Date().toISOString(),
+      };
       donations.unshift(created);
       localStorage.setItem('cnbv_donations', JSON.stringify(donations));
 
       // Conciliar las transacciones vinculadas en simulación
-      const targetIds = vinculo_transaccion_ids || (donationData.transaccion_id ? [donationData.transaccion_id] : []);
+      const targetIds =
+        vinculo_transaccion_ids ||
+        (donationData.transaccion_id ? [donationData.transaccion_id] : []);
       if (targetIds.length > 0) {
         const transactions = JSON.parse(localStorage.getItem('cnbv_bank_transactions') || '[]');
         let updated = false;
-        targetIds.forEach(id => {
+        targetIds.forEach((id) => {
           const txIndex = transactions.findIndex((t: BankTransaction) => t.id === id);
           if (txIndex !== -1) {
             transactions[txIndex].estado = 'conciliado';
@@ -962,7 +1327,11 @@ export const api = {
   // --- TASAS BCV ---
   getTasasBCV: async (): Promise<TasaBCV[]> => {
     if (!isSimulationMode) {
-      const { data, error } = await supabase.from('tasas_bcv').select('*').order('fecha', { ascending: false }).limit(100);
+      const { data, error } = await supabase
+        .from('tasas_bcv')
+        .select('*')
+        .order('fecha', { ascending: false })
+        .limit(100);
       if (error) throw error;
       return data as TasaBCV[];
     } else {
@@ -994,10 +1363,12 @@ export const api = {
     } else {
       const tasas: TasaBCV[] = JSON.parse(localStorage.getItem('cnbv_tasas_bcv') || '[]');
       // Buscar exacta
-      const exacta = tasas.find(t => t.fecha === fecha);
+      const exacta = tasas.find((t) => t.fecha === fecha);
       if (exacta) return exacta;
       // Buscar la más reciente anterior
-      const anteriores = tasas.filter(t => t.fecha < fecha).sort((a, b) => b.fecha.localeCompare(a.fecha));
+      const anteriores = tasas
+        .filter((t) => t.fecha < fecha)
+        .sort((a, b) => b.fecha.localeCompare(a.fecha));
       return anteriores[0] || null;
     }
   },
@@ -1017,7 +1388,7 @@ export const api = {
       const updatedTasa = {
         ...tasa,
         id: index !== -1 ? tasas[index].id : `rate-${Date.now()}`,
-        created_at: index !== -1 ? tasas[index].created_at : new Date().toISOString()
+        created_at: index !== -1 ? tasas[index].created_at : new Date().toISOString(),
       };
       if (index !== -1) {
         tasas[index] = updatedTasa;
@@ -1030,12 +1401,16 @@ export const api = {
   },
 
   bulkUpsertTasasBCV: async (
-    tasasInput: Array<{ fecha: string; tasa: number; fuente?: 'bcv_api' | 'manual' | 'historico_csv' }>
+    tasasInput: Array<{
+      fecha: string;
+      tasa: number;
+      fuente?: 'bcv_api' | 'manual' | 'historico_csv';
+    }>,
   ): Promise<TasaBCV[]> => {
-    const formatted = tasasInput.map(t => ({
+    const formatted = tasasInput.map((t) => ({
       fecha: t.fecha,
       tasa: t.tasa,
-      fuente: t.fuente || 'historico_csv'
+      fuente: t.fuente || 'historico_csv',
     }));
 
     if (!isSimulationMode) {
@@ -1053,7 +1428,7 @@ export const api = {
         const updatedTasa = {
           ...t,
           id: index !== -1 ? tasas[index].id : `rate-${Math.random().toString(36).substr(2, 9)}`,
-          created_at: index !== -1 ? tasas[index].created_at : new Date().toISOString()
+          created_at: index !== -1 ? tasas[index].created_at : new Date().toISOString(),
         };
         if (index !== -1) {
           tasas[index] = updatedTasa;
@@ -1082,13 +1457,16 @@ export const api = {
     }
   },
 
-  updateUserProfile: async (userId: string, updates: { rol?: UserRole; aprobado?: boolean }): Promise<any> => {
+  updateUserProfile: async (
+    userId: string,
+    updates: { rol?: UserRole; aprobado?: boolean },
+  ): Promise<any> => {
     if (!isSimulationMode) {
       const { data, error } = await supabase
         .from('usuarios_perfiles')
         .update({
           ...updates,
-          updated_at: new Date().toISOString()
+          updated_at: new Date().toISOString(),
         })
         .eq('id', userId)
         .select()
@@ -1098,26 +1476,31 @@ export const api = {
     } else {
       const profiles = JSON.parse(localStorage.getItem('cnbv_profiles') || '{}');
       if (!profiles[userId]) throw new Error('User profile not found in simulation');
-      
+
       const updated = {
         ...profiles[userId],
         ...updates,
-        updated_at: new Date().toISOString()
+        updated_at: new Date().toISOString(),
       };
-      
+
       profiles[userId] = updated;
       localStorage.setItem('cnbv_profiles', JSON.stringify(profiles));
       return updated;
     }
   },
 
-  adminCreateUser: async (userData: { email: string, password: string, nombre_completo: string, rol: UserRole }): Promise<any> => {
+  adminCreateUser: async (userData: {
+    email: string;
+    password: string;
+    nombre_completo: string;
+    rol: UserRole;
+  }): Promise<any> => {
     if (!isSimulationMode) {
       // Import { supabase } from '../supabaseClient'
       // We will use supabase.functions.invoke
       // To avoid circular dependency or import issues here, we can just use the global supabase client that api.ts already imports.
       const { data, error } = await supabase.functions.invoke('create-user', {
-        body: userData
+        body: userData,
       });
       if (error) {
         console.error('Edge Function Error:', error);
@@ -1150,7 +1533,7 @@ export const api = {
     const newJornada: Jornada = {
       id: `jor-${Date.now()}`,
       ...jornada,
-      created_at: new Date().toISOString()
+      created_at: new Date().toISOString(),
     };
     if (!isSimulationMode) {
       const { data, error } = await supabase
@@ -1170,10 +1553,7 @@ export const api = {
 
   updateJornadaStatus: async (id: string, activa: boolean): Promise<void> => {
     if (!isSimulationMode) {
-      const { error } = await supabase
-        .from('jornadas')
-        .update({ activa })
-        .eq('id', id);
+      const { error } = await supabase.from('jornadas').update({ activa }).eq('id', id);
       if (error) throw error;
     } else {
       const all = JSON.parse(localStorage.getItem('cnbv_jornadas') || '[]');
@@ -1202,7 +1582,7 @@ export const api = {
 
   saveBeneficiary: async (
     beneficiary: Omit<Beneficiary, 'id' | 'created_at' | 'url_firma'>,
-    signatureFile?: File
+    signatureFile?: File,
   ): Promise<Beneficiary> => {
     let url_firma: string | null = null;
     if (signatureFile) {
@@ -1218,14 +1598,12 @@ export const api = {
       id: `ben-${Date.now()}`,
       ...beneficiary,
       url_firma,
-      created_at: new Date().toISOString()
+      created_at: new Date().toISOString(),
     };
 
     if (!isSimulationMode) {
-      const { error } = await supabase
-        .from('beneficiarios')
-        .insert([newBen]);
-      
+      const { error } = await supabase.from('beneficiarios').insert([newBen]);
+
       if (error) throw error;
       return newBen;
     } else {
@@ -1234,13 +1612,14 @@ export const api = {
       localStorage.setItem('cnbv_beneficiaries', JSON.stringify(updated));
       return newBen;
     }
-  }
+  },
 };
 
 // =========================================================================
 // 5. API Y TIPOS DE REQUISICIONES (SOLICITUDES DE GASTO)
 // =========================================================================
-export type RequisitionStatus = 'pendiente_aprobacion_1' | 'pendiente_aprobacion_2' | 'aprobada_ejecucion' | 'rechazada';
+export type RequisitionStatus =
+  'pendiente_aprobacion_1' | 'pendiente_aprobacion_2' | 'aprobada_ejecucion' | 'rechazada';
 
 export interface Requisition {
   id: string;
@@ -1256,7 +1635,7 @@ export interface Requisition {
   monto_solicitado: number;
   motivo: string;
   estado: RequisitionStatus;
-  
+
   // Aprobadores
   validador_1_id: string | null;
   validador_1_nombre?: string;
@@ -1264,12 +1643,12 @@ export interface Requisition {
   validador_2_id: string | null;
   validador_2_nombre?: string;
   validado_2_at: string | null;
-  
+
   // Rechazos
   rechazado_por: string | null;
   rechazado_at: string | null;
   motivo_rechazo: string | null;
-  
+
   created_at: string;
   updated_at: string;
 }
@@ -1279,7 +1658,8 @@ export const requisitionsApi = {
     if (!isSimulationMode) {
       const { data, error } = await supabase
         .from('solicitudes_gasto')
-        .select(`
+        .select(
+          `
           *,
           solicitante:usuarios_perfiles!solicitante_id(nombre_completo),
           validador_1:usuarios_perfiles!validador_1_id(nombre_completo),
@@ -1290,12 +1670,13 @@ export const requisitionsApi = {
             codigo,
             categoria:categorias_gasto(nombre)
           )
-        `)
+        `,
+        )
         .order('created_at', { ascending: false });
-      
+
       if (error) throw error;
-      
-      return (data as any[]).map(row => ({
+
+      return (data as any[]).map((row) => ({
         ...row,
         solicitante_nombre: row.solicitante?.nombre_completo,
         validador_1_nombre: row.validador_1?.nombre_completo,
@@ -1303,7 +1684,7 @@ export const requisitionsApi = {
         proyecto_nombre: row.proyecto?.nombre,
         partida_nombre: row.partida?.nombre,
         partida_codigo: row.partida?.codigo,
-        categoria_nombre: row.partida?.categoria?.nombre
+        categoria_nombre: row.partida?.categoria?.nombre,
       }));
     } else {
       const reqs = JSON.parse(localStorage.getItem('cnbv_requisitions') || '[]');
@@ -1311,7 +1692,7 @@ export const requisitionsApi = {
       const partidas = JSON.parse(localStorage.getItem('cnbv_partidas') || '[]');
       const categories = JSON.parse(localStorage.getItem('cnbv_categories') || '[]');
       const profiles = JSON.parse(localStorage.getItem('cnbv_profiles') || '{}');
-      
+
       return reqs.map((r: any) => {
         const p = projects.find((x: any) => x.id === r.proyecto_id);
         const part = partidas.find((x: any) => x.id === r.partida_id);
@@ -1323,17 +1704,21 @@ export const requisitionsApi = {
           partida_nombre: part ? part.nombre : 'Artículos No Alimentarios',
           partida_codigo: part ? part.codigo : '1.1',
           categoria_nombre: cat ? cat.nombre : 'Costos Directos',
-          solicitante_nombre: user ? user.nombre_completo : 'Coordinador'
+          solicitante_nombre: user ? user.nombre_completo : 'Coordinador',
         };
       });
     }
   },
 
-  getRecentRequisitionsByUserId: async (userId: string, limit: number = 30): Promise<Requisition[]> => {
+  getRecentRequisitionsByUserId: async (
+    userId: string,
+    limit: number = 30,
+  ): Promise<Requisition[]> => {
     if (!isSimulationMode) {
       const { data, error } = await supabase
         .from('solicitudes_gasto')
-        .select(`
+        .select(
+          `
           *,
           solicitante:usuarios_perfiles!solicitante_id(nombre_completo),
           proyecto:proyectos(nombre),
@@ -1342,23 +1727,26 @@ export const requisitionsApi = {
             codigo,
             categoria:categorias_gasto(nombre)
           )
-        `)
+        `,
+        )
         .eq('solicitante_id', userId)
         .order('created_at', { ascending: false })
         .limit(limit);
-      
+
       if (error) throw error;
-      
-      return (data as any[]).map(row => ({
+
+      return (data as any[]).map((row) => ({
         ...row,
         solicitante_nombre: row.solicitante?.nombre_completo,
         proyecto_nombre: row.proyecto?.nombre,
         partida_nombre: row.partida?.nombre,
         partida_codigo: row.partida?.codigo,
-        categoria_nombre: row.partida?.categoria?.nombre
+        categoria_nombre: row.partida?.categoria?.nombre,
       }));
     } else {
-      return (await requisitionsApi.getRequisitions()).filter(r => r.solicitante_id === userId).slice(0, limit);
+      return (await requisitionsApi.getRequisitions())
+        .filter((r) => r.solicitante_id === userId)
+        .slice(0, limit);
     }
   },
 
@@ -1366,7 +1754,8 @@ export const requisitionsApi = {
     if (!isSimulationMode) {
       const { data, error } = await supabase
         .from('solicitudes_gasto')
-        .select(`
+        .select(
+          `
           *,
           solicitante:usuarios_perfiles!solicitante_id(nombre_completo),
           proyecto:proyectos(nombre),
@@ -1375,27 +1764,45 @@ export const requisitionsApi = {
             codigo,
             categoria:categorias_gasto(nombre)
           )
-        `)
+        `,
+        )
         .eq('estado', 'aprobada_ejecucion')
         .order('created_at', { ascending: false })
         .limit(limit);
-      
+
       if (error) throw error;
-      
-      return (data as any[]).map(row => ({
+
+      return (data as any[]).map((row) => ({
         ...row,
         solicitante_nombre: row.solicitante?.nombre_completo,
         proyecto_nombre: row.proyecto?.nombre,
         partida_nombre: row.partida?.nombre,
         partida_codigo: row.partida?.codigo,
-        categoria_nombre: row.partida?.categoria?.nombre
+        categoria_nombre: row.partida?.categoria?.nombre,
       }));
     } else {
-      return (await requisitionsApi.getRequisitions()).filter(r => r.estado === 'aprobada_ejecucion').slice(0, limit);
+      return (await requisitionsApi.getRequisitions())
+        .filter((r) => r.estado === 'aprobada_ejecucion')
+        .slice(0, limit);
     }
   },
 
-  createRequisition: async (req: Omit<Requisition, 'id' | 'estado' | 'created_at' | 'updated_at' | 'validador_1_id' | 'validador_2_id' | 'validado_1_at' | 'validado_2_at' | 'rechazado_por' | 'rechazado_at' | 'motivo_rechazo'>): Promise<Requisition> => {
+  createRequisition: async (
+    req: Omit<
+      Requisition,
+      | 'id'
+      | 'estado'
+      | 'created_at'
+      | 'updated_at'
+      | 'validador_1_id'
+      | 'validador_2_id'
+      | 'validado_1_at'
+      | 'validado_2_at'
+      | 'rechazado_por'
+      | 'rechazado_at'
+      | 'motivo_rechazo'
+    >,
+  ): Promise<Requisition> => {
     if (!isSimulationMode) {
       const { data, error } = await supabase
         .from('solicitudes_gasto')
@@ -1418,7 +1825,7 @@ export const requisitionsApi = {
         rechazado_at: null,
         motivo_rechazo: null,
         created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
+        updated_at: new Date().toISOString(),
       };
       reqs.unshift(newReq);
       localStorage.setItem('cnbv_requisitions', JSON.stringify(reqs));
@@ -1426,14 +1833,26 @@ export const requisitionsApi = {
     }
   },
 
-  approveRequisition: async (requisitionId: string, validadorId: string, currentStatus: RequisitionStatus): Promise<Requisition> => {
-    let nextStatus: RequisitionStatus = currentStatus === 'pendiente_aprobacion_1' 
-      ? 'pendiente_aprobacion_2' 
-      : 'aprobada_ejecucion';
+  approveRequisition: async (
+    requisitionId: string,
+    validadorId: string,
+    currentStatus: RequisitionStatus,
+  ): Promise<Requisition> => {
+    const nextStatus: RequisitionStatus =
+      currentStatus === 'pendiente_aprobacion_1' ? 'pendiente_aprobacion_2' : 'aprobada_ejecucion';
 
-    const updates: Partial<Requisition> = currentStatus === 'pendiente_aprobacion_1' 
-      ? { validador_1_id: validadorId, validado_1_at: new Date().toISOString(), estado: nextStatus }
-      : { validador_2_id: validadorId, validado_2_at: new Date().toISOString(), estado: nextStatus };
+    const updates: Partial<Requisition> =
+      currentStatus === 'pendiente_aprobacion_1'
+        ? {
+            validador_1_id: validadorId,
+            validado_1_at: new Date().toISOString(),
+            estado: nextStatus,
+          }
+        : {
+            validador_2_id: validadorId,
+            validado_2_at: new Date().toISOString(),
+            estado: nextStatus,
+          };
 
     if (!isSimulationMode) {
       const { data, error } = await supabase
@@ -1448,7 +1867,7 @@ export const requisitionsApi = {
       const reqs = JSON.parse(localStorage.getItem('cnbv_requisitions') || '[]');
       const index = reqs.findIndex((r: Requisition) => r.id === requisitionId);
       if (index === -1) throw new Error('Solicitud no encontrada');
-      
+
       const updated = { ...reqs[index], ...updates, updated_at: new Date().toISOString() };
       reqs[index] = updated;
       localStorage.setItem('cnbv_requisitions', JSON.stringify(reqs));
@@ -1456,9 +1875,13 @@ export const requisitionsApi = {
       // En simulación, si pasa a 'aprobada_ejecucion', reservamos presupuesto (monto_comprometido)
       if (nextStatus === 'aprobada_ejecucion') {
         const budgets = JSON.parse(localStorage.getItem('cnbv_budgets') || '[]');
-        const bIndex = budgets.findIndex((b: Budget) => b.proyecto_id === updated.proyecto_id && b.partida_id === updated.partida_id);
+        const bIndex = budgets.findIndex(
+          (b: Budget) =>
+            b.proyecto_id === updated.proyecto_id && b.partida_id === updated.partida_id,
+        );
         if (bIndex !== -1) {
-          budgets[bIndex].monto_comprometido = (budgets[bIndex].monto_comprometido || 0) + updated.monto_solicitado;
+          budgets[bIndex].monto_comprometido =
+            (budgets[bIndex].monto_comprometido || 0) + updated.monto_solicitado;
           localStorage.setItem('cnbv_budgets', JSON.stringify(budgets));
         }
       }
@@ -1467,12 +1890,16 @@ export const requisitionsApi = {
     }
   },
 
-  rejectRequisition: async (requisitionId: string, auditorId: string, motivo: string): Promise<Requisition> => {
+  rejectRequisition: async (
+    requisitionId: string,
+    auditorId: string,
+    motivo: string,
+  ): Promise<Requisition> => {
     const updates: Partial<Requisition> = {
       estado: 'rechazada',
       rechazado_por: auditorId,
       rechazado_at: new Date().toISOString(),
-      motivo_rechazo: motivo
+      motivo_rechazo: motivo,
     };
 
     if (!isSimulationMode) {
@@ -1488,7 +1915,7 @@ export const requisitionsApi = {
       const reqs = JSON.parse(localStorage.getItem('cnbv_requisitions') || '[]');
       const index = reqs.findIndex((r: Requisition) => r.id === requisitionId);
       if (index === -1) throw new Error('Solicitud no encontrada');
-      
+
       const original = reqs[index];
       const updated = { ...original, ...updates, updated_at: new Date().toISOString() };
       reqs[index] = updated;
@@ -1497,14 +1924,20 @@ export const requisitionsApi = {
       // Si estaba en aprobada_ejecucion y se rechaza, liberamos el monto comprometido
       if (original.estado === 'aprobada_ejecucion') {
         const budgets = JSON.parse(localStorage.getItem('cnbv_budgets') || '[]');
-        const bIndex = budgets.findIndex((b: Budget) => b.proyecto_id === updated.proyecto_id && b.partida_id === updated.partida_id);
+        const bIndex = budgets.findIndex(
+          (b: Budget) =>
+            b.proyecto_id === updated.proyecto_id && b.partida_id === updated.partida_id,
+        );
         if (bIndex !== -1) {
-          budgets[bIndex].monto_comprometido = Math.max(0, (budgets[bIndex].monto_comprometido || 0) - updated.monto_solicitado);
+          budgets[bIndex].monto_comprometido = Math.max(
+            0,
+            (budgets[bIndex].monto_comprometido || 0) - updated.monto_solicitado,
+          );
           localStorage.setItem('cnbv_budgets', JSON.stringify(budgets));
         }
       }
 
       return updated;
     }
-  }
+  },
 };
