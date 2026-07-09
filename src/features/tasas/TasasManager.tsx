@@ -53,7 +53,7 @@ export const TasasManager: React.FC = () => {
       if (!res.ok) throw new Error('No se pudo conectar al API de histórico');
       const data = await res.json();
       
-      const parsed: { fecha: string; tasa: number; fuente: string }[] = [];
+      const parsed: { fecha: string; tasa: number; fuente: 'bcv_api' | 'manual' | 'historico_csv' }[] = [];
       
       if (Array.isArray(data)) {
         data.forEach((item: any) => {

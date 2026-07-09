@@ -1029,11 +1029,13 @@ export const api = {
     }
   },
 
-  bulkUpsertTasasBCV: async (tasasInput: Array<{ fecha: string; tasa: number }>): Promise<TasaBCV[]> => {
+  bulkUpsertTasasBCV: async (
+    tasasInput: Array<{ fecha: string; tasa: number; fuente?: 'bcv_api' | 'manual' | 'historico_csv' }>
+  ): Promise<TasaBCV[]> => {
     const formatted = tasasInput.map(t => ({
       fecha: t.fecha,
       tasa: t.tasa,
-      fuente: 'historico_csv' as const
+      fuente: t.fuente || 'historico_csv'
     }));
 
     if (!isSimulationMode) {
