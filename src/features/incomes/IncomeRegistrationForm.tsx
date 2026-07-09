@@ -257,7 +257,7 @@ export const IncomeRegistrationForm: React.FC = () => {
       });
 
       alert('✅ Ingreso registrado con éxito.');
-      navigate('/app/incomes');
+      navigate(-1);
     } catch (err: any) {
       alert('Error al registrar el ingreso: ' + (err.message || ''));
     } finally {
@@ -319,7 +319,7 @@ export const IncomeRegistrationForm: React.FC = () => {
           <button
             type="button"
             className="btn btn-outline"
-            onClick={() => navigate('/app/incomes')}
+            onClick={() => navigate(-1)}
             style={{ fontWeight: 700 }}
           >
             <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
@@ -894,7 +894,7 @@ export const IncomeRegistrationForm: React.FC = () => {
               <button
                 type="button"
                 className="btn btn-outline"
-                onClick={() => navigate('/app/incomes')}
+                onClick={() => navigate(-1)}
                 disabled={submitting}
                 style={{ fontWeight: 700 }}
               >
