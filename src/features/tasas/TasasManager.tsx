@@ -11,6 +11,7 @@ export const TasasManager: React.FC = () => {
   const [tasas, setTasas] = useState<TasaBCV[]>([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [syncingHistory, setSyncingHistory] = useState(false);
 
   // Formulario manual
   const [fechaManual, setFechaManual] = useState(new Date().toISOString().split('T')[0]);
@@ -41,6 +42,49 @@ export const TasasManager: React.FC = () => {
   useEffect(() => {
     loadTasas();
   }, []);
+
+  // Sincronizar histórico desde API
+  const handleSyncHistory = async () => {
+    setSyncingHistory(true);
+    try {
+      // DolarVZLA public CDN returns history per year or month
+      // Fetching current year to get recent history
+      const res = await fetch('https://rates.dolarvzla.com/bcv/2026/list.json');
+      if (!res.ok) throw new Error('No se pudo conectar al API de histórico');
+      const data = await res.json();
+      
+      const parsed: { fecha: string; tasa: number; fuente: string }[] = [];
+      
+      if (data && typeof data === 'object') {
+        Object.entries(data).forEach(([dateStr, item]: [string, any]) => {
+          if (item && item.usd) {
+            parsed.push({
+              fecha: dateStr,
+              tasa: item.usd,
+              fuente: 'bcv_api'
+            });
+          }
+        });
+      }
+      
+      if (parsed.length > 0) {
+        // Solo insertamos los últimos 35 días para no sobrecargar
+        const recentRates = parsed
+          .sort((a, b) => b.fecha.localeCompare(a.fecha))
+          .slice(0, 35);
+          
+        await api.bulkUpsertTasasBCV(recentRates);
+        alert(`✅ Se sincronizaron ${recentRates.length} tasas históricas correctamente.`);
+        await loadTasas();
+      } else {
+        alert('No se encontraron registros históricos en la API.');
+      }
+    } catch (err: any) {
+      alert('Error obteniendo el histórico: ' + (err.message || ''));
+    } finally {
+      setSyncingHistory(false);
+    }
+  };
 
   // Calcular la fecha destino esperada hoy (próximo día hábil o el mismo día si es temprano)
   const getExpectedFechaTasaHoy = () => {
@@ -247,7 +291,18 @@ export const TasasManager: React.FC = () => {
 
         {/* Card Último Registro */}
         <div className="card" style={{ padding: '1.5rem', borderRadius: 'var(--radius-md)' }}>
-          <span style={{ fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', opacity: 0.6, display: 'block', marginBottom: '0.75rem' }}>Últimas Tasas Registradas</span>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
+            <span style={{ fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', opacity: 0.6, display: 'block' }}>Últimas Tasas Registradas</span>
+            <button 
+              onClick={handleSyncHistory} 
+              disabled={syncingHistory}
+              className="btn btn-outline" 
+              style={{ fontSize: '0.7rem', padding: '0.3rem 0.6rem' }}
+              title="Obtener últimos 30 días desde DolarVZLA"
+            >
+              {syncingHistory ? '⏳ Obteniendo...' : '🔄 Extraer Histórico API'}
+            </button>
+          </div>
           {tasas.length === 0 ? (
             <div style={{ opacity: 0.5, fontSize: '0.85rem', padding: '1rem 0' }}>No hay tasas registradas.</div>
           ) : (
