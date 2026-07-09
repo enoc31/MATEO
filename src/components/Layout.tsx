@@ -1,27 +1,11 @@
 import React, { useState } from 'react';
-import {
-  LayoutDashboard,
-  ClipboardList,
-  Wallet,
-  ArrowRightLeft,
-  Scale,
-  Search,
-  PieChart,
-  Camera,
-  Users,
-  LogOut,
-  Pin,
-  PinOff,
-  Menu,
-  Lightbulb,
-  UserCheck,
-  CalendarDays,
-} from 'lucide-react';
+import { LogOut, Pin, PinOff, Menu, Lightbulb, LayoutGrid } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { api, isSimulationMode } from '../services/api';
 import { InternalControlModal } from './InternalControlModal';
 import { getCaracasDateParts } from '../utils/formatters';
-import { useLocation, NavLink } from 'react-router-dom';
+import { useLocation, NavLink, useNavigate } from 'react-router-dom';
+import { menuItems, getMenuIcon } from './menuConfig';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -34,7 +18,10 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
   const [isCosoModalOpen, setIsCosoModalOpen] = useState(false);
   const [currentRate, setCurrentRate] = useState<number | null>(null);
   const location = useLocation();
+  const navigate = useNavigate();
   const currentPath = location.pathname.split('/')[2] || 'dashboard';
+
+  const isHome = location.pathname === '/app' || location.pathname === '/app/';
 
   // Revisar si el usuario ya vio el modal COSO
   React.useEffect(() => {
@@ -61,6 +48,11 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
   }, [profile?.id]);
 
   if (!profile) return null;
+
+  if (isHome) {
+    return <>{children}</>;
+  }
+
   const role = profile.rol;
 
   const handleCloseCosoModal = () => {
@@ -69,76 +61,6 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
     }
     setIsCosoModalOpen(false);
   };
-
-  // Configuración de menús basados en roles
-  const menuItems = [
-    {
-      id: 'dashboard',
-      label: 'Tableros',
-      icon: <LayoutDashboard size={20} strokeWidth={1.5} />,
-      roles: ['administrador', 'auditor', 'director', 'donante'],
-    },
-    {
-      id: 'requisitions',
-      label: 'Requisiciones',
-      icon: <ClipboardList size={20} strokeWidth={1.5} />,
-      roles: ['administrador', 'coordinador', 'director'],
-    },
-    {
-      id: 'incomes',
-      label: 'Ingresos',
-      icon: <Wallet size={20} strokeWidth={1.5} />,
-      roles: ['administrador', 'director', 'auditor'],
-    },
-    {
-      id: 'tasas',
-      label: 'Tasas BCV',
-      icon: <ArrowRightLeft size={20} strokeWidth={1.5} />,
-      roles: ['administrador', 'director'],
-    },
-    {
-      id: 'reconciliation',
-      label: 'Conciliación',
-      icon: <Scale size={20} strokeWidth={1.5} />,
-      roles: ['administrador'],
-    },
-    {
-      id: 'audit',
-      label: 'Auditoría',
-      icon: <Search size={20} strokeWidth={1.5} />,
-      roles: ['administrador', 'auditor'],
-    },
-    {
-      id: 'budgets',
-      label: 'Presupuestos',
-      icon: <PieChart size={20} strokeWidth={1.5} />,
-      roles: ['administrador', 'auditor', 'director'],
-    },
-    {
-      id: 'field-entry',
-      label: 'Cargar Gastos',
-      icon: <Camera size={20} strokeWidth={1.5} />,
-      roles: ['administrador', 'coordinador', 'director'],
-    },
-    {
-      id: 'jornadas',
-      label: 'Jornadas',
-      icon: <CalendarDays size={20} strokeWidth={1.5} />,
-      roles: ['administrador', 'director', 'coordinador'],
-    },
-    {
-      id: 'beneficiaries',
-      label: 'Beneficiarios',
-      icon: <UserCheck size={20} strokeWidth={1.5} />,
-      roles: ['administrador', 'coordinador', 'director', 'auxiliar_campo'],
-    },
-    {
-      id: 'users',
-      label: 'Usuarios',
-      icon: <Users size={20} strokeWidth={1.5} />,
-      roles: ['administrador'],
-    },
-  ];
 
   const visibleMenuItems = menuItems.filter((item) => item.roles.includes(role));
 
@@ -212,12 +134,41 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
           >
             <Menu size={24} />
           </button>
+          <button
+            onClick={() => navigate('/app')}
+            style={{
+              background: 'none',
+              border: 'none',
+              cursor: 'pointer',
+              color: 'var(--primary, #714B67)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: '6px',
+              marginRight: '8px',
+              borderRadius: '6px',
+              transition: 'background 0.2s',
+            }}
+            onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(0,0,0,0.05)')}
+            onMouseLeave={(e) => (e.currentTarget.style.background = 'none')}
+            title="Panel de Aplicaciones"
+          >
+            <LayoutGrid size={22} strokeWidth={1.5} />
+          </button>
           <img
             src={activeOng?.logo_url || '/mateo_logo.png'}
             alt={activeOng?.nombre || 'MATEO'}
             className="header-logo"
+            style={{ cursor: 'pointer' }}
+            onClick={() => navigate('/app')}
+            title="Volver al Panel"
           />
-          <div className="header-title-wrap">
+          <div
+            className="header-title-wrap"
+            style={{ cursor: 'pointer' }}
+            onClick={() => navigate('/app')}
+            title="Volver al Panel"
+          >
             <span className="header-title">{activeOng?.nombre || 'MATEO'}</span>
             <span className="header-subtitle">Gestión Humanitaria</span>
           </div>
@@ -241,7 +192,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
                   }}
                   onClick={() => setIsMobileMenuOpen(false)} // Close menu on mobile
                 >
-                  <span>{item.icon}</span>
+                  <span>{getMenuIcon(item.iconName)}</span>
                   <span>{item.label}</span>
                 </NavLink>
               </li>
@@ -407,10 +358,35 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
               minHeight: '40px',
             }}
           >
+            <button
+              onClick={() => {
+                setIsMobileMenuOpen(false);
+                navigate('/app');
+              }}
+              style={{
+                position: 'absolute',
+                left: 0,
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                color: 'var(--primary)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+              title="Panel de Aplicaciones"
+            >
+              <LayoutGrid size={20} strokeWidth={1.5} />
+            </button>
             <img
               src={activeOng?.logo_url || '/mateo_logo.png'}
               alt={activeOng?.nombre || 'MATEO'}
               className="sidebar-logo"
+              style={{ cursor: 'pointer' }}
+              onClick={() => {
+                setIsMobileMenuOpen(false);
+                navigate('/app');
+              }}
             />
             <button
               className="sidebar-close"
@@ -467,7 +443,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
                 className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}
                 onClick={() => setIsMobileMenuOpen(false)}
               >
-                <span className="sidebar-icon">{item.icon}</span>
+                <span className="sidebar-icon">{getMenuIcon(item.iconName)}</span>
                 <span className="sidebar-text">{item.label}</span>
                 {currentPath === item.id && <div className="active-indicator" />}
               </NavLink>

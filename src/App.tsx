@@ -7,6 +7,7 @@ import { Login } from './features/auth/Login';
 import { ForgotPassword } from './features/auth/ForgotPassword';
 import { UpdatePassword } from './features/auth/UpdatePassword';
 import { Layout } from './components/Layout';
+import { AppsDashboard } from './components/AppsDashboard';
 import { Suspense, lazy } from 'react';
 import { LandingPage } from './features/landing/LandingPage';
 
@@ -166,21 +167,7 @@ const MainAppContent: React.FC = () => {
     >
       <Routes>
         {/* Default route based on role */}
-        <Route
-          path="/"
-          element={
-            <Navigate
-              to={
-                profile.rol === 'auxiliar_campo'
-                  ? 'beneficiaries'
-                  : profile.rol === 'coordinador'
-                    ? 'field-entry'
-                    : 'dashboard'
-              }
-              replace
-            />
-          }
-        />
+        <Route path="/" element={<AppsDashboard />} />
 
         {/* Main features */}
         <Route
