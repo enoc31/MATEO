@@ -59,9 +59,9 @@ const MainAppContent: React.FC = () => {
       }}>
         <div style={{ textAlign: 'center' }}>
           <img 
-            src="https://cnbv.org/wp-content/uploads/2020/09/logo-cnbv.jpg" 
-            alt="Logo CNBV" 
-            style={{ height: '60px', objectFit: 'contain', marginBottom: '1rem' }}
+            src="/mateo_logo.png" 
+            alt="Logo MATEO" 
+            style={{ height: '60px', width: '60px', objectFit: 'contain', marginBottom: '1rem', borderRadius: '12px' }}
           />
           <div style={{ 
             fontSize: '1rem', 
@@ -347,9 +347,9 @@ function App() {
               <div style={{ backgroundColor: '#f4f5f7', minHeight: '100vh', padding: '1rem' }}>
                 <div style={{ textAlign: 'center', marginBottom: '1rem' }}>
                   <img 
-                    src="https://cnbv.org/wp-content/uploads/2020/09/logo-cnbv.jpg" 
-                    alt="Logo" 
-                    style={{ height: '50px', objectFit: 'contain' }}
+                    src="/mateo_logo.png" 
+                    alt="Logo MATEO" 
+                    style={{ height: '50px', width: '50px', objectFit: 'contain', borderRadius: '10px' }}
                   />
                 </div>
                 <Suspense fallback={<div style={{textAlign: 'center', padding: '2rem'}}>Cargando Módulo...</div>}>

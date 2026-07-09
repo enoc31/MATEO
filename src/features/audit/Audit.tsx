@@ -69,7 +69,7 @@ export const Audit: React.FC = () => {
 
   const handleOpenAudit = (exp: ExpenseReceipt) => {
     // Abre el detalle en una nueva pestaña
-    window.open(`/?page=audit-detail&id=${exp.id}`, '_blank');
+    window.open(`/app?page=audit-detail&id=${exp.id}`, '_blank');
   };
 
   const formatCurrency = (amount: number) => {

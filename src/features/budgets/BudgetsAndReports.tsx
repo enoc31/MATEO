@@ -22,7 +22,7 @@ export const BudgetsAndReports: React.FC = () => {
   const handleProjectCreated = async (newProjId: string) => {
     await loadData();
     setFilterProjectId(newProjId);
-    window.open('?page=budget-wizard', '_blank');
+    window.open('/app?page=budget-wizard', '_blank');
   };
 
   const loadData = async () => {
@@ -327,7 +327,7 @@ export const BudgetsAndReports: React.FC = () => {
             <span style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}><Plus size={16} /> Crear Proyecto</span>
           </button>
 
-          <button onClick={() => window.open('?page=budget-wizard', '_blank')} className="btn btn-primary" style={{ fontSize: '0.85rem', fontWeight: 600 }}>
+          <button onClick={() => window.open('/app?page=budget-wizard', '_blank')} className="btn btn-primary" style={{ fontSize: '0.85rem', fontWeight: 600 }}>
             <span style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}><Briefcase size={16} /> Asistente Presupuesto UNDG</span>
           </button>
           
@@ -394,7 +394,7 @@ export const BudgetsAndReports: React.FC = () => {
               <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}><AlertTriangle size={18} color="var(--warning)" /> Este proyecto no tiene un presupuesto asignado para el período seleccionado.</span>
               <br />
               <button 
-                onClick={() => window.open('?page=budget-wizard', '_blank')} 
+                onClick={() => window.open('/app?page=budget-wizard', '_blank')} 
                 className="btn btn-outline" 
                 style={{ marginTop: '1.5rem', fontSize: '0.85rem' }}
               >

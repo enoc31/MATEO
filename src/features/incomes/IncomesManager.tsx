@@ -154,14 +154,14 @@ export const IncomesManager: React.FC = () => {
           <div style={{ display: 'flex', gap: '0.75rem' }}>
             <button
               className="btn btn-outline"
-              onClick={() => window.open('/?page=importar-extracto', '_blank')}
+              onClick={() => window.open('/app?page=importar-extracto', '_blank')}
               style={{ fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.5rem' }}
             >
               <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}><Download size={16} /> Importar Extracto (CSV)</span>
             </button>
             <button
               className="btn btn-primary"
-              onClick={() => window.open('/?page=nuevo-ingreso', '_blank')}
+              onClick={() => window.open('/app?page=nuevo-ingreso', '_blank')}
               style={{ fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.5rem' }}
             >
               ＋ Registrar Ingreso

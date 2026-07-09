@@ -186,7 +186,7 @@ export const ImportBankStatement: React.FC = () => {
       alert(`✅ Se importaron exitosamente ${csvTxs.length} transacciones de ingreso.`);
       window.close();
       setTimeout(() => {
-        window.location.href = '/?page=incomes';
+        window.location.href = '/app?page=incomes';
       }, 100);
     } catch (err: any) {
       console.error('Error al registrar transacciones:', err);
@@ -237,7 +237,7 @@ export const ImportBankStatement: React.FC = () => {
             onClick={() => {
               window.close();
               setTimeout(() => {
-                window.location.href = '/?page=incomes';
+                window.location.href = '/app?page=incomes';
               }, 100);
             }}
             style={{ fontWeight: 700 }}
@@ -410,7 +410,7 @@ export const ImportBankStatement: React.FC = () => {
                 onClick={() => {
                window.close();
                setTimeout(() => {
-                 window.location.href = '/?page=incomes';
+                 window.location.href = '/app?page=incomes';
                }, 100);
              }} 
                 disabled={importingFile}
