@@ -124,7 +124,7 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({ onSuccess, j
       );
 
       onSuccess(saved.id);
-    } catch {
+    } catch (err: any) {
       console.error(err);
       setError(err.message || 'Error al guardar el beneficiario.');
     } finally {

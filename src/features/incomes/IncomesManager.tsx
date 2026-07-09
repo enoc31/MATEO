@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Wallet,
   Download,
@@ -36,6 +37,7 @@ export const IncomesManager: React.FC = () => {
   // Data
   const [projects, setProjects] = useState<Project[]>([]);
   const [donantes, setDonantes] = useState<Donante[]>([]);
+  const navigate = useNavigate();
   const [donations, setDonations] = useState<Donation[]>([]);
 
   // Filters & Pagination
@@ -180,7 +182,7 @@ export const IncomesManager: React.FC = () => {
           <div style={{ display: 'flex', gap: '0.75rem' }}>
             <button
               className="btn btn-outline"
-              onClick={() => window.open('/app/importar-extracto', '_blank')}
+              onClick={() => navigate('/app/importar-extracto')}
               style={{ fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.5rem' }}
             >
               <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
@@ -189,7 +191,7 @@ export const IncomesManager: React.FC = () => {
             </button>
             <button
               className="btn btn-primary"
-              onClick={() => window.open('/app/nuevo-ingreso', '_blank')}
+              onClick={() => navigate('/app/nuevo-ingreso')}
               style={{ fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.5rem' }}
             >
               ＋ Registrar Ingreso

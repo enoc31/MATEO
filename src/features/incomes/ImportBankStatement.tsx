@@ -212,11 +212,8 @@ export const ImportBankStatement: React.FC = () => {
     setImportingFile(true);
     try {
       await api.importBankTransactions(csvTxs);
-      alert(`✅ Se importaron exitosamente ${csvTxs.length} transacciones de ingreso.`);
-      window.close();
-      setTimeout(() => {
-        navigate('/app/incomes');
-      }, 100);
+      alert(`Éxito. Se importaron exitosamente ${csvTxs.length} transacciones de ingreso.`);
+      navigate('/app/incomes');
     } catch (err: any) {
       console.error('Error al registrar transacciones:', err);
       alert(
@@ -298,12 +295,7 @@ export const ImportBankStatement: React.FC = () => {
           <button
             type="button"
             className="btn btn-outline"
-            onClick={() => {
-              window.close();
-              setTimeout(() => {
-                navigate('/app/incomes');
-              }, 100);
-            }}
+            onClick={() => navigate('/app/incomes')}
             style={{ fontWeight: 700 }}
           >
             <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
@@ -679,12 +671,7 @@ export const ImportBankStatement: React.FC = () => {
               <button
                 type="button"
                 className="btn btn-outline"
-                onClick={() => {
-                  window.close();
-                  setTimeout(() => {
-                    navigate('/app/incomes');
-                  }, 100);
-                }}
+                onClick={() => navigate('/app/incomes')}
                 disabled={importingFile}
                 style={{ fontWeight: 700 }}
               >

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Search, Scale } from 'lucide-react';
 import { api } from '../../services/api';
 import type { ExpenseReceipt, Project, ExpenseCategory, PartidaGasto } from '../../services/api';
@@ -7,6 +8,7 @@ import { ProcessFlowchart } from '../../components/ProcessFlowchart';
 import { formatDateForFrontEnd } from '../../utils/formatters';
 
 export const Audit: React.FC = () => {
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [expenses, setExpenses] = useState<ExpenseReceipt[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
@@ -70,7 +72,7 @@ export const Audit: React.FC = () => {
 
   const handleOpenAudit = (exp: ExpenseReceipt) => {
     // Abre el detalle en una nueva pestaña
-    window.open(`/app/audit-detail?id=${exp.id}`, '_blank');
+    navigate(`/app/audit-detail?id=${exp.id}`);
   };
 
   const formatCurrency = (amount: number) => {

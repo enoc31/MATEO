@@ -28,7 +28,7 @@ export const BudgetsAndReports: React.FC = () => {
   const handleProjectCreated = async (newProjId: string) => {
     await loadData();
     setFilterProjectId(newProjId);
-    window.open('/app/budget-wizard', '_blank');
+    navigate('/app/budget-wizard');
   };
 
   const loadData = async () => {
@@ -394,7 +394,7 @@ export const BudgetsAndReports: React.FC = () => {
           </button>
 
           <button
-            onClick={() => window.open('/app/budget-wizard', '_blank')}
+            onClick={() => navigate('/app/budget-wizard')}
             className="btn btn-primary"
             style={{ fontSize: '0.85rem', fontWeight: 600 }}
           >
@@ -511,7 +511,7 @@ export const BudgetsAndReports: React.FC = () => {
               </span>
               <br />
               <button
-                onClick={() => window.open('/app/budget-wizard', '_blank')}
+                onClick={() => navigate('/app/budget-wizard')}
                 className="btn btn-outline"
                 style={{ marginTop: '1.5rem', fontSize: '0.85rem' }}
               >

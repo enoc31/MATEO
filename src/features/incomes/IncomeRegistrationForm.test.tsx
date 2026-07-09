@@ -12,7 +12,7 @@ vi.mock('../../services/api', () => ({
     getBankTransactions: vi.fn(),
     getTasasBCV: vi.fn(),
     getTasaByDate: vi.fn(),
-    saveDonacion: vi.fn(),
+    createDonation: vi.fn(),
   },
 }));
 
@@ -78,6 +78,6 @@ describe('Income Math & Validation (IncomeRegistrationForm.tsx)', () => {
 
     // Como es tipo 'button' (o 'submit' prevenido por validaciones en el componente),
     // comprobamos que el API NO fue llamado
-    expect(api.saveDonacion).not.toHaveBeenCalled();
+    expect(api.createDonation).not.toHaveBeenCalled();
   });
 });

@@ -1,43 +1,43 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<testsuites name="vitest tests" tests="14" failures="0" errors="0" time="4.8524997">
-    <testsuite name="src/App.test.tsx" timestamp="2026-07-09T17:17:23.877Z" hostname="GerardoH" tests="1" failures="0" errors="0" skipped="0" time="0.9260869">
-        <testcase classname="src/App.test.tsx" name="Security &amp; Access Control (App.tsx) &gt; debería bloquear el acceso al Dashboard a un auxiliar_campo" time="0.9142663">
+<testsuites name="vitest tests" tests="14" failures="0" errors="0" time="6.0217892">
+    <testsuite name="src/App.test.tsx" timestamp="2026-07-09T17:38:48.839Z" hostname="GerardoH" tests="1" failures="0" errors="0" skipped="0" time="1.0369565">
+        <testcase classname="src/App.test.tsx" name="Security &amp; Access Control (App.tsx) &gt; debería bloquear el acceso al Dashboard a un auxiliar_campo" time="1.0226062">
         </testcase>
     </testsuite>
-    <testsuite name="src/services/api.snapshot.test.ts" timestamp="2026-07-09T17:17:23.881Z" hostname="GerardoH" tests="4" failures="0" errors="0" skipped="0" time="0.0547446">
-        <testcase classname="src/services/api.snapshot.test.ts" name="API Service &gt; isSimulationMode should match env configuration" time="0.0159369">
+    <testsuite name="src/utils/formatters.test.ts" timestamp="2026-07-09T17:38:48.855Z" hostname="GerardoH" tests="2" failures="0" errors="0" skipped="0" time="0.1973213">
+        <testcase classname="src/utils/formatters.test.ts" name="formatters &gt; should format YYYY-MM-DD correctly" time="0.0114606">
         </testcase>
-        <testcase classname="src/services/api.snapshot.test.ts" name="API Service &gt; getDonations should return data using supabase.from" time="0.0105864">
-        </testcase>
-        <testcase classname="src/services/api.snapshot.test.ts" name="API Service &gt; getDashboardMetrics should handle rpc calls or simulation" time="0.0036764">
-        </testcase>
-        <testcase classname="src/services/api.snapshot.test.ts" name="API Service &gt; snapshot test: should match default simulated metrics format" time="0.0068673">
+        <testcase classname="src/utils/formatters.test.ts" name="formatters &gt; property-based test: should always return a string" time="0.1537771">
         </testcase>
     </testsuite>
-    <testsuite name="src/utils/formatters.test.ts" timestamp="2026-07-09T17:17:23.885Z" hostname="GerardoH" tests="2" failures="0" errors="0" skipped="0" time="0.1773741">
-        <testcase classname="src/utils/formatters.test.ts" name="formatters &gt; should format YYYY-MM-DD correctly" time="0.0150194">
+    <testsuite name="src/services/api.snapshot.test.ts" timestamp="2026-07-09T17:38:48.863Z" hostname="GerardoH" tests="4" failures="0" errors="0" skipped="0" time="0.078428">
+        <testcase classname="src/services/api.snapshot.test.ts" name="API Service &gt; isSimulationMode should match env configuration" time="0.0103456">
         </testcase>
-        <testcase classname="src/utils/formatters.test.ts" name="formatters &gt; property-based test: should always return a string" time="0.1422944">
+        <testcase classname="src/services/api.snapshot.test.ts" name="API Service &gt; getDonations should return data using supabase.from" time="0.0125942">
         </testcase>
-    </testsuite>
-    <testsuite name="src/features/dashboard/Dashboard.test.tsx" timestamp="2026-07-09T17:17:23.887Z" hostname="GerardoH" tests="2" failures="0" errors="0" skipped="0" time="0.4045658">
-        <testcase classname="src/features/dashboard/Dashboard.test.tsx" name="Financial Calculations (Dashboard.tsx) &gt; renders correctly with mocked financial data" time="0.3302656">
+        <testcase classname="src/services/api.snapshot.test.ts" name="API Service &gt; getDashboardMetrics should handle rpc calls or simulation" time="0.0057356">
         </testcase>
-        <testcase classname="src/features/dashboard/Dashboard.test.tsx" name="Financial Calculations (Dashboard.tsx) &gt; handles zero budget gracefully (no division by zero error)" time="0.0676244">
+        <testcase classname="src/services/api.snapshot.test.ts" name="API Service &gt; snapshot test: should match default simulated metrics format" time="0.0217256">
         </testcase>
     </testsuite>
-    <testsuite name="src/features/auth/Login.test.tsx" timestamp="2026-07-09T17:17:23.891Z" hostname="GerardoH" tests="3" failures="0" errors="0" skipped="0" time="1.4138868">
-        <testcase classname="src/features/auth/Login.test.tsx" name="Login Component &gt; renders login form correctly" time="1.0891954">
+    <testsuite name="src/features/auth/Login.test.tsx" timestamp="2026-07-09T17:38:48.869Z" hostname="GerardoH" tests="3" failures="0" errors="0" skipped="0" time="1.7538459">
+        <testcase classname="src/features/auth/Login.test.tsx" name="Login Component &gt; renders login form correctly" time="1.3337167">
         </testcase>
-        <testcase classname="src/features/auth/Login.test.tsx" name="Login Component &gt; updates email and password fields on user input" time="0.1148338">
+        <testcase classname="src/features/auth/Login.test.tsx" name="Login Component &gt; updates email and password fields on user input" time="0.1148185">
         </testcase>
-        <testcase classname="src/features/auth/Login.test.tsx" name="Login Component &gt; toggles to registration mode when &quot;Regístrate aquí&quot; is clicked" time="0.1995369">
+        <testcase classname="src/features/auth/Login.test.tsx" name="Login Component &gt; toggles to registration mode when &quot;Regístrate aquí&quot; is clicked" time="0.292379">
         </testcase>
     </testsuite>
-    <testsuite name="src/features/incomes/IncomeRegistrationForm.test.tsx" timestamp="2026-07-09T17:17:23.895Z" hostname="GerardoH" tests="2" failures="0" errors="0" skipped="0" time="1.8758415">
-        <testcase classname="src/features/incomes/IncomeRegistrationForm.test.tsx" name="Income Math &amp; Validation (IncomeRegistrationForm.tsx) &gt; calculates USD value correctly based on BCV rate when VES is selected" time="1.59298">
+    <testsuite name="src/features/dashboard/Dashboard.test.tsx" timestamp="2026-07-09T17:38:48.873Z" hostname="GerardoH" tests="2" failures="0" errors="0" skipped="0" time="0.6079569">
+        <testcase classname="src/features/dashboard/Dashboard.test.tsx" name="Financial Calculations (Dashboard.tsx) &gt; renders correctly with mocked financial data" time="0.5281555">
         </testcase>
-        <testcase classname="src/features/incomes/IncomeRegistrationForm.test.tsx" name="Income Math &amp; Validation (IncomeRegistrationForm.tsx) &gt; blocks submission if required fields are missing" time="0.2645488">
+        <testcase classname="src/features/dashboard/Dashboard.test.tsx" name="Financial Calculations (Dashboard.tsx) &gt; handles zero budget gracefully (no division by zero error)" time="0.0714958">
+        </testcase>
+    </testsuite>
+    <testsuite name="src/features/incomes/IncomeRegistrationForm.test.tsx" timestamp="2026-07-09T17:38:48.875Z" hostname="GerardoH" tests="2" failures="0" errors="0" skipped="0" time="2.3472806">
+        <testcase classname="src/features/incomes/IncomeRegistrationForm.test.tsx" name="Income Math &amp; Validation (IncomeRegistrationForm.tsx) &gt; calculates USD value correctly based on BCV rate when VES is selected" time="1.8835394">
+        </testcase>
+        <testcase classname="src/features/incomes/IncomeRegistrationForm.test.tsx" name="Income Math &amp; Validation (IncomeRegistrationForm.tsx) &gt; blocks submission if required fields are missing" time="0.4301761">
         </testcase>
     </testsuite>
 </testsuites>

@@ -32,7 +32,7 @@ export const Login: React.FC = () => {
       const { error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) throw error;
       await refreshProfile();
-    } catch {
+    } catch (err: any) {
       const friendlyMessage =
         err.message === '{}'
           ? 'Error de conexión o del servidor (500). Verifica que el servicio de Supabase esté activo y configurado.'
@@ -69,7 +69,7 @@ export const Login: React.FC = () => {
       setIsRegister(false);
       setNombreCompleto('');
       setPassword('');
-    } catch {
+    } catch (err: any) {
       setError(err.message || 'Error al registrar usuario');
     } finally {
       setLoading(false);

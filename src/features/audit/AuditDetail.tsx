@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { FileText, CreditCard, AlertTriangle, CheckCircle, XCircle } from 'lucide-react';
 import { api } from '../../services/api';
 import type { ExpenseReceipt, Project, PartidaGasto } from '../../services/api';
@@ -7,6 +8,8 @@ import { useAuth } from '../../context/AuthContext';
 
 export const AuditDetail: React.FC = () => {
   const { profile } = useAuth();
+  const location = useLocation();
+  const navigate = useNavigate();
   const [expense, setExpense] = useState<ExpenseReceipt | null>(null);
   const [projects, setProjects] = useState<Project[]>([]);
   const [partidas, setPartidas] = useState<PartidaGasto[]>([]);
@@ -23,7 +26,7 @@ export const AuditDetail: React.FC = () => {
 
   useEffect(() => {
     const fetchData = async () => {
-      const params = new URLSearchParams(window.location.search);
+      const params = new URLSearchParams(location.search);
       const id = params.get('id');
       if (!id) {
         setError('No se proporcionó un ID de gasto válido.');
@@ -54,7 +57,7 @@ export const AuditDetail: React.FC = () => {
       }
     };
     fetchData();
-  }, []);
+  }, [location.search]);
 
   const getProjectName = (id: string) =>
     projects.find((p) => p.id === id)?.nombre || 'Proyecto Desconocido';
@@ -92,17 +95,7 @@ export const AuditDetail: React.FC = () => {
       await api.updateExpenseStatus(expense.id, newStatus, auditComment, profile?.id || '');
       setExpense({ ...expense, estado: newStatus, comentarios_auditoria: auditComment });
       alert(`Gasto ${newStatus.toUpperCase()} exitosamente.`);
-
-      // Intentar refrescar la ventana principal si está abierta, y luego cerrar la pestaña actual
-      if (window.opener && !window.opener.closed) {
-        // Enviar mensaje a la ventana padre para que recargue los datos
-        window.opener.postMessage('RELOAD_AUDIT', '*');
-      }
-
-      // Opcional: Cerrar pestaña automáticamente después de aprobar/rechazar
-      setTimeout(() => {
-        window.close();
-      }, 1500);
+      navigate('/app/audit');
     } catch (err: any) {
       alert(`Error: ${err.message || 'Hubo un error al guardar la auditoría'}`);
     }
@@ -195,7 +188,14 @@ export const AuditDetail: React.FC = () => {
         >
           {/* Columna 1: Vista de Soportes (Factura / Pago) */}
           <div style={{ display: 'flex', flexDirection: 'column' }}>
-            <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.75rem' }}>
+            <div style={{ display: 'flex', gap: '1rem', marginBottom: '0.75rem' }}>
+              <button
+                onClick={() => navigate('/app/audit')}
+                className="btn btn-outline"
+                style={{ padding: '0.75rem 1.5rem', fontWeight: 600 }}
+              >
+                Volver a Auditoría
+              </button>
               <button
                 onClick={() => setActiveDocTab('recibo')}
                 style={{
@@ -524,11 +524,11 @@ export const AuditDetail: React.FC = () => {
           }}
         >
           <button
-            onClick={() => window.close()}
+            onClick={() => navigate('/app/audit')}
             className="btn btn-outline"
             style={{ padding: '0.75rem 1.5rem', fontWeight: 600 }}
           >
-            Cerrar Pestaña
+            Volver a Auditoría
           </button>
 
           {expense.estado !== 'aprobado' && (
