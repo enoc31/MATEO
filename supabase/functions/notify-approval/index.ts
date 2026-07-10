@@ -1,6 +1,7 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 
 const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY');
+const SENDER_EMAIL = Deno.env.get('SENDER_EMAIL') || 'onboarding@resend.dev';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -43,7 +44,7 @@ serve(async (req) => {
         Authorization: `Bearer ${RESEND_API_KEY}`,
       },
       body: JSON.stringify({
-        from: 'MATEO <registro@cnbv.org>', // Correo de salida del dominio verificado
+        from: `MATEO <${SENDER_EMAIL}>`, // Usa el correo configurado o el de onboarding
         to: email,
         subject: '¡Tu cuenta ha sido aprobada! 🎉',
         html: `
