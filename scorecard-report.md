@@ -1,18 +1,18 @@
 # AI Harness Scorecard: MATEO
 
-**Grade: A** (88.8/100) | Strong harness. AI-generated code has robust mechanical safeguards.
+**Grade: A** (95.0/100) | Strong harness. AI-generated code has robust mechanical safeguards.
 
 - **Repository**: `/home/runner/work/MATEO/MATEO`
 - **Languages**: javascript, typescript
-- **Assessed**: 2026-07-09 22:09 UTC
-- **Checks**: 30/31 passed
+- **Assessed**: 2026-07-10 20:25 UTC
+- **Checks**: 31/31 passed
 
 ## Summary
 
 | Category                    | Weight | Score             | Checks |
 | --------------------------- | ------ | ----------------- | ------ |
 | Architectural Documentation | 20%    | 100% [##########] | 5/5    |
-| Mechanical Constraints      | 25%    | 75% [########--]  | 6/7    |
+| Mechanical Constraints      | 25%    | 100% [##########] | 7/7    |
 | Testing & Stability         | 25%    | 86% [#########-]  | 8/8    |
 | Review & Drift Prevention   | 15%    | 100% [##########] | 6/6    |
 | AI-Specific Safeguards      | 15%    | 90% [#########-]  | 5/5    |
@@ -49,7 +49,7 @@ _DORA 2025 - AI-accessible documentation_
 
 **Evidence**: API spec found: openapi.json
 
-## Mechanical Constraints (75%)
+## Mechanical Constraints (100%)
 
 ### [PASS] CI Pipeline (3/3)
 
@@ -69,21 +69,17 @@ _OpenAI Harness Engineering - mechanical constraints_
 
 **Evidence**: Formatter check found in CI: prettier\s+--check
 
-### [PASS] Type Safety (2/3)
+### [PASS] Type Safety (3/3)
 
 _SlopCodeBench - preventing subtle type errors_
 
-**Evidence**: TypeScript found but strict mode not confirmed
+**Evidence**: TypeScript strict mode enabled
 
-**Remediation**: Enable "strict": true in tsconfig.json.
-
-### [FAIL] Dependency Auditing (0/4)
+### [PASS] Dependency Auditing (4/4)
 
 _Blog: security infrastructure reliability_
 
-**Evidence**: No dependency auditing found
-
-**Remediation**: Add cargo deny/audit, npm audit, pip-audit, or Snyk to CI as a blocking check.
+**Evidence**: Blocking dependency audit in CI: npm\s+audit
 
 ### [PASS] Conventional Commits (2/2)
 
