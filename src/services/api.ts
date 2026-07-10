@@ -1481,6 +1481,19 @@ export const api = {
         .select()
         .single();
       if (error) throw error;
+
+      // Si se aprobó el usuario, enviar correo de notificación usando la Edge Function
+      if (updates.aprobado === true && data) {
+        supabase.functions
+          .invoke('notify-approval', {
+            body: { email: data.email, nombre: data.nombre_completo },
+          })
+          .then(({ error: fnErr }) => {
+            if (fnErr) console.error('Error invoking notify-approval Edge Function:', fnErr);
+          })
+          .catch((e) => console.error('Exception calling notify-approval Edge Function:', e));
+      }
+
       return data;
     } else {
       const profiles = JSON.parse(localStorage.getItem('cnbv_profiles') || '{}');
@@ -1494,6 +1507,12 @@ export const api = {
 
       profiles[userId] = updated;
       localStorage.setItem('cnbv_profiles', JSON.stringify(profiles));
+
+      // Si se aprobó el usuario, registrar simulación de envío
+      if (updates.aprobado === true) {
+        console.log(`[Simulación SMTP] Correo de aprobación enviado a ${updated.email}`);
+      }
+
       return updated;
     }
   },

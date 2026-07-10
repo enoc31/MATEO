@@ -23,30 +23,30 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">5.33% </span>
+                <span class="strong">5.27% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>31/581</span>
+                <span class='fraction'>31/588</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">2.29% </span>
+                <span class="strong">2.25% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>11/479</span>
+                <span class='fraction'>11/487</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">6.09% </span>
+                <span class="strong">5.95% </span>
                 <span class="quiet">Functions</span>
-                <span class='fraction'>5/82</span>
+                <span class='fraction'>5/84</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">6.22% </span>
+                <span class="strong">6.15% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>31/498</span>
+                <span class='fraction'>31/504</span>
             </div>
         
             
@@ -2089,7 +2089,26 @@
 <a name='L2024'></a><a href='#L2024'>2024</a>
 <a name='L2025'></a><a href='#L2025'>2025</a>
 <a name='L2026'></a><a href='#L2026'>2026</a>
-<a name='L2027'></a><a href='#L2027'>2027</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<a name='L2027'></a><a href='#L2027'>2027</a>
+<a name='L2028'></a><a href='#L2028'>2028</a>
+<a name='L2029'></a><a href='#L2029'>2029</a>
+<a name='L2030'></a><a href='#L2030'>2030</a>
+<a name='L2031'></a><a href='#L2031'>2031</a>
+<a name='L2032'></a><a href='#L2032'>2032</a>
+<a name='L2033'></a><a href='#L2033'>2033</a>
+<a name='L2034'></a><a href='#L2034'>2034</a>
+<a name='L2035'></a><a href='#L2035'>2035</a>
+<a name='L2036'></a><a href='#L2036'>2036</a>
+<a name='L2037'></a><a href='#L2037'>2037</a>
+<a name='L2038'></a><a href='#L2038'>2038</a>
+<a name='L2039'></a><a href='#L2039'>2039</a>
+<a name='L2040'></a><a href='#L2040'>2040</a>
+<a name='L2041'></a><a href='#L2041'>2041</a>
+<a name='L2042'></a><a href='#L2042'>2042</a>
+<a name='L2043'></a><a href='#L2043'>2043</a>
+<a name='L2044'></a><a href='#L2044'>2044</a>
+<a name='L2045'></a><a href='#L2045'>2045</a>
+<a name='L2046'></a><a href='#L2046'>2046</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -3572,6 +3591,19 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -3585,6 +3617,12 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -5598,6 +5636,19 @@ export const api = {
         .select()
         .single();
 <span class="cstat-no" title="statement not covered" >      if (error) <span class="cstat-no" title="statement not covered" >throw error;</span></span>
+&nbsp;
+      // Si se aprobó el usuario, enviar correo de notificación usando la Edge Function
+<span class="cstat-no" title="statement not covered" >      if (updates.aprobado === true &amp;&amp; data) {</span>
+<span class="cstat-no" title="statement not covered" >        supabase.functions</span>
+          .invoke('notify-approval', {
+            body: { email: data.email, nombre: data.nombre_completo },
+          })
+          .<span class="fstat-no" title="function not covered" >then(({</span> error: fnErr }) =&gt; {
+<span class="cstat-no" title="statement not covered" >            if (fnErr) <span class="cstat-no" title="statement not covered" >console.error('Error invoking notify-approval Edge Function:', fnErr);</span></span>
+          })
+          .<span class="fstat-no" title="function not covered" >catch((e</span>) =&gt; <span class="cstat-no" title="statement not covered" >console.error('Exception calling notify-approval Edge Function:', e))</span>;
+      }
+&nbsp;
 <span class="cstat-no" title="statement not covered" >      return data;</span>
     } else {
       const profiles = <span class="cstat-no" title="statement not covered" >JSON.parse(localStorage.getItem('cnbv_profiles') || '{}');</span>
@@ -5611,6 +5662,12 @@ export const api = {
 &nbsp;
 <span class="cstat-no" title="statement not covered" >      profiles[userId] = updated;</span>
 <span class="cstat-no" title="statement not covered" >      localStorage.setItem('cnbv_profiles', JSON.stringify(profiles));</span>
+&nbsp;
+      // Si se aprobó el usuario, registrar simulación de envío
+<span class="cstat-no" title="statement not covered" >      if (updates.aprobado === true) {</span>
+<span class="cstat-no" title="statement not covered" >        console.log(`[Simulación SMTP] Correo de aprobación enviado a ${updated.email}`);</span>
+      }
+&nbsp;
 <span class="cstat-no" title="statement not covered" >      return updated;</span>
     }
   },
@@ -6148,7 +6205,7 @@ export const requisitionsApi = {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-07-10T03:02:50.814Z
+                at 2026-07-10T16:46:14.279Z
             </div>
         <script src="../../prettify.js"></script>
         <script>
