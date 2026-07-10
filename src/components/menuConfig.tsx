@@ -10,6 +10,7 @@ import {
   Users,
   UserCheck,
   CalendarDays,
+  Building,
 } from 'lucide-react';
 
 export interface MenuItemConfig {
@@ -98,6 +99,20 @@ export const menuItems: MenuItemConfig[] = [
     color: '#1E3A8A', // Navy/Blue
     roles: ['administrador'],
   },
+  {
+    id: 'saas-ongs',
+    label: 'Gestión de ONGs',
+    iconName: 'Building',
+    color: '#0D9488', // Teal
+    roles: ['super_admin'],
+  },
+  {
+    id: 'saas-users',
+    label: 'Usuarios del SaaS',
+    iconName: 'Users',
+    color: '#1E3A8A', // Navy
+    roles: ['super_admin'],
+  },
 ];
 
 export const getMenuIcon = (name: string, size = 20) => {
@@ -125,6 +140,8 @@ export const getMenuIcon = (name: string, size = 20) => {
       return <UserCheck {...props} />;
     case 'CalendarDays':
       return <CalendarDays {...props} />;
+    case 'Building':
+      return <Building {...props} />;
     default:
       return null;
   }

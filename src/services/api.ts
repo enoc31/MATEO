@@ -1447,19 +1447,28 @@ export const api = {
     if (!isSimulationMode) {
       const { data, error } = await supabase
         .from('usuarios_perfiles')
-        .select('*')
+        .select('*, ongs(nombre)')
         .order('nombre_completo');
       if (error) throw error;
       return data;
     } else {
       const profiles = JSON.parse(localStorage.getItem('cnbv_profiles') || '{}');
-      return Object.values(profiles);
+      const ongs = JSON.parse(localStorage.getItem('cnbv_ongs') || '[]');
+      return Object.values(profiles).map((p: any) => {
+        const ong = ongs.find((o: any) => o.id === p.ong_id);
+        return {
+          ...p,
+          ongs: ong
+            ? { nombre: ong.nombre }
+            : { nombre: 'Convención Nacional Bautista de Venezuela' },
+        };
+      });
     }
   },
 
   updateUserProfile: async (
     userId: string,
-    updates: { rol?: UserRole; aprobado?: boolean },
+    updates: { rol?: UserRole; aprobado?: boolean; ong_id?: string },
   ): Promise<any> => {
     if (!isSimulationMode) {
       const { data, error } = await supabase
@@ -1611,6 +1620,80 @@ export const api = {
       const updated = [newBen, ...all];
       localStorage.setItem('cnbv_beneficiaries', JSON.stringify(updated));
       return newBen;
+    }
+  },
+
+  // --- GESTIÓN DE ONGs (SaaS) ---
+  getOngs: async (): Promise<any[]> => {
+    if (!isSimulationMode) {
+      const { data, error } = await supabase.from('ongs').select('*').order('nombre');
+      if (error) throw error;
+      return data;
+    } else {
+      let ongs = JSON.parse(localStorage.getItem('cnbv_ongs') || '[]');
+      if (ongs.length === 0) {
+        ongs = [
+          {
+            id: '11111111-1111-1111-1111-111111111111',
+            nombre: 'Convención Nacional Bautista de Venezuela',
+            logo_url: 'https://cnbv.org/wp-content/uploads/2020/09/logo-cnbv.jpg',
+            created_at: new Date().toISOString(),
+          },
+        ];
+        localStorage.setItem('cnbv_ongs', JSON.stringify(ongs));
+      }
+      return ongs;
+    }
+  },
+
+  createOng: async (nombre: string, logoUrl?: string | null): Promise<any> => {
+    if (!isSimulationMode) {
+      const { data, error } = await supabase
+        .from('ongs')
+        .insert([{ nombre, logo_url: logoUrl }])
+        .select()
+        .single();
+      if (error) throw error;
+      return data;
+    } else {
+      const ongs = JSON.parse(localStorage.getItem('cnbv_ongs') || '[]');
+      const newOng = {
+        id: `ong-${Math.random().toString(36).substr(2, 9)}`,
+        nombre,
+        logo_url: logoUrl || null,
+        created_at: new Date().toISOString(),
+      };
+      ongs.push(newOng);
+      localStorage.setItem('cnbv_ongs', JSON.stringify(ongs));
+      return newOng;
+    }
+  },
+
+  updateOng: async (
+    id: string,
+    updates: { nombre?: string; logo_url?: string | null },
+  ): Promise<any> => {
+    if (!isSimulationMode) {
+      const { data, error } = await supabase
+        .from('ongs')
+        .update(updates)
+        .eq('id', id)
+        .select()
+        .single();
+      if (error) throw error;
+      return data;
+    } else {
+      const ongs = JSON.parse(localStorage.getItem('cnbv_ongs') || '[]');
+      const idx = ongs.findIndex((o: any) => o.id === id);
+      if (idx === -1) throw new Error('Organización no encontrada');
+
+      const updated = {
+        ...ongs[idx],
+        ...updates,
+      };
+      ongs[idx] = updated;
+      localStorage.setItem('cnbv_ongs', JSON.stringify(ongs));
+      return updated;
     }
   },
 };

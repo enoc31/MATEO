@@ -5,7 +5,13 @@ import { isSimulationMode } from '../services/api';
 import { checkAndSyncBCVRate } from '../utils/bcvSync';
 
 export type UserRole =
-  'administrador' | 'auditor' | 'coordinador' | 'director' | 'auxiliar_campo' | 'donante';
+  | 'administrador'
+  | 'auditor'
+  | 'coordinador'
+  | 'director'
+  | 'auxiliar_campo'
+  | 'donante'
+  | 'super_admin';
 
 export interface UserProfile {
   id: string;
@@ -56,7 +62,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               nombre_completo: meta?.nombre_completo || 'Usuario',
               rol: meta?.rol || 'donante',
               aprobado: false,
-              ong_id: '11111111-1111-1111-1111-111111111111',
+              ong_id: meta?.ong_id || '11111111-1111-1111-1111-111111111111',
             };
 
             const { data: insertedData, error: insertError } = await supabase

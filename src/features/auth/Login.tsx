@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Lightbulb, Shield, Briefcase, Scale, MapPin, Users, Gift } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import type { UserRole } from '../../context/AuthContext';
 import { Link } from 'react-router-dom';
-import { isSimulationMode } from '../../services/api';
+import { isSimulationMode, api } from '../../services/api';
 import { supabase } from '../../supabaseClient';
 
 export const Login: React.FC = () => {
@@ -20,6 +20,29 @@ export const Login: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+
+  // Estados de organizaciones para registro
+  const [ongs, setOngs] = useState<{ id: string; nombre: string }[]>([]);
+  const [selectedOngId, setSelectedOngId] = useState('');
+  const [newOngName, setNewOngName] = useState('');
+
+  // Fetch ONGs list on mount
+  useEffect(() => {
+    const loadOngs = async () => {
+      try {
+        const list = await api.getOngs();
+        setOngs(list);
+        if (list.length > 0) {
+          setSelectedOngId(list[0].id);
+        } else {
+          setSelectedOngId('new');
+        }
+      } catch (err) {
+        console.error('Error fetching ONGs for registration:', err);
+      }
+    };
+    loadOngs();
+  }, []);
 
   // Manejador para login en Supabase real
   const handleRealLogin = async (e: React.FormEvent) => {
@@ -51,6 +74,15 @@ export const Login: React.FC = () => {
     setError(null);
     setSuccess(null);
     try {
+      let finalOngId = selectedOngId;
+      if (selectedOngId === 'new') {
+        if (!newOngName.trim()) {
+          throw new Error('Por favor ingresa el nombre de la organización');
+        }
+        const newOng = await api.createOng(newOngName.trim());
+        finalOngId = newOng.id;
+      }
+
       const { error } = await supabase.auth.signUp({
         email,
         password,
@@ -58,6 +90,7 @@ export const Login: React.FC = () => {
           data: {
             nombre_completo: nombreCompleto,
             rol: rolSugerido,
+            ong_id: finalOngId,
           },
         },
       });
@@ -69,6 +102,7 @@ export const Login: React.FC = () => {
       setIsRegister(false);
       setNombreCompleto('');
       setPassword('');
+      setNewOngName('');
     } catch (err: any) {
       setError(err.message || 'Error al registrar usuario');
     } finally {
@@ -159,7 +193,7 @@ export const Login: React.FC = () => {
   };
 
   // Manejador para registro simulado local
-  const handleSimulatedRegister = (e: React.FormEvent) => {
+  const handleSimulatedRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email || !password || !nombreCompleto) return;
     setLoading(true);
@@ -179,12 +213,22 @@ export const Login: React.FC = () => {
         return;
       }
 
+      let finalOngId = selectedOngId;
+      if (selectedOngId === 'new') {
+        if (!newOngName.trim()) {
+          throw new Error('Por favor ingresa el nombre de la organización');
+        }
+        const newOng = await api.createOng(newOngName.trim());
+        finalOngId = newOng.id;
+      }
+
       profiles[userId] = {
         id: userId,
         email,
         nombre_completo: nombreCompleto,
         rol: rolSugerido,
         aprobado: false, // Inicia pendiente de aprobación
+        ong_id: finalOngId,
         created_at: new Date().toISOString(),
       };
 
@@ -195,8 +239,9 @@ export const Login: React.FC = () => {
       setIsRegister(false);
       setNombreCompleto('');
       setPassword('');
-    } catch {
-      setError('Error al simular registro');
+      setNewOngName('');
+    } catch (err: any) {
+      setError(err.message || 'Error al simular registro');
     } finally {
       setLoading(false);
     }
@@ -371,7 +416,7 @@ export const Login: React.FC = () => {
               />
             </div>
 
-            <div className="form-group" style={{ marginBottom: '2rem' }}>
+            <div className="form-group" style={{ marginBottom: '1.25rem' }}>
               <label className="form-label" htmlFor="rolSugerido">
                 Rol Solicitado
               </label>
@@ -391,6 +436,45 @@ export const Login: React.FC = () => {
                 <option value="administrador">Administrador (Control Total)</option>
               </select>
             </div>
+
+            <div className="form-group" style={{ marginBottom: '1.25rem' }}>
+              <label className="form-label" htmlFor="selectedOngId">
+                Organización (ONG)
+              </label>
+              <select
+                id="selectedOngId"
+                className="form-input"
+                value={selectedOngId}
+                onChange={(e) => setSelectedOngId(e.target.value)}
+                required
+                disabled={loading}
+              >
+                {ongs.map((o) => (
+                  <option key={o.id} value={o.id}>
+                    {o.nombre}
+                  </option>
+                ))}
+                <option value="new">+ Registrar Nueva Organización...</option>
+              </select>
+            </div>
+
+            {selectedOngId === 'new' && (
+              <div className="form-group" style={{ marginBottom: '2rem' }}>
+                <label className="form-label" htmlFor="newOngName">
+                  Nombre de la Nueva Organización
+                </label>
+                <input
+                  id="newOngName"
+                  type="text"
+                  className="form-input"
+                  required
+                  value={newOngName}
+                  onChange={(e) => setNewOngName(e.target.value)}
+                  disabled={loading}
+                  placeholder="Ej. Fundación Sonrisas"
+                />
+              </div>
+            )}
 
             <button
               type="submit"

@@ -7,6 +7,7 @@ import { Login } from './features/auth/Login';
 import { ForgotPassword } from './features/auth/ForgotPassword';
 import { UpdatePassword } from './features/auth/UpdatePassword';
 import { Layout } from './components/Layout';
+import { SaasLayout } from './components/SaasLayout';
 import { AppsDashboard } from './components/AppsDashboard';
 import { Suspense, lazy } from 'react';
 import { LandingPage } from './features/landing/LandingPage';
@@ -74,6 +75,20 @@ const JornadasManager = lazy(() =>
   })),
 );
 
+// SaaS lazy loaded features
+const SaasLogin = lazy(() =>
+  import('./features/saas/SaasLogin').then((module) => ({ default: module.SaasLogin })),
+);
+const SaasDashboard = lazy(() =>
+  import('./features/saas/SaasDashboard').then((module) => ({ default: module.SaasDashboard })),
+);
+const SaasOngs = lazy(() =>
+  import('./features/saas/SaasOngs').then((module) => ({ default: module.SaasOngs })),
+);
+const SaasUsers = lazy(() =>
+  import('./features/saas/SaasUsers').then((module) => ({ default: module.SaasUsers })),
+);
+
 const MainAppContent: React.FC = () => {
   const { profile, loading, logout, refreshProfile } = useAuth();
 
@@ -118,6 +133,11 @@ const MainAppContent: React.FC = () => {
   // Si no hay sesión válida, se manejará con PrivateRoute en lugar de redirigir aquí.
 
   if (!profile) return null; // Satisfy TypeScript since PrivateRoute already guards this
+
+  // Redirect Super Admins accessing regular App workspace to the SaaS dashboard
+  if (profile.rol === 'super_admin') {
+    return <Navigate to="/saas-admin/dashboard" replace />;
+  }
 
   // Si está logueado pero no ha sido aprobado por un administrador
   if (profile.aprobado === false) {
@@ -549,8 +569,53 @@ const PrivateRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => 
 const PublicRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { profile, loading } = useAuth();
   if (loading) return <div>Cargando...</div>;
-  if (profile) return <Navigate to="/app" replace />;
+  if (profile) {
+    if (profile.rol === 'super_admin') {
+      return <Navigate to="/saas-admin/dashboard" replace />;
+    }
+    return <Navigate to="/app" replace />;
+  }
   return <>{children}</>;
+};
+
+const SaasPrivateRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { profile, loading } = useAuth();
+
+  if (loading) return <div>Verificando...</div>;
+  if (!profile || profile.rol !== 'super_admin') {
+    return <Navigate to="/saas-admin" replace />;
+  }
+  return <>{children}</>;
+};
+
+const SaasPublicRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { profile, loading } = useAuth();
+  if (loading) return <div>Cargando...</div>;
+  if (profile) {
+    if (profile.rol === 'super_admin') {
+      return <Navigate to="/saas-admin/dashboard" replace />;
+    }
+    return <Navigate to="/app" replace />;
+  }
+  return <>{children}</>;
+};
+
+const SaasMainAppContent: React.FC = () => {
+  return (
+    <SaasLayout>
+      <Suspense
+        fallback={<div style={{ textAlign: 'center', padding: '3rem' }}>Cargando Panel...</div>}
+      >
+        <Routes>
+          <Route path="/" element={<Navigate to="dashboard" replace />} />
+          <Route path="dashboard" element={<SaasDashboard />} />
+          <Route path="ongs" element={<SaasOngs />} />
+          <Route path="users" element={<SaasUsers />} />
+          <Route path="*" element={<Navigate to="dashboard" replace />} />
+        </Routes>
+      </Suspense>
+    </SaasLayout>
+  );
 };
 
 // Envolver la App en el AuthProvider y NotificationProvider
@@ -609,6 +674,23 @@ function App() {
                     <BeneficiaryRegistry />
                   </Suspense>
                 </div>
+              }
+            />
+            {/* SaaS Admin Portal */}
+            <Route
+              path="/saas-admin"
+              element={
+                <SaasPublicRoute>
+                  <SaasLogin />
+                </SaasPublicRoute>
+              }
+            />
+            <Route
+              path="/saas-admin/*"
+              element={
+                <SaasPrivateRoute>
+                  <SaasMainAppContent />
+                </SaasPrivateRoute>
               }
             />
             {/* Rutas Privadas */}
