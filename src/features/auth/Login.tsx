@@ -26,6 +26,59 @@ export const Login: React.FC = () => {
   const [selectedOngId, setSelectedOngId] = useState('');
   const [newOngName, setNewOngName] = useState('');
 
+  // Control Anti-Bots (reCAPTCHA)
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+
+  // Cargar Google reCAPTCHA v2 de forma dinámica y explícita
+  useEffect(() => {
+    if (!isRegister || isSimulationMode) return;
+
+    // Callbacks globales para reCAPTCHA
+    (window as any).onRecaptchaSuccess = (token: string) => {
+      setCaptchaToken(token);
+    };
+    (window as any).onRecaptchaExpired = () => {
+      setCaptchaToken(null);
+    };
+
+    const renderRecaptcha = () => {
+      if ((window as any).grecaptcha && document.getElementById('recaptcha-container')) {
+        try {
+          (window as any).grecaptcha.render('recaptcha-container', {
+            sitekey:
+              import.meta.env.VITE_RECAPTCHA_SITE_KEY || '6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI',
+            callback: 'onRecaptchaSuccess',
+            'expired-callback': 'onRecaptchaExpired',
+          });
+        } catch (e) {
+          console.warn('grecaptcha render warning:', e);
+        }
+      }
+    };
+
+    if (!document.getElementById('recaptcha-script')) {
+      const script = document.createElement('script');
+      script.id = 'recaptcha-script';
+      script.src = 'https://www.google.com/recaptcha/api.js?onload=onRecaptchaLoad&render=explicit';
+      script.async = true;
+      script.defer = true;
+      (window as any).onRecaptchaLoad = () => {
+        renderRecaptcha();
+      };
+      document.body.appendChild(script);
+    } else {
+      // Esperar brevemente a que React monte el contenedor en el DOM
+      setTimeout(renderRecaptcha, 100);
+    }
+
+    return () => {
+      // Limpiar callbacks globales al desmontar
+      delete (window as any).onRecaptchaSuccess;
+      delete (window as any).onRecaptchaExpired;
+      delete (window as any).onRecaptchaLoad;
+    };
+  }, [isRegister]);
+
   // Fetch ONGs list on mount
   useEffect(() => {
     const loadOngs = async () => {
@@ -70,6 +123,12 @@ export const Login: React.FC = () => {
   const handleRealRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email || !password || !nombreCompleto) return;
+
+    if (!captchaToken) {
+      setError('Por favor completa el reCAPTCHA para registrarte.');
+      return;
+    }
+
     setLoading(true);
     setError(null);
     setSuccess(null);
@@ -103,6 +162,7 @@ export const Login: React.FC = () => {
       setNombreCompleto('');
       setPassword('');
       setNewOngName('');
+      setCaptchaToken(null);
     } catch (err: any) {
       setError(err.message || 'Error al registrar usuario');
     } finally {
@@ -196,6 +256,12 @@ export const Login: React.FC = () => {
   const handleSimulatedRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email || !password || !nombreCompleto) return;
+
+    if (!captchaToken) {
+      setError('Por favor completa el reCAPTCHA para registrarte.');
+      return;
+    }
+
     setLoading(true);
     setError(null);
     setSuccess(null);
@@ -240,6 +306,7 @@ export const Login: React.FC = () => {
       setNombreCompleto('');
       setPassword('');
       setNewOngName('');
+      setCaptchaToken(null);
     } catch (err: any) {
       setError(err.message || 'Error al simular registro');
     } finally {
@@ -251,6 +318,7 @@ export const Login: React.FC = () => {
     setIsRegister(!isRegister);
     setError(null);
     setSuccess(null);
+    setCaptchaToken(null);
   };
 
   return (
@@ -473,6 +541,57 @@ export const Login: React.FC = () => {
                   disabled={loading}
                   placeholder="Ej. Fundación Sonrisas"
                 />
+              </div>
+            )}
+
+            {/* Control Anti-Bots (reCAPTCHA) */}
+            {isSimulationMode ? (
+              <div
+                className="form-group"
+                style={{
+                  marginBottom: '1.5rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  background: '#f4f5f7',
+                  padding: '0.75rem',
+                  borderRadius: '6px',
+                  border: '1px solid #d1d5db',
+                }}
+              >
+                <input
+                  id="simulatedCaptcha"
+                  type="checkbox"
+                  checked={!!captchaToken}
+                  onChange={(e) => setCaptchaToken(e.target.checked ? 'mock-token' : null)}
+                  style={{
+                    marginRight: '0.5rem',
+                    width: '18px',
+                    height: '18px',
+                    cursor: 'pointer',
+                  }}
+                />
+                <label
+                  htmlFor="simulatedCaptcha"
+                  style={{
+                    cursor: 'pointer',
+                    fontSize: '0.9rem',
+                    color: '#4b5563',
+                    userSelect: 'none',
+                  }}
+                >
+                  [Simulado] No soy un robot (reCAPTCHA v2)
+                </label>
+              </div>
+            ) : (
+              <div
+                className="form-group"
+                style={{
+                  marginBottom: '1.5rem',
+                  display: 'flex',
+                  justifyContent: 'center',
+                }}
+              >
+                <div id="recaptcha-container"></div>
               </div>
             )}
 
