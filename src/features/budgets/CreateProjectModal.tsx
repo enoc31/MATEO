@@ -38,6 +38,66 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // States for donor creation form
+  const [showAddDonor, setShowAddDonor] = useState(false);
+  const [newDonorNombre, setNewDonorNombre] = useState('');
+  const [newDonorTipo, setNewDonorTipo] = useState<'nacional' | 'extranjero'>('nacional');
+  const [newDonorPais, setNewDonorPais] = useState('Venezuela');
+  const [newDonorContacto, setNewDonorContacto] = useState('');
+  const [newDonorEmail, setNewDonorEmail] = useState('');
+  const [isSavingDonor, setIsSavingDonor] = useState(false);
+  const [donorError, setDonorError] = useState<string | null>(null);
+
+  const handleSaveDonor = async () => {
+    if (!newDonorNombre.trim()) {
+      setDonorError('El nombre del donante es obligatorio.');
+      return;
+    }
+
+    setIsSavingDonor(true);
+    setDonorError(null);
+
+    const newDonorPayload = {
+      nombre: newDonorNombre.trim(),
+      tipo: newDonorTipo,
+      pais: newDonorTipo === 'nacional' ? 'Venezuela' : newDonorPais,
+      contacto: newDonorContacto.trim() || undefined,
+      email: newDonorEmail.trim() || undefined,
+      activo: true,
+    };
+
+    try {
+      const createdDonor = await api.createDonante(newDonorPayload);
+
+      // Update local donor list
+      setDonantes((prev) => [...prev, createdDonor]);
+
+      // Select newly created donor
+      setDonanteId(createdDonor.id);
+
+      // Reset donor form
+      setNewDonorNombre('');
+      setNewDonorTipo('nacional');
+      setNewDonorPais('Venezuela');
+      setNewDonorContacto('');
+      setNewDonorEmail('');
+      setShowAddDonor(false);
+    } catch (err: unknown) {
+      console.error('Error creating donor:', err);
+      const errMsg = err instanceof Error ? err.message : 'Error al registrar el donante.';
+      setDonorError(errMsg);
+    } finally {
+      setIsSavingDonor(false);
+    }
+  };
+
+  const preventSubmitOnEnter = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      handleSaveDonor();
+    }
+  };
+
   useEffect(() => {
     if (isOpen) {
       api.getDonantes().then(setDonantes).catch(console.error);
@@ -299,96 +359,317 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
           {/* ── SECCIÓN 2: DONANTE ─────────────────────────────────────── */}
           <div
             style={{
-              fontSize: '0.7rem',
-              fontWeight: 700,
-              letterSpacing: '0.1em',
-              color: 'var(--primary)',
-              textTransform: 'uppercase',
-              opacity: 0.8,
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
               marginTop: '0.5rem',
               borderTop: '1px solid var(--border-color)',
               paddingTop: '1rem',
             }}
           >
-            <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <Handshake size={18} /> Fuente de Financiamiento
-            </span>
-          </div>
+            <div
+              style={{
+                fontSize: '0.7rem',
+                fontWeight: 700,
+                letterSpacing: '0.1em',
+                color: 'var(--primary)',
+                textTransform: 'uppercase',
+                opacity: 0.8,
+              }}
+            >
+              <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <Handshake size={18} /> Fuente de Financiamiento
+              </span>
+            </div>
 
-          {/* Filtro de tipo */}
-          <div style={{ display: 'flex', gap: '0.5rem' }}>
-            {(['todos', 'nacional', 'extranjero'] as const).map((t) => (
+            {!showAddDonor && (
               <button
-                key={t}
                 type="button"
-                onClick={() => {
-                  setTipoFiltro(t);
-                  setDonanteId('');
-                }}
+                onClick={() => setShowAddDonor(true)}
                 style={{
-                  padding: '0.3rem 0.85rem',
-                  borderRadius: '20px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.25rem',
                   fontSize: '0.75rem',
                   fontWeight: 600,
-                  border: '1.5px solid',
+                  color: 'var(--primary)',
+                  background: 'none',
+                  border: 'none',
                   cursor: 'pointer',
-                  transition: 'all 0.2s',
-                  borderColor: tipoFiltro === t ? 'var(--primary)' : 'var(--border-color)',
-                  backgroundColor: tipoFiltro === t ? 'var(--primary)' : 'transparent',
-                  color: tipoFiltro === t ? '#fff' : 'var(--neutral-dark)',
+                  padding: '0.2rem 0.5rem',
+                  borderRadius: '4px',
+                  transition: 'background-color 0.2s',
                 }}
+                onMouseEnter={(e) =>
+                  (e.currentTarget.style.backgroundColor = 'rgba(47,90,174,0.08)')
+                }
+                onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
               >
-                {t === 'todos' ? '🌐 Todos' : t === 'nacional' ? '🇻🇪 Nacionales' : '✈️ Extranjeros'}
+                <Plus size={14} /> Nuevo Donante
               </button>
-            ))}
+            )}
           </div>
 
-          {/* Grid de donantes */}
-          <div
-            style={{
-              display: 'grid',
-              gridTemplateColumns: '1fr 1fr',
-              gap: '0.5rem',
-              maxHeight: '210px',
-              overflowY: 'auto',
-              padding: '0.25rem',
-            }}
-          >
-            {donantesFiltrados.map((d) => (
-              <button
-                key={d.id}
-                type="button"
-                onClick={() => setDonanteId(d.id)}
-                style={{
-                  padding: '0.75rem',
-                  borderRadius: '8px',
-                  border: '2px solid',
-                  borderColor: donanteId === d.id ? 'var(--primary)' : 'var(--border-color)',
-                  backgroundColor: donanteId === d.id ? 'rgba(47,90,174,0.08)' : 'transparent',
-                  cursor: 'pointer',
-                  textAlign: 'left',
-                  transition: 'all 0.15s',
-                }}
-              >
-                <div style={{ fontSize: '1.3rem', marginBottom: '0.2rem' }}>
-                  {FLAG_MAP[d.pais || ''] || '🏳️'}
+          {showAddDonor ? (
+            <div
+              style={{
+                border: '1px solid var(--border-color)',
+                borderRadius: '8px',
+                padding: '1rem',
+                backgroundColor: 'rgba(0,0,0,0.015)',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '0.75rem',
+              }}
+            >
+              <div style={{ fontWeight: 700, fontSize: '0.8rem', color: 'var(--primary)' }}>
+                Registrar Nuevo Donante
+              </div>
+
+              <div className="form-group" style={{ marginBottom: 0 }}>
+                <label
+                  htmlFor="newDonorNombre"
+                  className="form-label"
+                  style={{ fontWeight: 600, fontSize: '0.75rem' }}
+                >
+                  Nombre del Donante o Institución *
+                </label>
+                <input
+                  id="newDonorNombre"
+                  type="text"
+                  className="form-input"
+                  placeholder="Ej: Agencia Española de Cooperación (AECID)"
+                  value={newDonorNombre}
+                  onChange={(e) => setNewDonorNombre(e.target.value)}
+                  onKeyDown={preventSubmitOnEnter}
+                  style={{ padding: '0.4rem 0.6rem', fontSize: '0.8rem' }}
+                  required
+                />
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+                <div className="form-group" style={{ marginBottom: 0 }}>
+                  <label
+                    htmlFor="newDonorTipo"
+                    className="form-label"
+                    style={{ fontWeight: 600, fontSize: '0.75rem' }}
+                  >
+                    Tipo *
+                  </label>
+                  <select
+                    id="newDonorTipo"
+                    className="form-input"
+                    value={newDonorTipo}
+                    onChange={(e) => {
+                      const val = e.target.value as 'nacional' | 'extranjero';
+                      setNewDonorTipo(val);
+                      if (val === 'nacional') {
+                        setNewDonorPais('Venezuela');
+                      }
+                    }}
+                    style={{ padding: '0.4rem 0.6rem', fontSize: '0.8rem' }}
+                  >
+                    <option value="nacional">Nacional (Local)</option>
+                    <option value="extranjero">Extranjero (Internacional)</option>
+                  </select>
                 </div>
+
+                <div className="form-group" style={{ marginBottom: 0 }}>
+                  <label
+                    htmlFor="newDonorPais"
+                    className="form-label"
+                    style={{ fontWeight: 600, fontSize: '0.75rem' }}
+                  >
+                    País *
+                  </label>
+                  <select
+                    id="newDonorPais"
+                    className="form-input"
+                    value={newDonorPais}
+                    onChange={(e) => setNewDonorPais(e.target.value)}
+                    disabled={newDonorTipo === 'nacional'}
+                    style={{ padding: '0.4rem 0.6rem', fontSize: '0.8rem' }}
+                  >
+                    <option value="Venezuela">Venezuela</option>
+                    <option value="Estados Unidos">Estados Unidos</option>
+                    <option value="Reino Unido">Reino Unido</option>
+                    <option value="Europa">Europa</option>
+                    <option value="Internacional">Internacional</option>
+                  </select>
+                </div>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+                <div className="form-group" style={{ marginBottom: 0 }}>
+                  <label
+                    htmlFor="newDonorContacto"
+                    className="form-label"
+                    style={{ fontWeight: 600, fontSize: '0.75rem' }}
+                  >
+                    Contacto / Representante
+                  </label>
+                  <input
+                    id="newDonorContacto"
+                    type="text"
+                    className="form-input"
+                    placeholder="Ej: John Doe"
+                    value={newDonorContacto}
+                    onChange={(e) => setNewDonorContacto(e.target.value)}
+                    onKeyDown={preventSubmitOnEnter}
+                    style={{ padding: '0.4rem 0.6rem', fontSize: '0.8rem' }}
+                  />
+                </div>
+
+                <div className="form-group" style={{ marginBottom: 0 }}>
+                  <label
+                    htmlFor="newDonorEmail"
+                    className="form-label"
+                    style={{ fontWeight: 600, fontSize: '0.75rem' }}
+                  >
+                    Correo Electrónico
+                  </label>
+                  <input
+                    id="newDonorEmail"
+                    type="email"
+                    className="form-input"
+                    placeholder="Ej: john.doe@agency.org"
+                    value={newDonorEmail}
+                    onChange={(e) => setNewDonorEmail(e.target.value)}
+                    onKeyDown={preventSubmitOnEnter}
+                    style={{ padding: '0.4rem 0.6rem', fontSize: '0.8rem' }}
+                  />
+                </div>
+              </div>
+
+              {donorError && (
                 <div
                   style={{
-                    fontWeight: 700,
-                    fontSize: '0.78rem',
-                    lineHeight: 1.2,
-                    color: 'var(--neutral-dark)',
+                    color: 'var(--danger)',
+                    fontSize: '0.75rem',
+                    fontWeight: 600,
+                    backgroundColor: 'rgba(239, 68, 68, 0.08)',
+                    padding: '0.5rem',
+                    borderRadius: '4px',
                   }}
                 >
-                  {d.nombre}
+                  ⚠️ {donorError}
                 </div>
-                <div style={{ fontSize: '0.68rem', marginTop: '0.2rem', opacity: 0.55 }}>
-                  {d.tipo === 'nacional' ? '🇻🇪 Nacional' : `✈️ ${d.pais}`}
-                </div>
-              </button>
-            ))}
-          </div>
+              )}
+
+              <div
+                style={{
+                  display: 'flex',
+                  justifyContent: 'flex-end',
+                  gap: '0.5rem',
+                  marginTop: '0.25rem',
+                }}
+              >
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowAddDonor(false);
+                    setDonorError(null);
+                  }}
+                  className="btn btn-outline"
+                  style={{ padding: '0.35rem 0.75rem', fontSize: '0.75rem' }}
+                  disabled={isSavingDonor}
+                  aria-label="Cancelar creación de donante"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="button"
+                  onClick={handleSaveDonor}
+                  className="btn btn-primary"
+                  style={{ padding: '0.35rem 0.75rem', fontSize: '0.75rem' }}
+                  disabled={isSavingDonor}
+                >
+                  {isSavingDonor ? 'Guardando...' : 'Guardar Donante'}
+                </button>
+              </div>
+            </div>
+          ) : (
+            <>
+              {/* Filtro de tipo */}
+              <div style={{ display: 'flex', gap: '0.5rem' }}>
+                {(['todos', 'nacional', 'extranjero'] as const).map((t) => (
+                  <button
+                    key={t}
+                    type="button"
+                    onClick={() => {
+                      setTipoFiltro(t);
+                      setDonanteId('');
+                    }}
+                    style={{
+                      padding: '0.3rem 0.85rem',
+                      borderRadius: '20px',
+                      fontSize: '0.75rem',
+                      fontWeight: 600,
+                      border: '1.5px solid',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s',
+                      borderColor: tipoFiltro === t ? 'var(--primary)' : 'var(--border-color)',
+                      backgroundColor: tipoFiltro === t ? 'var(--primary)' : 'transparent',
+                      color: tipoFiltro === t ? '#fff' : 'var(--neutral-dark)',
+                    }}
+                  >
+                    {t === 'todos'
+                      ? '🌐 Todos'
+                      : t === 'nacional'
+                        ? '🇻🇪 Nacionales'
+                        : '✈️ Extranjeros'}
+                  </button>
+                ))}
+              </div>
+
+              {/* Grid de donantes */}
+              <div
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: '1fr 1fr',
+                  gap: '0.5rem',
+                  maxHeight: '210px',
+                  overflowY: 'auto',
+                  padding: '0.25rem',
+                }}
+              >
+                {donantesFiltrados.map((d) => (
+                  <button
+                    key={d.id}
+                    type="button"
+                    onClick={() => setDonanteId(d.id)}
+                    style={{
+                      padding: '0.75rem',
+                      borderRadius: '8px',
+                      border: '2px solid',
+                      borderColor: donanteId === d.id ? 'var(--primary)' : 'var(--border-color)',
+                      backgroundColor: donanteId === d.id ? 'rgba(47,90,174,0.08)' : 'transparent',
+                      cursor: 'pointer',
+                      textAlign: 'left',
+                      transition: 'all 0.15s',
+                    }}
+                  >
+                    <div style={{ fontSize: '1.3rem', marginBottom: '0.2rem' }}>
+                      {FLAG_MAP[d.pais || ''] || '🏳️'}
+                    </div>
+                    <div
+                      style={{
+                        fontWeight: 700,
+                        fontSize: '0.78rem',
+                        lineHeight: 1.2,
+                        color: 'var(--neutral-dark)',
+                      }}
+                    >
+                      {d.nombre}
+                    </div>
+                    <div style={{ fontSize: '0.68rem', marginTop: '0.2rem', opacity: 0.55 }}>
+                      {d.tipo === 'nacional' ? '🇻🇪 Nacional' : `✈️ ${d.pais}`}
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </>
+          )}
 
           {donanteSeleccionado && (
             <div
