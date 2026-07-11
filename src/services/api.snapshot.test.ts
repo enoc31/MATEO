@@ -72,4 +72,83 @@ describe('API Service', () => {
     };
     expect(defaultMetricsFormat).toMatchSnapshot();
   });
+
+  it('getCategories should return data from supabase or simulation', async () => {
+    const mockCats = [{ id: 'cat-1', nombre: '1. Costos Directos' }];
+
+    (supabase.from as any).mockImplementation((table: string) => {
+      if (table === 'categorias_gasto') {
+        return {
+          select: (fields: string) => {
+            if (fields === 'id') {
+              return Promise.resolve({ data: [{ id: 'cat-1' }], error: null });
+            }
+            return {
+              order: () => Promise.resolve({ data: mockCats, error: null }),
+            };
+          },
+        };
+      }
+      return {
+        select: () => ({
+          insert: () => ({
+            select: () => ({
+              single: () => Promise.resolve({ data: {}, error: null }),
+            }),
+          }),
+        }),
+        insert: () => Promise.resolve({ data: null, error: null }),
+      };
+    });
+
+    const categories = await api.getCategories();
+    expect(Array.isArray(categories)).toBe(true);
+    if (!isSimulationMode) {
+      expect(supabase.from).toHaveBeenCalledWith('categorias_gasto');
+      expect(categories).toEqual(mockCats);
+    }
+  });
+
+  it('getPartidas should return data from supabase or simulation', async () => {
+    const mockParts = [{ id: 'part-1', nombre: 'Artículos No Alimentarios' }];
+
+    (supabase.from as any).mockImplementation((table: string) => {
+      if (table === 'categorias_gasto') {
+        return {
+          select: (fields: string) => {
+            if (fields === 'id') {
+              return Promise.resolve({ data: [{ id: 'cat-1' }], error: null });
+            }
+            return {
+              order: () => Promise.resolve({ data: [], error: null }),
+            };
+          },
+        };
+      }
+      if (table === 'partidas_gasto') {
+        return {
+          select: () => ({
+            order: () => Promise.resolve({ data: mockParts, error: null }),
+          }),
+        };
+      }
+      return {
+        select: () => ({
+          insert: () => ({
+            select: () => ({
+              single: () => Promise.resolve({ data: {}, error: null }),
+            }),
+          }),
+        }),
+        insert: () => Promise.resolve({ data: null, error: null }),
+      };
+    });
+
+    const partidas = await api.getPartidas();
+    expect(Array.isArray(partidas)).toBe(true);
+    if (!isSimulationMode) {
+      expect(supabase.from).toHaveBeenCalledWith('partidas_gasto');
+      expect(partidas).toEqual(mockParts);
+    }
+  });
 });
