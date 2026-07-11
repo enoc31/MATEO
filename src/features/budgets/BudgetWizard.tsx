@@ -16,8 +16,16 @@ export const BudgetWizard: React.FC<BudgetWizardProps> = ({ isOpen, onClose, onS
   const [partidas, setPartidas] = useState<PartidaGasto[]>([]);
 
   // Selection
+  const getTodayDateString = () => {
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const day = String(today.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
   const [selectedProjectId, setSelectedProjectId] = useState('');
-  const [periodo, setPeriodo] = useState('2026-ANUAL');
+  const [periodo, setPeriodo] = useState(getTodayDateString());
   const [overheadPct, setOverheadPct] = useState<number>(7.0);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -349,18 +357,15 @@ export const BudgetWizard: React.FC<BudgetWizardProps> = ({ isOpen, onClose, onS
 
           <div>
             <label className="form-label" style={{ fontWeight: 600 }}>
-              Período Financiero
+              Fecha
             </label>
-            <select
-              className="form-input form-select"
+            <input
+              type="date"
+              className="form-input"
               value={periodo}
               onChange={(e) => setPeriodo(e.target.value)}
               disabled={isSubmitting}
-            >
-              <option value="2026-ANUAL">2026 - Presupuesto Anual</option>
-              <option value="2026-Q1">2026 - Q1 Trimestre</option>
-              <option value="2026-Q2">2026 - Q2 Trimestre</option>
-            </select>
+            />
           </div>
 
           <div>

@@ -25,6 +25,16 @@ export const BudgetsAndReports: React.FC = () => {
   // Selection
   const [filterProjectId, setFilterProjectId] = useState('');
   const [filterPeriodo, setFilterPeriodo] = useState('2026-ANUAL');
+
+  // Compute unique periods dynamically
+  const uniquePeriods = Array.from(new Set(budgets.map((b) => b.periodo))).sort();
+
+  useEffect(() => {
+    if (uniquePeriods.length > 0 && !uniquePeriods.includes(filterPeriodo)) {
+      setFilterPeriodo(uniquePeriods[0]);
+    }
+  }, [uniquePeriods, filterPeriodo]);
+
   const [isCreateProjectOpen, setIsCreateProjectOpen] = useState(false);
 
   const handleProjectCreated = async (newProjId: string) => {
@@ -474,9 +484,15 @@ export const BudgetsAndReports: React.FC = () => {
             value={filterPeriodo}
             onChange={(e) => setFilterPeriodo(e.target.value)}
           >
-            <option value="2026-ANUAL">2026 ANUAL</option>
-            <option value="2026-Q1">2026 Q1 Trimestre</option>
-            <option value="2026-Q2">2026 Q2 Trimestre</option>
+            {uniquePeriods.length === 0 ? (
+              <option value="2026-ANUAL">2026-ANUAL</option>
+            ) : (
+              uniquePeriods.map((p) => (
+                <option key={p} value={p}>
+                  {p}
+                </option>
+              ))
+            )}
           </select>
         </div>
       </div>
