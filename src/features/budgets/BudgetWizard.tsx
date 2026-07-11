@@ -93,6 +93,10 @@ export const BudgetWizard: React.FC<BudgetWizardProps> = ({ isOpen, onClose, onS
     return partidas.filter((p) => p.categoria_id === catId);
   };
 
+  // Dynamically resolve Category 4's ID
+  const cat4 = categories.find((c) => c.nombre.startsWith('4.'));
+  const cat4Id = cat4 ? cat4.id : 'c4000000-0000-0000-0000-000000000004';
+
   // Autocalculate values
   // Costos Directos: Categories 1, 2, 3, 5
   // Note: Partida 'part-43' (4.3 Overhead) is in Category 4, and is NOT a direct cost.
@@ -101,7 +105,7 @@ export const BudgetWizard: React.FC<BudgetWizardProps> = ({ isOpen, onClose, onS
     let sum = 0;
     partidas.forEach((p) => {
       // Exclude Category 4 from the direct costs base calculation
-      if (p.categoria_id !== 'c4000000-0000-0000-0000-000000000004' && p.categoria_id !== 'cat-4') {
+      if (p.categoria_id !== cat4Id) {
         sum += amounts[p.id] || 0;
       }
     });
@@ -114,10 +118,7 @@ export const BudgetWizard: React.FC<BudgetWizardProps> = ({ isOpen, onClose, onS
   // Get total for Category 4: 4.1 + 4.2 + (Overhead 4.3)
   const getCategory4Total = () => {
     let sum = 0;
-    const cat4Partidas =
-      getPartidasByCategory('c4000000-0000-0000-0000-000000000004').length > 0
-        ? getPartidasByCategory('c4000000-0000-0000-0000-000000000004')
-        : getPartidasByCategory('cat-4');
+    const cat4Partidas = getPartidasByCategory(cat4Id);
 
     cat4Partidas.forEach((p) => {
       if (p.codigo === '4.3') {
@@ -131,7 +132,7 @@ export const BudgetWizard: React.FC<BudgetWizardProps> = ({ isOpen, onClose, onS
 
   // Get total for any general category
   const getCategoryTotal = (catId: string) => {
-    if (catId === 'c4000000-0000-0000-0000-000000000004' || catId === 'cat-4') {
+    if (catId === cat4Id) {
       return getCategory4Total();
     }
     let sum = 0;

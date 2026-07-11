@@ -89,10 +89,14 @@ export const BudgetsAndReports: React.FC = () => {
   const overheadPct =
     selectedProject?.overhead_porcentaje !== undefined ? selectedProject.overhead_porcentaje : 7.0;
 
+  // Dynamically resolve Category 4's ID
+  const cat4 = categories.find((c) => c.nombre.startsWith('4.'));
+  const cat4Id = cat4 ? cat4.id : 'c4000000-0000-0000-0000-000000000004';
+
   const calculateDirectCostsSum = () => {
     let sum = 0;
     partidas.forEach((p) => {
-      if (p.categoria_id !== 'c4000000-0000-0000-0000-000000000004' && p.categoria_id !== 'cat-4') {
+      if (p.categoria_id !== cat4Id) {
         sum += getPartidaBudgetInfo(p.id).asignado;
       }
     });
@@ -124,8 +128,7 @@ export const BudgetsAndReports: React.FC = () => {
     return sum;
   };
 
-  const projectTotalAsignado =
-    directCostsTotal + getCategoryTotal('c4000000-0000-0000-0000-000000000004', 'asignado');
+  const projectTotalAsignado = directCostsTotal + getCategoryTotal(cat4Id, 'asignado');
   const projectTotalEjecutado = budgets
     .filter((b) => b.proyecto_id === filterProjectId && b.periodo === filterPeriodo)
     .reduce((sum, b) => sum + b.monto_ejecutado, 0);

@@ -696,6 +696,59 @@ if (isSimulationMode) {
   initLocalStorage();
 }
 
+let seedingPromise: Promise<void> | null = null;
+
+const ensureCategoriesAndPartidas = async () => {
+  if (isSimulationMode) return;
+
+  if (seedingPromise) {
+    return seedingPromise;
+  }
+
+  seedingPromise = (async () => {
+    const { data: cats, error: errCats } = await supabase.from('categorias_gasto').select('id');
+    if (errCats) throw errCats;
+
+    if (!cats || cats.length === 0) {
+      const seededCats: ExpenseCategory[] = [];
+      for (const cat of INITIAL_CATEGORIES) {
+        const { data: newCat, error: insertError } = await supabase
+          .from('categorias_gasto')
+          .insert([{ nombre: cat.nombre, descripcion: cat.descripcion }])
+          .select()
+          .single();
+        if (insertError) throw insertError;
+        seededCats.push(newCat as ExpenseCategory);
+      }
+
+      const catMap: Record<string, string> = {
+        'cat-1': seededCats.find((c) => c.nombre.startsWith('1.'))!.id,
+        'cat-2': seededCats.find((c) => c.nombre.startsWith('2.'))!.id,
+        'cat-3': seededCats.find((c) => c.nombre.startsWith('3.'))!.id,
+        'cat-4': seededCats.find((c) => c.nombre.startsWith('4.'))!.id,
+        'cat-5': seededCats.find((c) => c.nombre.startsWith('5.'))!.id,
+      };
+
+      const partidasToInsert = INITIAL_PARTIDAS.map((p) => ({
+        categoria_id: catMap[p.categoria_id],
+        codigo: p.codigo,
+        nombre: p.nombre,
+        descripcion: p.descripcion,
+      }));
+
+      const { error: partError } = await supabase.from('partidas_gasto').insert(partidasToInsert);
+      if (partError) throw partError;
+    }
+  })();
+
+  try {
+    await seedingPromise;
+  } catch (e) {
+    seedingPromise = null;
+    throw e;
+  }
+};
+
 // =========================================================================
 // SERVICIOS / MÉTODOS DE LA API (SUPABASE O LOCALSTORAGE)
 // =========================================================================
@@ -753,6 +806,7 @@ export const api = {
   // --- CATEGORÍAS ---
   getCategories: async (): Promise<ExpenseCategory[]> => {
     if (!isSimulationMode) {
+      await ensureCategoriesAndPartidas();
       const { data, error } = await supabase.from('categorias_gasto').select('*').order('nombre');
       if (error) throw error;
       return data as ExpenseCategory[];
@@ -764,6 +818,7 @@ export const api = {
   // --- PARTIDAS ---
   getPartidas: async (): Promise<PartidaGasto[]> => {
     if (!isSimulationMode) {
+      await ensureCategoriesAndPartidas();
       const { data, error } = await supabase.from('partidas_gasto').select('*').order('codigo');
       if (error) throw error;
       return data as PartidaGasto[];
