@@ -12,6 +12,18 @@ vi.mock('../../services/api', () => ({
   isSimulationMode: true,
 }));
 
+vi.mock('../../context/AuthContext', () => ({
+  useAuth: () => ({
+    profile: { ong_id: 'ong-test-cnbv', rol: 'administrador', aprobado: true },
+    activeOng: { nombre: 'ONG Test', logo_url: null },
+    user: null,
+    loading: false,
+    authError: null,
+    logout: vi.fn(),
+    refreshProfile: vi.fn(),
+  }),
+}));
+
 describe('CreateProjectModal (Donor Registration)', () => {
   const mockOnClose = vi.fn();
   const mockOnSuccess = vi.fn();
@@ -127,16 +139,19 @@ describe('CreateProjectModal (Donor Registration)', () => {
     const saveBtn = screen.getByRole('button', { name: /Guardar Donante/i });
     await userEvent.click(saveBtn);
 
-    // Check api call
+    // Check api call — now includes ong_id as second arg (defense-in-depth)
     await waitFor(() => {
-      expect(api.createDonante).toHaveBeenCalledWith({
-        nombre: 'Nuevo Donante Organico',
-        tipo: 'nacional',
-        pais: 'Venezuela',
-        contacto: undefined,
-        email: undefined,
-        activo: true,
-      });
+      expect(api.createDonante).toHaveBeenCalledWith(
+        {
+          nombre: 'Nuevo Donante Organico',
+          tipo: 'nacional',
+          pais: 'Venezuela',
+          contacto: undefined,
+          email: undefined,
+          activo: true,
+        },
+        'ong-test-cnbv',
+      );
     });
 
     // Form should hide, new donor should be in the list, and select message should show it selected
@@ -189,14 +204,17 @@ describe('CreateProjectModal (Donor Registration)', () => {
     await userEvent.click(saveBtn);
 
     await waitFor(() => {
-      expect(api.createDonante).toHaveBeenCalledWith({
-        nombre: 'USA Donor Agency',
-        tipo: 'extranjero',
-        pais: 'Estados Unidos',
-        contacto: 'Alice',
-        email: 'alice@usa.gov',
-        activo: true,
-      });
+      expect(api.createDonante).toHaveBeenCalledWith(
+        {
+          nombre: 'USA Donor Agency',
+          tipo: 'extranjero',
+          pais: 'Estados Unidos',
+          contacto: 'Alice',
+          email: 'alice@usa.gov',
+          activo: true,
+        },
+        'ong-test-cnbv',
+      );
     });
   });
 });

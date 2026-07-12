@@ -3,6 +3,7 @@ import { AlertTriangle } from 'lucide-react';
 import { api, isSimulationMode } from '../../services/api';
 import type { Project, ExpenseCategory, PartidaGasto, Budget } from '../../services/api';
 import { supabase } from '../../supabaseClient';
+import { useAuth } from '../../context/AuthContext';
 
 interface BudgetWizardProps {
   isOpen: boolean;
@@ -11,6 +12,7 @@ interface BudgetWizardProps {
 }
 
 export const BudgetWizard: React.FC<BudgetWizardProps> = ({ isOpen, onClose, onSuccess }) => {
+  const { profile } = useAuth();
   const [projects, setProjects] = useState<Project[]>([]);
   const [categories, setCategories] = useState<ExpenseCategory[]>([]);
   const [partidas, setPartidas] = useState<PartidaGasto[]>([]);
@@ -202,6 +204,7 @@ export const BudgetWizard: React.FC<BudgetWizardProps> = ({ isOpen, onClose, onS
               partida_id: b.partida_id,
               monto_asignado: b.monto_asignado,
               periodo: b.periodo,
+              ...(profile?.ong_id ? { ong_id: profile.ong_id } : {}),
             },
             {
               onConflict: 'proyecto_id,partida_id,periodo',

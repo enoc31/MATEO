@@ -768,14 +768,19 @@ export const api = {
     }
   },
 
-  createDonante: async (donante: Omit<Donante, 'id'>): Promise<Donante> => {
+  createDonante: async (donante: Omit<Donante, 'id'>, ongId?: string): Promise<Donante> => {
     if (!isSimulationMode) {
-      const { data, error } = await supabase.from('donantes').insert([donante]).select().single();
+      const payload = ongId ? { ...donante, ong_id: ongId } : donante;
+      const { data, error } = await supabase.from('donantes').insert([payload]).select().single();
       if (error) throw error;
       return data as Donante;
     } else {
       const donantes = JSON.parse(localStorage.getItem('cnbv_donantes') || '[]');
-      const newDonante = { ...donante, id: `don-${Date.now()}` };
+      const newDonante = {
+        ...donante,
+        id: `don-${Date.now()}`,
+        ...(ongId ? { ong_id: ongId } : {}),
+      };
       donantes.push(newDonante);
       localStorage.setItem('cnbv_donantes', JSON.stringify(donantes));
       return newDonante;
@@ -792,18 +797,35 @@ export const api = {
       if (error) throw error;
       return data as Project[];
     } else {
-      return JSON.parse(localStorage.getItem('cnbv_projects') || '[]');
+      // Resolve ongs join from localStorage so PDF names are correct
+      const projects: Project[] = JSON.parse(localStorage.getItem('cnbv_projects') || '[]');
+      const ongs: Array<{ id: string; nombre: string }> = JSON.parse(
+        localStorage.getItem('cnbv_ongs') || '[]',
+      );
+      return projects.map((p) => ({
+        ...p,
+        ongs: p.ong_id
+          ? (ongs.find((o) => o.id === p.ong_id) ?? null)
+            ? { nombre: ongs.find((o) => o.id === p.ong_id)!.nombre }
+            : null
+          : null,
+      }));
     }
   },
 
-  createProject: async (project: Omit<Project, 'id'>): Promise<Project> => {
+  createProject: async (project: Omit<Project, 'id'>, ongId?: string): Promise<Project> => {
     if (!isSimulationMode) {
-      const { data, error } = await supabase.from('proyectos').insert([project]).select().single();
+      const payload = ongId ? { ...project, ong_id: ongId } : project;
+      const { data, error } = await supabase.from('proyectos').insert([payload]).select().single();
       if (error) throw error;
       return data as Project;
     } else {
       const projects = JSON.parse(localStorage.getItem('cnbv_projects') || '[]');
-      const newProject = { ...project, id: `proj-${Date.now()}` };
+      const newProject = {
+        ...project,
+        id: `proj-${Date.now()}`,
+        ...(ongId ? { ong_id: ongId } : {}),
+      };
       projects.push(newProject);
       localStorage.setItem('cnbv_projects', JSON.stringify(projects));
       return newProject;
@@ -903,11 +925,14 @@ export const api = {
 
   importBankTransactions: async (
     txs: Omit<BankTransaction, 'id' | 'estado'>[],
+    ongId?: string,
   ): Promise<BankTransaction[]> => {
     if (!isSimulationMode) {
       const { data, error } = await supabase
         .from('transacciones_bancarias')
-        .insert(txs.map((tx) => ({ ...tx, estado: 'pendiente' })))
+        .insert(
+          txs.map((tx) => ({ ...tx, estado: 'pendiente', ...(ongId ? { ong_id: ongId } : {}) })),
+        )
         .select();
       if (error) throw error;
       return data as BankTransaction[];
@@ -1043,7 +1068,7 @@ export const api = {
 
     if (!isSimulationMode) {
       // Construcción estricta del payload para evitar cualquier propiedad fantasma (como solicitante_nombre)
-      const dbExpense = {
+      const dbExpense: Record<string, unknown> = {
         proyecto_id: newExpense.proyecto_id,
         partida_id: newExpense.partida_id,
         transaccion_id: newExpense.transaccion_id,
@@ -1057,6 +1082,7 @@ export const api = {
         estado: newExpense.estado,
         comentarios_auditoria: newExpense.comentarios_auditoria,
       };
+      if (expense.ong_id) dbExpense.ong_id = expense.ong_id;
 
       const { data, error } = await supabase
         .from('comprobantes_gasto')
@@ -1265,6 +1291,7 @@ export const api = {
             monto: donation.monto_original || donation.monto,
             estado: 'conciliado',
             csv_metadata: { moneda: donation.moneda, tipo: 'efectivo_caja' },
+            ...(donation.ong_id ? { ong_id: donation.ong_id } : {}),
           },
         ])
         .select()
@@ -1619,11 +1646,15 @@ export const api = {
     }
   },
 
-  createJornada: async (jornada: Omit<Jornada, 'id' | 'created_at'>): Promise<Jornada> => {
-    const newJornada: Jornada = {
+  createJornada: async (
+    jornada: Omit<Jornada, 'id' | 'created_at'>,
+    ongId?: string,
+  ): Promise<Jornada> => {
+    const newJornada: Jornada & { ong_id?: string } = {
       id: `jor-${Date.now()}`,
       ...jornada,
       created_at: new Date().toISOString(),
+      ...(ongId ? { ong_id: ongId } : {}),
     };
     if (!isSimulationMode) {
       const { data, error } = await supabase
@@ -1684,7 +1715,7 @@ export const api = {
       }
     }
 
-    const newBen: Beneficiary = {
+    const newBen: Beneficiary & { ong_id?: string } = {
       id: `ben-${Date.now()}`,
       ...beneficiary,
       url_firma,
@@ -1966,11 +1997,13 @@ export const requisitionsApi = {
       | 'rechazado_at'
       | 'motivo_rechazo'
     >,
+    ongId?: string,
   ): Promise<Requisition> => {
     if (!isSimulationMode) {
+      const payload = ongId ? { ...req, ong_id: ongId } : req;
       const { data, error } = await supabase
         .from('solicitudes_gasto')
-        .insert([req])
+        .insert([payload])
         .select()
         .single();
       if (error) throw error;
@@ -1990,6 +2023,7 @@ export const requisitionsApi = {
         motivo_rechazo: null,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
+        ...(ongId ? { ong_id: ongId } : {}),
       };
       reqs.unshift(newReq);
       localStorage.setItem('cnbv_requisitions', JSON.stringify(reqs));

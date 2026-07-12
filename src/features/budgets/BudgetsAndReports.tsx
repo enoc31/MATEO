@@ -16,7 +16,7 @@ import { useAuth } from '../../context/AuthContext';
 
 export const BudgetsAndReports: React.FC = () => {
   const navigate = useNavigate();
-  const { activeOng } = useAuth();
+  const { activeOng, profile } = useAuth();
   const [loading, setLoading] = useState(true);
   const [projects, setProjects] = useState<Project[]>([]);
   const [categories, setCategories] = useState<ExpenseCategory[]>([]);
@@ -237,12 +237,7 @@ export const BudgetsAndReports: React.FC = () => {
         return `${isNegative ? '-' : ''}$${parts.join(',')}`;
       };
 
-      const ongName =
-        (Array.isArray(selectedProject.ongs)
-          ? selectedProject.ongs[0]?.nombre
-          : selectedProject.ongs?.nombre) ||
-        activeOng?.nombre ||
-        'CONVENCIÓN NACIONAL BAUTISTA DE VENEZUELA';
+      const ongName = selectedProject.ongs?.nombre || activeOng?.nombre || '';
 
       // Colores de la paleta
       doc.setTextColor(47, 90, 174); // Azul Batista

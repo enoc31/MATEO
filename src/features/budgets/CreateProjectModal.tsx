@@ -4,6 +4,7 @@ import { api } from '../../services/api';
 import type { Donante } from '../../services/api';
 import { isSimulationMode } from '../../services/api';
 import { supabase } from '../../supabaseClient';
+import { useAuth } from '../../context/AuthContext';
 
 interface CreateProjectModalProps {
   isOpen: boolean;
@@ -24,6 +25,7 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
   onClose,
   onSuccess,
 }) => {
+  const { profile } = useAuth();
   const [nombre, setNombre] = useState('');
   const [descripcion, setDescripcion] = useState('');
   const [fechaInicio, setFechaInicio] = useState(new Date().toISOString().split('T')[0]);
@@ -67,7 +69,7 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
     };
 
     try {
-      const createdDonor = await api.createDonante(newDonorPayload);
+      const createdDonor = await api.createDonante(newDonorPayload, profile?.ong_id);
 
       // Update local donor list
       setDonantes((prev) => [...prev, createdDonor]);
@@ -134,6 +136,7 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
       fecha_fin: fechaFin,
       overhead_porcentaje: overheadPct,
       donante_id: donanteId,
+      ong_id: profile?.ong_id,
     };
 
     try {
