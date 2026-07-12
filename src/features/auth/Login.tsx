@@ -155,6 +155,21 @@ export const Login: React.FC = () => {
       });
       if (error) throw error;
 
+      // Invocar la Edge Function para notificar al Super Admin y a los Admins de la ONG
+      supabase.functions
+        .invoke('notify-registration', {
+          body: {
+            email,
+            nombre: nombreCompleto,
+            ongId: finalOngId,
+            rolSugerido: rolSugerido,
+          },
+        })
+        .then(({ error: fnErr }) => {
+          if (fnErr) console.error('Error invoking notify-registration Edge Function:', fnErr);
+        })
+        .catch((e) => console.error('Exception calling notify-registration Edge Function:', e));
+
       setSuccess(
         '¡Registro exitoso! Tu cuenta ha sido creada y está pendiente de aprobación por un administrador.',
       );

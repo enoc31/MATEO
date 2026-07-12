@@ -18,28 +18,29 @@
  *  8–13. Lógica pura de modelo y aislamiento RLS (sin render)
  */
 
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
-import { MemoryRouter } from 'react-router-dom';
-import { Login } from './Login';
-import * as AuthContextModule from '../../context/AuthContext';
-import type { UserRole } from '../../context/AuthContext';
-
-// ---------------------------------------------------------------------------
-// Mocks globales
-// ---------------------------------------------------------------------------
+import { vi } from 'vitest';
 
 const mockSignUp = vi.fn();
 const mockGetOngs = vi.fn();
 const mockCreateOng = vi.fn();
+const mockInvoke = vi.fn().mockResolvedValue({ data: null, error: null });
 
 vi.mock('../../supabaseClient', () => ({
   supabase: {
     auth: {
       signUp: (...args: unknown[]) => mockSignUp(...args),
     },
+    functions: {
+      invoke: (...args: unknown[]) => mockInvoke(...args),
+    },
   },
 }));
+
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
+import * as AuthContextModule from '../../context/AuthContext';
+import type { UserRole } from '../../context/AuthContext';
 
 vi.mock('../../services/api', () => ({
   isSimulationMode: false,
@@ -52,6 +53,9 @@ vi.mock('../../services/api', () => ({
 vi.mock('../../context/AuthContext', () => ({
   useAuth: vi.fn(),
 }));
+
+// Importamos Login después de que los mocks de dependencias estén declarados y registrados
+import { Login } from './Login';
 
 // ---------------------------------------------------------------------------
 // Datos de prueba
@@ -117,6 +121,7 @@ describe('Flujo de Registro de Nuevo Usuario (handleRealRegister)', () => {
     });
     mockGetOngs.mockResolvedValue([ONG_CNBV, ONG_CEV]);
     mockSignUp.mockResolvedValue({ data: { user: { id: 'new-user-uuid' } }, error: null });
+    mockInvoke.mockResolvedValue({ data: {}, error: null });
   });
 
   afterEach(() => {
