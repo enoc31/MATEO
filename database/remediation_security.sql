@@ -15,13 +15,14 @@ LANGUAGE plpgsql
 SECURITY DEFINER SET search_path = public
 AS $$
 BEGIN
-  INSERT INTO public.usuarios_perfiles (id, email, nombre_completo, rol, aprobado)
+  INSERT INTO public.usuarios_perfiles (id, email, nombre_completo, rol, aprobado, ong_id)
   VALUES (
     new.id,
     new.email,
     COALESCE(new.raw_user_meta_data->>'nombre_completo', 'Nuevo Usuario'),
     'coordinador'::user_role, -- Forzado por defecto
-    false                     -- Forzado por defecto
+    false,                    -- Forzado por defecto
+    COALESCE((new.raw_user_meta_data->>'ong_id')::uuid, '11111111-1111-1111-1111-111111111111')
   );
   RETURN new;
 END;

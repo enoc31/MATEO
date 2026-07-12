@@ -234,7 +234,9 @@ export const BudgetsAndReports: React.FC = () => {
       doc.setFont('Helvetica', 'bold');
       doc.setFontSize(16);
       const ongName =
-        selectedProject.ongs?.nombre ||
+        (Array.isArray(selectedProject.ongs)
+          ? selectedProject.ongs[0]?.nombre
+          : selectedProject.ongs?.nombre) ||
         activeOng?.nombre ||
         'CONVENCIÓN NACIONAL BAUTISTA DE VENEZUELA';
       doc.text(ongName.toUpperCase(), 105, 20, { align: 'center' });
