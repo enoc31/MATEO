@@ -302,3 +302,124 @@ describe('Principio de aislamiento — validación global cross-tenant', () => {
     });
   });
 });
+
+// ─── Simulación de políticas UPDATE ─────────────────────────────────────────
+
+/**
+ * Política UPDATE CORREGIDA de comprobantes_gasto para auditores/admins:
+ * ong_id = get_user_ong_id() AND rol autorizado
+ */
+function canUpdateComprobanteAdmin(user: SimulatedUser, row: ComprobantRow): boolean {
+  return row.ong_id === user.ong_id && ['administrador', 'auditor'].includes(user.rol);
+}
+
+/**
+ * Política UPDATE CORREGIDA de comprobantes_gasto para coordinadores:
+ * ong_id = get_user_ong_id() AND solicitante_id = uid AND estado pendiente
+ */
+function canUpdateComprobantePropioCoord(
+  user: SimulatedUser,
+  row: ComprobantRow & { estado: string },
+): boolean {
+  return (
+    row.ong_id === user.ong_id &&
+    row.solicitante_id === user.uid &&
+    ['pendiente_soporte', 'pendiente_revision'].includes(row.estado)
+  );
+}
+
+/**
+ * Política UPDATE CORREGIDA de solicitudes_gasto:
+ * ong_id = get_user_ong_id() AND rol autorizado
+ */
+function canUpdateSolicitud(user: SimulatedUser, row: SolicitudRow): boolean {
+  return row.ong_id === user.ong_id && ['administrador', 'auditor', 'director'].includes(user.rol);
+}
+
+/**
+ * Política ALL CORREGIDA de tasas_bcv:
+ * ong_id = get_user_ong_id() AND rol admin/director
+ */
+function canManageTasa(user: SimulatedUser, row: { ong_id: string }): boolean {
+  return row.ong_id === user.ong_id && ['administrador', 'director'].includes(user.rol);
+}
+
+describe('RLS UPDATE comprobantes_gasto — aislamiento cross-tenant en escritura', () => {
+  const comprobanteOngAPendiente = { ...comprobanteOngA, estado: 'pendiente_revision' };
+  const comprobanteOngBPendiente = { ...comprobanteOngB, estado: 'pendiente_revision' };
+
+  it('admin de ONG-A puede actualizar comprobantes de su ONG', () => {
+    expect(canUpdateComprobanteAdmin(adminOngA, comprobanteOngA)).toBe(true);
+  });
+
+  it('admin de ONG-A NO puede actualizar comprobantes de ONG-B', () => {
+    expect(canUpdateComprobanteAdmin(adminOngA, comprobanteOngB)).toBe(false);
+  });
+
+  it('auditor de ONG-A NO puede actualizar comprobantes de ONG-B', () => {
+    expect(canUpdateComprobanteAdmin(auditorOngA, comprobanteOngB)).toBe(false);
+  });
+
+  it('coordinador puede actualizar su propio comprobante pendiente de su ONG', () => {
+    const propio = { ...comprobanteOngBPendiente, solicitante_id: coordOngB.uid };
+    expect(canUpdateComprobantePropioCoord(coordOngB, propio)).toBe(true);
+  });
+
+  it('coordinador NO puede actualizar comprobante pendiente de ONG-A', () => {
+    const ajenoOngA = { ...comprobanteOngAPendiente, solicitante_id: coordOngB.uid };
+    // ong_id es ONG_A, pero coordinador es de ONG_B
+    ajenoOngA.ong_id = ONG_A;
+    expect(canUpdateComprobantePropioCoord(coordOngB, ajenoOngA)).toBe(false);
+  });
+});
+
+describe('RLS UPDATE solicitudes_gasto — aislamiento cross-tenant en escritura', () => {
+  it('director de ONG-B puede aprobar solicitudes de su ONG', () => {
+    expect(canUpdateSolicitud(directorOngB, solicitudOngB)).toBe(true);
+  });
+
+  it('director de ONG-B NO puede aprobar solicitudes de ONG-A', () => {
+    expect(canUpdateSolicitud(directorOngB, solicitudOngA)).toBe(false);
+  });
+
+  it('admin de ONG-A NO puede rechazar solicitudes de ONG-B', () => {
+    expect(canUpdateSolicitud(adminOngA, solicitudOngB)).toBe(false);
+  });
+
+  it('coordinador NO puede aprobar solicitudes (rol no autorizado)', () => {
+    const solicitudPropia: SolicitudRow = { ...solicitudOngB, solicitante_id: coordOngB.uid };
+    expect(canUpdateSolicitud(coordOngB, solicitudPropia)).toBe(false);
+  });
+});
+
+describe('RLS ALL tasas_bcv — aislamiento en gestión', () => {
+  const tasaOngA = { ong_id: ONG_A };
+  const tasaOngB = { ong_id: ONG_B };
+  const tasaBase = { ong_id: ONG_BASE_ID };
+
+  it('admin de ONG-A puede gestionar tasas de su ONG', () => {
+    expect(canManageTasa(adminOngA, tasaOngA)).toBe(true);
+  });
+
+  it('admin de ONG-A NO puede gestionar tasas de ONG-B', () => {
+    expect(canManageTasa(adminOngA, tasaOngB)).toBe(false);
+  });
+
+  it('director de ONG-B puede gestionar tasas de su ONG', () => {
+    expect(canManageTasa(directorOngB, tasaOngB)).toBe(true);
+  });
+
+  it('director de ONG-B NO puede gestionar tasas de ONG-A', () => {
+    expect(canManageTasa(directorOngB, tasaOngA)).toBe(false);
+  });
+
+  it('coordinador NO puede gestionar tasas (rol no autorizado)', () => {
+    expect(canManageTasa(coordOngB, tasaOngB)).toBe(false);
+  });
+
+  it('ningún usuario puede modificar tasas de la ONG base salvo que pertenezca a ella', () => {
+    // La ONG base (11111111...) solo puede ser gestionada por sus propios admins
+    expect(canManageTasa(adminOngA, tasaBase)).toBe(false);
+    expect(canManageTasa(directorOngB, tasaBase)).toBe(false);
+  });
+});
