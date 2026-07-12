@@ -69,6 +69,11 @@ const CustomCatalogManager = lazy(() =>
     default: module.CustomCatalogManager,
   })),
 );
+const ProjectPartidasConfig = lazy(() =>
+  import('./features/budgets/ProjectPartidasConfig').then((module) => ({
+    default: module.ProjectPartidasConfig,
+  })),
+);
 const BeneficiaryRegistry = lazy(() =>
   import('./features/beneficiaries/BeneficiaryRegistry').then((module) => ({
     default: module.BeneficiaryRegistry,
@@ -287,6 +292,15 @@ const MainAppContent: React.FC = () => {
             <ProtectedRoute
               allowedRoles={['administrador', 'director']}
               element={<CustomCatalogManager />}
+            />
+          }
+        />
+        <Route
+          path="project-partidas/:projectId"
+          element={
+            <ProtectedRoute
+              allowedRoles={['administrador', 'director']}
+              element={<ProjectPartidasConfig />}
             />
           }
         />

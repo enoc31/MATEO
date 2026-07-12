@@ -10,7 +10,6 @@ import type {
   ExpenseReceipt,
 } from '../../services/api';
 import { CreateProjectModal } from './CreateProjectModal';
-import { ProjectPartidasModal } from './ProjectPartidasModal';
 import { Settings } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import { jsPDF } from 'jspdf';
@@ -40,7 +39,6 @@ export const BudgetsAndReports: React.FC = () => {
   }, [uniquePeriods, filterPeriodo]);
 
   const [isCreateProjectOpen, setIsCreateProjectOpen] = useState(false);
-  const [isPartidasModalOpen, setIsPartidasModalOpen] = useState(false);
   const [ocultarCero, setOcultarCero] = useState(false);
 
   const handleProjectCreated = async (newProjId: string) => {
@@ -492,7 +490,7 @@ export const BudgetsAndReports: React.FC = () => {
 
         {filterProjectId && ['administrador', 'director'].includes(profile?.rol || '') && (
           <button
-            onClick={() => setIsPartidasModalOpen(true)}
+            onClick={() => navigate(`/app/project-partidas/${filterProjectId}`)}
             className="btn btn-outline"
             style={{
               fontSize: '0.82rem',
@@ -503,6 +501,7 @@ export const BudgetsAndReports: React.FC = () => {
               gap: '0.4rem',
               borderColor: 'var(--primary)',
               color: 'var(--primary)',
+              margin: 0,
             }}
           >
             <Settings size={15} />
@@ -881,16 +880,6 @@ export const BudgetsAndReports: React.FC = () => {
         onClose={() => setIsCreateProjectOpen(false)}
         onSuccess={handleProjectCreated}
       />
-
-      {/* Modal Configurar Partidas */}
-      {selectedProject && (
-        <ProjectPartidasModal
-          isOpen={isPartidasModalOpen}
-          onClose={() => setIsPartidasModalOpen(false)}
-          proyectoId={selectedProject.id}
-          proyectoNombre={selectedProject.nombre}
-        />
-      )}
     </div>
   );
 };
