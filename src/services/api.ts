@@ -22,6 +22,10 @@ export interface Project {
   fecha_fin: string;
   overhead_porcentaje?: number;
   donante_id?: string | null;
+  ong_id?: string;
+  ongs?: {
+    nombre: string;
+  } | null;
 }
 
 export interface ExpenseCategory {
@@ -781,7 +785,10 @@ export const api = {
   // --- PROYECTOS ---
   getProjects: async (): Promise<Project[]> => {
     if (!isSimulationMode) {
-      const { data, error } = await supabase.from('proyectos').select('*').order('nombre');
+      const { data, error } = await supabase
+        .from('proyectos')
+        .select('*, ongs (nombre)')
+        .order('nombre');
       if (error) throw error;
       return data as Project[];
     } else {

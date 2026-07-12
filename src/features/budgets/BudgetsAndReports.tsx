@@ -233,7 +233,10 @@ export const BudgetsAndReports: React.FC = () => {
       doc.setTextColor(47, 90, 174); // Azul Batista
       doc.setFont('Helvetica', 'bold');
       doc.setFontSize(16);
-      const ongName = activeOng?.nombre || 'CONVENCIÓN NACIONAL BAUTISTA DE VENEZUELA';
+      const ongName =
+        selectedProject.ongs?.nombre ||
+        activeOng?.nombre ||
+        'CONVENCIÓN NACIONAL BAUTISTA DE VENEZUELA';
       doc.text(ongName.toUpperCase(), 105, 20, { align: 'center' });
 
       doc.setTextColor(7, 58, 17); // Verde
