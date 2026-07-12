@@ -46,7 +46,7 @@ CREATE POLICY "Visualización de solicitudes según rol"
   USING (
     ong_id = public.get_user_ong_id()
     AND (
-      auth.uid() = creador_id
+      auth.uid() = solicitante_id
       OR EXISTS (
         SELECT 1 FROM public.usuarios_perfiles
         WHERE id = auth.uid()
@@ -131,3 +131,4 @@ WHERE schemaname = 'public'
     'tasas_bcv'
   )
 ORDER BY tablename, policyname;
+

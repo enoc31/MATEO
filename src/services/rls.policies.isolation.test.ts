@@ -31,7 +31,7 @@ interface ComprobantRow {
 interface SolicitudRow {
   id: string;
   ong_id: string;
-  creador_id: string;
+  solicitante_id: string;
   descripcion: string;
 }
 
@@ -70,7 +70,7 @@ function canReadComprobante_VULNERABLE(user: SimulatedUser, row: ComprobantRow):
  */
 function canReadSolicitud(user: SimulatedUser, row: SolicitudRow): boolean {
   const ongMatch = row.ong_id === user.ong_id;
-  const isCreator = row.creador_id === user.uid;
+  const isCreator = row.solicitante_id === user.uid;
   const isAuthorizedRole = ['administrador', 'auditor', 'director'].includes(user.rol);
   return ongMatch && (isCreator || isAuthorizedRole);
 }
@@ -118,13 +118,13 @@ const comprobanteOngB: ComprobantRow = {
 const solicitudOngA: SolicitudRow = {
   id: 'sol-1',
   ong_id: ONG_A,
-  creador_id: 'user-coord-a',
+  solicitante_id: 'user-coord-a',
   descripcion: 'Compra ONG A',
 };
 const solicitudOngB: SolicitudRow = {
   id: 'sol-2',
   ong_id: ONG_B,
-  creador_id: 'user-coord-b',
+  solicitante_id: 'user-coord-b',
   descripcion: 'Compra ONG B',
 };
 
@@ -202,14 +202,14 @@ describe('RLS solicitudes_gasto — política CORREGIDA', () => {
     // tiene creador_id = 'user-coord-b' y coordOngB.uid = 'user-coord-b' → es el creador
     const solicitudDeOtroCreadorOngB: SolicitudRow = {
       ...solicitudOngB,
-      creador_id: 'otro-user-ong-b', // Diferente creador, misma ONG
+      solicitante_id: 'otro-user-ong-b', // Diferente solicitante, misma ONG
     };
     // Coordinador NO puede ver solicitudes de otro creador (no es creador ni tiene rol autorizado)
     expect(canReadSolicitud(coordOngB, solicitudDeOtroCreadorOngB)).toBe(false);
   });
 
   it('coordinador de ONG-B SÍ puede ver su propia solicitud de ONG-B', () => {
-    const propiaSolicitud: SolicitudRow = { ...solicitudOngB, creador_id: coordOngB.uid };
+    const propiaSolicitud: SolicitudRow = { ...solicitudOngB, solicitante_id: coordOngB.uid };
     expect(canReadSolicitud(coordOngB, propiaSolicitud)).toBe(true);
   });
 });
