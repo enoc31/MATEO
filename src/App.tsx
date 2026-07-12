@@ -64,6 +64,11 @@ const ImportBankStatement = lazy(() =>
 const TasasManager = lazy(() =>
   import('./features/tasas/TasasManager').then((module) => ({ default: module.TasasManager })),
 );
+const CustomCatalogManager = lazy(() =>
+  import('./features/budgets/CustomCatalogManager').then((module) => ({
+    default: module.CustomCatalogManager,
+  })),
+);
 const BeneficiaryRegistry = lazy(() =>
   import('./features/beneficiaries/BeneficiaryRegistry').then((module) => ({
     default: module.BeneficiaryRegistry,
@@ -273,6 +278,15 @@ const MainAppContent: React.FC = () => {
             <ProtectedRoute
               allowedRoles={['administrador', 'director']}
               element={<TasasManager />}
+            />
+          }
+        />
+        <Route
+          path="catalog"
+          element={
+            <ProtectedRoute
+              allowedRoles={['administrador', 'director']}
+              element={<CustomCatalogManager />}
             />
           }
         />

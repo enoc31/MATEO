@@ -11,6 +11,7 @@ import {
   UserCheck,
   CalendarDays,
   Building,
+  Tag,
 } from 'lucide-react';
 
 export interface MenuItemConfig {
@@ -93,6 +94,13 @@ export const menuItems: MenuItemConfig[] = [
     roles: ['administrador', 'director'],
   },
   {
+    id: 'catalog',
+    label: 'Catálogo de Partidas',
+    iconName: 'Tag',
+    color: '#059669', // Emerald green
+    roles: ['administrador', 'director'],
+  },
+  {
     id: 'users',
     label: 'Usuarios',
     iconName: 'Users',
@@ -142,6 +150,8 @@ export const getMenuIcon = (name: string, size = 20) => {
       return <CalendarDays {...props} />;
     case 'Building':
       return <Building {...props} />;
+    case 'Tag':
+      return <Tag {...props} />;
     default:
       return null;
   }

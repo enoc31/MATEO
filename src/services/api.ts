@@ -2138,4 +2138,61 @@ export const requisitionsApi = {
       return updated;
     }
   },
+
+  // --- CATÁLOGO PERSONALIZADO ---
+  getCatalog: async (): Promise<{ categories: ExpenseCategory[]; partidas: PartidaGasto[] }> => {
+    if (isSimulationMode) {
+      return { categories: [], partidas: [] };
+    }
+    const [{ data: cats, error: catsErr }, { data: parts, error: partsErr }] = await Promise.all([
+      supabase.from('categorias_gasto').select('*').order('nombre'),
+      supabase.from('partidas_gasto').select('*').order('codigo'),
+    ]);
+    if (catsErr) throw catsErr;
+    if (partsErr) throw partsErr;
+    return {
+      categories: (cats ?? []) as ExpenseCategory[],
+      partidas: (parts ?? []) as PartidaGasto[],
+    };
+  },
+
+  createCategoria: async (
+    data: { nombre: string; descripcion?: string },
+    ongId: string,
+  ): Promise<ExpenseCategory> => {
+    if (isSimulationMode) throw new Error('No disponible en modo simulación');
+    const { data: cat, error } = await supabase
+      .from('categorias_gasto')
+      .insert([{ ...data, ong_id: ongId }])
+      .select()
+      .single();
+    if (error) throw error;
+    return cat as ExpenseCategory;
+  },
+
+  deleteCategoria: async (categoriaId: string): Promise<void> => {
+    if (isSimulationMode) throw new Error('No disponible en modo simulación');
+    const { error } = await supabase.from('categorias_gasto').delete().eq('id', categoriaId);
+    if (error) throw error;
+  },
+
+  createPartida: async (
+    data: { categoria_id: string; codigo: string; nombre: string; descripcion?: string },
+    ongId: string,
+  ): Promise<PartidaGasto> => {
+    if (isSimulationMode) throw new Error('No disponible en modo simulación');
+    const { data: partida, error } = await supabase
+      .from('partidas_gasto')
+      .insert([{ ...data, ong_id: ongId }])
+      .select()
+      .single();
+    if (error) throw error;
+    return partida as PartidaGasto;
+  },
+
+  deletePartida: async (partidaId: string): Promise<void> => {
+    if (isSimulationMode) throw new Error('No disponible en modo simulación');
+    const { error } = await supabase.from('partidas_gasto').delete().eq('id', partidaId);
+    if (error) throw error;
+  },
 };
