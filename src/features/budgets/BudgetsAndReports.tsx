@@ -228,17 +228,26 @@ export const BudgetsAndReports: React.FC = () => {
       if (!selectedProject) return;
 
       const doc = new jsPDF();
+      const formatCurrency = (amount: number): string => {
+        const isNegative = amount < 0;
+        const absVal = Math.abs(amount);
+        const fixed = absVal.toFixed(2);
+        const parts = fixed.split('.');
+        parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+        return `${isNegative ? '-' : ''}$${parts.join(',')}`;
+      };
 
-      // Colores de la paleta
-      doc.setTextColor(47, 90, 174); // Azul Batista
-      doc.setFont('Helvetica', 'bold');
-      doc.setFontSize(16);
       const ongName =
         (Array.isArray(selectedProject.ongs)
           ? selectedProject.ongs[0]?.nombre
           : selectedProject.ongs?.nombre) ||
         activeOng?.nombre ||
         'CONVENCIÓN NACIONAL BAUTISTA DE VENEZUELA';
+
+      // Colores de la paleta
+      doc.setTextColor(47, 90, 174); // Azul Batista
+      doc.setFont('Helvetica', 'bold');
+      doc.setFontSize(16);
       doc.text(ongName.toUpperCase(), 105, 20, { align: 'center' });
 
       doc.setTextColor(7, 58, 17); // Verde
@@ -264,10 +273,10 @@ export const BudgetsAndReports: React.FC = () => {
 
       doc.setFontSize(9);
       doc.text('Categoría de Gasto', 15, 68);
-      doc.text('Asignado', 110, 68);
-      doc.text('Comprometido', 135, 68);
-      doc.text('Ejecutado', 165, 68);
-      doc.text('Disponible', 182, 68);
+      doc.text('Asignado', 120, 68, { align: 'right' });
+      doc.text('Comprometido', 145, 68, { align: 'right' });
+      doc.text('Ejecutado', 170, 68, { align: 'right' });
+      doc.text('Disponible', 195, 68, { align: 'right' });
 
       doc.line(15, 70, 195, 70);
 
@@ -281,10 +290,10 @@ export const BudgetsAndReports: React.FC = () => {
         doc.setFont('Helvetica', 'bold');
         doc.text(cat.nombre.substring(0, 48), 15, yOffset);
         doc.setFont('Helvetica', 'normal');
-        doc.text(`$${asignado.toFixed(2)}`, 110, yOffset);
-        doc.text(`$${comprometido.toFixed(2)}`, 135, yOffset);
-        doc.text(`$${ejecutado.toFixed(2)}`, 165, yOffset);
-        doc.text(`$${disponible.toFixed(2)}`, 182, yOffset);
+        doc.text(formatCurrency(asignado), 120, yOffset, { align: 'right' });
+        doc.text(formatCurrency(comprometido), 145, yOffset, { align: 'right' });
+        doc.text(formatCurrency(ejecutado), 170, yOffset, { align: 'right' });
+        doc.text(formatCurrency(disponible), 195, yOffset, { align: 'right' });
 
         doc.line(15, yOffset + 2, 195, yOffset + 2);
         yOffset += 8;
@@ -293,10 +302,10 @@ export const BudgetsAndReports: React.FC = () => {
       // Sumatorias Totales
       doc.setFont('Helvetica', 'bold');
       doc.text('TOTAL PROYECTO', 15, yOffset);
-      doc.text(`$${projectTotalAsignado.toFixed(2)}`, 110, yOffset);
-      doc.text(`$${projectTotalComprometido.toFixed(2)}`, 135, yOffset);
-      doc.text(`$${projectTotalEjecutado.toFixed(2)}`, 165, yOffset);
-      doc.text(`$${projectTotalDisponible.toFixed(2)}`, 182, yOffset);
+      doc.text(formatCurrency(projectTotalAsignado), 120, yOffset, { align: 'right' });
+      doc.text(formatCurrency(projectTotalComprometido), 145, yOffset, { align: 'right' });
+      doc.text(formatCurrency(projectTotalEjecutado), 170, yOffset, { align: 'right' });
+      doc.text(formatCurrency(projectTotalDisponible), 195, yOffset, { align: 'right' });
 
       yOffset += 15;
       doc.text('DETALLE DE EJECUCIÓN POR PARTIDAS', 15, yOffset);
@@ -304,9 +313,9 @@ export const BudgetsAndReports: React.FC = () => {
 
       doc.setFontSize(8);
       doc.text('Partida', 15, yOffset);
-      doc.text('Monto Asignado', 110, yOffset);
-      doc.text('Monto Ejecutado', 145, yOffset);
-      doc.text('Disponible', 175, yOffset);
+      doc.text('Monto Asignado', 135, yOffset, { align: 'right' });
+      doc.text('Monto Ejecutado', 165, yOffset, { align: 'right' });
+      doc.text('Disponible', 195, yOffset, { align: 'right' });
       doc.line(15, yOffset + 2, 195, yOffset + 2);
 
       doc.setFont('Helvetica', 'normal');
@@ -332,9 +341,9 @@ export const BudgetsAndReports: React.FC = () => {
             : info.disponible;
 
         doc.text(`[${p.codigo}] ${p.nombre.substring(0, 45)}`, 15, yOffset);
-        doc.text(`$${finalAsignado.toFixed(2)}`, 110, yOffset);
-        doc.text(`$${info.ejecutado.toFixed(2)}`, 145, yOffset);
-        doc.text(`$${finalDisponible.toFixed(2)}`, 175, yOffset);
+        doc.text(formatCurrency(finalAsignado), 135, yOffset, { align: 'right' });
+        doc.text(formatCurrency(info.ejecutado), 165, yOffset, { align: 'right' });
+        doc.text(formatCurrency(finalDisponible), 195, yOffset, { align: 'right' });
 
         doc.line(15, yOffset + 2, 195, yOffset + 2);
         yOffset += 7;
