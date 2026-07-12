@@ -74,6 +74,11 @@ const ProjectPartidasConfig = lazy(() =>
     default: module.ProjectPartidasConfig,
   })),
 );
+const CreateProjectPage = lazy(() =>
+  import('./features/budgets/CreateProjectPage').then((module) => ({
+    default: module.CreateProjectPage,
+  })),
+);
 const BeneficiaryRegistry = lazy(() =>
   import('./features/beneficiaries/BeneficiaryRegistry').then((module) => ({
     default: module.BeneficiaryRegistry,
@@ -301,6 +306,15 @@ const MainAppContent: React.FC = () => {
             <ProtectedRoute
               allowedRoles={['administrador', 'director']}
               element={<ProjectPartidasConfig />}
+            />
+          }
+        />
+        <Route
+          path="create-project"
+          element={
+            <ProtectedRoute
+              allowedRoles={['administrador', 'director']}
+              element={<CreateProjectPage />}
             />
           }
         />

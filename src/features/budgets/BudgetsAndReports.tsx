@@ -9,7 +9,6 @@ import type {
   Budget,
   ExpenseReceipt,
 } from '../../services/api';
-import { CreateProjectModal } from './CreateProjectModal';
 import { Settings } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import { jsPDF } from 'jspdf';
@@ -38,14 +37,7 @@ export const BudgetsAndReports: React.FC = () => {
     }
   }, [uniquePeriods, filterPeriodo]);
 
-  const [isCreateProjectOpen, setIsCreateProjectOpen] = useState(false);
   const [ocultarCero, setOcultarCero] = useState(false);
-
-  const handleProjectCreated = async (newProjId: string) => {
-    await loadData();
-    setFilterProjectId(newProjId);
-    navigate('/app/budget-wizard');
-  };
 
   const loadData = async () => {
     setLoading(true);
@@ -408,7 +400,7 @@ export const BudgetsAndReports: React.FC = () => {
 
         <div style={{ display: 'flex', gap: '0.75rem' }}>
           <button
-            onClick={() => setIsCreateProjectOpen(true)}
+            onClick={() => navigate('/app/create-project')}
             className="btn btn-outline"
             style={{
               fontSize: '0.85rem',
@@ -871,15 +863,6 @@ export const BudgetsAndReports: React.FC = () => {
           </div>
         </div>
       </div>
-
-      {/* Modal Asistente de Presupuesto - Ahora abre en nueva pestaña */}
-
-      {/* Modal Crear Proyecto */}
-      <CreateProjectModal
-        isOpen={isCreateProjectOpen}
-        onClose={() => setIsCreateProjectOpen(false)}
-        onSuccess={handleProjectCreated}
-      />
     </div>
   );
 };
