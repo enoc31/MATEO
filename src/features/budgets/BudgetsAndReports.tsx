@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Briefcase, FileSpreadsheet, FileText, AlertTriangle } from 'lucide-react';
+import { Plus, Briefcase, FileSpreadsheet, FileText, AlertTriangle, EyeOff } from 'lucide-react';
 import { api } from '../../services/api';
 import type {
   Project,
@@ -41,6 +41,7 @@ export const BudgetsAndReports: React.FC = () => {
 
   const [isCreateProjectOpen, setIsCreateProjectOpen] = useState(false);
   const [isPartidasModalOpen, setIsPartidasModalOpen] = useState(false);
+  const [ocultarCero, setOcultarCero] = useState(false);
 
   const handleProjectCreated = async (newProjId: string) => {
     await loadData();
@@ -530,6 +531,29 @@ export const BudgetsAndReports: React.FC = () => {
             )}
           </select>
         </div>
+
+        <button
+          onClick={() => setOcultarCero(!ocultarCero)}
+          className={`btn ${ocultarCero ? 'btn-primary' : 'btn-outline'}`}
+          style={{
+            fontSize: '0.82rem',
+            fontWeight: 600,
+            padding: '0.45rem 0.85rem',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.4rem',
+            margin: 0,
+          }}
+          disabled={!filterProjectId}
+          title={
+            ocultarCero
+              ? 'Mostrar todas las partidas'
+              : 'Ocultar partidas y categorías con presupuesto asignado en 0'
+          }
+        >
+          <EyeOff size={15} />
+          {ocultarCero ? 'Mostrar Todo' : 'Ocultar Presupuestos en $0'}
+        </button>
       </div>
 
       {/* Contenido en dos columnas */}
@@ -576,128 +600,147 @@ export const BudgetsAndReports: React.FC = () => {
             </div>
           ) : (
             <div>
-              {categories.map((cat) => {
-                const catPartidas = partidas.filter((p) => p.categoria_id === cat.id);
-                return (
-                  <div key={cat.id} style={{ marginBottom: '1.75rem' }}>
-                    <div
-                      style={{
-                        backgroundColor: 'rgba(var(--primary-rgb), 0.08)',
-                        padding: '0.5rem 1rem',
-                        fontWeight: 700,
-                        fontSize: '0.9rem',
-                        color: 'var(--primary)',
-                        borderLeft: '3px solid var(--primary)',
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                      }}
-                    >
-                      <span>{cat.nombre}</span>
-                      <span>Total: {formatCurrency(getCategoryTotal(cat.id, 'asignado'))}</span>
-                    </div>
-
-                    <div style={{ overflowX: 'auto' }}>
-                      <table
-                        style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.8rem' }}
+              {categories
+                .map((cat) => {
+                  let catPartidas = partidas.filter((p) => p.categoria_id === cat.id);
+                  if (ocultarCero) {
+                    catPartidas = catPartidas.filter((p) => {
+                      const info = getPartidaBudgetInfo(p.id);
+                      const finalAsignado = p.codigo === '4.3' ? calculatedOverhead : info.asignado;
+                      return finalAsignado > 0;
+                    });
+                  }
+                  return { cat, catPartidas };
+                })
+                .filter(({ catPartidas }) => catPartidas.length > 0)
+                .map(({ cat, catPartidas }) => {
+                  return (
+                    <div key={cat.id} style={{ marginBottom: '1.75rem' }}>
+                      <div
+                        style={{
+                          backgroundColor: 'rgba(var(--primary-rgb), 0.08)',
+                          padding: '0.5rem 1rem',
+                          fontWeight: 700,
+                          fontSize: '0.9rem',
+                          color: 'var(--primary)',
+                          borderLeft: '3px solid var(--primary)',
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                        }}
                       >
-                        <thead>
-                          <tr
-                            style={{
-                              borderBottom: '1px solid var(--border-color)',
-                              textAlign: 'left',
-                              opacity: 0.7,
-                            }}
-                          >
-                            <th style={{ padding: '0.5rem', width: '80px' }}>Código</th>
-                            <th style={{ padding: '0.5rem' }}>Partida Contable</th>
-                            <th style={{ padding: '0.5rem', textAlign: 'right' }}>Asignado</th>
-                            <th style={{ padding: '0.5rem', textAlign: 'right' }}>Comprometido</th>
-                            <th style={{ padding: '0.5rem', textAlign: 'right' }}>Ejecutado</th>
-                            <th style={{ padding: '0.5rem', textAlign: 'right' }}>Disponible</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {catPartidas.map((p) => {
-                            const info = getPartidaBudgetInfo(p.id);
-                            const finalAsignado =
-                              p.codigo === '4.3' ? calculatedOverhead : info.asignado;
-                            const finalDisponible =
-                              p.codigo === '4.3'
-                                ? calculatedOverhead - info.ejecutado - info.comprometido
-                                : info.disponible;
+                        <span>{cat.nombre}</span>
+                        <span>Total: {formatCurrency(getCategoryTotal(cat.id, 'asignado'))}</span>
+                      </div>
 
-                            return (
-                              <tr key={p.id} style={{ borderBottom: '1px solid rgba(0,0,0,0.05)' }}>
-                                <td
-                                  style={{
-                                    padding: '0.6rem 0.5rem',
-                                    fontWeight: 700,
-                                    color: 'var(--primary)',
-                                  }}
+                      <div style={{ overflowX: 'auto' }}>
+                        <table
+                          style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.8rem' }}
+                        >
+                          <thead>
+                            <tr
+                              style={{
+                                borderBottom: '1px solid var(--border-color)',
+                                textAlign: 'left',
+                                opacity: 0.7,
+                              }}
+                            >
+                              <th style={{ padding: '0.5rem', width: '80px' }}>Código</th>
+                              <th style={{ padding: '0.5rem' }}>Partida Contable</th>
+                              <th style={{ padding: '0.5rem', textAlign: 'right' }}>Asignado</th>
+                              <th style={{ padding: '0.5rem', textAlign: 'right' }}>
+                                Comprometido
+                              </th>
+                              <th style={{ padding: '0.5rem', textAlign: 'right' }}>Ejecutado</th>
+                              <th style={{ padding: '0.5rem', textAlign: 'right' }}>Disponible</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {catPartidas.map((p) => {
+                              const info = getPartidaBudgetInfo(p.id);
+                              const finalAsignado =
+                                p.codigo === '4.3' ? calculatedOverhead : info.asignado;
+                              const finalDisponible =
+                                p.codigo === '4.3'
+                                  ? calculatedOverhead - info.ejecutado - info.comprometido
+                                  : info.disponible;
+
+                              return (
+                                <tr
+                                  key={p.id}
+                                  style={{ borderBottom: '1px solid rgba(0,0,0,0.05)' }}
                                 >
-                                  {p.codigo}
-                                </td>
-                                <td style={{ padding: '0.6rem 0.5rem', fontWeight: 500 }}>
-                                  {p.nombre}
-                                  <span
+                                  <td
                                     style={{
-                                      display: 'block',
-                                      fontSize: '0.7rem',
-                                      opacity: 0.5,
-                                      fontWeight: 'normal',
+                                      padding: '0.6rem 0.5rem',
+                                      fontWeight: 700,
+                                      color: 'var(--primary)',
                                     }}
                                   >
-                                    {p.descripcion}
-                                  </span>
-                                </td>
-                                <td
-                                  style={{
-                                    padding: '0.6rem 0.5rem',
-                                    textAlign: 'right',
-                                    fontWeight: 600,
-                                  }}
-                                >
-                                  {formatCurrency(finalAsignado)}
-                                </td>
-                                <td
-                                  style={{
-                                    padding: '0.6rem 0.5rem',
-                                    textAlign: 'right',
-                                    color: info.comprometido > 0 ? 'var(--secondary)' : 'inherit',
-                                  }}
-                                >
-                                  {formatCurrency(info.comprometido)}
-                                </td>
-                                <td
-                                  style={{
-                                    padding: '0.6rem 0.5rem',
-                                    textAlign: 'right',
-                                    color: 'var(--success)',
-                                    fontWeight: 600,
-                                  }}
-                                >
-                                  {formatCurrency(info.ejecutado)}
-                                </td>
-                                <td
-                                  style={{
-                                    padding: '0.6rem 0.5rem',
-                                    textAlign: 'right',
-                                    fontWeight: 700,
-                                    color:
-                                      finalDisponible < 0 ? 'var(--danger)' : 'var(--neutral-dark)',
-                                  }}
-                                >
-                                  {formatCurrency(finalDisponible)}
-                                </td>
-                              </tr>
-                            );
-                          })}
-                        </tbody>
-                      </table>
+                                    {p.codigo}
+                                  </td>
+                                  <td style={{ padding: '0.6rem 0.5rem', fontWeight: 500 }}>
+                                    {p.nombre}
+                                    <span
+                                      style={{
+                                        display: 'block',
+                                        fontSize: '0.7rem',
+                                        opacity: 0.5,
+                                        fontWeight: 'normal',
+                                      }}
+                                    >
+                                      {p.descripcion}
+                                    </span>
+                                  </td>
+                                  <td
+                                    style={{
+                                      padding: '0.6rem 0.5rem',
+                                      textAlign: 'right',
+                                      fontWeight: 600,
+                                    }}
+                                  >
+                                    {formatCurrency(finalAsignado)}
+                                  </td>
+                                  <td
+                                    style={{
+                                      padding: '0.6rem 0.5rem',
+                                      textAlign: 'right',
+                                      color: info.comprometido > 0 ? 'var(--secondary)' : 'inherit',
+                                    }}
+                                  >
+                                    {formatCurrency(info.comprometido)}
+                                  </td>
+                                  <td
+                                    style={{
+                                      padding: '0.6rem 0.5rem',
+                                      textAlign: 'right',
+                                      color: 'var(--success)',
+                                      fontWeight: 600,
+                                    }}
+                                  >
+                                    {formatCurrency(info.ejecutado)}
+                                  </td>
+                                  <td
+                                    style={{
+                                      padding: '0.6rem 0.5rem',
+                                      textAlign: 'right',
+                                      fontWeight: 700,
+                                      color:
+                                        finalDisponible < 0
+                                          ? 'var(--danger)'
+                                          : 'var(--neutral-dark)',
+                                    }}
+                                  >
+                                    {formatCurrency(finalDisponible)}
+                                  </td>
+                                </tr>
+                              );
+                            })}
+                          </tbody>
+                        </table>
+                      </div>
                     </div>
-                  </div>
-                );
-              })}
+                  );
+                })}
             </div>
           )}
         </div>

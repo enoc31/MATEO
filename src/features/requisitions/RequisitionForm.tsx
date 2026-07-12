@@ -22,7 +22,6 @@ export const RequisitionForm: React.FC<RequisitionFormProps> = ({ onClose, onSuc
   // Lists
   const [projects, setProjects] = useState<Project[]>([]);
   const [categories, setCategories] = useState<ExpenseCategory[]>([]);
-  const [partidas, setPartidas] = useState<PartidaGasto[]>([]);
   const [projectPartidas, setProjectPartidas] = useState<PartidaGasto[]>([]);
 
   // UI states
@@ -32,14 +31,9 @@ export const RequisitionForm: React.FC<RequisitionFormProps> = ({ onClose, onSuc
   useEffect(() => {
     const loadFormOptions = async () => {
       try {
-        const [projData, catData, partData] = await Promise.all([
-          api.getProjects(),
-          api.getCategories(),
-          api.getPartidas(),
-        ]);
+        const [projData, catData] = await Promise.all([api.getProjects(), api.getCategories()]);
         setProjects(projData.filter((p) => p.activo));
         setCategories(catData);
-        setPartidas(partData);
       } catch (err) {
         console.error('Error loading form options:', err);
         setError('Error al cargar proyectos y categorías.');
