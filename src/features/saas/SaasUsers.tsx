@@ -323,7 +323,10 @@ export const SaasUsers: React.FC = () => {
               ) : (
                 filteredUsers.map((user) => {
                   const isEditing = isEditingId === user.id;
-                  const displayOng = user.ongs?.nombre || 'Convención Nacional Bautista';
+                  const displayOng =
+                    user.rol === 'super_admin'
+                      ? 'No aplica (Super Admin SaaS)'
+                      : user.ongs?.nombre || 'Convención Nacional Bautista';
                   return (
                     <tr key={user.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
                       {/* Name / Email */}
@@ -338,7 +341,7 @@ export const SaasUsers: React.FC = () => {
 
                       {/* ONG Assignment */}
                       <td style={{ padding: '1rem 1.5rem' }}>
-                        {isEditing ? (
+                        {isEditing && user.rol !== 'super_admin' ? (
                           <select
                             value={editOngId}
                             onChange={(e) => setEditOngId(e.target.value)}
