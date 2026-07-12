@@ -144,7 +144,7 @@ describe('PDF ongName — logica de fallback', () => {
   });
 
   it('cae al activeOng solo cuando proyecto.ongs es null', () => {
-    const projectOng: { nombre: string } | null = null;
+    const projectOng: any = null;
     const activeOngNombre = 'ONG del Usuario como fallback';
 
     const ongName = projectOng?.nombre || activeOngNombre || '';
@@ -153,7 +153,7 @@ describe('PDF ongName — logica de fallback', () => {
   });
 
   it('cadena vacia si tanto proyecto.ongs como activeOng son null', () => {
-    const projectOng: { nombre: string } | null = null;
+    const projectOng: any = null;
     const activeOngNombre: string | null | undefined = null;
 
     const ongName = projectOng?.nombre || activeOngNombre || '';

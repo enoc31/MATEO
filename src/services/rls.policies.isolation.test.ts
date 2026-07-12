@@ -191,7 +191,7 @@ describe('RLS solicitudes_gasto — política CORREGIDA', () => {
   });
 
   it('coordinador de ONG-B puede ver su propia solicitud', () => {
-    const propia: SolicitudRow = { ...solicitudOngB, creador_id: coordOngB.uid };
+    const propia: SolicitudRow = { ...solicitudOngB, solicitante_id: coordOngB.uid };
     expect(canReadSolicitud(coordOngB, propia)).toBe(true);
   });
 

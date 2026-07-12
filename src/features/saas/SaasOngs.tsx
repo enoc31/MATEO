@@ -1,16 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { api } from '../../services/api';
+import type { Ong } from '../../services/api';
 import { Plus, Edit2, Check, X, Image as ImageIcon } from 'lucide-react';
 
-interface OngItem {
-  id: string;
-  nombre: string;
-  logo_url: string | null;
-  created_at: string;
-}
-
 export const SaasOngs: React.FC = () => {
-  const [ongs, setOngs] = useState<OngItem[]>([]);
+  const [ongs, setOngs] = useState<Ong[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
@@ -64,7 +58,7 @@ export const SaasOngs: React.FC = () => {
     }
   };
 
-  const handleStartEdit = (ong: OngItem) => {
+  const handleStartEdit = (ong: Ong) => {
     setIsEditingId(ong.id);
     setEditName(ong.nombre);
     setEditLogoUrl(ong.logo_url || '');

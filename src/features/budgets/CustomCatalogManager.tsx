@@ -15,7 +15,7 @@ import {
 } from 'lucide-react';
 import { api } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
-import { useNotification } from '../../components/NotificationProvider';
+import { useNotifications } from '../../components/NotificationProvider';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -23,7 +23,7 @@ interface Category {
   id: string;
   nombre: string;
   descripcion?: string;
-  ong_id: string;
+  ong_id?: string;
 }
 
 interface Partida {
@@ -32,7 +32,7 @@ interface Partida {
   codigo: string;
   nombre: string;
   descripcion?: string;
-  ong_id: string;
+  ong_id?: string;
 }
 
 // ─── Constants ───────────────────────────────────────────────────────────────
@@ -224,7 +224,7 @@ const PartidaBadge: React.FC<PartidaBadgeProps> = ({ isBase }) =>
 
 export const CustomCatalogManager: React.FC = () => {
   const { profile } = useAuth();
-  const { showNotification } = useNotification();
+  const { addNotification } = useNotifications();
 
   const [categories, setCategories] = useState<Category[]>([]);
   const [partidas, setPartidas] = useState<Partida[]>([]);
@@ -247,14 +247,14 @@ export const CustomCatalogManager: React.FC = () => {
       setCategories(cats);
       setPartidas(parts);
       // Expand all categories by default
-      setExpandedCats(new Set(cats.map((c) => c.id)));
+      setExpandedCats(new Set(cats.map((c: Category) => c.id)));
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : 'Error al cargar el catálogo';
-      showNotification(msg, 'error');
+      addNotification(msg, 'warning');
     } finally {
       setLoading(false);
     }
-  }, [showNotification]);
+  }, [addNotification]);
 
   useEffect(() => {
     fetchData();
@@ -273,7 +273,7 @@ export const CustomCatalogManager: React.FC = () => {
 
   const handleAddCategory = async (values: { nombre: string; descripcion?: string }) => {
     await api.createCategoria({ nombre: values.nombre, descripcion: values.descripcion }, ongId);
-    showNotification('Categoría creada exitosamente', 'success');
+    addNotification('Categoría creada exitosamente', 'success');
     setAddingCat(false);
     await fetchData();
   };
@@ -281,9 +281,9 @@ export const CustomCatalogManager: React.FC = () => {
   const handleDeleteCategory = async (cat: Category) => {
     const partidasInCat = partidas.filter((p) => p.categoria_id === cat.id && p.ong_id === ongId);
     if (partidasInCat.length > 0) {
-      showNotification(
+      addNotification(
         `No se puede eliminar la categoría "${cat.nombre}" porque tiene ${partidasInCat.length} partida(s) asociada(s). Elimina primero las partidas.`,
-        'error',
+        'warning',
       );
       return;
     }
@@ -294,11 +294,11 @@ export const CustomCatalogManager: React.FC = () => {
     setDeletingId(cat.id);
     try {
       await api.deleteCategoria(cat.id);
-      showNotification('Categoría eliminada', 'success');
+      addNotification('Categoría eliminada', 'success');
       await fetchData();
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : 'Error al eliminar';
-      showNotification(msg, 'error');
+      addNotification(msg, 'warning');
     } finally {
       setDeletingId(null);
     }
@@ -318,7 +318,7 @@ export const CustomCatalogManager: React.FC = () => {
       },
       ongId,
     );
-    showNotification('Partida creada exitosamente', 'success');
+    addNotification('Partida creada exitosamente', 'success');
     setAddingPartidaFor(null);
     await fetchData();
   };
@@ -333,17 +333,17 @@ export const CustomCatalogManager: React.FC = () => {
     setDeletingId(partida.id);
     try {
       await api.deletePartida(partida.id);
-      showNotification('Partida eliminada', 'success');
+      addNotification('Partida eliminada', 'success');
       await fetchData();
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : 'Error al eliminar';
       if (msg.includes('foreign key') || msg.includes('violates')) {
-        showNotification(
+        addNotification(
           'No se puede eliminar: esta partida tiene presupuestos o comprobantes activos.',
-          'error',
+          'warning',
         );
       } else {
-        showNotification(msg, 'error');
+        addNotification(msg, 'warning');
       }
     } finally {
       setDeletingId(null);
@@ -503,11 +503,9 @@ export const CustomCatalogManager: React.FC = () => {
             {catPartidas.length} partida{catPartidas.length !== 1 ? 's' : ''}
           </span>
           {isBase ? (
-            <Shield
-              size={14}
-              title="Categoría base UNDG — no editable"
-              style={{ color: '#1e6fa8', opacity: 0.6 }}
-            />
+            <span title="Categoría base UNDG — no editable">
+              <Shield size={14} style={{ color: '#1e6fa8', opacity: 0.6 }} />
+            </span>
           ) : (
             <Sparkles size={14} style={{ color: '#1a7a4a', opacity: 0.7 }} />
           )}

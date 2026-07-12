@@ -16,7 +16,7 @@ import { useAuth } from '../../context/AuthContext';
 
 export const BudgetsAndReports: React.FC = () => {
   const navigate = useNavigate();
-  const { activeOng, profile } = useAuth();
+  const { activeOng } = useAuth();
   const [loading, setLoading] = useState(true);
   const [projects, setProjects] = useState<Project[]>([]);
   const [categories, setCategories] = useState<ExpenseCategory[]>([]);

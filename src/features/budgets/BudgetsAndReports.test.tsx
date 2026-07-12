@@ -116,7 +116,7 @@ describe('BudgetsAndReports — aislamiento de nombre de ONG en PDF', () => {
     setupMocks('ONG Alpha', 'ong-alpha', 'ONG Beta (usuario)', 'ong-beta');
 
     // Simular proyecto sin ongs resuelto (join fallido)
-    const projectSinOng = { ...buildProject('ONG Alpha', 'ong-alpha'), ongs: null };
+    const projectSinOng = { ...buildProject('ONG Alpha', 'ong-alpha'), ongs: null as any };
     const activeOngNombre = 'ONG Beta (usuario)';
     const ongName = projectSinOng.ongs?.nombre || activeOngNombre || '';
 

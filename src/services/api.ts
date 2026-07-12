@@ -132,6 +132,43 @@ export interface ExpenseReceipt {
   comentarios_auditoria: string | null;
   auditado_por?: string;
   auditado_at?: string;
+  ong_id?: string;
+}
+
+export interface ProjectExecutionMetric {
+  id?: string;
+  nombre: string;
+  Presupuesto: number;
+  Ejecutado: number;
+}
+
+export interface DashboardMetrics {
+  totalInflows: number;
+  reconciledInflows: number;
+  unreconciledInflows: number;
+  totalOutflows: number;
+  expensesByCategory: Record<string, number>;
+  projectExecution: ProjectExecutionMetric[];
+}
+
+export interface UserWithOng {
+  id: string;
+  email: string;
+  nombre_completo: string;
+  rol: UserRole;
+  aprobado: boolean;
+  ong_id: string;
+  created_at: string;
+  ongs?: {
+    nombre: string;
+  } | null;
+}
+
+export interface Ong {
+  id: string;
+  nombre: string;
+  logo_url: string | null;
+  created_at?: string;
 }
 
 // Determinar si Supabase está configurado correctamente
@@ -857,11 +894,11 @@ export const api = {
   },
 
   // --- DASHBOARD METRICS (RPC) ---
-  getDashboardMetrics: async (): Promise<any> => {
+  getDashboardMetrics: async (): Promise<DashboardMetrics> => {
     if (!isSimulationMode) {
       const { data, error } = await supabase.rpc('get_dashboard_metrics');
       if (error) throw error;
-      return data;
+      return data as DashboardMetrics;
     } else {
       // Retorno simulado si no hay BD
       return {
@@ -1532,19 +1569,22 @@ export const api = {
   },
 
   // --- GESTIÓN DE USUARIOS ---
-  getUsers: async (): Promise<any[]> => {
+  getUsers: async (): Promise<UserWithOng[]> => {
     if (!isSimulationMode) {
       const { data, error } = await supabase
         .from('usuarios_perfiles')
         .select('*, ongs(nombre)')
         .order('nombre_completo');
       if (error) throw error;
-      return data;
+      return data as UserWithOng[];
     } else {
-      const profiles = JSON.parse(localStorage.getItem('cnbv_profiles') || '{}');
-      const ongs = JSON.parse(localStorage.getItem('cnbv_ongs') || '[]');
-      return Object.values(profiles).map((p: any) => {
-        const ong = ongs.find((o: any) => o.id === p.ong_id);
+      const profiles = JSON.parse(localStorage.getItem('cnbv_profiles') || '{}') as Record<
+        string,
+        UserWithOng
+      >;
+      const ongs = JSON.parse(localStorage.getItem('cnbv_ongs') || '[]') as Ong[];
+      return Object.values(profiles).map((p) => {
+        const ong = ongs.find((o) => o.id === p.ong_id);
         return {
           ...p,
           ongs: ong
@@ -1558,7 +1598,7 @@ export const api = {
   updateUserProfile: async (
     userId: string,
     updates: { rol?: UserRole; aprobado?: boolean; ong_id?: string },
-  ): Promise<any> => {
+  ): Promise<UserWithOng> => {
     if (!isSimulationMode) {
       const { data, error } = await supabase
         .from('usuarios_perfiles')
@@ -1583,9 +1623,12 @@ export const api = {
           .catch((e) => console.error('Exception calling notify-approval Edge Function:', e));
       }
 
-      return data;
+      return data as UserWithOng;
     } else {
-      const profiles = JSON.parse(localStorage.getItem('cnbv_profiles') || '{}');
+      const profiles = JSON.parse(localStorage.getItem('cnbv_profiles') || '{}') as Record<
+        string,
+        UserWithOng
+      >;
       if (!profiles[userId]) throw new Error('User profile not found in simulation');
 
       const updated = {
@@ -1611,7 +1654,7 @@ export const api = {
     password: string;
     nombre_completo: string;
     rol: UserRole;
-  }): Promise<any> => {
+  }): Promise<{ user?: unknown; message?: string; error?: string }> => {
     if (!isSimulationMode) {
       // Import { supabase } from '../supabaseClient'
       // We will use supabase.functions.invoke
@@ -1736,13 +1779,13 @@ export const api = {
   },
 
   // --- GESTIÓN DE ONGs (SaaS) ---
-  getOngs: async (): Promise<any[]> => {
+  getOngs: async (): Promise<Ong[]> => {
     if (!isSimulationMode) {
       const { data, error } = await supabase.from('ongs').select('*').order('nombre');
       if (error) throw error;
-      return data;
+      return data as Ong[];
     } else {
-      let ongs = JSON.parse(localStorage.getItem('cnbv_ongs') || '[]');
+      let ongs = JSON.parse(localStorage.getItem('cnbv_ongs') || '[]') as Ong[];
       if (ongs.length === 0) {
         ongs = [
           {
@@ -1758,7 +1801,7 @@ export const api = {
     }
   },
 
-  createOng: async (nombre: string, logoUrl?: string | null): Promise<any> => {
+  createOng: async (nombre: string, logoUrl?: string | null): Promise<Ong> => {
     if (!isSimulationMode) {
       const { data, error } = await supabase
         .from('ongs')
@@ -1766,10 +1809,10 @@ export const api = {
         .select()
         .single();
       if (error) throw error;
-      return data;
+      return data as Ong;
     } else {
-      const ongs = JSON.parse(localStorage.getItem('cnbv_ongs') || '[]');
-      const newOng = {
+      const ongs = JSON.parse(localStorage.getItem('cnbv_ongs') || '[]') as Ong[];
+      const newOng: Ong = {
         id: `ong-${Math.random().toString(36).substr(2, 9)}`,
         nombre,
         logo_url: logoUrl || null,
@@ -1784,7 +1827,7 @@ export const api = {
   updateOng: async (
     id: string,
     updates: { nombre?: string; logo_url?: string | null },
-  ): Promise<any> => {
+  ): Promise<Ong> => {
     if (!isSimulationMode) {
       const { data, error } = await supabase
         .from('ongs')
@@ -1793,10 +1836,10 @@ export const api = {
         .select()
         .single();
       if (error) throw error;
-      return data;
+      return data as Ong;
     } else {
-      const ongs = JSON.parse(localStorage.getItem('cnbv_ongs') || '[]');
-      const idx = ongs.findIndex((o: any) => o.id === id);
+      const ongs = JSON.parse(localStorage.getItem('cnbv_ongs') || '[]') as Ong[];
+      const idx = ongs.findIndex((o) => o.id === id);
       if (idx === -1) throw new Error('Organización no encontrada');
 
       const updated = {
@@ -1807,6 +1850,63 @@ export const api = {
       localStorage.setItem('cnbv_ongs', JSON.stringify(ongs));
       return updated;
     }
+  },
+
+  // --- CATÁLOGO PERSONALIZADO ---
+  getCatalog: async (): Promise<{ categories: ExpenseCategory[]; partidas: PartidaGasto[] }> => {
+    if (isSimulationMode) {
+      return { categories: [], partidas: [] };
+    }
+    const [{ data: cats, error: catsErr }, { data: parts, error: partsErr }] = await Promise.all([
+      supabase.from('categorias_gasto').select('*').order('nombre'),
+      supabase.from('partidas_gasto').select('*').order('codigo'),
+    ]);
+    if (catsErr) throw catsErr;
+    if (partsErr) throw partsErr;
+    return {
+      categories: (cats ?? []) as ExpenseCategory[],
+      partidas: (parts ?? []) as PartidaGasto[],
+    };
+  },
+
+  createCategoria: async (
+    data: { nombre: string; descripcion?: string },
+    ongId: string,
+  ): Promise<ExpenseCategory> => {
+    if (isSimulationMode) throw new Error('No disponible en modo simulación');
+    const { data: cat, error } = await supabase
+      .from('categorias_gasto')
+      .insert([{ ...data, ong_id: ongId }])
+      .select()
+      .single();
+    if (error) throw error;
+    return cat as ExpenseCategory;
+  },
+
+  deleteCategoria: async (categoriaId: string): Promise<void> => {
+    if (isSimulationMode) throw new Error('No disponible en modo simulación');
+    const { error } = await supabase.from('categorias_gasto').delete().eq('id', categoriaId);
+    if (error) throw error;
+  },
+
+  createPartida: async (
+    data: { categoria_id: string; codigo: string; nombre: string; descripcion?: string },
+    ongId: string,
+  ): Promise<PartidaGasto> => {
+    if (isSimulationMode) throw new Error('No disponible en modo simulación');
+    const { data: partida, error } = await supabase
+      .from('partidas_gasto')
+      .insert([{ ...data, ong_id: ongId }])
+      .select()
+      .single();
+    if (error) throw error;
+    return partida as PartidaGasto;
+  },
+
+  deletePartida: async (partidaId: string): Promise<void> => {
+    if (isSimulationMode) throw new Error('No disponible en modo simulación');
+    const { error } = await supabase.from('partidas_gasto').delete().eq('id', partidaId);
+    if (error) throw error;
   },
 };
 
@@ -1848,6 +1948,35 @@ export interface Requisition {
   updated_at: string;
 }
 
+interface RawRequisition {
+  id: string;
+  codigo?: string;
+  solicitante_id: string;
+  proyecto_id: string;
+  partida_id: string;
+  monto_solicitado: number;
+  motivo: string;
+  estado: RequisitionStatus;
+  validador_1_id: string | null;
+  validado_1_at: string | null;
+  validador_2_id: string | null;
+  validado_2_at: string | null;
+  rechazado_por: string | null;
+  rechazado_at: string | null;
+  motivo_rechazo: string | null;
+  created_at: string;
+  updated_at: string;
+  solicitante?: { nombre_completo: string } | null;
+  validador_1?: { nombre_completo: string } | null;
+  validador_2?: { nombre_completo: string } | null;
+  proyecto?: { nombre: string } | null;
+  partida?: {
+    nombre: string;
+    codigo: string;
+    categoria?: { nombre: string } | null;
+  } | null;
+}
+
 export const requisitionsApi = {
   getRequisitions: async (): Promise<Requisition[]> => {
     if (!isSimulationMode) {
@@ -1871,7 +2000,7 @@ export const requisitionsApi = {
 
       if (error) throw error;
 
-      return (data as any[]).map((row) => ({
+      return (data as RawRequisition[]).map((row) => ({
         ...row,
         solicitante_nombre: row.solicitante?.nombre_completo,
         validador_1_nombre: row.validador_1?.nombre_completo,
@@ -1882,16 +2011,21 @@ export const requisitionsApi = {
         categoria_nombre: row.partida?.categoria?.nombre,
       }));
     } else {
-      const reqs = JSON.parse(localStorage.getItem('cnbv_requisitions') || '[]');
-      const projects = JSON.parse(localStorage.getItem('cnbv_projects') || '[]');
-      const partidas = JSON.parse(localStorage.getItem('cnbv_partidas') || '[]');
-      const categories = JSON.parse(localStorage.getItem('cnbv_categories') || '[]');
-      const profiles = JSON.parse(localStorage.getItem('cnbv_profiles') || '{}');
+      const reqs = JSON.parse(localStorage.getItem('cnbv_requisitions') || '[]') as Requisition[];
+      const projects = JSON.parse(localStorage.getItem('cnbv_projects') || '[]') as Project[];
+      const partidas = JSON.parse(localStorage.getItem('cnbv_partidas') || '[]') as PartidaGasto[];
+      const categories = JSON.parse(
+        localStorage.getItem('cnbv_categories') || '[]',
+      ) as ExpenseCategory[];
+      const profiles = JSON.parse(localStorage.getItem('cnbv_profiles') || '{}') as Record<
+        string,
+        UserWithOng
+      >;
 
-      return reqs.map((r: any) => {
-        const p = projects.find((x: any) => x.id === r.proyecto_id);
-        const part = partidas.find((x: any) => x.id === r.partida_id);
-        const cat = part ? categories.find((x: any) => x.id === part.categoria_id) : null;
+      return reqs.map((r) => {
+        const p = projects.find((x) => x.id === r.proyecto_id);
+        const part = partidas.find((x) => x.id === r.partida_id);
+        const cat = part ? categories.find((x) => x.id === part.categoria_id) : null;
         const user = profiles[r.solicitante_id];
         return {
           ...r,
@@ -1930,7 +2064,7 @@ export const requisitionsApi = {
 
       if (error) throw error;
 
-      return (data as any[]).map((row) => ({
+      return (data as RawRequisition[]).map((row) => ({
         ...row,
         solicitante_nombre: row.solicitante?.nombre_completo,
         proyecto_nombre: row.proyecto?.nombre,
@@ -1967,7 +2101,7 @@ export const requisitionsApi = {
 
       if (error) throw error;
 
-      return (data as any[]).map((row) => ({
+      return (data as RawRequisition[]).map((row) => ({
         ...row,
         solicitante_nombre: row.solicitante?.nombre_completo,
         proyecto_nombre: row.proyecto?.nombre,
@@ -2137,62 +2271,5 @@ export const requisitionsApi = {
 
       return updated;
     }
-  },
-
-  // --- CATÁLOGO PERSONALIZADO ---
-  getCatalog: async (): Promise<{ categories: ExpenseCategory[]; partidas: PartidaGasto[] }> => {
-    if (isSimulationMode) {
-      return { categories: [], partidas: [] };
-    }
-    const [{ data: cats, error: catsErr }, { data: parts, error: partsErr }] = await Promise.all([
-      supabase.from('categorias_gasto').select('*').order('nombre'),
-      supabase.from('partidas_gasto').select('*').order('codigo'),
-    ]);
-    if (catsErr) throw catsErr;
-    if (partsErr) throw partsErr;
-    return {
-      categories: (cats ?? []) as ExpenseCategory[],
-      partidas: (parts ?? []) as PartidaGasto[],
-    };
-  },
-
-  createCategoria: async (
-    data: { nombre: string; descripcion?: string },
-    ongId: string,
-  ): Promise<ExpenseCategory> => {
-    if (isSimulationMode) throw new Error('No disponible en modo simulación');
-    const { data: cat, error } = await supabase
-      .from('categorias_gasto')
-      .insert([{ ...data, ong_id: ongId }])
-      .select()
-      .single();
-    if (error) throw error;
-    return cat as ExpenseCategory;
-  },
-
-  deleteCategoria: async (categoriaId: string): Promise<void> => {
-    if (isSimulationMode) throw new Error('No disponible en modo simulación');
-    const { error } = await supabase.from('categorias_gasto').delete().eq('id', categoriaId);
-    if (error) throw error;
-  },
-
-  createPartida: async (
-    data: { categoria_id: string; codigo: string; nombre: string; descripcion?: string },
-    ongId: string,
-  ): Promise<PartidaGasto> => {
-    if (isSimulationMode) throw new Error('No disponible en modo simulación');
-    const { data: partida, error } = await supabase
-      .from('partidas_gasto')
-      .insert([{ ...data, ong_id: ongId }])
-      .select()
-      .single();
-    if (error) throw error;
-    return partida as PartidaGasto;
-  },
-
-  deletePartida: async (partidaId: string): Promise<void> => {
-    if (isSimulationMode) throw new Error('No disponible en modo simulación');
-    const { error } = await supabase.from('partidas_gasto').delete().eq('id', partidaId);
-    if (error) throw error;
   },
 };
