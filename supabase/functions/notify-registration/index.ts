@@ -75,7 +75,23 @@ serve(async (req) => {
       recipients.add('gerardoh31@gmail.com');
     }
 
-    const toList = Array.from(recipients);
+    let toList = Array.from(recipients);
+    let sandboxWarning = '';
+
+    // Control Sandbox de Resend:
+    // Si estamos usando onboarding@resend.dev (cuenta no verificada / testing),
+    // Resend solo permite enviar correos al dueño de la cuenta (gerardoh31@gmail.com).
+    // Filtramos la lista para evitar que Resend rebote toda la petición.
+    if (SENDER_EMAIL === 'onboarding@resend.dev') {
+      const originalTo = toList.join(', ');
+      toList = toList.filter((email) => email.toLowerCase() === 'gerardoh31@gmail.com');
+      if (toList.length === 0) {
+        toList = ['gerardoh31@gmail.com'];
+      }
+      sandboxWarning = `<p style="color: #ef4444; font-size: 12px; background: #fee2e2; padding: 8px; border-radius: 6px; margin-bottom: 16px;">
+        <strong>[Modo Prueba Sandbox]</strong> Este correo originalmente iba dirigido a: <code>${originalTo}</code>, pero fue filtrado y redirigido a ti por limitaciones de la cuenta gratuita de Resend.
+      </p>`;
+    }
 
     // Petición a la API de Resend para enviar el correo a todos los administradores
     const response = await fetch('https://api.resend.com/emails', {
@@ -93,6 +109,7 @@ serve(async (req) => {
             <div style="text-align: center; margin-bottom: 25px;">
               <img src="https://cnbv.org/wp-content/uploads/2020/09/logo-cnbv.jpg" alt="MATEO Logo" style="height: 60px; border-radius: 8px;" />
             </div>
+            ${sandboxWarning}
             <h2 style="color: #0f172a; margin-bottom: 16px; font-size: 20px; font-weight: 700;">¡Nuevo usuario registrado!</h2>
             <p style="font-size: 16px; line-height: 1.6; color: #334155; margin-bottom: 16px;">
               Un nuevo usuario ha solicitado acceso a la plataforma de auditoría <strong>MATEO</strong>:
