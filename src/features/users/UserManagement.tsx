@@ -138,7 +138,10 @@ export const UserManagement: React.FC = () => {
   };
 
   // Filtrado de usuarios
+  // Se excluye al Super Administrador global del SaaS: los admins de ONG no deben verlo ni gestionarlo
   const filteredUsers = users.filter((user) => {
+    if (user.rol === 'super_admin') return false;
+
     const matchesSearch =
       user.nombre_completo.toLowerCase().includes(searchTerm.toLowerCase()) ||
       user.email.toLowerCase().includes(searchTerm.toLowerCase());
