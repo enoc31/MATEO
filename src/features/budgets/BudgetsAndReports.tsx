@@ -12,9 +12,11 @@ import type {
 import { CreateProjectModal } from './CreateProjectModal';
 import * as XLSX from 'xlsx';
 import { jsPDF } from 'jspdf';
+import { useAuth } from '../../context/AuthContext';
 
 export const BudgetsAndReports: React.FC = () => {
   const navigate = useNavigate();
+  const { activeOng } = useAuth();
   const [loading, setLoading] = useState(true);
   const [projects, setProjects] = useState<Project[]>([]);
   const [categories, setCategories] = useState<ExpenseCategory[]>([]);
@@ -231,7 +233,8 @@ export const BudgetsAndReports: React.FC = () => {
       doc.setTextColor(47, 90, 174); // Azul Batista
       doc.setFont('Helvetica', 'bold');
       doc.setFontSize(16);
-      doc.text('CONVENCIÓN NACIONAL BAUTISTA DE VENEZUELA', 105, 20, { align: 'center' });
+      const ongName = activeOng?.nombre || 'CONVENCIÓN NACIONAL BAUTISTA DE VENEZUELA';
+      doc.text(ongName.toUpperCase(), 105, 20, { align: 'center' });
 
       doc.setTextColor(7, 58, 17); // Verde
       doc.setFontSize(12);
