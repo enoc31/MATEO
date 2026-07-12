@@ -102,6 +102,31 @@ export const SaasUsers: React.FC = () => {
     }
   };
 
+  const handleDeleteUser = async (user: UserItem) => {
+    if (user.rol === 'super_admin') {
+      setError('No puedes eliminar al Super Administrador principal.');
+      return;
+    }
+
+    const confirmDelete = window.confirm(
+      `¿Estás seguro de que deseas eliminar permanentemente a ${user.nombre_completo} (${user.email})? \n\nEsta acción borrará por completo sus credenciales de acceso de Supabase y todo su historial de la plataforma de forma irreversible.`,
+    );
+    if (!confirmDelete) return;
+
+    setError(null);
+    setSuccess(null);
+    setSubmitting(true);
+    try {
+      await api.adminDeleteUser(user.id);
+      setSuccess(`Usuario ${user.nombre_completo} eliminado correctamente.`);
+      await loadData();
+    } catch (err: any) {
+      setError(err.message || 'Error al eliminar usuario.');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   // Filtering Logic
   const filteredUsers = users.filter((u) => {
     const matchesSearch =
@@ -498,6 +523,25 @@ export const SaasUsers: React.FC = () => {
                               >
                                 {user.aprobado ? 'Suspender' : 'Aprobar'}
                               </button>
+
+                              {user.rol !== 'super_admin' && (
+                                <button
+                                  onClick={() => handleDeleteUser(user)}
+                                  disabled={submitting}
+                                  style={{
+                                    backgroundColor: 'rgba(239, 68, 68, 0.15)',
+                                    color: '#ef4444',
+                                    border: 'none',
+                                    borderRadius: '6px',
+                                    padding: '0.35rem 0.75rem',
+                                    cursor: 'pointer',
+                                    fontSize: '0.75rem',
+                                    fontWeight: 700,
+                                  }}
+                                >
+                                  Eliminar
+                                </button>
+                              )}
                             </>
                           )}
                         </div>

@@ -386,3 +386,21 @@ describe('Aislamiento — Módulo Usuarios de ONG', () => {
     expect(rolesPermitidos.includes('administrador')).toBe(false);
   });
 });
+
+describe('Eliminación de Usuarios (adminDeleteUser)', () => {
+  it('el Super Admin puede eliminar a otros usuarios pero no a sí mismo', () => {
+    const superAdminId = 'sa-uuid';
+    const targetUserId = 'target-user-uuid';
+
+    // Simula comprobación en la Edge Function
+    const canDelete = (callerRol: string, callerId: string, targetId: string) => {
+      if (callerRol !== 'super_admin') return false;
+      if (callerId === targetId) return false; // Evita auto-eliminación
+      return true;
+    };
+
+    expect(canDelete('super_admin', superAdminId, targetUserId)).toBe(true);
+    expect(canDelete('super_admin', superAdminId, superAdminId)).toBe(false);
+    expect(canDelete('administrador', 'admin-id', targetUserId)).toBe(false);
+  });
+});

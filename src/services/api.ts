@@ -1678,6 +1678,34 @@ export const api = {
     }
   },
 
+  adminDeleteUser: async (userId: string): Promise<{ message?: string; error?: string }> => {
+    if (!isSimulationMode) {
+      const { data, error } = await supabase.functions.invoke('delete-user', {
+        body: { userId },
+      });
+      if (error) {
+        console.error('Edge Function Delete User Error:', error);
+        throw new Error(error.message || 'Error executing delete-user edge function');
+      }
+      if (data?.error) {
+        throw new Error(data.error);
+      }
+      return data;
+    } else {
+      // Modo simulación: simulamos borrar de localStorage
+      const profiles = JSON.parse(localStorage.getItem('cnbv_profiles') || '{}') as Record<
+        string,
+        UserWithOng
+      >;
+      if (profiles[userId]) {
+        delete profiles[userId];
+        localStorage.setItem('cnbv_profiles', JSON.stringify(profiles));
+        return { message: 'Usuario simulado eliminado exitosamente.' };
+      }
+      throw new Error('Usuario no encontrado en modo simulación');
+    }
+  },
+
   getJornadas: async (): Promise<Jornada[]> => {
     if (!isSimulationMode) {
       const { data, error } = await supabase
