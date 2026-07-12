@@ -15,7 +15,7 @@ vi.mock('recharts', async () => {
   const OriginalRecharts = await vi.importActual('recharts');
   return {
     ...OriginalRecharts,
-    ResponsiveContainer: ({ children }: any) => <div>{children}</div>,
+    ResponsiveContainer: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
   };
 });
 
@@ -34,7 +34,7 @@ describe('Financial Calculations (Dashboard.tsx)', () => {
 
   it('renders correctly with mocked financial data', async () => {
     // Simulamos datos financieros perfectos
-    (api.getDashboardMetrics as any).mockResolvedValue({
+    vi.mocked(api.getDashboardMetrics).mockResolvedValue({
       totalInflows: 2000,
       reconciledInflows: 2000,
       unreconciledInflows: 0,
@@ -45,7 +45,7 @@ describe('Financial Calculations (Dashboard.tsx)', () => {
       ],
     });
 
-    (api.getCategories as any).mockResolvedValue([
+    vi.mocked(api.getCategories).mockResolvedValue([
       { id: 'cat-1', nombre: 'Comida', descripcion: '' },
     ]);
 
@@ -73,7 +73,7 @@ describe('Financial Calculations (Dashboard.tsx)', () => {
   });
 
   it('handles zero budget gracefully (no division by zero error)', async () => {
-    (api.getDashboardMetrics as any).mockResolvedValue({
+    vi.mocked(api.getDashboardMetrics).mockResolvedValue({
       totalInflows: 100,
       reconciledInflows: 100,
       unreconciledInflows: 0,
@@ -82,7 +82,7 @@ describe('Financial Calculations (Dashboard.tsx)', () => {
       projectExecution: [], // Sin presupuesto
     });
 
-    (api.getCategories as any).mockResolvedValue([]);
+    vi.mocked(api.getCategories).mockResolvedValue([]);
 
     render(<Dashboard />);
 

@@ -27,11 +27,11 @@ describe('API Service', () => {
     const orderMock = vi.fn().mockReturnThis();
     const limitMock = vi.fn().mockResolvedValue({ data: mockData, error: null });
 
-    (supabase.from as any).mockReturnValue({
+    vi.mocked(supabase.from).mockReturnValue({
       select: selectMock,
       order: orderMock,
       limit: limitMock,
-    });
+    } as unknown as ReturnType<typeof supabase.from>);
 
     // En caso de que estemos en SimulationMode (CI sin .env), api.ts usa mocks internos
     // Si no lo estamos, usa supabase. Verificaremos que devuelve algo.
@@ -46,7 +46,10 @@ describe('API Service', () => {
 
   it('getDashboardMetrics should handle rpc calls or simulation', async () => {
     const mockMetrics = { totalInflows: 500, reconciledInflows: 500, totalOutflows: 200 };
-    (supabase.rpc as any).mockResolvedValue({ data: mockMetrics, error: null });
+    vi.mocked(supabase.rpc).mockResolvedValue({
+      data: mockMetrics,
+      error: null,
+    } as unknown as Awaited<ReturnType<typeof supabase.rpc>>);
 
     const metrics = await api.getDashboardMetrics();
     expect(metrics).toBeDefined();
@@ -76,7 +79,7 @@ describe('API Service', () => {
   it('getCategories should return data from supabase or simulation', async () => {
     const mockCats = [{ id: 'cat-1', nombre: '1. Costos Directos' }];
 
-    (supabase.from as any).mockImplementation((table: string) => {
+    vi.mocked(supabase.from).mockImplementation(((table: string) => {
       if (table === 'categorias_gasto') {
         return {
           select: (fields: string) => {
@@ -99,7 +102,7 @@ describe('API Service', () => {
         }),
         insert: () => Promise.resolve({ data: null, error: null }),
       };
-    });
+    }) as unknown as typeof supabase.from);
 
     const categories = await api.getCategories();
     expect(Array.isArray(categories)).toBe(true);
@@ -112,7 +115,7 @@ describe('API Service', () => {
   it('getPartidas should return data from supabase or simulation', async () => {
     const mockParts = [{ id: 'part-1', nombre: 'Artículos No Alimentarios' }];
 
-    (supabase.from as any).mockImplementation((table: string) => {
+    vi.mocked(supabase.from).mockImplementation(((table: string) => {
       if (table === 'categorias_gasto') {
         return {
           select: (fields: string) => {
@@ -142,13 +145,71 @@ describe('API Service', () => {
         }),
         insert: () => Promise.resolve({ data: null, error: null }),
       };
-    });
+    }) as unknown as typeof supabase.from);
 
     const partidas = await api.getPartidas();
     expect(Array.isArray(partidas)).toBe(true);
     if (!isSimulationMode) {
       expect(supabase.from).toHaveBeenCalledWith('partidas_gasto');
       expect(partidas).toEqual(mockParts);
+    }
+  });
+
+  it('getProjectPartidas should retrieve project budget lines', async () => {
+    const mockRelation = [
+      {
+        partida_id: 'part-1',
+        partidas_gasto: { id: 'part-1', nombre: 'Mock Partida' },
+      },
+    ];
+
+    const eqMock = vi.fn().mockResolvedValue({ data: mockRelation, error: null });
+    const selectMock = vi.fn().mockReturnValue({ eq: eqMock });
+
+    vi.mocked(supabase.from).mockImplementation(((table: string) => {
+      if (table === 'proyectos_partidas') {
+        return {
+          select: selectMock,
+        };
+      }
+      return {
+        select: () => ({
+          order: () => Promise.resolve({ data: [], error: null }),
+        }),
+      };
+    }) as unknown as typeof supabase.from);
+
+    const result = await api.getProjectPartidas('proj-123');
+    expect(Array.isArray(result)).toBe(true);
+    if (!isSimulationMode) {
+      expect(supabase.from).toHaveBeenCalledWith('proyectos_partidas');
+      expect(result).toEqual([{ id: 'part-1', nombre: 'Mock Partida' }]);
+    }
+  });
+
+  it('setProjectPartidas should delete and insert associations', async () => {
+    const eqMock = vi.fn().mockResolvedValue({ error: null });
+    const deleteMock = vi.fn().mockReturnValue({ eq: eqMock });
+    const insertMock = vi.fn().mockResolvedValue({ error: null });
+
+    vi.mocked(supabase.from).mockImplementation(((table: string) => {
+      if (table === 'proyectos_partidas') {
+        return {
+          delete: deleteMock,
+          insert: insertMock,
+        };
+      }
+      return {};
+    }) as unknown as typeof supabase.from);
+
+    await api.setProjectPartidas('proj-123', ['part-1'], 'ong-123');
+    if (!isSimulationMode) {
+      expect(supabase.from).toHaveBeenCalledWith('proyectos_partidas');
+      expect(deleteMock).toHaveBeenCalled();
+      expect(eqMock).toHaveBeenCalledWith('proyecto_id', 'proj-123');
+      expect(insertMock).toHaveBeenCalledWith([
+        { proyecto_id: 'proj-123', partida_id: 'part-1', ong_id: 'ong-123' },
+      ]);
     }
   });
 });

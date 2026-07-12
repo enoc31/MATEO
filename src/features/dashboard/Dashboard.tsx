@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Download, CheckCircle, Clock, Upload, Scale } from 'lucide-react';
 import { api } from '../../services/api';
-import type { ExpenseCategory } from '../../services/api';
+import type { ExpenseCategory, DashboardMetrics, ProjectExecutionMetric } from '../../services/api';
 import {
   ResponsiveContainer,
   BarChart,
@@ -17,7 +17,7 @@ import {
 
 export const Dashboard: React.FC = () => {
   const [loading, setLoading] = useState(true);
-  const [metrics, setMetrics] = useState<any>(null);
+  const [metrics, setMetrics] = useState<DashboardMetrics | null>(null);
   const [categories, setCategories] = useState<ExpenseCategory[]>([]);
 
   useEffect(() => {
@@ -72,11 +72,11 @@ export const Dashboard: React.FC = () => {
 
   // Ejecución Presupuestaria Total
   const totalBudgeted = projectExecution.reduce(
-    (sum: number, p: any) => sum + Number(p.Presupuesto || 0),
+    (sum: number, p: ProjectExecutionMetric) => sum + Number(p.Presupuesto || 0),
     0,
   );
   const totalExecuted = projectExecution.reduce(
-    (sum: number, p: any) => sum + Number(p.Ejecutado || 0),
+    (sum: number, p: ProjectExecutionMetric) => sum + Number(p.Ejecutado || 0),
     0,
   );
   const budgetExecutionPercent = totalBudgeted > 0 ? (totalExecuted / totalBudgeted) * 100 : 0;
