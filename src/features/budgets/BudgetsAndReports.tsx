@@ -10,13 +10,15 @@ import type {
   ExpenseReceipt,
 } from '../../services/api';
 import { CreateProjectModal } from './CreateProjectModal';
+import { ProjectPartidasModal } from './ProjectPartidasModal';
+import { Settings } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import { jsPDF } from 'jspdf';
 import { useAuth } from '../../context/AuthContext';
 
 export const BudgetsAndReports: React.FC = () => {
   const navigate = useNavigate();
-  const { activeOng } = useAuth();
+  const { activeOng, profile } = useAuth();
   const [loading, setLoading] = useState(true);
   const [projects, setProjects] = useState<Project[]>([]);
   const [categories, setCategories] = useState<ExpenseCategory[]>([]);
@@ -38,6 +40,7 @@ export const BudgetsAndReports: React.FC = () => {
   }, [uniquePeriods, filterPeriodo]);
 
   const [isCreateProjectOpen, setIsCreateProjectOpen] = useState(false);
+  const [isPartidasModalOpen, setIsPartidasModalOpen] = useState(false);
 
   const handleProjectCreated = async (newProjId: string) => {
     await loadData();
@@ -486,6 +489,26 @@ export const BudgetsAndReports: React.FC = () => {
           </select>
         </div>
 
+        {filterProjectId && ['administrador', 'director'].includes(profile?.rol || '') && (
+          <button
+            onClick={() => setIsPartidasModalOpen(true)}
+            className="btn btn-outline"
+            style={{
+              fontSize: '0.82rem',
+              fontWeight: 600,
+              padding: '0.45rem 0.85rem',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.4rem',
+              borderColor: 'var(--primary)',
+              color: 'var(--primary)',
+            }}
+          >
+            <Settings size={15} />
+            Configurar Partidas
+          </button>
+        )}
+
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
           <label style={{ fontWeight: 700, fontSize: '0.9rem', color: 'var(--primary)' }}>
             Período:
@@ -815,6 +838,16 @@ export const BudgetsAndReports: React.FC = () => {
         onClose={() => setIsCreateProjectOpen(false)}
         onSuccess={handleProjectCreated}
       />
+
+      {/* Modal Configurar Partidas */}
+      {selectedProject && (
+        <ProjectPartidasModal
+          isOpen={isPartidasModalOpen}
+          onClose={() => setIsPartidasModalOpen(false)}
+          proyectoId={selectedProject.id}
+          proyectoNombre={selectedProject.nombre}
+        />
+      )}
     </div>
   );
 };

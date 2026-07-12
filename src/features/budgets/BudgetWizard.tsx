@@ -197,6 +197,14 @@ export const BudgetWizard: React.FC<BudgetWizardProps> = ({ isOpen, onClose, onS
       // 3. Save to database or localStorage
       if (!isSimulationMode) {
         // Real database operation
+        const partidasConMonto = budgetsToSave
+          .filter((b) => b.monto_asignado > 0)
+          .map((b) => b.partida_id);
+
+        if (partidasConMonto.length > 0) {
+          await api.setProjectPartidas(selectedProjectId, partidasConMonto, profile?.ong_id || '');
+        }
+
         for (const b of budgetsToSave) {
           const { error } = await supabase.from('presupuestos').upsert(
             {

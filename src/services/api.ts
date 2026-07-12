@@ -32,6 +32,7 @@ export interface ExpenseCategory {
   id: string;
   nombre: string;
   descripcion: string;
+  ong_id?: string;
 }
 
 export interface PartidaGasto {
@@ -40,6 +41,7 @@ export interface PartidaGasto {
   codigo: string;
   nombre: string;
   descripcion: string;
+  ong_id?: string;
 }
 
 export interface Budget {
@@ -1907,6 +1909,47 @@ export const api = {
     if (isSimulationMode) throw new Error('No disponible en modo simulación');
     const { error } = await supabase.from('partidas_gasto').delete().eq('id', partidaId);
     if (error) throw error;
+  },
+
+  getProjectPartidas: async (proyectoId: string): Promise<PartidaGasto[]> => {
+    if (isSimulationMode) {
+      // En simulación devolvemos todas las de la ONG
+      return api.getPartidas();
+    }
+    const { data, error } = await supabase
+      .from('proyectos_partidas')
+      .select('partida_id, partidas_gasto(*)')
+      .eq('proyecto_id', proyectoId);
+
+    if (error) throw error;
+    return (data ?? []).map((row: any) => row.partidas_gasto).filter(Boolean) as PartidaGasto[];
+  },
+
+  setProjectPartidas: async (
+    proyectoId: string,
+    partidaIds: string[],
+    ongId: string,
+  ): Promise<void> => {
+    if (isSimulationMode) return;
+
+    // 1. Eliminar relaciones existentes del proyecto
+    const { error: deleteError } = await supabase
+      .from('proyectos_partidas')
+      .delete()
+      .eq('proyecto_id', proyectoId);
+    if (deleteError) throw deleteError;
+
+    if (partidaIds.length === 0) return;
+
+    // 2. Insertar las nuevas
+    const toInsert = partidaIds.map((pId) => ({
+      proyecto_id: proyectoId,
+      partida_id: pId,
+      ong_id: ongId,
+    }));
+
+    const { error: insertError } = await supabase.from('proyectos_partidas').insert(toInsert);
+    if (insertError) throw insertError;
   },
 };
 

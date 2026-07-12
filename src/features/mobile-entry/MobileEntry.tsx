@@ -75,6 +75,7 @@ export const MobileEntry: React.FC = () => {
   // Requisitions
   const [approvedRequisitions, setApprovedRequisitions] = useState<Requisition[]>([]);
   const [partidas, setPartidas] = useState<PartidaGasto[]>([]);
+  const [projectPartidas, setProjectPartidas] = useState<PartidaGasto[]>([]);
   const [budgets, setBudgets] = useState<import('../../services/api').Budget[]>([]);
 
   // Document 1: Factura o Recibo
@@ -153,14 +154,22 @@ export const MobileEntry: React.FC = () => {
     setDoc2Preview(null);
   };
 
-  // Partidas con presupuesto asignado en el proyecto seleccionado
-  const partidasConPresupuesto = projectId
-    ? partidas.filter((p) =>
-        budgets.some(
-          (b) => b.proyecto_id === projectId && b.partida_id === p.id && b.monto_asignado > 0,
-        ),
-      )
-    : [];
+  // Cargar partidas asociadas al proyecto seleccionado (Relación B)
+  useEffect(() => {
+    if (!projectId) {
+      setProjectPartidas([]);
+      return;
+    }
+    const fetchProjectPartidas = async () => {
+      try {
+        const list = await api.getProjectPartidas(projectId);
+        setProjectPartidas(list);
+      } catch (err) {
+        console.error('Error fetching project partidas:', err);
+      }
+    };
+    fetchProjectPartidas();
+  }, [projectId]);
 
   const handleSelectRequisition = (reqId: string) => {
     setSolicitudId(reqId);
@@ -476,8 +485,7 @@ export const MobileEntry: React.FC = () => {
                 >
                   Seleccionar Partida de Gasto UNDG *
                 </label>
-                {partidasConPresupuesto.filter((p) => p.categoria_id === categoryId).length ===
-                0 ? (
+                {projectPartidas.filter((p) => p.categoria_id === categoryId).length === 0 ? (
                   <div
                     style={{
                       padding: '0.75rem',
@@ -489,10 +497,10 @@ export const MobileEntry: React.FC = () => {
                     }}
                   >
                     <span style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                      <AlertTriangle size={16} /> Esta categoría no tiene presupuesto asignado en el
+                      <AlertTriangle size={16} /> Esta categoría no tiene partidas asociadas al
                       proyecto seleccionado.
                     </span>
-                    Ve a <strong>Presupuestos → Asistente UNDG</strong> para asignar montos primero.
+                    Ve a <strong>Presupuestos</strong> para configurarlas primero.
                   </div>
                 ) : (
                   <select
@@ -504,7 +512,7 @@ export const MobileEntry: React.FC = () => {
                     required
                   >
                     <option value="">-- Elija la partida contable --</option>
-                    {partidasConPresupuesto
+                    {projectPartidas
                       .filter((p) => p.categoria_id === categoryId)
                       .map((p) => {
                         const b = budgets.find(

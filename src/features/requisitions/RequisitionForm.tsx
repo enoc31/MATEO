@@ -23,6 +23,7 @@ export const RequisitionForm: React.FC<RequisitionFormProps> = ({ onClose, onSuc
   const [projects, setProjects] = useState<Project[]>([]);
   const [categories, setCategories] = useState<ExpenseCategory[]>([]);
   const [partidas, setPartidas] = useState<PartidaGasto[]>([]);
+  const [projectPartidas, setProjectPartidas] = useState<PartidaGasto[]>([]);
 
   // UI states
   const [loading, setLoading] = useState(false);
@@ -46,6 +47,23 @@ export const RequisitionForm: React.FC<RequisitionFormProps> = ({ onClose, onSuc
     };
     loadFormOptions();
   }, []);
+
+  // Cargar partidas asociadas al proyecto seleccionado (Relación B)
+  useEffect(() => {
+    if (!proyectoId) {
+      setProjectPartidas([]);
+      return;
+    }
+    const fetchProjectPartidas = async () => {
+      try {
+        const list = await api.getProjectPartidas(proyectoId);
+        setProjectPartidas(list);
+      } catch (err) {
+        console.error('Error fetching project partidas:', err);
+      }
+    };
+    fetchProjectPartidas();
+  }, [proyectoId]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -214,7 +232,7 @@ export const RequisitionForm: React.FC<RequisitionFormProps> = ({ onClose, onSuc
                 disabled={loading}
               >
                 <option value="">Selecciona la partida contable...</option>
-                {partidas
+                {projectPartidas
                   .filter((p) => p.categoria_id === categoriaId)
                   .map((p) => (
                     <option key={p.id} value={p.id}>
