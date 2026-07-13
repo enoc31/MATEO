@@ -12,6 +12,7 @@ import {
   X,
   Check,
   Loader,
+  RefreshCw,
 } from 'lucide-react';
 import { api } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
@@ -234,6 +235,7 @@ export const CustomCatalogManager: React.FC = () => {
   const [addingCat, setAddingCat] = useState(false);
   const [addingPartidaFor, setAddingPartidaFor] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [restoring, setRestoring] = useState(false);
 
   const ongId = profile?.ong_id ?? '';
   const canEdit = ['administrador', 'director'].includes(profile?.rol ?? '');
@@ -347,6 +349,26 @@ export const CustomCatalogManager: React.FC = () => {
       }
     } finally {
       setDeletingId(null);
+    }
+  };
+
+  const handleRestoreCatalog = async () => {
+    if (
+      !window.confirm(
+        '¿Deseas restaurar las categorías y partidas base del catálogo estándar UNDG por defecto? Esto recuperará cualquier elemento base que se haya eliminado.',
+      )
+    )
+      return;
+    setRestoring(true);
+    try {
+      await api.restoreDefaultCatalog();
+      addNotification('Catálogo base UNDG restaurado correctamente', 'success');
+      await fetchData();
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : 'Error al restaurar el catálogo';
+      addNotification(msg, 'warning');
+    } finally {
+      setRestoring(false);
     }
   };
 
@@ -628,15 +650,43 @@ export const CustomCatalogManager: React.FC = () => {
             Partidas estándar UNDG + categorías y partidas personalizadas de tu organización
           </p>
         </div>
-        {canEdit && !addingCat && (
-          <button
-            onClick={() => setAddingCat(true)}
-            className="btn btn-primary"
-            style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.88rem' }}
-          >
-            <Plus size={16} />
-            Nueva Categoría
-          </button>
+        {canEdit && (
+          <div style={{ display: 'flex', gap: '0.75rem' }}>
+            <button
+              onClick={handleRestoreCatalog}
+              disabled={restoring}
+              className="btn btn-outline"
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+                fontSize: '0.88rem',
+                borderColor: 'rgba(30,111,168,0.4)',
+                color: '#1e6fa8',
+              }}
+            >
+              <RefreshCw
+                size={15}
+                style={{ animation: restoring ? 'spin 1.2s linear infinite' : 'none' }}
+              />
+              {restoring ? 'Restaurando...' : 'Restaurar Catálogo UNDG'}
+            </button>
+            {!addingCat && (
+              <button
+                onClick={() => setAddingCat(true)}
+                className="btn btn-primary"
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  fontSize: '0.88rem',
+                }}
+              >
+                <Plus size={16} />
+                Nueva Categoría
+              </button>
+            )}
+          </div>
         )}
       </div>
 

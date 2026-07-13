@@ -1939,6 +1939,12 @@ export const api = {
     if (error) throw error;
   },
 
+  restoreDefaultCatalog: async (): Promise<void> => {
+    if (isSimulationMode) throw new Error('No disponible en modo simulación');
+    const { error } = await supabase.rpc('restore_default_undg_catalog');
+    if (error) throw error;
+  },
+
   getProjectPartidas: async (proyectoId: string): Promise<PartidaGasto[]> => {
     if (isSimulationMode) {
       // En simulación devolvemos todas las de la ONG
