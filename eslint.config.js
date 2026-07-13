@@ -17,6 +17,8 @@ export default tseslint.config(
       '*.cjs',
       '*.js',
       'check_users.js',
+      '.agents',
+      '.agents/**',
     ],
   },
   {

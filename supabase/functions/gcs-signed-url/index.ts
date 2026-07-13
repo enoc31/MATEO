@@ -23,7 +23,7 @@ async function generateGoogleAccessToken(serviceAccountJson: string): Promise<st
     iat: now,
   };
 
-  const encodeBase64Url = (obj: any) =>
+  const encodeBase64Url = (obj: Record<string, unknown> | string | number) =>
     btoa(JSON.stringify(obj)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
 
   const encodedHeader = encodeBase64Url(header);
@@ -128,9 +128,10 @@ serve(async (req) => {
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
     );
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const msg = error instanceof Error ? error.message : String(error);
     console.error('GCS Edge Function Error Interno:', error);
-    return new Response(JSON.stringify({ error: error.message }), {
+    return new Response(JSON.stringify({ error: msg }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 400,
     });

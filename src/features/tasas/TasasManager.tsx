@@ -6,6 +6,13 @@ import { formatDateForFrontEnd, getCaracasDateParts } from '../../utils/formatte
 import { useAuth } from '../../context/AuthContext';
 import Papa from 'papaparse';
 
+/** Shape of each element returned by the DolarVzla historical API. */
+interface DolarVzlaResponseItem {
+  date?: string;
+  usd?: number;
+  [key: string]: unknown;
+}
+
 export const TasasManager: React.FC = () => {
   const { profile } = useAuth();
   const [tasas, setTasas] = useState<TasaBCV[]>([]);
@@ -60,7 +67,7 @@ export const TasasManager: React.FC = () => {
       }[] = [];
 
       if (Array.isArray(data)) {
-        data.forEach((item: any) => {
+        (data as DolarVzlaResponseItem[]).forEach((item) => {
           if (item && item.date && item.usd) {
             parsed.push({
               fecha: item.date,
@@ -70,7 +77,7 @@ export const TasasManager: React.FC = () => {
           }
         });
       } else if (data && typeof data === 'object') {
-        Object.values(data).forEach((item: any) => {
+        Object.values(data as Record<string, DolarVzlaResponseItem>).forEach((item) => {
           if (item && item.date && item.usd) {
             parsed.push({
               fecha: item.date,
@@ -91,8 +98,9 @@ export const TasasManager: React.FC = () => {
       } else {
         alert('No se encontraron registros históricos en la API.');
       }
-    } catch (err: any) {
-      alert('Error obteniendo el histórico: ' + (err.message || ''));
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      alert('Error obteniendo el histórico: ' + msg);
     } finally {
       setSyncingHistory(false);
     }
@@ -159,8 +167,9 @@ export const TasasManager: React.FC = () => {
       alert('✅ Tasa registrada correctamente.');
       setTasaManual('');
       await loadTasas();
-    } catch (err: any) {
-      alert('Error al guardar la tasa: ' + (err.message || ''));
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      alert('Error al guardar la tasa: ' + msg);
     } finally {
       setSubmitting(false);
     }
@@ -179,7 +188,12 @@ export const TasasManager: React.FC = () => {
       complete: (results) => {
         const parsed: { fecha: string; tasa: number }[] = [];
 
-        results.data.forEach((row: any) => {
+        const isStringRecord = (val: unknown): val is Record<string, string> =>
+          typeof val === 'object' && val !== null;
+
+        results.data.forEach((rawRow) => {
+          if (!isStringRecord(rawRow)) return;
+          const row = rawRow as Record<string, string>;
           // Detectar columnas (fecha/date y tasa/rate/value)
           const keys = Object.keys(row);
           const fechaKey = keys.find(
@@ -236,8 +250,9 @@ export const TasasManager: React.FC = () => {
       setCsvFileName('');
       if (fileInputRef.current) fileInputRef.current.value = '';
       await loadTasas();
-    } catch (err: any) {
-      alert('Error al importar el lote: ' + (err.message || ''));
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      alert('Error al importar el lote: ' + msg);
     } finally {
       setSubmitting(false);
     }
@@ -258,8 +273,9 @@ export const TasasManager: React.FC = () => {
       });
       setEditingId(null);
       await loadTasas();
-    } catch (err: any) {
-      alert('Error al actualizar: ' + (err.message || ''));
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      alert('Error al actualizar: ' + msg);
     }
   };
 

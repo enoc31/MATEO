@@ -6,6 +6,18 @@ import { Link } from 'react-router-dom';
 import { isSimulationMode, api } from '../../services/api';
 import { supabase } from '../../supabaseClient';
 
+/** Extends the global Window with reCAPTCHA v2 explicit render callbacks. */
+interface CustomWindow extends Window {
+  onRecaptchaSuccess?: (token: string) => void;
+  onRecaptchaExpired?: () => void;
+  onRecaptchaLoad?: () => void;
+  grecaptcha?: {
+    render: (container: string | HTMLElement, options: Record<string, string>) => void;
+  };
+}
+
+const customWindow = window as CustomWindow;
+
 export const Login: React.FC = () => {
   const { refreshProfile } = useAuth();
 
@@ -34,17 +46,17 @@ export const Login: React.FC = () => {
     if (!isRegister || isSimulationMode) return;
 
     // Callbacks globales para reCAPTCHA
-    (window as any).onRecaptchaSuccess = (token: string) => {
+    customWindow.onRecaptchaSuccess = (token: string) => {
       setCaptchaToken(token);
     };
-    (window as any).onRecaptchaExpired = () => {
+    customWindow.onRecaptchaExpired = () => {
       setCaptchaToken(null);
     };
 
     const renderRecaptcha = () => {
-      if ((window as any).grecaptcha && document.getElementById('recaptcha-container')) {
+      if (customWindow.grecaptcha && document.getElementById('recaptcha-container')) {
         try {
-          (window as any).grecaptcha.render('recaptcha-container', {
+          customWindow.grecaptcha.render('recaptcha-container', {
             sitekey:
               import.meta.env.VITE_RECAPTCHA_SITE_KEY || '6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI',
             callback: 'onRecaptchaSuccess',
@@ -62,7 +74,7 @@ export const Login: React.FC = () => {
       script.src = 'https://www.google.com/recaptcha/api.js?onload=onRecaptchaLoad&render=explicit';
       script.async = true;
       script.defer = true;
-      (window as any).onRecaptchaLoad = () => {
+      customWindow.onRecaptchaLoad = () => {
         renderRecaptcha();
       };
       document.body.appendChild(script);
@@ -73,9 +85,9 @@ export const Login: React.FC = () => {
 
     return () => {
       // Limpiar callbacks globales al desmontar
-      delete (window as any).onRecaptchaSuccess;
-      delete (window as any).onRecaptchaExpired;
-      delete (window as any).onRecaptchaLoad;
+      delete customWindow.onRecaptchaSuccess;
+      delete customWindow.onRecaptchaExpired;
+      delete customWindow.onRecaptchaLoad;
     };
   }, [isRegister]);
 
