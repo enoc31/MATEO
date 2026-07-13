@@ -74,7 +74,7 @@ serve(async (req) => {
               Ya puedes iniciar sesión en el sistema con tus credenciales registradas y comenzar a colaborar con tu organización.
             </p>
             <div style="text-align: center; margin: 30px 0;">
-              <a href="https://ydnylydulwjecdllbnev.supabase.co" style="background-color: #800020; color: #ffffff; padding: 12px 30px; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 16px; display: inline-block; transition: background-color 0.2s;">
+              <a href="https://mateo-wine.vercel.app" style="background-color: #800020; color: #ffffff; padding: 12px 30px; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 16px; display: inline-block; transition: background-color 0.2s;">
                 Ingresar al Sistema
               </a>
             </div>

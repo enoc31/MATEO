@@ -124,7 +124,7 @@ serve(async (req) => {
               Este usuario se encuentra en estado <strong>Pendiente de Aprobación</strong> y no podrá acceder a las funciones del sistema hasta que apruebes su registro.
             </p>
             <div style="text-align: center; margin: 30px 0;">
-              <a href="https://ydnylydulwjecdllbnev.supabase.co" style="background-color: #800020; color: #ffffff; padding: 12px 30px; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 16px; display: inline-block;">
+              <a href="https://mateo-wine.vercel.app" style="background-color: #800020; color: #ffffff; padding: 12px 30px; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 16px; display: inline-block;">
                 Ir a Panel de Administración
               </a>
             </div>
