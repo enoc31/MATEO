@@ -281,6 +281,10 @@ export const CustomCatalogManager: React.FC = () => {
   };
 
   const handleDeleteCategory = async (cat: Category) => {
+    if (cat.ong_id === BASE_ONG_ID) {
+      addNotification('No se pueden eliminar categorías del catálogo estándar UNDG', 'warning');
+      return;
+    }
     const partidasInCat = partidas.filter((p) => p.categoria_id === cat.id && p.ong_id === ongId);
     if (partidasInCat.length > 0) {
       addNotification(
@@ -326,6 +330,10 @@ export const CustomCatalogManager: React.FC = () => {
   };
 
   const handleDeletePartida = async (partida: Partida) => {
+    if (partida.ong_id === BASE_ONG_ID) {
+      addNotification('No se pueden eliminar partidas del catálogo estándar UNDG', 'warning');
+      return;
+    }
     if (
       !window.confirm(
         `¿Eliminar la partida "${partida.nombre}"?\n\nSi tiene presupuestos o comprobantes asociados, la eliminación fallará.`,
@@ -714,6 +722,32 @@ export const CustomCatalogManager: React.FC = () => {
           <Sparkles size={14} color="#1a7a4a" />
           <PartidaBadge isBase={false} />
           <span style={{ color: 'var(--neutral-medium)' }}>Personalizadas por tu organización</span>
+        </div>
+      </div>
+
+      {/* Advertencia Explicativa */}
+      <div
+        style={{
+          display: 'flex',
+          gap: '0.75rem',
+          padding: '1rem',
+          background: 'rgba(255, 165, 0, 0.05)',
+          border: '1px solid rgba(255, 165, 0, 0.25)',
+          borderRadius: 'var(--radius-md)',
+          fontSize: '0.85rem',
+          color: '#805500',
+          marginBottom: '1.5rem',
+          lineHeight: '1.5',
+        }}
+      >
+        <AlertCircle size={20} style={{ flexShrink: 0, marginTop: '2px' }} />
+        <div>
+          <strong>Aviso sobre la gestión del catálogo:</strong> Eliminar categorías o partidas desde
+          esta pantalla las borrará <strong>permanentemente</strong> de la base de datos de tu
+          organización y de todos sus proyectos. Si solo deseas ocultarlas o desactivarlas para
+          mejorar la presentación o presupuesto de un proyecto específico, no las elimines aquí; en
+          su lugar, utiliza la opción <strong>"Configurar Partidas"</strong> dentro del menú de
+          presupuestos de dicho proyecto.
         </div>
       </div>
 
