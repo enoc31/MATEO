@@ -13,7 +13,7 @@ export const Login: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [nombreCompleto, setNombreCompleto] = useState('');
-  const [rolSugerido, setRolSugerido] = useState<UserRole>('coordinador');
+  const rolSugerido: UserRole = 'coordinador';
 
   // Estados de control
   const [isRegister, setIsRegister] = useState(false);
