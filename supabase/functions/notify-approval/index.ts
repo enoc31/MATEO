@@ -63,7 +63,7 @@ serve(async (req) => {
         html: `
           <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 30px; border: 1px solid #f1f5f9; border-radius: 12px; background-color: #ffffff; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);">
             <div style="text-align: center; margin-bottom: 25px;">
-              <img src="https://cnbv.org/wp-content/uploads/2020/09/logo-cnbv.jpg" alt="MATEO Logo" style="height: 60px; border-radius: 8px;" />
+              <img src="https://mateo-wine.vercel.app/mateo_logo.png" alt="MATEO Logo" style="height: 64px; object-fit: contain; border-radius: 12px;" />
             </div>
             ${sandboxWarning}
             <h2 style="color: #0f172a; margin-bottom: 16px; font-size: 22px; font-weight: 700;">¡Hola, ${nombre}!</h2>
