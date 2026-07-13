@@ -500,27 +500,6 @@ export const Login: React.FC = () => {
             </div>
 
             <div className="form-group" style={{ marginBottom: '1.25rem' }}>
-              <label className="form-label" htmlFor="rolSugerido">
-                Rol Solicitado
-              </label>
-              <select
-                id="rolSugerido"
-                className="form-input"
-                value={rolSugerido}
-                onChange={(e) => setRolSugerido(e.target.value as UserRole)}
-                required
-                disabled={loading}
-              >
-                <option value="coordinador">Coordinador de Campo (Carga de comprobantes)</option>
-                <option value="auxiliar_campo">Auxiliar de Campo (Carga y Requisiciones)</option>
-                <option value="auditor">Auditor (Finanzas, Conciliación y Reportes)</option>
-                <option value="director">Director (Reportes, Requisición y Carga)</option>
-                <option value="donante">Donante (Ver Tableros)</option>
-                <option value="administrador">Administrador (Control Total)</option>
-              </select>
-            </div>
-
-            <div className="form-group" style={{ marginBottom: '1.25rem' }}>
               <label className="form-label" htmlFor="selectedOngId">
                 Organización (ONG)
               </label>
