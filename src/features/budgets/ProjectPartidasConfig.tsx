@@ -1,12 +1,21 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Shield, Sparkles, Check, Loader, FolderKanban, ArrowLeft } from 'lucide-react';
+import {
+  Shield,
+  Sparkles,
+  Check,
+  Loader,
+  FolderKanban,
+  ArrowLeft,
+  ListChecks,
+  ListX,
+  BookOpen,
+  Eye,
+} from 'lucide-react';
 import { api } from '../../services/api';
 import type { ExpenseCategory, PartidaGasto, Project } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 import { useNotifications } from '../../components/NotificationProvider';
-
-const BASE_ONG_ID = '11111111-1111-1111-1111-111111111111';
 
 export const ProjectPartidasConfig: React.FC = () => {
   const { projectId } = useParams<{ projectId: string }>();
@@ -20,6 +29,13 @@ export const ProjectPartidasConfig: React.FC = () => {
   const [selectedPartidas, setSelectedPartidas] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+
+  /** Solo administradores y directores pueden editar; auditores solo leen */
+  const canEdit =
+    profile?.rol === 'administrador' ||
+    profile?.rol === 'director' ||
+    profile?.rol === 'super_admin';
+  const isReadOnly = profile?.rol === 'auditor';
 
   // ── Fetch Catalog & Project-Partida Relations ──────────────────────────────
 
@@ -56,6 +72,7 @@ export const ProjectPartidasConfig: React.FC = () => {
   // ── Handlers ─────────────────────────────────────────────────────────────
 
   const handleCheckboxChange = (partidaId: string) => {
+    if (!canEdit) return;
     setSelectedPartidas((prev) => {
       const next = new Set(prev);
       if (next.has(partidaId)) {
@@ -68,6 +85,7 @@ export const ProjectPartidasConfig: React.FC = () => {
   };
 
   const handleSelectAllInCategory = (categoryId: string) => {
+    if (!canEdit) return;
     const categoryPartidas = partidas.filter((p) => p.categoria_id === categoryId);
     const categoryPartidaIds = categoryPartidas.map((p) => p.id);
     const allSelected = categoryPartidaIds.every((id) => selectedPartidas.has(id));
@@ -75,18 +93,39 @@ export const ProjectPartidasConfig: React.FC = () => {
     setSelectedPartidas((prev) => {
       const next = new Set(prev);
       if (allSelected) {
-        // Deseleccionar todas las de esta categoría
         categoryPartidaIds.forEach((id) => next.delete(id));
       } else {
-        // Seleccionar todas las de esta categoría
         categoryPartidaIds.forEach((id) => next.add(id));
       }
       return next;
     });
   };
 
+  /** Selecciona solo las partidas del catálogo estándar UNDG */
+  const handleSelectUNDG = () => {
+    if (!canEdit) return;
+    const undgIds = partidas.filter((p) => p.es_catalogo_undg).map((p) => p.id);
+    setSelectedPartidas((prev) => {
+      const next = new Set(prev);
+      undgIds.forEach((id) => next.add(id));
+      return next;
+    });
+  };
+
+  /** Selecciona absolutamente todas las partidas del catálogo */
+  const handleSelectAll = () => {
+    if (!canEdit) return;
+    setSelectedPartidas(new Set(partidas.map((p) => p.id)));
+  };
+
+  /** Limpia toda la selección */
+  const handleClearAll = () => {
+    if (!canEdit) return;
+    setSelectedPartidas(new Set());
+  };
+
   const handleSave = async () => {
-    if (!projectId) return;
+    if (!projectId || !canEdit) return;
     setSaving(true);
     try {
       await api.setProjectPartidas(projectId, Array.from(selectedPartidas), profile?.ong_id ?? '');
@@ -99,6 +138,17 @@ export const ProjectPartidasConfig: React.FC = () => {
       setSaving(false);
     }
   };
+
+  // ── Derived counts ────────────────────────────────────────────────────────
+
+  const totalPartidas = partidas.length;
+  const selectedCount = selectedPartidas.size;
+  const undgCount = partidas.filter((p) => p.es_catalogo_undg).length;
+  const selectedUNDGCount = partidas.filter(
+    (p) => p.es_catalogo_undg && selectedPartidas.has(p.id),
+  ).length;
+
+  // ── Render ────────────────────────────────────────────────────────────────
 
   return (
     <div style={{ padding: '2rem', maxWidth: '960px', margin: '0 auto' }}>
@@ -141,33 +191,165 @@ export const ProjectPartidasConfig: React.FC = () => {
               Configurar Partidas del Proyecto
             </h2>
             <p style={{ margin: '0.35rem 0px 0px', fontSize: '0.95rem', opacity: 0.7 }}>
-              Habilita las partidas que están autorizadas para el proyecto:{' '}
+              Habilita las partidas autorizadas para el proyecto:{' '}
               <strong style={{ color: 'var(--primary)' }}>
                 {project ? project.nombre : 'Cargando...'}
               </strong>
             </p>
           </div>
 
+          {/* Contador de selección */}
+          {!loading && (
+            <div
+              style={{
+                textAlign: 'center',
+                background: 'var(--card-bg)',
+                border: '1px solid var(--border-color)',
+                borderRadius: 'var(--radius-md)',
+                padding: '0.65rem 1.25rem',
+                minWidth: '130px',
+              }}
+            >
+              <div
+                style={{
+                  fontSize: '1.6rem',
+                  fontWeight: 800,
+                  color: selectedCount > 0 ? 'var(--primary)' : 'var(--neutral-medium)',
+                  lineHeight: 1,
+                }}
+              >
+                {selectedCount}
+              </div>
+              <div
+                style={{ fontSize: '0.72rem', color: 'var(--neutral-medium)', marginTop: '2px' }}
+              >
+                de {totalPartidas} partidas
+              </div>
+              <div
+                style={{
+                  fontSize: '0.7rem',
+                  color: selectedUNDGCount === undgCount ? '#1a7a4a' : 'var(--neutral-medium)',
+                  marginTop: '2px',
+                }}
+              >
+                {selectedUNDGCount}/{undgCount} UNDG
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Modo Solo Lectura — aviso para auditor */}
+      {isReadOnly && (
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.75rem',
+            padding: '0.75rem 1rem',
+            background: 'rgba(30,111,168,0.06)',
+            border: '1px solid rgba(30,111,168,0.2)',
+            borderRadius: 'var(--radius-md)',
+            marginBottom: '1.5rem',
+            fontSize: '0.85rem',
+            color: '#1e6fa8',
+          }}
+        >
+          <Eye size={17} style={{ flexShrink: 0 }} />
+          <span>
+            Estás viendo esta pantalla en <strong>modo lectura</strong>. Solo Administradores y
+            Directores pueden modificar las partidas habilitadas por proyecto.
+          </span>
+        </div>
+      )}
+
+      {/* Barra de acciones globales */}
+      {!loading && canEdit && (
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.65rem',
+            marginBottom: '1.25rem',
+            flexWrap: 'wrap',
+          }}
+        >
+          <span style={{ fontSize: '0.82rem', color: 'var(--neutral-medium)', fontWeight: 600 }}>
+            Selección rápida:
+          </span>
+          <button
+            onClick={handleSelectUNDG}
+            className="btn btn-outline"
+            title="Añade a la selección todas las partidas del catálogo UNDG"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.4rem',
+              fontSize: '0.8rem',
+              padding: '0.4rem 0.85rem',
+              borderColor: 'rgba(30,111,168,0.4)',
+              color: '#1e6fa8',
+            }}
+          >
+            <Shield size={14} />
+            Seleccionar Catálogo UNDG
+          </button>
+          <button
+            onClick={handleSelectAll}
+            className="btn btn-outline"
+            title="Selecciona absolutamente todas las partidas disponibles"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.4rem',
+              fontSize: '0.8rem',
+              padding: '0.4rem 0.85rem',
+            }}
+          >
+            <ListChecks size={14} />
+            Seleccionar Todo
+          </button>
+          <button
+            onClick={handleClearAll}
+            className="btn btn-outline"
+            title="Desmarca todas las partidas"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.4rem',
+              fontSize: '0.8rem',
+              padding: '0.4rem 0.85rem',
+              borderColor: 'rgba(200,50,50,0.35)',
+              color: 'var(--danger)',
+            }}
+          >
+            <ListX size={14} />
+            Limpiar selección
+          </button>
+
+          {/* Separador */}
+          <div style={{ flex: 1 }} />
+
           <button
             onClick={handleSave}
             disabled={saving || loading}
             className="btn btn-primary"
             style={{
-              padding: '0.75rem 2rem',
+              padding: '0.5rem 1.5rem',
               display: 'flex',
               alignItems: 'center',
               gap: '0.5rem',
             }}
           >
             {saving ? (
-              <Loader size={18} style={{ animation: 'spin 0.8s linear infinite' }} />
+              <Loader size={16} style={{ animation: 'spin 0.8s linear infinite' }} />
             ) : (
-              <Check size={18} />
+              <Check size={16} />
             )}
             Guardar Cambios
           </button>
         </div>
-      </div>
+      )}
 
       {/* Contenido / Catálogo */}
       <div className="card" style={{ padding: '2rem' }}>
@@ -193,7 +375,7 @@ export const ProjectPartidasConfig: React.FC = () => {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
             {categories.map((cat) => {
               const catPartidas = partidas.filter((p) => p.categoria_id === cat.id);
-              const isBase = cat.ong_id === BASE_ONG_ID;
+              const isBase = cat.es_catalogo_undg === true;
               const hasAllSelected =
                 catPartidas.length > 0 && catPartidas.every((p) => selectedPartidas.has(p.id));
 
@@ -233,8 +415,18 @@ export const ProjectPartidasConfig: React.FC = () => {
                         <Sparkles size={16} style={{ color: '#1a7a4a', opacity: 0.8 }} />
                       )}
                       {cat.nombre}
+                      <span
+                        style={{
+                          fontSize: '0.72rem',
+                          fontWeight: 500,
+                          color: 'var(--neutral-medium)',
+                          fontStyle: 'italic',
+                        }}
+                      >
+                        {isBase ? '— Estándar UNDG' : '— Personalizada'}
+                      </span>
                     </span>
-                    {catPartidas.length > 0 && (
+                    {catPartidas.length > 0 && canEdit && (
                       <button
                         onClick={() => handleSelectAllInCategory(cat.id)}
                         style={{
@@ -276,7 +468,7 @@ export const ProjectPartidasConfig: React.FC = () => {
                       </p>
                     ) : (
                       catPartidas.map((p) => {
-                        const isPartidaBase = p.ong_id === BASE_ONG_ID;
+                        const isPartidaBase = p.es_catalogo_undg === true;
                         const isChecked = selectedPartidas.has(p.id);
 
                         return (
@@ -288,17 +480,19 @@ export const ProjectPartidasConfig: React.FC = () => {
                               gap: '0.75rem',
                               padding: '0.6rem 0.75rem',
                               borderRadius: 'var(--radius-sm)',
-                              cursor: 'pointer',
+                              cursor: canEdit ? 'pointer' : 'default',
                               backgroundColor: isChecked ? 'rgba(0,143,166,0.04)' : 'transparent',
                               border: '1px solid',
                               borderColor: isChecked ? 'rgba(0,143,166,0.15)' : 'transparent',
                               transition: 'all 0.15s',
+                              opacity: !canEdit && !isChecked ? 0.55 : 1,
                             }}
                           >
                             <input
                               type="checkbox"
                               checked={isChecked}
                               onChange={() => handleCheckboxChange(p.id)}
+                              disabled={!canEdit}
                               style={{ marginTop: '0.2rem' }}
                             />
                             <div style={{ flex: 1 }}>
@@ -347,6 +541,35 @@ export const ProjectPartidasConfig: React.FC = () => {
           </div>
         )}
       </div>
+
+      {/* Leyenda informativa */}
+      {!loading && (
+        <div
+          style={{
+            display: 'flex',
+            gap: '1.5rem',
+            marginTop: '1.25rem',
+            padding: '0.65rem 1rem',
+            background: 'var(--card-bg)',
+            borderRadius: 'var(--radius-md)',
+            border: '1px solid var(--border-color)',
+            flexWrap: 'wrap',
+            fontSize: '0.78rem',
+            color: 'var(--neutral-medium)',
+          }}
+        >
+          <span style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+            <Shield size={13} color="#1e6fa8" /> Catálogo estándar UNDG
+          </span>
+          <span style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+            <Sparkles size={13} color="#1a7a4a" /> Partidas personalizadas de tu organización
+          </span>
+          <span style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+            <BookOpen size={13} /> Solo las partidas habilitadas aquí pueden usarse en presupuestos
+            y comprobantes de este proyecto.
+          </span>
+        </div>
+      )}
     </div>
   );
 };

@@ -25,6 +25,8 @@ interface Category {
   nombre: string;
   descripcion?: string;
   ong_id?: string;
+  /** true cuando pertenece al catálogo estándar UNDG */
+  es_catalogo_undg?: boolean;
 }
 
 interface Partida {
@@ -34,11 +36,11 @@ interface Partida {
   nombre: string;
   descripcion?: string;
   ong_id?: string;
+  /** true cuando pertenece al catálogo estándar UNDG */
+  es_catalogo_undg?: boolean;
 }
 
 // ─── Constants ───────────────────────────────────────────────────────────────
-
-const BASE_ONG_ID = '11111111-1111-1111-1111-111111111111';
 
 // ─── Sub-components ──────────────────────────────────────────────────────────
 
@@ -281,7 +283,7 @@ export const CustomCatalogManager: React.FC = () => {
   };
 
   const handleDeleteCategory = async (cat: Category) => {
-    if (cat.ong_id === BASE_ONG_ID) {
+    if (cat.es_catalogo_undg) {
       addNotification('No se pueden eliminar categorías del catálogo estándar UNDG', 'warning');
       return;
     }
@@ -330,7 +332,7 @@ export const CustomCatalogManager: React.FC = () => {
   };
 
   const handleDeletePartida = async (partida: Partida) => {
-    if (partida.ong_id === BASE_ONG_ID) {
+    if (partida.es_catalogo_undg) {
       addNotification('No se pueden eliminar partidas del catálogo estándar UNDG', 'warning');
       return;
     }
@@ -383,8 +385,8 @@ export const CustomCatalogManager: React.FC = () => {
   // ── Group data ────────────────────────────────────────────────────────────
 
   // Separate base categories from custom ones
-  const baseCategories = categories.filter((c) => c.ong_id === BASE_ONG_ID);
-  const customCategories = categories.filter((c) => c.ong_id === ongId);
+  const baseCategories = categories.filter((c) => c.es_catalogo_undg === true);
+  const customCategories = categories.filter((c) => !c.es_catalogo_undg);
 
   const getPartidasForCategory = (catId: string) =>
     partidas.filter((p) => p.categoria_id === catId);
@@ -410,8 +412,8 @@ export const CustomCatalogManager: React.FC = () => {
   }
 
   const renderPartidaRow = (partida: Partida) => {
-    const isBase = partida.ong_id === BASE_ONG_ID;
-    const isOwn = partida.ong_id === ongId;
+    const isBase = partida.es_catalogo_undg === true;
+    const isOwn = !isBase;
     const isDeleting = deletingId === partida.id;
 
     return (
@@ -725,29 +727,29 @@ export const CustomCatalogManager: React.FC = () => {
         </div>
       </div>
 
-      {/* Advertencia Explicativa */}
+      {/* Aviso sobre gestión del catálogo */}
       <div
         style={{
           display: 'flex',
           gap: '0.75rem',
-          padding: '1rem',
-          background: 'rgba(255, 165, 0, 0.05)',
-          border: '1px solid rgba(255, 165, 0, 0.25)',
+          padding: '0.9rem 1rem',
+          background: 'rgba(30,111,168,0.05)',
+          border: '1px solid rgba(30,111,168,0.18)',
           borderRadius: 'var(--radius-md)',
-          fontSize: '0.85rem',
-          color: '#805500',
+          fontSize: '0.84rem',
+          color: '#1e5a8a',
           marginBottom: '1.5rem',
-          lineHeight: '1.5',
+          lineHeight: '1.55',
         }}
       >
-        <AlertCircle size={20} style={{ flexShrink: 0, marginTop: '2px' }} />
+        <AlertCircle size={18} style={{ flexShrink: 0, marginTop: '2px', opacity: 0.7 }} />
         <div>
-          <strong>Aviso sobre la gestión del catálogo:</strong> Eliminar categorías o partidas desde
-          esta pantalla las borrará <strong>permanentemente</strong> de la base de datos de tu
-          organización y de todos sus proyectos. Si solo deseas ocultarlas o desactivarlas para
-          mejorar la presentación o presupuesto de un proyecto específico, no las elimines aquí; en
-          su lugar, utiliza la opción <strong>"Configurar Partidas"</strong> dentro del menú de
-          presupuestos de dicho proyecto.
+          <strong>Esta pantalla gestiona el catálogo base de tu organización.</strong> Aquí puedes
+          crear categorías y partidas <em>personalizadas</em>. Las partidas del catálogo estándar
+          UNDG son de solo lectura.{' '}
+          <strong>Para seleccionar qué partidas aplican a un proyecto específico</strong>, usa la
+          opción <strong>"Configurar Partidas"</strong> dentro del menú de Presupuestos de ese
+          proyecto.
         </div>
       </div>
 

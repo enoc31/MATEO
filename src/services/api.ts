@@ -33,6 +33,8 @@ export interface ExpenseCategory {
   nombre: string;
   descripcion: string;
   ong_id?: string;
+  /** true cuando es parte del catálogo estándar UNDG compartido */
+  es_catalogo_undg?: boolean;
 }
 
 export interface PartidaGasto {
@@ -42,6 +44,8 @@ export interface PartidaGasto {
   nombre: string;
   descripcion: string;
   ong_id?: string;
+  /** true cuando es parte del catálogo estándar UNDG compartido */
+  es_catalogo_undg?: boolean;
 }
 
 export interface Budget {
@@ -1888,8 +1892,14 @@ export const api = {
       return { categories: [], partidas: [] };
     }
     const [{ data: cats, error: catsErr }, { data: parts, error: partsErr }] = await Promise.all([
-      supabase.from('categorias_gasto').select('*').order('nombre'),
-      supabase.from('partidas_gasto').select('*').order('codigo'),
+      supabase
+        .from('categorias_gasto')
+        .select('id, nombre, descripcion, ong_id, es_catalogo_undg')
+        .order('nombre'),
+      supabase
+        .from('partidas_gasto')
+        .select('id, categoria_id, codigo, nombre, descripcion, ong_id, es_catalogo_undg')
+        .order('codigo'),
     ]);
     if (catsErr) throw catsErr;
     if (partsErr) throw partsErr;
@@ -1897,6 +1907,17 @@ export const api = {
       categories: (cats ?? []) as ExpenseCategory[],
       partidas: (parts ?? []) as PartidaGasto[],
     };
+  },
+
+  /** Devuelve los IDs de todas las partidas del catálogo estándar UNDG */
+  getUNDGPartidaIds: async (): Promise<string[]> => {
+    if (isSimulationMode) return [];
+    const { data, error } = await supabase
+      .from('partidas_gasto')
+      .select('id')
+      .eq('es_catalogo_undg', true);
+    if (error) throw error;
+    return (data ?? []).map((r: { id: string }) => r.id);
   },
 
   createCategoria: async (
@@ -1952,11 +1973,15 @@ export const api = {
     }
     const { data, error } = await supabase
       .from('proyectos_partidas')
-      .select('partida_id, partidas_gasto(*)')
+      .select(
+        'partida_id, partidas_gasto(id, categoria_id, codigo, nombre, descripcion, ong_id, es_catalogo_undg)',
+      )
       .eq('proyecto_id', proyectoId);
 
     if (error) throw error;
-    return (data ?? []).map((row: any) => row.partidas_gasto).filter(Boolean) as PartidaGasto[];
+    return (data ?? [])
+      .map((row: { partida_id: string; partidas_gasto: PartidaGasto | null }) => row.partidas_gasto)
+      .filter(Boolean) as PartidaGasto[];
   },
 
   setProjectPartidas: async (
