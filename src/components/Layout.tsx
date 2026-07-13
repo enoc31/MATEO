@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { LogOut, Pin, PinOff, Menu, Lightbulb, LayoutGrid } from 'lucide-react';
+import { LogOut, Pin, PinOff, Menu, Lightbulb, LayoutGrid, Building } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { api, isSimulationMode } from '../services/api';
 import { InternalControlModal } from './InternalControlModal';
@@ -45,6 +45,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
       }
     };
     fetchRate();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [profile?.id]);
 
   if (!profile) return null;
@@ -174,6 +175,14 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
           </div>
         </div>
 
+        {/* Badge móvil para identificar ONG activa de manera prominente */}
+        {activeOng && (
+          <div className="header-ong-badge-mobile" title={`Organización: ${activeOng.nombre}`}>
+            <Building size={13} style={{ flexShrink: 0 }} />
+            <span>{activeOng.nombre}</span>
+          </div>
+        )}
+
         {/* Navegación de Escritorio */}
         <nav
           className="nav-menu-desktop"
@@ -238,7 +247,38 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
             )}
             <div style={{ textAlign: 'right' }}>
               <div style={{ fontWeight: 600, fontSize: '0.85rem' }}>{profile.nombre_completo}</div>
-              <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '0.1rem' }}>
+              <div
+                style={{
+                  display: 'flex',
+                  justifyContent: 'flex-end',
+                  alignItems: 'center',
+                  gap: '0.4rem',
+                  marginTop: '0.2rem',
+                }}
+              >
+                {activeOng && (
+                  <span
+                    style={{
+                      fontSize: '0.68rem',
+                      fontWeight: 700,
+                      color: 'var(--primary)',
+                      background: 'rgba(113, 75, 103, 0.08)',
+                      padding: '0.12rem 0.5rem',
+                      borderRadius: '4px',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '0.25rem',
+                      maxWidth: '180px',
+                      whiteSpace: 'nowrap',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                    }}
+                    title={`Organización: ${activeOng.nombre}`}
+                  >
+                    <Building size={11} style={{ flexShrink: 0 }} />
+                    {activeOng.nombre}
+                  </span>
+                )}
                 <span
                   className={`badge ${
                     role === 'administrador'
@@ -430,7 +470,33 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
             <span style={{ fontWeight: 700, color: 'var(--primary)', fontSize: '0.9rem' }}>
               {profile.nombre_completo}
             </span>
-            <span style={{ fontSize: '0.75rem', color: 'var(--neutral-dark)' }}>
+            {activeOng && (
+              <span
+                style={{
+                  fontSize: '0.72rem',
+                  color: 'var(--primary)',
+                  background: 'rgba(113, 75, 103, 0.08)',
+                  padding: '0.15rem 0.5rem',
+                  borderRadius: '4px',
+                  marginTop: '0.25rem',
+                  fontWeight: 600,
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '0.25rem',
+                  maxWidth: '220px',
+                  whiteSpace: 'nowrap',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                }}
+                title={activeOng.nombre}
+              >
+                <Building size={12} style={{ flexShrink: 0 }} />
+                {activeOng.nombre}
+              </span>
+            )}
+            <span
+              style={{ fontSize: '0.75rem', color: 'var(--neutral-dark)', marginTop: '0.25rem' }}
+            >
               {role.toUpperCase()}
             </span>
           </div>

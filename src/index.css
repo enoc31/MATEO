@@ -445,10 +445,33 @@ textarea {
   }
 }
 
+.header-ong-badge-mobile {
+  display: none !important;
+}
+
 /* =========================================================================
    4. ESTILOS PARTICULARES DE LA VISTA MÓVIL
    ========================================================================= */
 @media (max-width: 768px) {
+  .header-ong-badge-mobile {
+    display: flex !important;
+    align-items: center;
+    gap: 0.35rem;
+    background-color: rgba(113, 75, 103, 0.06);
+    color: var(--primary);
+    padding: 0.25rem 0.65rem;
+    border-radius: 12px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    border: 1px solid rgba(113, 75, 103, 0.15);
+    margin-left: auto;
+    margin-right: 0.5rem;
+    max-width: 130px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
   .nav-menu-desktop {
     display: none !important;
   }
