@@ -1979,8 +1979,17 @@ export const api = {
       .eq('proyecto_id', proyectoId);
 
     if (error) throw error;
-    return (data ?? [])
-      .map((row: { partida_id: string; partidas_gasto: PartidaGasto | null }) => row.partidas_gasto)
+
+    const rows = data as unknown as Array<{
+      partida_id: string;
+      partidas_gasto: PartidaGasto | PartidaGasto[] | null;
+    }>;
+
+    return (rows ?? [])
+      .map((row) => {
+        if (!row.partidas_gasto) return null;
+        return Array.isArray(row.partidas_gasto) ? row.partidas_gasto[0] : row.partidas_gasto;
+      })
       .filter(Boolean) as PartidaGasto[];
   },
 
