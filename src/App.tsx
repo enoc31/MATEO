@@ -421,9 +421,9 @@ const PendingApproval: React.FC<PendingApprovalProps> = ({ logout, refreshProfil
             lineHeight: '1.6',
           }}
         >
-          Tu cuenta ha sido creada exitosamente. Para poder ingresar, un **Administrador** de la
-          CNBV debe validar tu identidad, aprobar tu registro y asignarte un rol dentro de la
-          plataforma.
+          Tu cuenta ha sido creada exitosamente. Para poder ingresar, un **Administrador** de tu
+          Organización debe validar tu identidad, aprobar tu registro y asignarte un rol dentro de
+          la plataforma.
         </p>
 
         <div
@@ -451,7 +451,7 @@ const PendingApproval: React.FC<PendingApprovalProps> = ({ logout, refreshProfil
               gap: '0.3rem',
             }}
           >
-            <li>Contacta al Administrador de Finanzas o Director Nacional de la CNBV.</li>
+            <li>Contacta al Administrador de tu Organización.</li>
             <li>Solicita la aprobación de tu correo institucional.</li>
             <li>
               Una vez aprobado, pulsa el botón **Verificar Estado de Acceso** o recarga esta página.
