@@ -2,10 +2,10 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { menuItems, getMenuIcon } from './menuConfig';
-import { LogOut } from 'lucide-react';
+import { LogOut, Building } from 'lucide-react';
 
 export const AppsDashboard: React.FC = () => {
-  const { profile, logout } = useAuth();
+  const { profile, logout, activeOng } = useAuth();
   const navigate = useNavigate();
 
   if (!profile) return null;
@@ -62,21 +62,53 @@ export const AppsDashboard: React.FC = () => {
             <div style={{ fontWeight: 700, fontSize: '0.85rem', color: '#1e293b' }}>
               {profile.nombre_completo}
             </div>
-            <span
+            <div
               style={{
-                fontSize: '0.65rem',
-                fontWeight: 800,
-                color: 'white',
-                background: 'var(--primary, #714B67)',
-                padding: '0.1rem 0.5rem',
-                borderRadius: '4px',
-                display: 'inline-block',
+                display: 'flex',
+                justifyContent: 'flex-end',
+                alignItems: 'center',
+                gap: '0.4rem',
                 marginTop: '2px',
-                textTransform: 'uppercase',
               }}
             >
-              {profile.rol.replace('_', ' ')}
-            </span>
+              {activeOng && (
+                <span
+                  style={{
+                    fontSize: '0.65rem',
+                    fontWeight: 800,
+                    color: 'var(--primary)',
+                    background: 'rgba(113, 75, 103, 0.08)',
+                    padding: '0.1rem 0.5rem',
+                    borderRadius: '4px',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '0.25rem',
+                    maxWidth: '180px',
+                    whiteSpace: 'nowrap',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                  }}
+                  title={`Organización: ${activeOng.nombre}`}
+                >
+                  <Building size={11} style={{ flexShrink: 0 }} />
+                  {activeOng.nombre}
+                </span>
+              )}
+              <span
+                style={{
+                  fontSize: '0.65rem',
+                  fontWeight: 800,
+                  color: 'white',
+                  background: 'var(--primary, #714B67)',
+                  padding: '0.1rem 0.5rem',
+                  borderRadius: '4px',
+                  display: 'inline-block',
+                  textTransform: 'uppercase',
+                }}
+              >
+                {profile.rol.replace('_', ' ')}
+              </span>
+            </div>
           </div>
 
           <button
