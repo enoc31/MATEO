@@ -240,7 +240,7 @@ export const JornadasManager: React.FC = () => {
               </span>
             </div>
             <button
-              onClick={copyLink}
+              onClick={() => copyLink()}
               className="btn"
               style={{
                 backgroundColor: '#1976d2',
