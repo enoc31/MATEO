@@ -1,3 +1,6 @@
 {
-  "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]
+  "rewrites": [
+    { "source": "/registro", "destination": "/api/registro" },
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
 }
