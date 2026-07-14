@@ -12,7 +12,17 @@ interface ReportOptions {
 const getUrlBase64 = async (url: string | null): Promise<string | null> => {
   if (!url) return null;
   try {
-    const response = await fetch(url);
+    let response;
+    try {
+      response = await fetch(url);
+      if (!response.ok) throw new Error('Response not OK');
+    } catch (e) {
+      console.warn('Direct fetch failed for URL: ' + url + '. Trying CORS proxy...', e);
+      // Intentar usar el proxy público para evadir el bloqueo de CORS del navegador
+      const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`;
+      response = await fetch(proxyUrl);
+      if (!response.ok) throw new Error('Proxy response not OK', { cause: e });
+    }
     const blob = await response.blob();
 
     const imgUrl = URL.createObjectURL(blob);
