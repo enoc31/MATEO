@@ -1776,6 +1776,41 @@ export const api = {
     }
   },
 
+  deleteJornada: async (id: string, deleteBeneficiaries: boolean): Promise<void> => {
+    if (!isSimulationMode) {
+      if (deleteBeneficiaries) {
+        const { error: bError } = await supabase
+          .from('beneficiarios')
+          .delete()
+          .eq('jornada_id', id);
+        if (bError) throw bError;
+      } else {
+        const { error: uError } = await supabase
+          .from('beneficiarios')
+          .update({ jornada_id: null })
+          .eq('jornada_id', id);
+        if (uError) throw uError;
+      }
+      const { error: jError } = await supabase.from('jornadas').delete().eq('id', id);
+      if (jError) throw jError;
+    } else {
+      const allJornadas = JSON.parse(localStorage.getItem('cnbv_jornadas') || '[]');
+      const filteredJornadas = allJornadas.filter((j: Jornada) => j.id !== id);
+      localStorage.setItem('cnbv_jornadas', JSON.stringify(filteredJornadas));
+
+      const allBen = JSON.parse(localStorage.getItem('cnbv_beneficiarios') || '[]');
+      if (deleteBeneficiaries) {
+        const filteredBen = allBen.filter((b: any) => b.jornada_id !== id);
+        localStorage.setItem('cnbv_beneficiarios', JSON.stringify(filteredBen));
+      } else {
+        const updatedBen = allBen.map((b: any) =>
+          b.jornada_id === id ? { ...b, jornada_id: null } : b,
+        );
+        localStorage.setItem('cnbv_beneficiarios', JSON.stringify(updatedBen));
+      }
+    }
+  },
+
   getBeneficiaries: async (): Promise<Beneficiary[]> => {
     if (!isSimulationMode) {
       const { data, error } = await supabase

@@ -10,6 +10,7 @@ import {
   Eye,
   Download,
   X,
+  Trash2,
 } from 'lucide-react';
 import { useNotifications } from '../../components/NotificationProvider';
 import { useAuth } from '../../context/AuthContext';
@@ -27,6 +28,11 @@ export const JornadasManager: React.FC = () => {
   const [selectedJornadaForDetails, setSelectedJornadaForDetails] = useState<Jornada | null>(null);
   const [jornadaBeneficiaries, setJornadaBeneficiaries] = useState<Beneficiary[]>([]);
   const [loadingDetails, setLoadingDetails] = useState(false);
+
+  // Deletion state
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleteBeneficiariesOpt, setDeleteBeneficiariesOpt] = useState(false);
+  const [deletingJornada, setDeletingJornada] = useState(false);
 
   // Form state
   const [nombre, setNombre] = useState('');
@@ -142,6 +148,24 @@ export const JornadasManager: React.FC = () => {
     } catch (err) {
       console.error(err);
       addNotification('Error al generar el reporte PDF', 'warning');
+    }
+  };
+
+  const handleConfirmDeleteJornada = async () => {
+    if (!selectedJornadaForDetails) return;
+    setDeletingJornada(true);
+    try {
+      await api.deleteJornada(selectedJornadaForDetails.id, deleteBeneficiariesOpt);
+      addNotification('Jornada eliminada correctamente', 'success');
+      setShowDeleteConfirm(false);
+      setSelectedJornadaForDetails(null);
+      setDeleteBeneficiariesOpt(false);
+      await loadData();
+    } catch (err) {
+      console.error(err);
+      addNotification('Error al eliminar la jornada', 'warning');
+    } finally {
+      setDeletingJornada(false);
     }
   };
 
@@ -665,17 +689,141 @@ export const JornadasManager: React.FC = () => {
             <div
               style={{
                 display: 'flex',
-                justifyContent: 'flex-end',
+                justifyContent: 'space-between',
+                alignItems: 'center',
                 padding: '1rem 1.5rem',
                 borderTop: '1px solid var(--border-color)',
                 backgroundColor: 'var(--neutral-light)',
               }}
             >
               <button
+                className="btn btn-danger"
+                onClick={() => setShowDeleteConfirm(true)}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  backgroundColor: 'var(--danger)',
+                  color: '#fff',
+                  border: 'none',
+                }}
+              >
+                <Trash2 size={16} /> Eliminar Jornada
+              </button>
+              <button
                 className="btn btn-secondary"
                 onClick={() => setSelectedJornadaForDetails(null)}
               >
                 Cerrar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showDeleteConfirm && selectedJornadaForDetails && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.6)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1100,
+            padding: '1.5rem',
+          }}
+        >
+          <div
+            style={{
+              backgroundColor: '#fff',
+              borderRadius: 'var(--radius-lg)',
+              padding: '2rem',
+              maxWidth: '500px',
+              width: '100%',
+              boxShadow: 'var(--shadow-lg)',
+            }}
+          >
+            <h3
+              style={{
+                marginTop: 0,
+                color: 'var(--danger)',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+              }}
+            >
+              <Trash2 size={24} /> ¿Confirmar Eliminación?
+            </h3>
+            <p style={{ margin: '1rem 0', color: 'var(--neutral-dark)' }}>
+              Estás a punto de eliminar la jornada{' '}
+              <strong>{selectedJornadaForDetails.nombre}</strong>. Esta acción es irreversible.
+            </p>
+
+            <div
+              style={{
+                backgroundColor: 'var(--neutral-light)',
+                padding: '1rem',
+                borderRadius: 'var(--radius-md)',
+                marginBottom: '1.5rem',
+                border: '1px solid var(--border-color)',
+              }}
+            >
+              <label
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.75rem',
+                  cursor: 'pointer',
+                  fontWeight: 600,
+                }}
+              >
+                <input
+                  type="checkbox"
+                  checked={deleteBeneficiariesOpt}
+                  onChange={(e) => setDeleteBeneficiariesOpt(e.target.checked)}
+                  style={{ width: '18px', height: '18px', cursor: 'pointer' }}
+                />
+                <span>También borrar los beneficiarios asociados en la Base de Datos</span>
+              </label>
+              <p
+                style={{
+                  margin: '0.5rem 0 0 1.85rem',
+                  fontSize: '0.8rem',
+                  color: 'var(--neutral-gray)',
+                }}
+              >
+                {deleteBeneficiariesOpt
+                  ? 'Se eliminarán de forma permanente todos los beneficiados registrados en esta jornada.'
+                  : 'Los beneficiarios se conservarán en la base de datos pero se desvincularán de esta jornada.'}
+              </p>
+            </div>
+
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem' }}>
+              <button
+                className="btn btn-secondary"
+                disabled={deletingJornada}
+                onClick={() => {
+                  setShowDeleteConfirm(false);
+                  setDeleteBeneficiariesOpt(false);
+                }}
+              >
+                Cancelar
+              </button>
+              <button
+                className="btn btn-danger"
+                disabled={deletingJornada}
+                onClick={handleConfirmDeleteJornada}
+                style={{
+                  backgroundColor: 'var(--danger)',
+                  color: '#fff',
+                  border: 'none',
+                }}
+              >
+                {deletingJornada ? 'Eliminando...' : 'Sí, Eliminar'}
               </button>
             </div>
           </div>
