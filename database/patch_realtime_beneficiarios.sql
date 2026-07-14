@@ -1,9 +1,17 @@
 -- =========================================================================
 -- PATCH: patch_realtime_beneficiarios.sql
--- Objetivo: Configurar soporte para registro público (anónimo) de beneficiarios
---           y habilitar replicación en tiempo real (Supabase Realtime).
+-- Objetivo: Configurar soporte para registro público (anónimo) de beneficiarios,
+--           habilitar RLS y replicación en tiempo real (Supabase Realtime).
 -- Ejecutar en: Supabase SQL Editor
 -- =========================================================================
+
+-- 0. Habilitar y forzar Row Level Security (RLS)
+-- Esto garantiza que las políticas de aislamiento de tenant sean aplicadas por Postgres
+ALTER TABLE public.jornadas ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.jornadas FORCE ROW LEVEL SECURITY;
+
+ALTER TABLE public.beneficiarios ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.beneficiarios FORCE ROW LEVEL SECURITY;
 
 -- 1. Habilitar la Replicación en Tiempo Real para la tabla beneficiarios
 DO $$
