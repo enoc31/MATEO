@@ -84,12 +84,13 @@ export const Dashboard: React.FC = () => {
   // --- 2. PREPARACIÓN DE DATOS PARA GRÁFICOS ---
   const CATEGORY_COLORS = ['#2f5aae', '#073a11', '#008fa6', '#be574b', '#e2af13', '#64748b'];
 
-  const categoryData = Object.keys(expensesByCategory).map((catId, index) => {
-    const catObj = categories.find((c) => c.id === catId);
-    const catName = catObj ? catObj.nombre.split(' (')[0].replace(/^\d+\.\s+/, '') : 'Otros';
+  const categoryData = Object.keys(expensesByCategory).map((catKey, index) => {
+    const catObj = categories.find((c) => c.id === catKey || c.nombre === catKey);
+    const rawName = catObj ? catObj.nombre : catKey;
+    const catName = rawName.split(' (')[0].replace(/^\d+\.\s+/, '');
     return {
       name: catName,
-      value: Number(expensesByCategory[catId] || 0),
+      value: Number(expensesByCategory[catKey] || 0),
       color: CATEGORY_COLORS[index % CATEGORY_COLORS.length],
     };
   });
