@@ -29,14 +29,14 @@ DROP POLICY IF EXISTS "beneficiarios_public_insert" ON public.beneficiarios;
 -- Esto permite a los colaboradores no logueados cargar los detalles de la jornada actual
 CREATE POLICY "jornadas_public_read_active" ON public.jornadas
   FOR SELECT
-  TO public
+  TO anon
   USING (activa = true);
 
 -- 4. Crear política para permitir la inserción pública de beneficiarios
 -- Esto permite registrar beneficiarios desde el formulario público de campo sin requerir sesión
 CREATE POLICY "beneficiarios_public_insert" ON public.beneficiarios
   FOR INSERT
-  TO public
+  TO anon
   WITH CHECK (true);
 
 -- Nota: Las consultas de lectura (SELECT) o modificación (UPDATE, DELETE) de beneficiarios
