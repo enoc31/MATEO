@@ -220,44 +220,6 @@ export const JornadasManager: React.FC = () => {
         </div>
       ) : (
         <>
-          <div
-            style={{
-              backgroundColor: '#e3f2fd',
-              padding: '1rem',
-              borderRadius: 'var(--radius-md)',
-              marginBottom: '1.5rem',
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-            }}
-          >
-            <div>
-              <strong style={{ color: '#1565c0', display: 'block', marginBottom: '0.25rem' }}>
-                URL Pública para Capturistas
-              </strong>
-              <span style={{ fontSize: '0.9rem', color: '#1e88e5' }}>
-                Comparte este enlace a tu equipo. Ellos solo verán el formulario de captura.
-              </span>
-            </div>
-            <button
-              onClick={() => copyLink()}
-              className="btn"
-              style={{
-                backgroundColor: '#1976d2',
-                color: 'white',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.5rem',
-                border: 'none',
-                cursor: 'pointer',
-                padding: '0.5rem 1rem',
-                borderRadius: 'var(--radius-sm)',
-              }}
-            >
-              <LinkIcon size={16} /> Copiar Enlace
-            </button>
-          </div>
-
           {jornadas.length === 0 ? (
             <div
               style={{
