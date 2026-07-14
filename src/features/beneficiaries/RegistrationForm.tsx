@@ -17,9 +17,14 @@ import {
 interface RegistrationFormProps {
   onSuccess: (id: string) => void;
   jornadaId: string;
+  ongId?: string;
 }
 
-export const RegistrationForm: React.FC<RegistrationFormProps> = ({ onSuccess, jornadaId }) => {
+export const RegistrationForm: React.FC<RegistrationFormProps> = ({
+  onSuccess,
+  jornadaId,
+  ongId,
+}) => {
   const [nombre, setNombre] = useState('');
   const [apellido, setApellido] = useState('');
   const [cedula, setCedula] = useState('');
@@ -121,6 +126,7 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({ onSuccess, j
           ip_captura,
         },
         signatureFile,
+        ongId,
       );
 
       onSuccess(saved.id);

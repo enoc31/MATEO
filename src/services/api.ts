@@ -104,6 +104,7 @@ export interface Jornada {
   beneficios_entregados: string;
   proyecto_id: string;
   activa: boolean;
+  ong_id?: string;
   created_at?: string;
 }
 
@@ -118,6 +119,7 @@ export interface Beneficiary {
   tipo_donacion?: string[];
   url_firma: string | null;
   ip_captura?: string;
+  ong_id?: string;
   created_at: string;
 }
 
@@ -1723,6 +1725,17 @@ export const api = {
     }
   },
 
+  getJornadaById: async (id: string): Promise<Jornada | null> => {
+    if (!isSimulationMode) {
+      const { data, error } = await supabase.from('jornadas').select('*').eq('id', id).single();
+      if (error) return null;
+      return data as Jornada;
+    } else {
+      const all = JSON.parse(localStorage.getItem('cnbv_jornadas') || '[]');
+      return all.find((j: Jornada) => j.id === id) || null;
+    }
+  },
+
   createJornada: async (
     jornada: Omit<Jornada, 'id' | 'created_at'>,
     ongId?: string,
@@ -1781,6 +1794,7 @@ export const api = {
   saveBeneficiary: async (
     beneficiary: Omit<Beneficiary, 'id' | 'created_at' | 'url_firma'>,
     signatureFile?: File,
+    ongId?: string,
   ): Promise<Beneficiary> => {
     let url_firma: string | null = null;
     if (signatureFile) {
@@ -1792,11 +1806,12 @@ export const api = {
       }
     }
 
-    const newBen: Beneficiary & { ong_id?: string } = {
+    const newBen: Beneficiary = {
       id: `ben-${Date.now()}`,
       ...beneficiary,
       url_firma,
       created_at: new Date().toISOString(),
+      ...(ongId ? { ong_id: ongId } : {}),
     };
 
     if (!isSimulationMode) {

@@ -3,8 +3,10 @@ import { api } from '../../services/api';
 import type { Jornada, Project } from '../../services/api';
 import { CalendarDays, Plus, Activity, Power, Link as LinkIcon } from 'lucide-react';
 import { useNotifications } from '../../components/NotificationProvider';
+import { useAuth } from '../../context/AuthContext';
 
 export const JornadasManager: React.FC = () => {
+  const { profile } = useAuth();
   const [jornadas, setJornadas] = useState<Jornada[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
@@ -45,13 +47,16 @@ export const JornadasManager: React.FC = () => {
 
     setSubmitting(true);
     try {
-      await api.createJornada({
-        nombre,
-        fecha,
-        beneficios_entregados: beneficios,
-        proyecto_id: proyectoId,
-        activa: true,
-      });
+      await api.createJornada(
+        {
+          nombre,
+          fecha,
+          beneficios_entregados: beneficios,
+          proyecto_id: proyectoId,
+          activa: true,
+        },
+        profile?.ong_id,
+      );
       addNotification('Jornada creada exitosamente', 'success');
       setShowForm(false);
       loadData();
@@ -85,8 +90,11 @@ export const JornadasManager: React.FC = () => {
     }
   };
 
-  const copyLink = () => {
-    const url = `${window.location.origin}/registro`;
+  const copyLink = (jornadaId?: string) => {
+    const url =
+      typeof jornadaId === 'string'
+        ? `${window.location.origin}/registro?jornadaId=${jornadaId}`
+        : `${window.location.origin}/registro`;
     navigator.clipboard.writeText(url);
     addNotification('Enlace copiado al portapapeles', 'success');
   };
@@ -354,6 +362,26 @@ export const JornadasManager: React.FC = () => {
                       gap: '0.5rem',
                     }}
                   >
+                    <button
+                      onClick={() => copyLink(j.id)}
+                      disabled={!j.activa}
+                      className="btn btn-secondary"
+                      style={{
+                        flex: 1,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '0.5rem',
+                        border: '1px solid var(--border-color)',
+                        cursor: j.activa ? 'pointer' : 'not-allowed',
+                        padding: '0.5rem',
+                        borderRadius: 'var(--radius-sm)',
+                        opacity: j.activa ? 1 : 0.5,
+                      }}
+                    >
+                      <LinkIcon size={16} />
+                      Enlace
+                    </button>
                     <button
                       onClick={() => toggleStatus(j)}
                       className="btn"

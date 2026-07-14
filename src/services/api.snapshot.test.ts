@@ -212,4 +212,65 @@ describe('API Service', () => {
       ]);
     }
   });
+
+  it('getJornadaById should return single journey or handle simulation', async () => {
+    const mockJornada = { id: 'jor-123', nombre: 'Jornada Test', activa: true, ong_id: 'ong-123' };
+    const singleMock = vi.fn().mockResolvedValue({ data: mockJornada, error: null });
+    const eqMock = vi.fn().mockReturnValue({ single: singleMock });
+    const selectMock = vi.fn().mockReturnValue({ eq: eqMock });
+
+    vi.mocked(supabase.from).mockImplementation(((table: string) => {
+      if (table === 'jornadas') {
+        return {
+          select: selectMock,
+        };
+      }
+      return {};
+    }) as unknown as typeof supabase.from);
+
+    const result = await api.getJornadaById('jor-123');
+    if (!isSimulationMode) {
+      expect(supabase.from).toHaveBeenCalledWith('jornadas');
+      expect(selectMock).toHaveBeenCalledWith('*');
+      expect(eqMock).toHaveBeenCalledWith('id', 'jor-123');
+      expect(result).toEqual(mockJornada);
+    } else {
+      expect(result).toBeNull();
+    }
+  });
+
+  it('saveBeneficiary should include ongId in payload and insert', async () => {
+    const beneficiaryData = {
+      jornada_id: 'jor-123',
+      nombre: 'Pedro',
+      apellido: 'Perez',
+      cedula: '12345678',
+      sexo: 'Masculino',
+      fecha_nacimiento: '2000-01-01',
+      tipo_donacion: ['Comida'],
+      ip_captura: '127.0.0.1',
+    };
+
+    const insertMock = vi.fn().mockResolvedValue({ error: null });
+
+    vi.mocked(supabase.from).mockImplementation(((table: string) => {
+      if (table === 'beneficiarios') {
+        return {
+          insert: insertMock,
+        };
+      }
+      return {};
+    }) as unknown as typeof supabase.from);
+
+    const result = await api.saveBeneficiary(beneficiaryData, undefined, 'ong-123');
+    expect(result).toBeDefined();
+    expect(result.nombre).toBe('Pedro');
+
+    if (!isSimulationMode) {
+      expect(supabase.from).toHaveBeenCalledWith('beneficiarios');
+      expect(insertMock).toHaveBeenCalled();
+      const insertedObj = insertMock.mock.calls[0][0][0];
+      expect(insertedObj).toHaveProperty('ong_id', 'ong-123');
+    }
+  });
 });

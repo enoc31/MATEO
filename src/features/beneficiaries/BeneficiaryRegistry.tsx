@@ -13,9 +13,29 @@ export const BeneficiaryRegistry: React.FC = () => {
   const [jornadas, setJornadas] = useState<Jornada[]>([]);
   const [selectedJornadaId, setSelectedJornadaId] = useState<string>('');
   const [loading, setLoading] = useState(true);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   const loadJornadas = async () => {
     try {
+      const params = new URLSearchParams(window.location.search);
+      const urlJornadaId = params.get('jornadaId');
+
+      if (urlJornadaId) {
+        const jDetails = await api.getJornadaById(urlJornadaId);
+        if (jDetails) {
+          if (jDetails.activa) {
+            setJornadas([jDetails]);
+            setSelectedJornadaId(jDetails.id);
+            setLoading(false);
+            return;
+          } else {
+            setErrorMsg('La jornada solicitada ya no se encuentra activa.');
+          }
+        } else {
+          setErrorMsg('La jornada especificada no existe o no pudo ser cargada.');
+        }
+      }
+
       const allJornadas = await api.getJornadas();
       const activas = allJornadas.filter((j) => j.activa);
       setJornadas(activas);
@@ -64,6 +84,20 @@ export const BeneficiaryRegistry: React.FC = () => {
           <h2 style={{ color: 'var(--neutral-dark)', marginBottom: '1.5rem' }}>
             Seleccionar Jornada Activa
           </h2>
+
+          {errorMsg && (
+            <p
+              style={{
+                color: 'var(--danger)',
+                padding: '1rem',
+                backgroundColor: '#ffebee',
+                borderRadius: 'var(--radius-sm)',
+                marginBottom: '1.5rem',
+              }}
+            >
+              {errorMsg}
+            </p>
+          )}
 
           {jornadas.length === 0 ? (
             <p
@@ -247,7 +281,11 @@ export const BeneficiaryRegistry: React.FC = () => {
 
       <div className="card" style={{ padding: '1.5rem', borderRadius: 'var(--radius-lg)' }}>
         {activeTab === 'form' && (
-          <RegistrationForm onSuccess={handleSuccess} jornadaId={selectedJornadaId} />
+          <RegistrationForm
+            onSuccess={handleSuccess}
+            jornadaId={selectedJornadaId}
+            ongId={selectedJornada?.ong_id}
+          />
         )}
         {activeTab === 'history' && <CapturedRecords />}
         {activeTab === 'success' && <SuccessScreen onNewRegistration={handleNewRegistration} />}
