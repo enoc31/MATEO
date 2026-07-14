@@ -6,12 +6,52 @@ interface ReportOptions {
   records: Beneficiary[];
   jornadas: Jornada[];
   title?: string;
+  logoUrl?: string | null;
 }
+
+const getUrlBase64 = async (url: string | null): Promise<string | null> => {
+  if (!url) return null;
+  try {
+    const response = await fetch(url);
+    const blob = await response.blob();
+
+    const imgUrl = URL.createObjectURL(blob);
+    return new Promise((resolve) => {
+      const img = new Image();
+      img.crossOrigin = 'Anonymous';
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        canvas.width = img.width;
+        canvas.height = img.height;
+        const ctx = canvas.getContext('2d');
+        if (ctx) {
+          ctx.fillStyle = '#FFFFFF';
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+          ctx.drawImage(img, 0, 0);
+          resolve(canvas.toDataURL('image/jpeg', 0.9));
+        } else {
+          resolve(null);
+        }
+        URL.revokeObjectURL(imgUrl);
+      };
+      img.onerror = () => {
+        console.warn('Error decoding image');
+        resolve(null);
+        URL.revokeObjectURL(imgUrl);
+      };
+      img.src = imgUrl;
+    });
+  } catch (err) {
+    console.warn('Error cargando imagen', err);
+    return null;
+  }
+};
 
 export const generateBeneficiariesReport = async ({
   records,
   jornadas,
   title = 'Reporte de Beneficiarios',
+  logoUrl = null,
 }: ReportOptions) => {
   // Crear documento PDF, orientación Landscape (apaisado)
   const doc = new jsPDF({
@@ -22,21 +62,45 @@ export const generateBeneficiariesReport = async ({
 
   const totalPagesExp = '{total_pages_count_string}';
 
-  // Barra de acento estético primario (azul clásico de la marca)
-  doc.setFillColor(21, 101, 192);
-  doc.rect(14, 15, 2, 16, 'F');
+  let headerLeftMargin = 19;
+  let logoBase64: string | null = null;
+  if (logoUrl) {
+    logoBase64 = await getUrlBase64(logoUrl);
+  }
+
+  if (logoBase64) {
+    try {
+      const logoWidth = 25;
+      const logoHeight = 15;
+      doc.addImage(logoBase64, 'JPEG', 14, 12, logoWidth, logoHeight);
+      headerLeftMargin = 43; // Desplazar el título a la derecha
+    } catch (e) {
+      console.warn('Error rendering logo in PDF', e);
+      // Barra de acento estético primario si falla
+      doc.setFillColor(21, 101, 192);
+      doc.rect(14, 15, 2, 16, 'F');
+    }
+  } else {
+    // Barra de acento estético primario (azul clásico de la marca)
+    doc.setFillColor(21, 101, 192);
+    doc.rect(14, 15, 2, 16, 'F');
+  }
 
   // Título del Reporte
   doc.setFontSize(18);
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(30, 41, 59); // slate-800
-  doc.text(title, 19, 22);
+  doc.text(title, headerLeftMargin, 22);
 
   // Subtítulo
   doc.setFontSize(9);
   doc.setFont('helvetica', 'normal');
   doc.setTextColor(100, 116, 139); // slate-500
-  doc.text('Listado oficial de control de beneficiados y entrega de donaciones.', 19, 28);
+  doc.text(
+    'Listado oficial de control de beneficiados y entrega de donaciones.',
+    headerLeftMargin,
+    28,
+  );
 
   // Información del reporte alineada a la derecha
   doc.setFontSize(9);
@@ -48,44 +112,6 @@ export const generateBeneficiariesReport = async ({
 
   const getJornadaName = (id: string) => {
     return jornadas.find((j) => j.id === id)?.nombre || 'Desconocida';
-  };
-
-  const getUrlBase64 = async (url: string | null): Promise<string | null> => {
-    if (!url) return null;
-    try {
-      const response = await fetch(url);
-      const blob = await response.blob();
-
-      const imgUrl = URL.createObjectURL(blob);
-      return new Promise((resolve) => {
-        const img = new Image();
-        img.crossOrigin = 'Anonymous';
-        img.onload = () => {
-          const canvas = document.createElement('canvas');
-          canvas.width = img.width;
-          canvas.height = img.height;
-          const ctx = canvas.getContext('2d');
-          if (ctx) {
-            ctx.fillStyle = '#FFFFFF';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-            ctx.drawImage(img, 0, 0);
-            resolve(canvas.toDataURL('image/jpeg', 0.9));
-          } else {
-            resolve(null);
-          }
-          URL.revokeObjectURL(imgUrl);
-        };
-        img.onerror = () => {
-          console.warn('Error decoding image');
-          resolve(null);
-          URL.revokeObjectURL(imgUrl);
-        };
-        img.src = imgUrl;
-      });
-    } catch (err) {
-      console.warn('Error cargando imagen', err);
-      return null;
-    }
   };
 
   const formatDateTime = (dateStr: string) => {

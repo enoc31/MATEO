@@ -16,7 +16,7 @@ import { useAuth } from '../../context/AuthContext';
 import { generateBeneficiariesReport } from '../../utils/pdfReport';
 
 export const JornadasManager: React.FC = () => {
-  const { profile } = useAuth();
+  const { profile, activeOng } = useAuth();
   const [jornadas, setJornadas] = useState<Jornada[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
@@ -136,6 +136,7 @@ export const JornadasManager: React.FC = () => {
         records: jornadaBeneficiaries,
         jornadas: [selectedJornadaForDetails],
         title: `Reporte de Entregas - Jornada ${selectedJornadaForDetails.nombre}`,
+        logoUrl: activeOng?.logo_url,
       });
       addNotification('Reporte PDF generado correctamente', 'success');
     } catch (err) {

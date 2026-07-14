@@ -5,8 +5,10 @@ import { Search, Calendar, Filter, CalendarDays, Download, Activity, History } f
 import { useNotifications } from '../../components/NotificationProvider';
 import { generateBeneficiariesReport } from '../../utils/pdfReport';
 import { supabase } from '../../supabaseClient';
+import { useAuth } from '../../context/AuthContext';
 
 export const CapturedRecords: React.FC = () => {
+  const { activeOng } = useAuth();
   const [records, setRecords] = useState<Beneficiary[]>([]);
   const [jornadas, setJornadas] = useState<Jornada[]>([]);
   const [loading, setLoading] = useState(true);
@@ -136,6 +138,7 @@ export const CapturedRecords: React.FC = () => {
           jornadaFilter !== 'todas'
             ? `Reporte de Beneficiarios: ${jornadas.find((j) => j.id === jornadaFilter)?.nombre}`
             : 'Reporte General de Beneficiarios',
+        logoUrl: activeOng?.logo_url,
       });
       addNotification('Reporte PDF generado correctamente', 'success');
     } catch (e) {
