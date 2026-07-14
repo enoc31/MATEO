@@ -88,6 +88,15 @@ export const generateBeneficiariesReport = async ({
     }
   };
 
+  const formatDateTime = (dateStr: string) => {
+    const d = new Date(dateStr);
+    if (isNaN(d.getTime())) return 'N/A';
+    const pad = (n: number) => n.toString().padStart(2, '0');
+    const dateFormatted = `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()}`;
+    const timeFormatted = `${pad(d.getHours())}:${pad(d.getMinutes())}`;
+    return `${dateFormatted} ${timeFormatted}`;
+  };
+
   // Pre-cargar firmas para evitar problemas asíncronos en el render
   const imagesMap: Record<string, string | null> = {};
   for (const record of records) {
@@ -114,8 +123,8 @@ export const generateBeneficiariesReport = async ({
       record.sexo,
       record.tipo_donacion ? record.tipo_donacion.join(', ') : 'N/A',
       getJornadaName(record.jornada_id),
-      // IP y fecha
-      `${record.ip_captura || 'N/A'}\n${new Date(record.created_at).toLocaleString('es-VE')}`,
+      // IP y fecha formateada en una sola línea debajo de la IP
+      `${record.ip_captura || 'N/A'}\n${formatDateTime(record.created_at)}`,
       '', // Espacio para la firma
     ];
   });
@@ -141,7 +150,7 @@ export const generateBeneficiariesReport = async ({
     theme: 'striped',
     styles: {
       fontSize: 8,
-      cellPadding: { top: 3, bottom: 3, left: 3, right: 3 },
+      cellPadding: { top: 3, bottom: 3, left: 1.5, right: 1.5 },
       valign: 'middle',
       font: 'helvetica',
       lineColor: [226, 232, 240], // slate-200
@@ -158,15 +167,15 @@ export const generateBeneficiariesReport = async ({
       fillColor: [248, 250, 252], // slate-50
     },
     columnStyles: {
-      0: { halign: 'center', cellWidth: 10 },
-      1: { halign: 'left', cellWidth: 25 },
-      2: { halign: 'left', cellWidth: 25 },
-      3: { halign: 'center', cellWidth: 20 },
-      4: { halign: 'center', cellWidth: 22 },
-      5: { halign: 'center', cellWidth: 12 },
-      6: { halign: 'left', cellWidth: 45 },
-      7: { halign: 'left', cellWidth: 45 },
-      8: { halign: 'left', cellWidth: 30 },
+      0: { halign: 'center', cellWidth: 8 },
+      1: { halign: 'left', cellWidth: 24 },
+      2: { halign: 'left', cellWidth: 24 },
+      3: { halign: 'center', cellWidth: 28 }, // Cédula con ancho suficiente
+      4: { halign: 'center', cellWidth: 20 },
+      5: { halign: 'center', cellWidth: 10 },
+      6: { halign: 'left', cellWidth: 42 },
+      7: { halign: 'left', cellWidth: 42 },
+      8: { halign: 'left', cellWidth: 36 }, // IP / Registro con ancho suficiente
       9: { halign: 'center', cellWidth: 35 },
     },
     bodyStyles: {
