@@ -1,9 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { api } from '../../services/api';
-import type { Jornada, Project } from '../../services/api';
-import { CalendarDays, Plus, Activity, Power, Link as LinkIcon } from 'lucide-react';
+import type { Jornada, Project, Beneficiary } from '../../services/api';
+import {
+  CalendarDays,
+  Plus,
+  Activity,
+  Power,
+  Link as LinkIcon,
+  Eye,
+  Download,
+  X,
+} from 'lucide-react';
 import { useNotifications } from '../../components/NotificationProvider';
 import { useAuth } from '../../context/AuthContext';
+import { generateBeneficiariesReport } from '../../utils/pdfReport';
 
 export const JornadasManager: React.FC = () => {
   const { profile } = useAuth();
@@ -12,6 +22,11 @@ export const JornadasManager: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const { addNotification } = useNotifications();
+
+  // Modal and details state
+  const [selectedJornadaForDetails, setSelectedJornadaForDetails] = useState<Jornada | null>(null);
+  const [jornadaBeneficiaries, setJornadaBeneficiaries] = useState<Beneficiary[]>([]);
+  const [loadingDetails, setLoadingDetails] = useState(false);
 
   // Form state
   const [nombre, setNombre] = useState('');
@@ -97,6 +112,36 @@ export const JornadasManager: React.FC = () => {
         : `${window.location.origin}/registro`;
     navigator.clipboard.writeText(url);
     addNotification('Enlace copiado al portapapeles', 'success');
+  };
+
+  const handleOpenDetails = async (jornada: Jornada) => {
+    setSelectedJornadaForDetails(jornada);
+    setLoadingDetails(true);
+    try {
+      const allBens = await api.getBeneficiaries();
+      const filtered = allBens.filter((b) => b.jornada_id === jornada.id);
+      setJornadaBeneficiaries(filtered);
+    } catch (err) {
+      console.error(err);
+      addNotification('Error al cargar beneficiarios de la jornada', 'warning');
+    } finally {
+      setLoadingDetails(false);
+    }
+  };
+
+  const handleExportPDF = async () => {
+    if (!selectedJornadaForDetails) return;
+    try {
+      await generateBeneficiariesReport({
+        records: jornadaBeneficiaries,
+        jornadas: [selectedJornadaForDetails],
+        title: `Reporte de Entregas - Jornada ${selectedJornadaForDetails.nombre}`,
+      });
+      addNotification('Reporte PDF generado correctamente', 'success');
+    } catch (err) {
+      console.error(err);
+      addNotification('Error al generar el reporte PDF', 'warning');
+    }
   };
 
   if (loading) {
@@ -339,10 +384,30 @@ export const JornadasManager: React.FC = () => {
                         padding: '0.5rem',
                         borderRadius: 'var(--radius-sm)',
                         opacity: j.activa ? 1 : 0.5,
+                        fontSize: '0.85rem',
                       }}
                     >
-                      <LinkIcon size={16} />
+                      <LinkIcon size={14} />
                       Enlace
+                    </button>
+                    <button
+                      onClick={() => handleOpenDetails(j)}
+                      className="btn btn-secondary"
+                      style={{
+                        flex: 1,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '0.5rem',
+                        border: '1px solid var(--border-color)',
+                        cursor: 'pointer',
+                        padding: '0.5rem',
+                        borderRadius: 'var(--radius-sm)',
+                        fontSize: '0.85rem',
+                      }}
+                    >
+                      <Eye size={14} />
+                      Detalles
                     </button>
                     <button
                       onClick={() => toggleStatus(j)}
@@ -359,9 +424,10 @@ export const JornadasManager: React.FC = () => {
                         cursor: 'pointer',
                         padding: '0.5rem',
                         borderRadius: 'var(--radius-sm)',
+                        fontSize: '0.85rem',
                       }}
                     >
-                      <Power size={16} />
+                      <Power size={14} />
                       {j.activa ? 'Desactivar' : 'Activar'}
                     </button>
                   </div>
@@ -370,6 +436,249 @@ export const JornadasManager: React.FC = () => {
             </div>
           )}
         </>
+      )}
+
+      {selectedJornadaForDetails && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1000,
+            padding: '1.5rem',
+          }}
+        >
+          <div
+            style={{
+              backgroundColor: '#fff',
+              borderRadius: 'var(--radius-lg)',
+              width: '100%',
+              maxWidth: '950px',
+              maxHeight: '90vh',
+              display: 'flex',
+              flexDirection: 'column',
+              boxShadow: 'var(--shadow-lg)',
+              overflow: 'hidden',
+            }}
+          >
+            {/* Cabecera del Modal */}
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                padding: '1.25rem 1.5rem',
+                borderBottom: '1px solid var(--border-color)',
+                backgroundColor: 'var(--neutral-light)',
+              }}
+            >
+              <div>
+                <h3
+                  style={{
+                    margin: 0,
+                    color: 'var(--primary)',
+                    fontSize: '1.25rem',
+                    fontWeight: 700,
+                  }}
+                >
+                  Detalles de Entregas: {selectedJornadaForDetails.nombre}
+                </h3>
+                <span style={{ fontSize: '0.85rem', color: 'var(--neutral-gray)' }}>
+                  Beneficios Habilitados: {selectedJornadaForDetails.beneficios_entregados}
+                </span>
+              </div>
+              <button
+                onClick={() => setSelectedJornadaForDetails(null)}
+                style={{
+                  border: 'none',
+                  background: 'none',
+                  cursor: 'pointer',
+                  padding: '0.25rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  color: 'var(--neutral-gray)',
+                }}
+              >
+                <X size={24} />
+              </button>
+            </div>
+
+            {/* Cuerpo del Modal */}
+            <div style={{ padding: '1.5rem', overflowY: 'auto', flex: 1 }}>
+              {loadingDetails ? (
+                <div style={{ textAlign: 'center', padding: '3rem', opacity: 0.7 }}>
+                  Cargando entregas...
+                </div>
+              ) : (
+                <div>
+                  <div
+                    style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      marginBottom: '1rem',
+                    }}
+                  >
+                    <span style={{ fontWeight: 600, color: 'var(--neutral-dark)' }}>
+                      Beneficiarios Registrados ({jornadaBeneficiaries.length})
+                    </span>
+                    <button
+                      className="btn btn-secondary"
+                      onClick={handleExportPDF}
+                      disabled={jornadaBeneficiaries.length === 0}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.5rem',
+                        padding: '0.5rem 1rem',
+                      }}
+                    >
+                      <Download size={16} /> Exportar PDF de la Jornada
+                    </button>
+                  </div>
+
+                  {jornadaBeneficiaries.length === 0 ? (
+                    <div
+                      style={{
+                        textAlign: 'center',
+                        padding: '3rem',
+                        border: '1px dashed var(--border-color)',
+                        borderRadius: 'var(--radius-md)',
+                        color: 'var(--neutral-gray)',
+                      }}
+                    >
+                      No se han registrado entregas de beneficios en esta jornada.
+                    </div>
+                  ) : (
+                    <div style={{ overflowX: 'auto' }}>
+                      <table
+                        style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.9rem' }}
+                      >
+                        <thead>
+                          <tr
+                            style={{
+                              borderBottom: '2px solid var(--border-color)',
+                              textAlign: 'left',
+                              backgroundColor: 'var(--neutral-light)',
+                            }}
+                          >
+                            <th style={{ padding: '0.75rem' }}>Cédula</th>
+                            <th style={{ padding: '0.75rem' }}>Nombre Completo</th>
+                            <th style={{ padding: '0.75rem' }}>Sexo</th>
+                            <th style={{ padding: '0.75rem' }}>F. Nacimiento</th>
+                            <th style={{ padding: '0.75rem' }}>Donaciones</th>
+                            <th style={{ padding: '0.75rem' }}>Fecha/Hora</th>
+                            <th style={{ padding: '0.75rem' }}>IP Captura</th>
+                            <th style={{ padding: '0.75rem' }}>Firma</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {jornadaBeneficiaries.map((b) => (
+                            <tr
+                              key={b.id}
+                              style={{ borderBottom: '1px solid var(--border-color)' }}
+                            >
+                              <td style={{ padding: '0.75rem', fontWeight: 600 }}>{b.cedula}</td>
+                              <td style={{ padding: '0.75rem' }}>
+                                {b.nombre} {b.apellido}
+                              </td>
+                              <td style={{ padding: '0.75rem' }}>{b.sexo}</td>
+                              <td style={{ padding: '0.75rem' }}>
+                                {new Date(b.fecha_nacimiento).toLocaleDateString('es-VE')}
+                              </td>
+                              <td style={{ padding: '0.75rem' }}>
+                                <div style={{ display: 'flex', gap: '0.2rem', flexWrap: 'wrap' }}>
+                                  {b.tipo_donacion?.map((t, idx) => (
+                                    <span
+                                      key={idx}
+                                      style={{
+                                        fontSize: '0.75rem',
+                                        backgroundColor: '#e3f2fd',
+                                        color: '#1565c0',
+                                        padding: '0.1rem 0.3rem',
+                                        borderRadius: '4px',
+                                        fontWeight: 600,
+                                      }}
+                                    >
+                                      {t}
+                                    </span>
+                                  ))}
+                                </div>
+                              </td>
+                              <td
+                                style={{
+                                  padding: '0.75rem',
+                                  fontSize: '0.8rem',
+                                  color: 'var(--neutral-gray)',
+                                }}
+                              >
+                                {new Date(b.created_at || '').toLocaleString('es-VE')}
+                              </td>
+                              <td
+                                style={{
+                                  padding: '0.75rem',
+                                  fontSize: '0.8rem',
+                                  color: 'var(--neutral-gray)',
+                                }}
+                              >
+                                {b.ip_captura || 'N/A'}
+                              </td>
+                              <td style={{ padding: '0.75rem' }}>
+                                {b.url_firma ? (
+                                  <div
+                                    style={{
+                                      width: '60px',
+                                      height: '30px',
+                                      border: '1px solid var(--border-color)',
+                                      borderRadius: '4px',
+                                      backgroundImage: `url(${b.url_firma})`,
+                                      backgroundSize: 'contain',
+                                      backgroundRepeat: 'no-repeat',
+                                      backgroundPosition: 'center',
+                                      backgroundColor: '#fff',
+                                    }}
+                                  />
+                                ) : (
+                                  <span style={{ fontSize: '0.75rem', opacity: 0.5 }}>
+                                    Sin firma
+                                  </span>
+                                )}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Pie del Modal */}
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'flex-end',
+                padding: '1rem 1.5rem',
+                borderTop: '1px solid var(--border-color)',
+                backgroundColor: 'var(--neutral-light)',
+              }}
+            >
+              <button
+                className="btn btn-secondary"
+                onClick={() => setSelectedJornadaForDetails(null)}
+              >
+                Cerrar
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
