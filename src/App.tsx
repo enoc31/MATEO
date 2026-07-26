@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { Hourglass, Megaphone, RefreshCw, ShieldAlert } from 'lucide-react';
+import { Hourglass, Megaphone, Radio, RefreshCw, ShieldAlert } from 'lucide-react';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { NotificationProvider } from './components/NotificationProvider';
 import { Login } from './features/auth/Login';
@@ -11,6 +11,8 @@ import { SaasLayout } from './components/SaasLayout';
 import { AppsDashboard } from './components/AppsDashboard';
 import { Suspense, lazy } from 'react';
 import { LandingPage } from './features/landing/LandingPage';
+import { supabase } from './supabaseClient';
+import { isSimulationMode } from './services/api';
 
 // Lazy loaded features
 const Dashboard = lazy(() =>
@@ -105,7 +107,7 @@ const SaasUsers = lazy(() =>
 );
 
 const MainAppContent: React.FC = () => {
-  const { profile, loading, logout, refreshProfile } = useAuth();
+  const { profile, user, loading, logout, refreshProfile } = useAuth();
 
   if (loading) {
     return (
@@ -156,7 +158,7 @@ const MainAppContent: React.FC = () => {
 
   // Si está logueado pero no ha sido aprobado por un administrador
   if (profile.aprobado === false) {
-    return <PendingApproval logout={logout} refreshProfile={refreshProfile} />;
+    return <PendingApproval logout={logout} refreshProfile={refreshProfile} userId={user?.id} />;
   }
 
   // Función de ayuda para proteger rutas basadas en roles
@@ -349,11 +351,42 @@ const MainAppContent: React.FC = () => {
 interface PendingApprovalProps {
   logout: () => Promise<void>;
   refreshProfile: () => Promise<void>;
+  userId?: string;
 }
 
-const PendingApproval: React.FC<PendingApprovalProps> = ({ logout, refreshProfile }) => {
+const PendingApproval: React.FC<PendingApprovalProps> = ({ logout, refreshProfile, userId }) => {
   const [checking, setChecking] = useState(false);
   const [feedback, setFeedback] = useState<string | null>(null);
+  const [isListening, setIsListening] = useState(false);
+
+  useEffect(() => {
+    if (!userId || isSimulationMode) return;
+
+    setIsListening(true);
+    // Escuchar actualizaciones de la tabla 'usuarios' en tiempo real
+    const channel = supabase
+      .channel(`user-approval-${userId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'usuarios',
+          filter: `id=eq.${userId}`,
+        },
+        async (payload) => {
+          if (payload.new && payload.new.aprobado === true) {
+            setFeedback('¡Tu cuenta ha sido aprobada por el Administrador! Ingresando...');
+            await refreshProfile();
+          }
+        },
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [userId, refreshProfile]);
 
   const handleCheckStatus = async () => {
     setChecking(true);
@@ -426,9 +459,30 @@ const PendingApproval: React.FC<PendingApprovalProps> = ({ logout, refreshProfil
           la plataforma.
         </p>
 
+        {isListening && (
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '0.5rem',
+              marginTop: '1rem',
+              fontSize: '0.82rem',
+              color: 'var(--primary)',
+              fontWeight: 600,
+              backgroundColor: 'rgba(0, 143, 166, 0.08)',
+              padding: '0.5rem 1rem',
+              borderRadius: 'var(--radius-md)',
+            }}
+          >
+            <Radio size={16} style={{ animation: 'pulse 2s infinite', color: '#10b981' }} />
+            <span>Conectado en tiempo real. Serás redirigido automáticamente al ser aprobado.</span>
+          </div>
+        )}
+
         <div
           style={{
-            marginTop: '2rem',
+            marginTop: '1.5rem',
             backgroundColor: 'rgba(0, 143, 166, 0.06)',
             border: '1px solid rgba(0, 143, 166, 0.2)',
             borderRadius: 'var(--radius-sm)',
@@ -454,7 +508,8 @@ const PendingApproval: React.FC<PendingApprovalProps> = ({ logout, refreshProfil
             <li>Contacta al Administrador de tu Organización.</li>
             <li>Solicita la aprobación de tu correo institucional.</li>
             <li>
-              Una vez aprobado, pulsa el botón **Verificar Estado de Acceso** o recarga esta página.
+              El sistema se actualizará **automáticamente** cuando seas aprobado, o puedes pulsar el
+              botón a continuación.
             </li>
           </ul>
         </div>
