@@ -1,113 +1,22 @@
-import React, { useState, useEffect } from 'react';
-import { Lightbulb, Shield, Briefcase, Scale, MapPin, Users, Gift } from 'lucide-react';
+import React, { useState } from 'react';
+import { UserRole } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
-import type { UserRole } from '../../context/AuthContext';
-import { Link } from 'react-router-dom';
-import { isSimulationMode, api } from '../../services/api';
 import { supabase } from '../../supabaseClient';
-
-/** Extends the global Window with reCAPTCHA v2 explicit render callbacks. */
-interface CustomWindow extends Window {
-  onRecaptchaSuccess?: (token: string) => void;
-  onRecaptchaExpired?: () => void;
-  onRecaptchaLoad?: () => void;
-  grecaptcha?: {
-    render: (container: string | HTMLElement, options: Record<string, string>) => void;
-  };
-}
-
-const customWindow = window as CustomWindow;
+import { isSimulationMode } from '../../services/api';
+import { Link } from 'react-router-dom';
+import { Lock, Mail, Building2, KeyRound, ArrowRight } from 'lucide-react';
 
 export const Login: React.FC = () => {
   const { refreshProfile } = useAuth();
 
-  // Estados generales del formulario
+  // Estados del formulario
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [nombreCompleto, setNombreCompleto] = useState('');
-  const rolSugerido: UserRole = 'coordinador';
 
   // Estados de control
-  const [isRegister, setIsRegister] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
-
-  // Estados de organizaciones para registro
-  const [ongs, setOngs] = useState<{ id: string; nombre: string }[]>([]);
-  const [selectedOngId, setSelectedOngId] = useState('');
-  const [newOngName, setNewOngName] = useState('');
-
-  // Control Anti-Bots (reCAPTCHA)
-  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
-
-  // Cargar Google reCAPTCHA v2 de forma dinámica y explícita
-  useEffect(() => {
-    if (!isRegister || isSimulationMode) return;
-
-    // Callbacks globales para reCAPTCHA
-    customWindow.onRecaptchaSuccess = (token: string) => {
-      setCaptchaToken(token);
-    };
-    customWindow.onRecaptchaExpired = () => {
-      setCaptchaToken(null);
-    };
-
-    const renderRecaptcha = () => {
-      if (customWindow.grecaptcha && document.getElementById('recaptcha-container')) {
-        try {
-          customWindow.grecaptcha.render('recaptcha-container', {
-            sitekey:
-              import.meta.env.VITE_RECAPTCHA_SITE_KEY || '6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI',
-            callback: 'onRecaptchaSuccess',
-            'expired-callback': 'onRecaptchaExpired',
-          });
-        } catch (e) {
-          console.warn('grecaptcha render warning:', e);
-        }
-      }
-    };
-
-    if (!document.getElementById('recaptcha-script')) {
-      const script = document.createElement('script');
-      script.id = 'recaptcha-script';
-      script.src = 'https://www.google.com/recaptcha/api.js?onload=onRecaptchaLoad&render=explicit';
-      script.async = true;
-      script.defer = true;
-      customWindow.onRecaptchaLoad = () => {
-        renderRecaptcha();
-      };
-      document.body.appendChild(script);
-    } else {
-      // Esperar brevemente a que React monte el contenedor en el DOM
-      setTimeout(renderRecaptcha, 100);
-    }
-
-    return () => {
-      // Limpiar callbacks globales al desmontar
-      delete customWindow.onRecaptchaSuccess;
-      delete customWindow.onRecaptchaExpired;
-      delete customWindow.onRecaptchaLoad;
-    };
-  }, [isRegister]);
-
-  // Fetch ONGs list on mount
-  useEffect(() => {
-    const loadOngs = async () => {
-      try {
-        const list = await api.getOngs();
-        setOngs(list);
-        if (list.length > 0) {
-          setSelectedOngId(list[0].id);
-        } else {
-          setSelectedOngId('new');
-        }
-      } catch (err) {
-        console.error('Error fetching ONGs for registration:', err);
-      }
-    };
-    loadOngs();
-  }, []);
 
   // Manejador para login en Supabase real
   const handleRealLogin = async (e: React.FormEvent) => {
@@ -118,86 +27,25 @@ export const Login: React.FC = () => {
     setSuccess(null);
     try {
       const { error } = await supabase.auth.signInWithPassword({ email, password });
-      if (error) throw error;
+      if (error) {
+        if (error.message.includes('Invalid login credentials')) {
+          throw new Error('Credenciales inválidas. Verifica tu correo y contraseña.');
+        } else if (error.message.includes('Email not confirmed')) {
+          throw new Error(
+            'Tu correo electrónico no ha sido verificado. Por favor revisa tu bandeja de entrada.',
+          );
+        }
+        throw error;
+      }
       await refreshProfile();
     } catch (err: any) {
-      const friendlyMessage =
-        err.message === '{}'
-          ? 'Error de conexión o del servidor (500). Verifica que el servicio de Supabase esté activo y configurado.'
-          : err.message || 'Error al iniciar sesión';
-      setError(friendlyMessage);
+      setError(err.message || 'Error al iniciar sesión');
     } finally {
       setLoading(false);
     }
   };
 
-  // Manejador para registro en Supabase real
-  const handleRealRegister = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!email || !password || !nombreCompleto) return;
-
-    if (!captchaToken) {
-      setError('Por favor completa el reCAPTCHA para registrarte.');
-      return;
-    }
-
-    setLoading(true);
-    setError(null);
-    setSuccess(null);
-    try {
-      let finalOngId = selectedOngId;
-      if (selectedOngId === 'new') {
-        if (!newOngName.trim()) {
-          throw new Error('Por favor ingresa el nombre de la organización');
-        }
-        const newOng = await api.createOng(newOngName.trim());
-        finalOngId = newOng.id;
-      }
-
-      const { error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            nombre_completo: nombreCompleto,
-            rol: rolSugerido,
-            ong_id: finalOngId,
-          },
-        },
-      });
-      if (error) throw error;
-
-      // Invocar la Edge Function para notificar al Super Admin y a los Admins de la ONG
-      supabase.functions
-        .invoke('notify-registration', {
-          body: {
-            email,
-            nombre: nombreCompleto,
-            ongId: finalOngId,
-            rolSugerido: rolSugerido,
-          },
-        })
-        .then(({ error: fnErr }) => {
-          if (fnErr) console.error('Error invoking notify-registration Edge Function:', fnErr);
-        })
-        .catch((e) => console.error('Exception calling notify-registration Edge Function:', e));
-
-      setSuccess(
-        '¡Registro exitoso! Tu cuenta ha sido creada y está pendiente de aprobación por un administrador.',
-      );
-      setIsRegister(false);
-      setNombreCompleto('');
-      setPassword('');
-      setNewOngName('');
-      setCaptchaToken(null);
-    } catch (err: any) {
-      setError(err.message || 'Error al registrar usuario');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Manejador para login en simulación local (Inicio rápido con roles preconfigurados)
+  // Manejador para login en simulación local
   const handleSimulatedLogin = async (role: UserRole) => {
     setLoading(true);
     setError(null);
@@ -228,7 +76,7 @@ export const Login: React.FC = () => {
                     ? 'Donante Internacional (Alianza)'
                     : 'Coordinador Ayuda Apure',
         rol: role,
-        aprobado: true, // Los preconfigurados ya están aprobados
+        aprobado: true,
         created_at: new Date().toISOString(),
       };
       localStorage.setItem('cnbv_profiles', JSON.stringify(profiles));
@@ -242,7 +90,6 @@ export const Login: React.FC = () => {
     }
   };
 
-  // Manejador para login simulado personalizado (por correo y contraseña)
   const handleSimulatedPasswordLogin = (e: React.FormEvent) => {
     e.preventDefault();
     if (!email || !password) return;
@@ -261,7 +108,6 @@ export const Login: React.FC = () => {
         return;
       }
 
-      // En simulación aceptamos cualquier contraseña para este demo local
       const mockSession = {
         user: {
           id: foundProfile.id,
@@ -279,75 +125,6 @@ export const Login: React.FC = () => {
     }
   };
 
-  // Manejador para registro simulado local
-  const handleSimulatedRegister = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!email || !password || !nombreCompleto) return;
-
-    if (!captchaToken) {
-      setError('Por favor completa el reCAPTCHA para registrarte.');
-      return;
-    }
-
-    setLoading(true);
-    setError(null);
-    setSuccess(null);
-    try {
-      const userId = `user-sim-${Date.now()}`;
-      const profiles = JSON.parse(localStorage.getItem('cnbv_profiles') || '{}');
-
-      // Validar si ya existe el correo
-      const emailExists = Object.values(profiles).some(
-        (p: any) => p.email.toLowerCase() === email.toLowerCase(),
-      );
-      if (emailExists) {
-        setError('El correo electrónico ya está registrado.');
-        setLoading(false);
-        return;
-      }
-
-      let finalOngId = selectedOngId;
-      if (selectedOngId === 'new') {
-        if (!newOngName.trim()) {
-          throw new Error('Por favor ingresa el nombre de la organización');
-        }
-        const newOng = await api.createOng(newOngName.trim());
-        finalOngId = newOng.id;
-      }
-
-      profiles[userId] = {
-        id: userId,
-        email,
-        nombre_completo: nombreCompleto,
-        rol: rolSugerido,
-        aprobado: false, // Inicia pendiente de aprobación
-        ong_id: finalOngId,
-        created_at: new Date().toISOString(),
-      };
-
-      localStorage.setItem('cnbv_profiles', JSON.stringify(profiles));
-      setSuccess(
-        '¡Registro simulado exitoso! Tu cuenta ha sido creada y está pendiente de aprobación por el Administrador.',
-      );
-      setIsRegister(false);
-      setNombreCompleto('');
-      setPassword('');
-      setNewOngName('');
-      setCaptchaToken(null);
-    } catch (err: any) {
-      setError(err.message || 'Error al simular registro');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleToggleMode = () => {
-    setIsRegister(!isRegister);
-    setError(null);
-    setSuccess(null);
-    setCaptchaToken(null);
-  };
-
   return (
     <div
       style={{
@@ -355,43 +132,51 @@ export const Login: React.FC = () => {
         alignItems: 'center',
         justifyContent: 'center',
         minHeight: '100vh',
-        background: 'linear-gradient(135deg, #f4f5f7 0%, #e2e8f0 100%)',
-        padding: '1rem',
+        backgroundColor: '#f1f5f9',
+        backgroundImage: 'radial-gradient(at 50% 0%, rgba(47, 90, 174, 0.06) 0px, transparent 75%)',
+        padding: '2rem 1rem',
       }}
     >
       <div
         className="card animate-fade-in-up"
         style={{
-          maxWidth: '450px',
+          maxWidth: '460px',
           width: '100%',
           padding: '2.5rem',
-          borderRadius: 'var(--radius-lg)',
-          boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04)',
+          backgroundColor: '#ffffff',
+          borderRadius: '16px',
+          boxShadow: '0 20px 25px -5px rgba(0,0,0,0.08), 0 10px 10px -5px rgba(0,0,0,0.02)',
         }}
       >
         {/* Header con imagen corporativa MATEO */}
-        <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
+        <div style={{ textAlign: 'center', marginBottom: '1.8rem' }}>
           <div
             style={{
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               gap: '0.75rem',
-              marginBottom: '1rem',
+              marginBottom: '0.75rem',
             }}
           >
             <img
               src="/mateo_logo.png"
               alt="Logo MATEO"
-              style={{ height: '64px', width: '64px', objectFit: 'contain', borderRadius: '12px' }}
+              style={{
+                height: '56px',
+                width: '56px',
+                objectFit: 'contain',
+                borderRadius: '14px',
+                boxShadow: '0 8px 16px -4px rgba(47, 90, 174, 0.2)',
+              }}
             />
             <div style={{ textAlign: 'left' }}>
               <div
                 style={{
-                  fontSize: '2rem',
+                  fontSize: '1.8rem',
                   fontWeight: 900,
                   color: 'var(--primary)',
-                  letterSpacing: '-1px',
+                  letterSpacing: '-0.5px',
                   lineHeight: 1,
                 }}
               >
@@ -399,110 +184,100 @@ export const Login: React.FC = () => {
               </div>
               <div
                 style={{
-                  fontSize: '0.7rem',
-                  color: 'var(--neutral-dark)',
-                  opacity: 0.7,
-                  letterSpacing: '2px',
+                  fontSize: '0.65rem',
+                  color: '#64748b',
+                  fontWeight: 700,
+                  letterSpacing: '1.5px',
                   textTransform: 'uppercase',
                 }}
               >
-                Gestión Humanitaria
+                Plataforma de Auditoría & Donaciones
               </div>
             </div>
           </div>
           <h2
             style={{
               color: 'var(--primary)',
-              fontFamily: 'var(--font-headings)',
               fontSize: '1.1rem',
-              fontWeight: 600,
-              marginTop: '0.5rem',
+              fontWeight: 700,
+              margin: '0.5rem 0 0 0',
             }}
           >
-            {isRegister ? 'Crea tu cuenta' : 'Bienvenido de nuevo'}
+            Iniciar Sesión
           </h2>
         </div>
 
         {error && (
           <div
-            className="badge badge-danger"
             style={{
-              width: '100%',
-              padding: '0.75rem',
-              borderRadius: 'var(--radius-sm)',
-              marginBottom: '1rem',
+              padding: '0.85rem 1rem',
+              backgroundColor: 'rgba(239, 68, 68, 0.08)',
+              border: '1px solid rgba(239, 68, 68, 0.3)',
+              borderRadius: '10px',
+              color: '#dc2626',
+              fontSize: '0.85rem',
+              fontWeight: 600,
+              marginBottom: '1.25rem',
               textAlign: 'center',
-              display: 'block',
             }}
           >
-            {error}
+            ⚠️ {error}
           </div>
         )}
 
         {success && (
           <div
-            className="badge"
             style={{
-              width: '100%',
-              padding: '0.75rem',
-              borderRadius: 'var(--radius-sm)',
-              marginBottom: '1.5rem',
+              padding: '0.85rem 1rem',
+              backgroundColor: 'rgba(16, 185, 129, 0.08)',
+              border: '1px solid rgba(16, 185, 129, 0.3)',
+              borderRadius: '10px',
+              color: '#047857',
+              fontSize: '0.85rem',
+              fontWeight: 600,
+              marginBottom: '1.25rem',
               textAlign: 'center',
-              backgroundColor: 'rgba(0, 143, 166, 0.1)',
-              color: 'var(--accent)',
-              border: '1px solid var(--accent)',
-              display: 'block',
-              lineHeight: '1.4',
-              fontSize: '0.8rem',
             }}
           >
             {success}
           </div>
         )}
 
-        {isRegister ? (
-          // ==================== FORMULARIO DE REGISTRO ====================
-          <form onSubmit={isSimulationMode ? handleSimulatedRegister : handleRealRegister}>
-            <div className="form-group">
-              <label className="form-label" htmlFor="nombreCompleto">
-                Nombre Completo
-              </label>
-              <input
-                id="nombreCompleto"
-                type="text"
-                className="form-input"
-                value={nombreCompleto}
-                onChange={(e) => setNombreCompleto(e.target.value)}
-                required
-                disabled={loading}
-                placeholder="Juan Pérez"
-              />
-            </div>
-
-            <div className="form-group">
-              <label className="form-label" htmlFor="email">
-                Correo Electrónico
-              </label>
+        {/* Formulario de Login */}
+        <form
+          noValidate
+          onSubmit={isSimulationMode ? handleSimulatedPasswordLogin : handleRealLogin}
+          style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}
+        >
+          <div className="form-field">
+            <label className="form-field-label" htmlFor="email">
+              Correo Electrónico
+            </label>
+            <div className="input-with-icon">
+              <Mail size={18} className="input-icon" />
               <input
                 id="email"
                 type="email"
-                className="form-input"
+                className="form-input-premium"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
                 disabled={loading}
-                placeholder="ejemplo@cnbv.org"
+                placeholder="usuario@tu-ong.org"
               />
             </div>
+          </div>
 
-            <div className="form-group">
-              <label className="form-label" htmlFor="password">
-                Contraseña
-              </label>
+          <div className="form-field">
+            <label className="form-field-label" htmlFor="password">
+              Contraseña
+            </label>
+            <div className="input-with-icon">
+              <Lock size={18} className="input-icon" />
               <input
                 id="password"
                 type="password"
-                className="form-input"
+                className="form-input-premium"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
@@ -510,335 +285,153 @@ export const Login: React.FC = () => {
                 placeholder="••••••••"
               />
             </div>
-
-            <div className="form-group" style={{ marginBottom: '1.25rem' }}>
-              <label className="form-label" htmlFor="selectedOngId">
-                Organización (ONG)
-              </label>
-              <select
-                id="selectedOngId"
-                className="form-input"
-                value={selectedOngId}
-                onChange={(e) => setSelectedOngId(e.target.value)}
-                required
-                disabled={loading}
-              >
-                {ongs.map((o) => (
-                  <option key={o.id} value={o.id}>
-                    {o.nombre}
-                  </option>
-                ))}
-                <option value="new">+ Registrar Nueva Organización...</option>
-              </select>
-            </div>
-
-            {selectedOngId === 'new' && (
-              <div className="form-group" style={{ marginBottom: '2rem' }}>
-                <label className="form-label" htmlFor="newOngName">
-                  Nombre de la Nueva Organización
-                </label>
-                <input
-                  id="newOngName"
-                  type="text"
-                  className="form-input"
-                  required
-                  value={newOngName}
-                  onChange={(e) => setNewOngName(e.target.value)}
-                  disabled={loading}
-                  placeholder="Ej. Fundación Sonrisas"
-                />
-                <div
-                  style={{
-                    marginTop: '0.75rem',
-                    padding: '0.6rem',
-                    backgroundColor: 'rgba(0, 143, 166, 0.08)',
-                    borderRadius: '6px',
-                    fontSize: '0.82rem',
-                  }}
-                >
-                  ¿Deseas registrar datos legales completos e iniciar un Trial de 14 días?{' '}
-                  <Link to="/registro-ong" style={{ color: 'var(--primary)', fontWeight: 700 }}>
-                    Ir al Asistente de Registro →
-                  </Link>
-                </div>
-              </div>
-            )}
-
-            {/* Control Anti-Bots (reCAPTCHA) */}
-            {isSimulationMode ? (
-              <div
-                className="form-group"
-                style={{
-                  marginBottom: '1.5rem',
-                  display: 'flex',
-                  alignItems: 'center',
-                  background: '#f4f5f7',
-                  padding: '0.75rem',
-                  borderRadius: '6px',
-                  border: '1px solid #d1d5db',
-                }}
-              >
-                <input
-                  id="simulatedCaptcha"
-                  type="checkbox"
-                  checked={!!captchaToken}
-                  onChange={(e) => setCaptchaToken(e.target.checked ? 'mock-token' : null)}
-                  style={{
-                    marginRight: '0.5rem',
-                    width: '18px',
-                    height: '18px',
-                    cursor: 'pointer',
-                  }}
-                />
-                <label
-                  htmlFor="simulatedCaptcha"
-                  style={{
-                    cursor: 'pointer',
-                    fontSize: '0.9rem',
-                    color: '#4b5563',
-                    userSelect: 'none',
-                  }}
-                >
-                  [Simulado] No soy un robot (reCAPTCHA v2)
-                </label>
-              </div>
-            ) : (
-              <div
-                className="form-group"
-                style={{
-                  marginBottom: '1.5rem',
-                  display: 'flex',
-                  justifyContent: 'center',
-                }}
-              >
-                <div id="recaptcha-container"></div>
-              </div>
-            )}
-
-            <button
-              type="submit"
-              className="btn btn-primary"
-              style={{ width: '100%', padding: '0.75rem', marginBottom: '1rem' }}
-              disabled={loading}
-            >
-              {loading ? 'Creando cuenta...' : 'Solicitar Registro'}
-            </button>
-          </form>
-        ) : (
-          // ==================== FORMULARIO DE ACCESO ====================
-          <div>
-            {isSimulationMode && (
-              <div
-                style={{
-                  backgroundColor: 'rgba(0, 143, 166, 0.08)',
-                  border: '1px solid var(--accent)',
-                  borderRadius: 'var(--radius-sm)',
-                  padding: '1rem',
-                  marginBottom: '1.5rem',
-                  textAlign: 'center',
-                }}
-              >
-                <p style={{ fontSize: '0.8rem', color: 'var(--accent)', fontWeight: 600 }}>
-                  <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <Lightbulb size={18} style={{ marginRight: '6px' }} /> Modo Demostración Activo
-                  </span>
-                </p>
-                <p
-                  style={{
-                    fontSize: '0.75rem',
-                    color: 'var(--neutral-dark)',
-                    marginTop: '0.25rem',
-                    opacity: 0.9,
-                  }}
-                >
-                  Selecciona un rol pre-aprobado para ingresar de inmediato:
-                </p>
-              </div>
-            )}
-
-            {isSimulationMode ? (
-              <div
-                style={{
-                  display: 'grid',
-                  gridTemplateColumns: '1fr 1fr',
-                  gap: '0.5rem',
-                  marginBottom: '1.5rem',
-                }}
-              >
-                <button
-                  onClick={() => handleSimulatedLogin('administrador')}
-                  disabled={loading}
-                  className="btn btn-primary"
-                  style={{ padding: '0.6rem', fontSize: '0.8rem', gridColumn: 'span 2' }}
-                >
-                  <span style={{ display: 'flex', alignItems: 'center' }}>
-                    <Shield size={16} style={{ marginRight: '6px' }} /> Super Admin (Control Total)
-                  </span>
-                </button>
-
-                <button
-                  onClick={() => handleSimulatedLogin('director')}
-                  disabled={loading}
-                  className="btn btn-secondary"
-                  style={{ padding: '0.6rem', fontSize: '0.8rem' }}
-                >
-                  <span style={{ display: 'flex', alignItems: 'center' }}>
-                    <Briefcase size={16} style={{ marginRight: '6px' }} /> Director
-                  </span>
-                </button>
-
-                <button
-                  onClick={() => handleSimulatedLogin('auditor')}
-                  disabled={loading}
-                  className="btn btn-outline"
-                  style={{ padding: '0.6rem', fontSize: '0.8rem' }}
-                >
-                  <span style={{ display: 'flex', alignItems: 'center' }}>
-                    <Scale size={16} style={{ marginRight: '6px' }} /> Auditor
-                  </span>
-                </button>
-
-                <button
-                  onClick={() => handleSimulatedLogin('coordinador')}
-                  disabled={loading}
-                  className="btn btn-outline"
-                  style={{ padding: '0.6rem', fontSize: '0.8rem' }}
-                >
-                  <span style={{ display: 'flex', alignItems: 'center' }}>
-                    <MapPin size={16} style={{ marginRight: '6px' }} /> Coordinador
-                  </span>
-                </button>
-
-                <button
-                  onClick={() => handleSimulatedLogin('auxiliar_campo')}
-                  disabled={loading}
-                  className="btn btn-outline"
-                  style={{ padding: '0.6rem', fontSize: '0.8rem' }}
-                >
-                  <span style={{ display: 'flex', alignItems: 'center' }}>
-                    <Users size={16} style={{ marginRight: '6px' }} /> Auxiliar Campo
-                  </span>
-                </button>
-
-                <button
-                  onClick={() => handleSimulatedLogin('donante')}
-                  disabled={loading}
-                  className="btn btn-outline"
-                  style={{ padding: '0.6rem', fontSize: '0.8rem', gridColumn: 'span 2' }}
-                >
-                  <span style={{ display: 'flex', alignItems: 'center' }}>
-                    <Gift size={16} style={{ marginRight: '6px' }} /> Donante (Solo Tableros)
-                  </span>
-                </button>
-              </div>
-            ) : null}
-
-            {/* Formulario de Correo/Contraseña (Real o Simulado) */}
-            <form onSubmit={isSimulationMode ? handleSimulatedPasswordLogin : handleRealLogin}>
-              {isSimulationMode && (
-                <div style={{ textAlign: 'center', margin: '1rem 0', position: 'relative' }}>
-                  <hr style={{ border: 'none', borderTop: '1px solid #e2e8f0' }} />
-                  <span
-                    style={{
-                      position: 'absolute',
-                      top: '-10px',
-                      left: '50%',
-                      transform: 'translateX(-50%)',
-                      backgroundColor: '#ffffff',
-                      padding: '0 0.5rem',
-                      fontSize: '0.7rem',
-                      color: 'var(--neutral-dark)',
-                      opacity: 0.7,
-                    }}
-                  >
-                    O ingresa con cuenta creada
-                  </span>
-                </div>
-              )}
-
-              <div className="form-group">
-                <label className="form-label" htmlFor="email">
-                  Correo Electrónico
-                </label>
-                <input
-                  id="email"
-                  type="email"
-                  className="form-input"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                  disabled={loading}
-                  placeholder="ejemplo@cnbv.org"
-                />
-              </div>
-
-              <div className="form-group" style={{ marginBottom: '2rem' }}>
-                <div
-                  style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    marginBottom: '0.5rem',
-                  }}
-                >
-                  <label className="form-label" htmlFor="password" style={{ marginBottom: 0 }}>
-                    Contraseña
-                  </label>
-                  <Link
-                    to="/forgot-password"
-                    style={{
-                      color: '#3b82f6',
-                      fontSize: '0.85rem',
-                      textDecoration: 'none',
-                      fontWeight: 600,
-                    }}
-                  >
-                    ¿Olvidaste tu contraseña?
-                  </Link>
-                </div>
-                <input
-                  id="password"
-                  type="password"
-                  className="form-input"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                  disabled={loading}
-                  placeholder="••••••••"
-                />
-              </div>
-
-              <button
-                type="submit"
-                className="btn btn-primary"
-                style={{ width: '100%', padding: '0.75rem' }}
-                disabled={loading}
-              >
-                {loading ? 'Iniciando sesión...' : 'Ingresar al Sistema'}
-              </button>
-            </form>
           </div>
-        )}
 
-        {/* Enlace para alternar entre Login y Registro */}
-        <div style={{ textAlign: 'center', marginTop: '1.5rem' }}>
           <button
-            onClick={handleToggleMode}
+            type="submit"
+            className="btn btn-primary"
+            disabled={loading}
             style={{
-              background: 'none',
-              border: 'none',
-              color: 'var(--accent)',
-              cursor: 'pointer',
-              fontSize: '0.85rem',
-              fontWeight: 600,
-              textDecoration: 'underline',
+              width: '100%',
+              padding: '0.85rem',
+              fontWeight: 700,
+              borderRadius: '10px',
+              marginTop: '0.5rem',
+              boxShadow: '0 4px 12px rgba(47, 90, 174, 0.25)',
             }}
           >
-            {isRegister
-              ? '¿Ya tienes una cuenta? Iniciar Sesión'
-              : '¿No tienes una cuenta? Regístrate aquí'}
+            {loading ? 'Iniciando Sesión...' : 'Ingresar a la Plataforma'}
           </button>
+        </form>
+
+        {/* Accesos de Registro de ONG e Invitaciones */}
+        <div
+          style={{
+            marginTop: '1.8rem',
+            borderTop: '1px solid #f1f5f9',
+            paddingTop: '1.25rem',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '0.85rem',
+          }}
+        >
+          {/* CTA Crear Nueva ONG en Trial */}
+          <Link
+            to="/registro-ong"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              padding: '0.85rem 1rem',
+              backgroundColor: 'rgba(47, 90, 174, 0.06)',
+              border: '1px solid rgba(47, 90, 174, 0.2)',
+              borderRadius: '12px',
+              textDecoration: 'none',
+              transition: 'all 0.2s ease',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+              <Building2 size={20} color="var(--primary)" />
+              <div style={{ textAlign: 'left' }}>
+                <span
+                  style={{
+                    fontSize: '0.85rem',
+                    fontWeight: 700,
+                    color: 'var(--primary)',
+                    display: 'block',
+                  }}
+                >
+                  ¿Deseas registrar una nueva ONG?
+                </span>
+                <span style={{ fontSize: '0.72rem', color: '#64748b' }}>
+                  Prueba Gratuita de 14 Días (Acceso Completo)
+                </span>
+              </div>
+            </div>
+            <ArrowRight size={18} color="var(--primary)" />
+          </Link>
+
+          {/* Enlace para aceptar invitación */}
+          <Link
+            to="/aceptar-invitacion"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '0.5rem',
+              fontSize: '0.82rem',
+              color: '#64748b',
+              fontWeight: 600,
+              textDecoration: 'none',
+              padding: '0.4rem',
+            }}
+          >
+            <KeyRound size={16} /> ¿Tienes un código o enlace de invitación?{' '}
+            <span style={{ color: 'var(--primary)', textDecoration: 'underline' }}>
+              Aceptar Invitación
+            </span>
+          </Link>
         </div>
+
+        {/* Accesos rápidos en Modo Simulación local */}
+        {isSimulationMode && (
+          <div
+            style={{
+              marginTop: '1.5rem',
+              paddingTop: '1rem',
+              borderTop: '1px dashed #cbd5e1',
+              textAlign: 'center',
+            }}
+          >
+            <span
+              style={{
+                fontSize: '0.72rem',
+                color: '#64748b',
+                fontWeight: 700,
+                display: 'block',
+                marginBottom: '0.5rem',
+              }}
+            >
+              DEMO LOCAL SIMULADO (ACCESO RÁPIDO):
+            </span>
+            <div
+              style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem', justifyContent: 'center' }}
+            >
+              <button
+                type="button"
+                onClick={() => handleSimulatedLogin('administrador')}
+                className="btn btn-outline"
+                style={{ fontSize: '0.72rem', padding: '0.3rem 0.6rem', borderRadius: '6px' }}
+              >
+                Admin ONG
+              </button>
+              <button
+                type="button"
+                onClick={() => handleSimulatedLogin('coordinador')}
+                className="btn btn-outline"
+                style={{ fontSize: '0.72rem', padding: '0.3rem 0.6rem', borderRadius: '6px' }}
+              >
+                Coordinador
+              </button>
+              <button
+                type="button"
+                onClick={() => handleSimulatedLogin('auditor')}
+                className="btn btn-outline"
+                style={{ fontSize: '0.72rem', padding: '0.3rem 0.6rem', borderRadius: '6px' }}
+              >
+                Auditor
+              </button>
+              <button
+                type="button"
+                onClick={() => handleSimulatedLogin('super_admin')}
+                className="btn btn-outline"
+                style={{ fontSize: '0.72rem', padding: '0.3rem 0.6rem', borderRadius: '6px' }}
+              >
+                SuperAdmin
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

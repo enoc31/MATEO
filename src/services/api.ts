@@ -199,6 +199,19 @@ export interface Ong {
   created_at?: string;
 }
 
+export interface Invitation {
+  id: string;
+  ong_id: string;
+  email: string;
+  rol: UserRole;
+  token: string;
+  estado: 'pendiente' | 'aceptada' | 'expirada';
+  invitado_por?: string | null;
+  created_at: string;
+  expires_at: string;
+  ong_nombre?: string;
+}
+
 // Determinar si Supabase está configurado correctamente
 const isSupabaseConfigured = () => {
   const url = import.meta.env.VITE_SUPABASE_URL;
@@ -2493,6 +2506,134 @@ export const requisitionsApi = {
       }
 
       return updated;
+    }
+  },
+
+  // =========================================================================
+  // GESTIÓN DE INVITACIONES EXCLUSIVAS DE TENANT (ONG)
+  // =========================================================================
+  createInvitation: async (params: {
+    email: string;
+    rol: UserRole;
+    ong_id: string;
+    invitado_por?: string;
+  }): Promise<Invitation> => {
+    const token = `inv-${Math.random().toString(36).substring(2, 10)}${Math.random().toString(36).substring(2, 10)}`;
+    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
+
+    const payload = {
+      ong_id: params.ong_id,
+      email: params.email.trim().toLowerCase(),
+      rol: params.rol,
+      token,
+      estado: 'pendiente' as const,
+      invitado_por: params.invitado_por || null,
+      expires_at: expiresAt,
+    };
+
+    if (!isSimulationMode) {
+      const { data, error } = await supabase
+        .from('invitaciones')
+        .insert([payload])
+        .select()
+        .single();
+      if (error) throw error;
+      return data as Invitation;
+    } else {
+      const list = JSON.parse(localStorage.getItem('cnbv_invitations') || '[]') as Invitation[];
+      const newInv: Invitation = {
+        id: `inv-${Date.now()}`,
+        ...payload,
+        created_at: new Date().toISOString(),
+      };
+      list.push(newInv);
+      localStorage.setItem('cnbv_invitations', JSON.stringify(list));
+      return newInv;
+    }
+  },
+
+  getInvitationByToken: async (token: string): Promise<Invitation> => {
+    if (!isSimulationMode) {
+      const { data, error } = await supabase
+        .from('invitaciones')
+        .select('*, ongs(nombre)')
+        .eq('token', token.trim())
+        .single();
+      if (error) throw error;
+      const inv = data as any;
+      return {
+        ...inv,
+        ong_nombre: inv.ongs?.nombre || 'Organización',
+      } as Invitation;
+    } else {
+      const list = JSON.parse(localStorage.getItem('cnbv_invitations') || '[]') as Invitation[];
+      const found = list.find((i) => i.token === token.trim() && i.estado === 'pendiente');
+      if (!found) throw new Error('La invitación no existe o ya ha sido utilizada.');
+
+      const ongs = JSON.parse(localStorage.getItem('cnbv_ongs') || '[]') as Ong[];
+      const matchedOng = ongs.find((o) => o.id === found.ong_id);
+      return {
+        ...found,
+        ong_nombre: matchedOng?.nombre || 'Organización (Simulado)',
+      };
+    }
+  },
+
+  acceptInvitation: async (params: {
+    token: string;
+    nombreCompleto: string;
+    password: string;
+  }): Promise<void> => {
+    const inv = await api.getInvitationByToken(params.token);
+
+    if (!isSimulationMode) {
+      const { data: authData, error: authErr } = await supabase.auth.signUp({
+        email: inv.email,
+        password: params.password,
+        options: {
+          data: {
+            nombre_completo: params.nombreCompleto.trim(),
+            rol: inv.rol,
+            aprobado: true,
+            ong_id: inv.ong_id,
+          },
+        },
+      });
+      if (authErr) throw authErr;
+
+      if (authData.user) {
+        await supabase.from('usuarios_perfiles').upsert({
+          id: authData.user.id,
+          email: inv.email,
+          nombre_completo: params.nombreCompleto.trim(),
+          rol: inv.rol,
+          aprobado: true,
+          ong_id: inv.ong_id,
+        });
+      }
+
+      // Marcar la invitación como aceptada
+      await supabase.from('invitaciones').update({ estado: 'aceptada' }).eq('token', params.token);
+    } else {
+      const list = JSON.parse(localStorage.getItem('cnbv_invitations') || '[]') as Invitation[];
+      const idx = list.findIndex((i) => i.token === params.token);
+      if (idx !== -1) {
+        list[idx].estado = 'aceptada';
+        localStorage.setItem('cnbv_invitations', JSON.stringify(list));
+      }
+
+      const userId = `user-inv-${Date.now()}`;
+      const profiles = JSON.parse(localStorage.getItem('cnbv_profiles') || '{}');
+      profiles[userId] = {
+        id: userId,
+        email: inv.email,
+        nombre_completo: params.nombreCompleto.trim(),
+        rol: inv.rol,
+        aprobado: true,
+        ong_id: inv.ong_id,
+        created_at: new Date().toISOString(),
+      };
+      localStorage.setItem('cnbv_profiles', JSON.stringify(profiles));
     }
   },
 };

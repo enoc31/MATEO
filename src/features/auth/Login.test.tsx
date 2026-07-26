@@ -29,8 +29,7 @@ describe('Login Component', () => {
     // Verificar que los campos de correo y contraseña están presentes
     expect(screen.getByLabelText(/Correo Electrónico/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/Contraseña/i)).toBeInTheDocument();
-    // En el modo "Real" o simulado siempre aparece el botón de inicio de sesión
-    expect(screen.getByRole('button', { name: /Ingresar al Sistema/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Ingresar a la Plataforma/i })).toBeInTheDocument();
   });
 
   it('updates email and password fields on user input', () => {
@@ -50,54 +49,24 @@ describe('Login Component', () => {
     expect(passwordInput.value).toBe('password123');
   });
 
-  it('toggles to registration mode when "Regístrate aquí" is clicked', () => {
+  it('renders CTA link for registering a new NGO in trial', () => {
     render(
       <MemoryRouter>
         <Login />
       </MemoryRouter>,
     );
 
-    const toggleButton = screen.getByRole('button', {
-      name: /¿No tienes una cuenta\? Regístrate aquí/i,
-    });
-    fireEvent.click(toggleButton);
-
-    // Ahora deberíamos ver el campo de Nombre Completo y el botón de crear cuenta
-    expect(screen.getByLabelText(/Nombre Completo/i)).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /Solicitar Registro/i })).toBeInTheDocument();
+    expect(screen.getByText(/¿Deseas registrar una nueva ONG\?/i)).toBeInTheDocument();
+    expect(screen.getByText(/Prueba Gratuita de 14 Días/i)).toBeInTheDocument();
   });
 
-  it('blocks registration if captcha is not completed', async () => {
+  it('renders invitation acceptance link for invited users', () => {
     render(
       <MemoryRouter>
         <Login />
       </MemoryRouter>,
     );
 
-    // Switch to register mode
-    const toggleButton = screen.getByRole('button', {
-      name: /¿No tienes una cuenta\? Regístrate aquí/i,
-    });
-    fireEvent.click(toggleButton);
-
-    // Fill form fields
-    fireEvent.change(screen.getByLabelText(/Nombre Completo/i), {
-      target: { value: 'Jane Doe' },
-    });
-    fireEvent.change(screen.getByLabelText(/Correo Electrónico/i), {
-      target: { value: 'jane@example.com' },
-    });
-    fireEvent.change(screen.getByLabelText(/Contraseña/i), {
-      target: { value: 'password123' },
-    });
-
-    // Attempt to submit without checking captcha
-    const submitButton = screen.getByRole('button', { name: /Solicitar Registro/i });
-    fireEvent.click(submitButton);
-
-    // Check warning is displayed
-    expect(
-      screen.getByText(/Por favor completa el reCAPTCHA para registrarte./i),
-    ).toBeInTheDocument();
+    expect(screen.getByText(/Aceptar Invitación/i)).toBeInTheDocument();
   });
 });

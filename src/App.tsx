@@ -101,6 +101,11 @@ const EmailUnverified = lazy(() =>
     default: module.EmailUnverified,
   })),
 );
+const AcceptInvitation = lazy(() =>
+  import('./features/auth/AcceptInvitation').then((module) => ({
+    default: module.AcceptInvitation,
+  })),
+);
 
 // SaaS lazy loaded features
 const SaasLogin = lazy(() =>
@@ -775,6 +780,22 @@ function App() {
                     }
                   >
                     <CreateOngWizard />
+                  </Suspense>
+                </PublicRoute>
+              }
+            />
+            <Route
+              path="/aceptar-invitacion"
+              element={
+                <PublicRoute>
+                  <Suspense
+                    fallback={
+                      <div style={{ textAlign: 'center', padding: '3rem' }}>
+                        Cargando Invitación...
+                      </div>
+                    }
+                  >
+                    <AcceptInvitation />
                   </Suspense>
                 </PublicRoute>
               }
