@@ -91,6 +91,11 @@ const JornadasManager = lazy(() =>
     default: module.JornadasManager,
   })),
 );
+const CreateOngWizard = lazy(() =>
+  import('./features/auth/CreateOngWizard').then((module) => ({
+    default: module.CreateOngWizard,
+  })),
+);
 
 // SaaS lazy loaded features
 const SaasLogin = lazy(() =>
@@ -743,6 +748,22 @@ function App() {
               element={
                 <PublicRoute>
                   <ForgotPassword />
+                </PublicRoute>
+              }
+            />
+            <Route
+              path="/registro-ong"
+              element={
+                <PublicRoute>
+                  <Suspense
+                    fallback={
+                      <div style={{ textAlign: 'center', padding: '3rem' }}>
+                        Cargando Registro...
+                      </div>
+                    }
+                  >
+                    <CreateOngWizard />
+                  </Suspense>
                 </PublicRoute>
               }
             />

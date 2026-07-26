@@ -172,10 +172,30 @@ export interface UserWithOng {
   } | null;
 }
 
+export interface CreateOngParams {
+  nombre: string;
+  logoUrl?: string | null;
+  rif_identificacion?: string | null;
+  pais?: string | null;
+  telefono?: string | null;
+  direccion?: string | null;
+  sitio_web?: string | null;
+  plan?: 'trial' | 'pro' | 'enterprise';
+  estado?: 'trial' | 'activo' | 'suspendido';
+}
+
 export interface Ong {
   id: string;
   nombre: string;
   logo_url: string | null;
+  rif_identificacion?: string | null;
+  pais?: string | null;
+  telefono?: string | null;
+  direccion?: string | null;
+  sitio_web?: string | null;
+  plan?: 'trial' | 'pro' | 'enterprise';
+  estado?: 'trial' | 'activo' | 'suspendido';
+  trial_ends_at?: string | null;
   created_at?: string;
 }
 
@@ -1885,21 +1905,40 @@ export const api = {
     }
   },
 
-  createOng: async (nombre: string, logoUrl?: string | null): Promise<Ong> => {
+  createOng: async (
+    dataOrName: string | CreateOngParams,
+    logoUrl?: string | null,
+  ): Promise<Ong> => {
+    let params: CreateOngParams;
+    if (typeof dataOrName === 'string') {
+      params = { nombre: dataOrName, logoUrl };
+    } else {
+      params = dataOrName;
+    }
+
+    const fourteenDaysLater = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString();
+    const insertPayload = {
+      nombre: params.nombre,
+      logo_url: params.logoUrl || null,
+      rif_identificacion: params.rif_identificacion || null,
+      pais: params.pais || 'Venezuela',
+      telefono: params.telefono || null,
+      direccion: params.direccion || null,
+      sitio_web: params.sitio_web || null,
+      plan: params.plan || 'trial',
+      estado: params.estado || 'trial',
+      trial_ends_at: fourteenDaysLater,
+    };
+
     if (!isSimulationMode) {
-      const { data, error } = await supabase
-        .from('ongs')
-        .insert([{ nombre, logo_url: logoUrl }])
-        .select()
-        .single();
+      const { data, error } = await supabase.from('ongs').insert([insertPayload]).select().single();
       if (error) throw error;
       return data as Ong;
     } else {
       const ongs = JSON.parse(localStorage.getItem('cnbv_ongs') || '[]') as Ong[];
       const newOng: Ong = {
         id: `ong-${Math.random().toString(36).substr(2, 9)}`,
-        nombre,
-        logo_url: logoUrl || null,
+        ...insertPayload,
         created_at: new Date().toISOString(),
       };
       ongs.push(newOng);

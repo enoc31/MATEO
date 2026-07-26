@@ -547,6 +547,20 @@ export const Login: React.FC = () => {
                   disabled={loading}
                   placeholder="Ej. Fundación Sonrisas"
                 />
+                <div
+                  style={{
+                    marginTop: '0.75rem',
+                    padding: '0.6rem',
+                    backgroundColor: 'rgba(0, 143, 166, 0.08)',
+                    borderRadius: '6px',
+                    fontSize: '0.82rem',
+                  }}
+                >
+                  ¿Deseas registrar datos legales completos e iniciar un Trial de 14 días?{' '}
+                  <Link to="/registro-ong" style={{ color: 'var(--primary)', fontWeight: 700 }}>
+                    Ir al Asistente de Registro →
+                  </Link>
+                </div>
               </div>
             )}
 
