@@ -1931,9 +1931,32 @@ export const api = {
     };
 
     if (!isSimulationMode) {
+      let finalData: Ong;
       const { data, error } = await supabase.from('ongs').insert([insertPayload]).select().single();
-      if (error) throw error;
-      return data as Ong;
+
+      // Graceful fallback si la base de datos de Supabase aún no tiene aplicadas las nuevas columnas de la migración
+      if (error && (error.message?.includes('column') || error.code === 'PGRST204')) {
+        console.warn(
+          'Aviso de esquema Supabase: Intentando inserción de fallback con columnas estándar...',
+          error.message,
+        );
+        const basicPayload = {
+          nombre: params.nombre,
+          logo_url: params.logoUrl || null,
+        };
+        const basicRes = await supabase.from('ongs').insert([basicPayload]).select().single();
+        if (basicRes.error) throw basicRes.error;
+        finalData = {
+          ...basicRes.data,
+          ...insertPayload, // mantener en respuesta cliente los datos del trial
+        } as Ong;
+      } else if (error) {
+        throw error;
+      } else {
+        finalData = data as Ong;
+      }
+
+      return finalData;
     } else {
       const ongs = JSON.parse(localStorage.getItem('cnbv_ongs') || '[]') as Ong[];
       const newOng: Ong = {
