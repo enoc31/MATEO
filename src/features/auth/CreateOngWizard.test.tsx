@@ -28,7 +28,7 @@ describe('CreateOngWizard Component', () => {
       </MemoryRouter>,
     );
 
-    expect(screen.getByText(/Datos Legales de la Organización/i)).toBeInTheDocument();
+    expect(screen.getByText(/Información Legal de la ONG/i)).toBeInTheDocument();
     expect(screen.getByPlaceholderText(/Fundación Manos de Esperanza/i)).toBeInTheDocument();
     expect(screen.getByPlaceholderText(/J-12345678-9/i)).toBeInTheDocument();
   });
@@ -79,7 +79,7 @@ describe('CreateOngWizard Component', () => {
     fireEvent.click(screen.getByText(/Siguiente: Administrador/i));
 
     // Step 2
-    expect(await screen.findByText(/Datos del Administrador Principal/i)).toBeInTheDocument();
+    expect(await screen.findByText(/Perfil del Administrador/i)).toBeInTheDocument();
 
     fireEvent.change(screen.getByPlaceholderText(/María Rodríguez/i), {
       target: { value: 'Carlos Admin' },
@@ -97,9 +97,7 @@ describe('CreateOngWizard Component', () => {
     fireEvent.click(screen.getByText(/Siguiente: Verificación/i));
 
     // Step 3
-    expect(
-      await screen.findByText(/Verificación de Seguridad y Confirmación/i),
-    ).toBeInTheDocument();
+    expect(await screen.findByText(/Verificación de Seguridad/i)).toBeInTheDocument();
 
     // Check legal declaration
     const checkLegal = screen.getByRole('checkbox');
@@ -122,7 +120,7 @@ describe('CreateOngWizard Component', () => {
     });
 
     // Step 4 (Success screen)
-    expect(await screen.findByText(/Organización Creada Exitosamente/i)).toBeInTheDocument();
+    expect(await screen.findByText(/Organización Registrada/i)).toBeInTheDocument();
     expect(screen.getByText(/Prueba Completa \(14 días\)/i)).toBeInTheDocument();
   });
 });

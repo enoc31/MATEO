@@ -12,6 +12,9 @@ import {
   Phone,
   MapPin,
   FileText,
+  Briefcase,
+  Mail,
+  Check,
 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { api, isSimulationMode } from '../../services/api';
@@ -253,197 +256,217 @@ export const CreateOngWizard: React.FC = () => {
     <div
       style={{
         minHeight: '100vh',
-        backgroundColor: '#f4f5f7',
+        backgroundColor: '#f1f5f9',
+        backgroundImage: 'radial-gradient(at 50% 0%, rgba(47, 90, 174, 0.06) 0px, transparent 75%)',
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
-        padding: '2rem 1rem',
+        padding: '2.5rem 1rem',
       }}
     >
       {/* Header con Marca */}
-      <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
-        <img
-          src="/mateo_logo.png"
-          alt="MATEO Logo"
+      <div style={{ textAlign: 'center', marginBottom: '1.8rem' }}>
+        <div
           style={{
-            height: '56px',
-            width: '56px',
-            objectFit: 'contain',
-            borderRadius: '12px',
-            boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)',
-          }}
-        />
-        <h1
-          style={{
-            fontSize: '1.5rem',
-            fontWeight: 800,
-            color: 'var(--primary)',
-            marginTop: '0.5rem',
-            margin: 0,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '0.75rem',
           }}
         >
-          MATEO ONG
-        </h1>
-        <p
-          style={{
-            fontSize: '0.85rem',
-            color: 'var(--neutral-dark)',
-            opacity: 0.8,
-            marginTop: '0.2rem',
-          }}
-        >
-          Auditoría, Donaciones & Transparencia Financiera
-        </p>
+          <img
+            src="/mateo_logo.png"
+            alt="MATEO Logo"
+            style={{
+              height: '54px',
+              width: '54px',
+              objectFit: 'contain',
+              borderRadius: '14px',
+              boxShadow: '0 8px 16px -4px rgba(47, 90, 174, 0.2)',
+            }}
+          />
+          <div style={{ textAlign: 'left' }}>
+            <h1
+              style={{
+                fontSize: '1.75rem',
+                fontWeight: 900,
+                color: 'var(--primary)',
+                letterSpacing: '-0.5px',
+                margin: 0,
+                lineHeight: 1,
+              }}
+            >
+              MATEO
+            </h1>
+            <span
+              style={{
+                fontSize: '0.68rem',
+                color: '#64748b',
+                fontWeight: 700,
+                letterSpacing: '1.5px',
+                textTransform: 'uppercase',
+              }}
+            >
+              Plataforma de Auditoría & Donaciones
+            </span>
+          </div>
+        </div>
       </div>
 
-      {/* Tarjeta Contenedora Principal */}
+      {/* Tarjeta Contenedora Principal (Wizard Card) */}
       <div
-        className="card animate-fade-in-up"
+        className="wizard-card animate-fade-in-up"
         style={{
-          maxWidth: '620px',
+          maxWidth: '640px',
           width: '100%',
-          padding: '2.5rem',
-          borderRadius: 'var(--radius-lg)',
-          boxShadow: '0 20px 25px -5px rgba(0,0,0,0.08), 0 10px 10px -5px rgba(0,0,0,0.02)',
-          backgroundColor: '#ffffff',
         }}
       >
         {/* Banner de Trial Gratis de 14 Días */}
         {step !== 4 && (
-          <div
-            style={{
-              backgroundColor: 'rgba(0, 143, 166, 0.08)',
-              border: '1px solid rgba(0, 143, 166, 0.25)',
-              borderRadius: 'var(--radius-md)',
-              padding: '0.75rem 1rem',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              marginBottom: '1.5rem',
-            }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
-              <Sparkles size={20} color="var(--primary)" />
-              <span style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--primary)' }}>
-                Prueba Gratuita de 14 Días (Acceso Completo)
-              </span>
+          <div className="wizard-badge-trial" style={{ marginBottom: '1.8rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+              <div
+                style={{
+                  width: '36px',
+                  height: '36px',
+                  borderRadius: '10px',
+                  backgroundColor: 'rgba(47, 90, 174, 0.12)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: 'var(--primary)',
+                }}
+              >
+                <Sparkles size={20} />
+              </div>
+              <div>
+                <span
+                  style={{
+                    fontSize: '0.9rem',
+                    fontWeight: 700,
+                    color: 'var(--primary)',
+                    display: 'block',
+                  }}
+                >
+                  Prueba Gratuita de 14 Días (Acceso Completo)
+                </span>
+                <span style={{ fontSize: '0.75rem', color: '#64748b' }}>
+                  Sin tarjeta de crédito • Cancela cuando quieras
+                </span>
+              </div>
             </div>
             <span
               style={{
                 fontSize: '0.75rem',
                 backgroundColor: 'var(--primary)',
                 color: 'white',
-                padding: '0.2rem 0.6rem',
-                borderRadius: '12px',
+                padding: '0.3rem 0.75rem',
+                borderRadius: '20px',
                 fontWeight: 700,
+                letterSpacing: '0.5px',
+                boxShadow: '0 2px 4px rgba(47, 90, 174, 0.25)',
               }}
             >
-              Sin Tarjeta
+              Proceso Seguro
             </span>
           </div>
         )}
 
-        {/* Indicador de Progreso del Wizard */}
+        {/* Indicador de Progreso del Wizard (Stepper) */}
         {step !== 4 && (
           <div
             style={{
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'space-between',
-              marginBottom: '2rem',
+              marginBottom: '2.2rem',
+              position: 'relative',
             }}
           >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            {/* Paso 1 Node */}
+            <div className="wizard-step-node">
               <div
-                style={{
-                  width: '28px',
-                  height: '28px',
-                  borderRadius: '50%',
-                  backgroundColor: step >= 1 ? 'var(--primary)' : '#e2e8f0',
-                  color: step >= 1 ? '#ffffff' : '#64748b',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontSize: '0.85rem',
-                  fontWeight: 700,
-                }}
+                className={`wizard-step-bubble ${
+                  step === 1 ? 'active' : step > 1 ? 'completed' : 'pending'
+                }`}
               >
-                1
+                {step > 1 ? <Check size={18} /> : 1}
               </div>
-              <span
-                style={{
-                  fontSize: '0.82rem',
-                  fontWeight: step === 1 ? 700 : 500,
-                  color: step === 1 ? 'var(--primary)' : '#64748b',
-                }}
-              >
-                ONG Legal
-              </span>
+              <div style={{ display: 'flex', flexDirection: 'column' }}>
+                <span
+                  style={{
+                    fontSize: '0.82rem',
+                    fontWeight: step === 1 ? 700 : 600,
+                    color: step === 1 ? 'var(--primary)' : step > 1 ? '#10b981' : '#64748b',
+                  }}
+                >
+                  ONG Legal
+                </span>
+                <span style={{ fontSize: '0.7rem', color: '#94a3b8' }}>Datos Fiscales</span>
+              </div>
             </div>
 
             <div
-              style={{ flex: 1, height: '2px', backgroundColor: '#e2e8f0', margin: '0 0.5rem' }}
+              style={{
+                flex: 1,
+                height: '3px',
+                backgroundColor: step > 1 ? '#10b981' : '#e2e8f0',
+                margin: '0 0.75rem',
+                borderRadius: '2px',
+                transition: 'background-color 0.3s ease',
+              }}
             />
 
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            {/* Paso 2 Node */}
+            <div className="wizard-step-node">
               <div
-                style={{
-                  width: '28px',
-                  height: '28px',
-                  borderRadius: '50%',
-                  backgroundColor: step >= 2 ? 'var(--primary)' : '#e2e8f0',
-                  color: step >= 2 ? '#ffffff' : '#64748b',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontSize: '0.85rem',
-                  fontWeight: 700,
-                }}
+                className={`wizard-step-bubble ${
+                  step === 2 ? 'active' : step > 2 ? 'completed' : 'pending'
+                }`}
               >
-                2
+                {step > 2 ? <Check size={18} /> : 2}
               </div>
-              <span
-                style={{
-                  fontSize: '0.82rem',
-                  fontWeight: step === 2 ? 700 : 500,
-                  color: step === 2 ? 'var(--primary)' : '#64748b',
-                }}
-              >
-                Administrador
-              </span>
+              <div style={{ display: 'flex', flexDirection: 'column' }}>
+                <span
+                  style={{
+                    fontSize: '0.82rem',
+                    fontWeight: step === 2 ? 700 : 600,
+                    color: step === 2 ? 'var(--primary)' : step > 2 ? '#10b981' : '#64748b',
+                  }}
+                >
+                  Administrador
+                </span>
+                <span style={{ fontSize: '0.7rem', color: '#94a3b8' }}>Credenciales</span>
+              </div>
             </div>
 
             <div
-              style={{ flex: 1, height: '2px', backgroundColor: '#e2e8f0', margin: '0 0.5rem' }}
+              style={{
+                flex: 1,
+                height: '3px',
+                backgroundColor: step > 2 ? '#10b981' : '#e2e8f0',
+                margin: '0 0.75rem',
+                borderRadius: '2px',
+                transition: 'background-color 0.3s ease',
+              }}
             />
 
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <div
-                style={{
-                  width: '28px',
-                  height: '28px',
-                  borderRadius: '50%',
-                  backgroundColor: step >= 3 ? 'var(--primary)' : '#e2e8f0',
-                  color: step >= 3 ? '#ffffff' : '#64748b',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontSize: '0.85rem',
-                  fontWeight: 700,
-                }}
-              >
-                3
+            {/* Paso 3 Node */}
+            <div className="wizard-step-node">
+              <div className={`wizard-step-bubble ${step === 3 ? 'active' : 'pending'}`}>3</div>
+              <div style={{ display: 'flex', flexDirection: 'column' }}>
+                <span
+                  style={{
+                    fontSize: '0.82rem',
+                    fontWeight: step === 3 ? 700 : 600,
+                    color: step === 3 ? 'var(--primary)' : '#64748b',
+                  }}
+                >
+                  Verificación
+                </span>
+                <span style={{ fontSize: '0.7rem', color: '#94a3b8' }}>Seguridad</span>
               </div>
-              <span
-                style={{
-                  fontSize: '0.82rem',
-                  fontWeight: step === 3 ? 700 : 500,
-                  color: step === 3 ? 'var(--primary)' : '#64748b',
-                }}
-              >
-                Verificación
-              </span>
             </div>
           </div>
         )}
@@ -452,17 +475,20 @@ export const CreateOngWizard: React.FC = () => {
         {error && (
           <div
             style={{
-              padding: '0.75rem 1rem',
-              backgroundColor: 'rgba(239, 68, 68, 0.1)',
+              padding: '0.85rem 1.2rem',
+              backgroundColor: 'rgba(239, 68, 68, 0.08)',
               border: '1px solid rgba(239, 68, 68, 0.3)',
-              borderRadius: 'var(--radius-md)',
+              borderRadius: '10px',
               color: '#dc2626',
               fontSize: '0.85rem',
               fontWeight: 600,
-              marginBottom: '1.5rem',
+              marginBottom: '1.8rem',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem',
             }}
           >
-            {error}
+            ⚠️ {error}
           </div>
         )}
 
@@ -473,15 +499,19 @@ export const CreateOngWizard: React.FC = () => {
           <form
             noValidate
             onSubmit={handleNextFromStep1}
-            style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem' }}
+            style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}
           >
             <div
-              style={{ borderBottom: '1px solid #e2e8f0', pb: '0.5rem', marginBottom: '0.5rem' }}
+              style={{
+                borderBottom: '1px solid #f1f5f9',
+                paddingBottom: '0.75rem',
+                marginBottom: '0.5rem',
+              }}
             >
               <h3
                 style={{
                   margin: 0,
-                  fontSize: '1.15rem',
+                  fontSize: '1.2rem',
                   color: 'var(--primary)',
                   fontWeight: 700,
                   display: 'flex',
@@ -489,57 +519,42 @@ export const CreateOngWizard: React.FC = () => {
                   gap: '0.5rem',
                 }}
               >
-                <Building2 size={20} /> Datos Legales de la Organización
+                <Building2 size={22} /> Información Legal de la ONG
               </h3>
-              <p style={{ fontSize: '0.82rem', color: '#64748b', margin: '0.2rem 0 0 0' }}>
-                Información oficial de la ONG para la auditoría y facturación.
+              <p style={{ fontSize: '0.82rem', color: '#64748b', margin: '0.25rem 0 0 0' }}>
+                Ingresa los datos institucionales de tu organización para configurar su espacio.
               </p>
             </div>
 
-            <div>
-              <label
-                style={{
-                  display: 'block',
-                  fontSize: '0.85rem',
-                  fontWeight: 600,
-                  marginBottom: '0.3rem',
-                  color: 'var(--neutral-dark)',
-                }}
-              >
-                Nombre Legal de la ONG *
+            {/* Nombre Legal */}
+            <div className="form-field">
+              <label className="form-field-label">
+                Nombre Legal de la Organización <span className="form-field-required">*</span>
               </label>
-              <input
-                type="text"
-                className="input"
-                placeholder="Ej. Fundación Manos de Esperanza"
-                value={nombreOng}
-                onChange={(e) => setNombreOng(e.target.value)}
-                required
-              />
+              <div className="input-with-icon">
+                <Building2 size={18} className="input-icon" />
+                <input
+                  type="text"
+                  className="form-input-premium"
+                  placeholder="Ej. Fundación Manos de Esperanza"
+                  value={nombreOng}
+                  onChange={(e) => setNombreOng(e.target.value)}
+                  required
+                />
+              </div>
             </div>
 
+            {/* RIF y País */}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-              <div>
-                <label
-                  style={{
-                    display: 'block',
-                    fontSize: '0.85rem',
-                    fontWeight: 600,
-                    marginBottom: '0.3rem',
-                    color: 'var(--neutral-dark)',
-                  }}
-                >
-                  RIF / Identificación Fiscal *
+              <div className="form-field">
+                <label className="form-field-label">
+                  RIF / Identificación Fiscal <span className="form-field-required">*</span>
                 </label>
-                <div style={{ position: 'relative' }}>
-                  <FileText
-                    size={16}
-                    style={{ position: 'absolute', left: '10px', top: '12px', color: '#94a3b8' }}
-                  />
+                <div className="input-with-icon">
+                  <FileText size={18} className="input-icon" />
                   <input
                     type="text"
-                    className="input"
-                    style={{ paddingLeft: '2.2rem' }}
+                    className="form-input-premium"
                     placeholder="J-12345678-9"
                     value={rif}
                     onChange={(e) => setRif(e.target.value)}
@@ -548,27 +563,15 @@ export const CreateOngWizard: React.FC = () => {
                 </div>
               </div>
 
-              <div>
-                <label
-                  style={{
-                    display: 'block',
-                    fontSize: '0.85rem',
-                    fontWeight: 600,
-                    marginBottom: '0.3rem',
-                    color: 'var(--neutral-dark)',
-                  }}
-                >
-                  País de Operación *
+              <div className="form-field">
+                <label className="form-field-label">
+                  País de Operación <span className="form-field-required">*</span>
                 </label>
-                <div style={{ position: 'relative' }}>
-                  <Globe
-                    size={16}
-                    style={{ position: 'absolute', left: '10px', top: '12px', color: '#94a3b8' }}
-                  />
+                <div className="input-with-icon">
+                  <Globe size={18} className="input-icon" />
                   <input
                     type="text"
-                    className="input"
-                    style={{ paddingLeft: '2.2rem' }}
+                    className="form-input-premium"
                     placeholder="Venezuela"
                     value={pais}
                     onChange={(e) => setPais(e.target.value)}
@@ -578,28 +581,17 @@ export const CreateOngWizard: React.FC = () => {
               </div>
             </div>
 
+            {/* Teléfono y Sitio Web */}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-              <div>
-                <label
-                  style={{
-                    display: 'block',
-                    fontSize: '0.85rem',
-                    fontWeight: 600,
-                    marginBottom: '0.3rem',
-                    color: 'var(--neutral-dark)',
-                  }}
-                >
-                  Teléfono Oficial *
+              <div className="form-field">
+                <label className="form-field-label">
+                  Teléfono Oficial de Contacto <span className="form-field-required">*</span>
                 </label>
-                <div style={{ position: 'relative' }}>
-                  <Phone
-                    size={16}
-                    style={{ position: 'absolute', left: '10px', top: '12px', color: '#94a3b8' }}
-                  />
+                <div className="input-with-icon">
+                  <Phone size={18} className="input-icon" />
                   <input
                     type="tel"
-                    className="input"
-                    style={{ paddingLeft: '2.2rem' }}
+                    className="form-input-premium"
                     placeholder="+58 412 1234567"
                     value={telefono}
                     onChange={(e) => setTelefono(e.target.value)}
@@ -608,49 +600,29 @@ export const CreateOngWizard: React.FC = () => {
                 </div>
               </div>
 
-              <div>
-                <label
-                  style={{
-                    display: 'block',
-                    fontSize: '0.85rem',
-                    fontWeight: 600,
-                    marginBottom: '0.3rem',
-                    color: 'var(--neutral-dark)',
-                  }}
-                >
-                  Sitio Web / Red Social (Opcional)
-                </label>
-                <input
-                  type="text"
-                  className="input"
-                  placeholder="https://fundacion.org"
-                  value={sitioWeb}
-                  onChange={(e) => setSitioWeb(e.target.value)}
-                />
+              <div className="form-field">
+                <label className="form-field-label">Sitio Web / Red Social (Opcional)</label>
+                <div className="input-with-icon">
+                  <Globe size={18} className="input-icon" />
+                  <input
+                    type="text"
+                    className="form-input-premium"
+                    placeholder="https://fundacion.org"
+                    value={sitioWeb}
+                    onChange={(e) => setSitioWeb(e.target.value)}
+                  />
+                </div>
               </div>
             </div>
 
-            <div>
-              <label
-                style={{
-                  display: 'block',
-                  fontSize: '0.85rem',
-                  fontWeight: 600,
-                  marginBottom: '0.3rem',
-                  color: 'var(--neutral-dark)',
-                }}
-              >
-                Dirección Física Oficial (Opcional)
-              </label>
-              <div style={{ position: 'relative' }}>
-                <MapPin
-                  size={16}
-                  style={{ position: 'absolute', left: '10px', top: '12px', color: '#94a3b8' }}
-                />
+            {/* Dirección */}
+            <div className="form-field">
+              <label className="form-field-label">Dirección Física Oficial (Opcional)</label>
+              <div className="input-with-icon">
+                <MapPin size={18} className="input-icon" />
                 <input
                   type="text"
-                  className="input"
-                  style={{ paddingLeft: '2.2rem' }}
+                  className="form-input-premium"
                   placeholder="Av. Principal, Edificio Sede, Piso 2"
                   value={direccion}
                   onChange={(e) => setDireccion(e.target.value)}
@@ -662,13 +634,18 @@ export const CreateOngWizard: React.FC = () => {
               style={{
                 display: 'flex',
                 justifyContent: 'space-between',
-                marginTop: '1.5rem',
+                marginTop: '1.8rem',
                 alignItems: 'center',
               }}
             >
               <Link
                 to="/login"
-                style={{ color: '#64748b', fontSize: '0.85rem', textDecoration: 'none' }}
+                style={{
+                  color: '#64748b',
+                  fontSize: '0.88rem',
+                  fontWeight: 600,
+                  textDecoration: 'none',
+                }}
               >
                 Volver al Login
               </Link>
@@ -680,7 +657,9 @@ export const CreateOngWizard: React.FC = () => {
                   display: 'flex',
                   alignItems: 'center',
                   gap: '0.5rem',
-                  padding: '0.75rem 1.5rem',
+                  padding: '0.85rem 1.75rem',
+                  fontWeight: 700,
+                  borderRadius: '10px',
                 }}
               >
                 Siguiente: Administrador <ArrowRight size={18} />
@@ -694,16 +673,21 @@ export const CreateOngWizard: React.FC = () => {
         {/* ========================================================================= */}
         {step === 2 && (
           <form
+            noValidate
             onSubmit={handleNextFromStep2}
-            style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem' }}
+            style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}
           >
             <div
-              style={{ borderBottom: '1px solid #e2e8f0', pb: '0.5rem', marginBottom: '0.5rem' }}
+              style={{
+                borderBottom: '1px solid #f1f5f9',
+                paddingBottom: '0.75rem',
+                marginBottom: '0.5rem',
+              }}
             >
               <h3
                 style={{
                   margin: 0,
-                  fontSize: '1.15rem',
+                  fontSize: '1.2rem',
                   color: 'var(--primary)',
                   fontWeight: 700,
                   display: 'flex',
@@ -711,101 +695,79 @@ export const CreateOngWizard: React.FC = () => {
                   gap: '0.5rem',
                 }}
               >
-                <User size={20} /> Datos del Administrador Principal
+                <User size={22} /> Perfil del Administrador Principal
               </h3>
-              <p style={{ fontSize: '0.82rem', color: '#64748b', margin: '0.2rem 0 0 0' }}>
-                Tus credenciales para gestionar el espacio de tu ONG y tu equipo.
+              <p style={{ fontSize: '0.82rem', color: '#64748b', margin: '0.25rem 0 0 0' }}>
+                Establece las credenciales maestras para acceder y administrar tu ONG.
               </p>
             </div>
 
-            <div>
-              <label
-                style={{
-                  display: 'block',
-                  fontSize: '0.85rem',
-                  fontWeight: 600,
-                  marginBottom: '0.3rem',
-                  color: 'var(--neutral-dark)',
-                }}
-              >
-                Nombre Completo del Administrador *
+            {/* Nombre Completo */}
+            <div className="form-field">
+              <label className="form-field-label">
+                Nombre Completo del Administrador <span className="form-field-required">*</span>
               </label>
-              <input
-                type="text"
-                className="input"
-                placeholder="Ej. María Rodríguez"
-                value={nombreAdmin}
-                onChange={(e) => setNombreAdmin(e.target.value)}
-                required
-              />
+              <div className="input-with-icon">
+                <User size={18} className="input-icon" />
+                <input
+                  type="text"
+                  className="form-input-premium"
+                  placeholder="Ej. María Rodríguez"
+                  value={nombreAdmin}
+                  onChange={(e) => setNombreAdmin(e.target.value)}
+                  required
+                />
+              </div>
             </div>
 
-            <div>
-              <label
-                style={{
-                  display: 'block',
-                  fontSize: '0.85rem',
-                  fontWeight: 600,
-                  marginBottom: '0.3rem',
-                  color: 'var(--neutral-dark)',
-                }}
-              >
-                Cargo u Ocupación en la ONG *
-              </label>
-              <input
-                type="text"
-                className="input"
-                placeholder="Director Ejecutivo / Administrador General"
-                value={cargo}
-                onChange={(e) => setCargo(e.target.value)}
-                required
-              />
-            </div>
-
-            <div>
-              <label
-                style={{
-                  display: 'block',
-                  fontSize: '0.85rem',
-                  fontWeight: 600,
-                  marginBottom: '0.3rem',
-                  color: 'var(--neutral-dark)',
-                }}
-              >
-                Correo Electrónico Institucional *
-              </label>
-              <input
-                type="email"
-                className="input"
-                placeholder="direccion@fundacion.org"
-                value={emailAdmin}
-                onChange={(e) => setEmailAdmin(e.target.value)}
-                required
-              />
-            </div>
-
+            {/* Cargo y Email */}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-              <div>
-                <label
-                  style={{
-                    display: 'block',
-                    fontSize: '0.85rem',
-                    fontWeight: 600,
-                    marginBottom: '0.3rem',
-                    color: 'var(--neutral-dark)',
-                  }}
-                >
-                  Contraseña *
+              <div className="form-field">
+                <label className="form-field-label">
+                  Cargo / Posición en la ONG <span className="form-field-required">*</span>
                 </label>
-                <div style={{ position: 'relative' }}>
-                  <Lock
-                    size={16}
-                    style={{ position: 'absolute', left: '10px', top: '12px', color: '#94a3b8' }}
+                <div className="input-with-icon">
+                  <Briefcase size={18} className="input-icon" />
+                  <input
+                    type="text"
+                    className="form-input-premium"
+                    placeholder="Director Ejecutivo / Administrador"
+                    value={cargo}
+                    onChange={(e) => setCargo(e.target.value)}
+                    required
                   />
+                </div>
+              </div>
+
+              <div className="form-field">
+                <label className="form-field-label">
+                  Correo Electrónico Institucional <span className="form-field-required">*</span>
+                </label>
+                <div className="input-with-icon">
+                  <Mail size={18} className="input-icon" />
+                  <input
+                    type="email"
+                    className="form-input-premium"
+                    placeholder="direccion@fundacion.org"
+                    value={emailAdmin}
+                    onChange={(e) => setEmailAdmin(e.target.value)}
+                    required
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Contraseñas */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+              <div className="form-field">
+                <label className="form-field-label">
+                  Contraseña de Acceso <span className="form-field-required">*</span>
+                </label>
+                <div className="input-with-icon">
+                  <Lock size={18} className="input-icon" />
                   <input
                     type="password"
-                    className="input"
-                    style={{ paddingLeft: '2.2rem' }}
+                    className="form-input-premium"
                     placeholder="Mínimo 6 caracteres"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
@@ -814,27 +776,15 @@ export const CreateOngWizard: React.FC = () => {
                 </div>
               </div>
 
-              <div>
-                <label
-                  style={{
-                    display: 'block',
-                    fontSize: '0.85rem',
-                    fontWeight: 600,
-                    marginBottom: '0.3rem',
-                    color: 'var(--neutral-dark)',
-                  }}
-                >
-                  Confirmar Contraseña *
+              <div className="form-field">
+                <label className="form-field-label">
+                  Confirmar Contraseña <span className="form-field-required">*</span>
                 </label>
-                <div style={{ position: 'relative' }}>
-                  <Lock
-                    size={16}
-                    style={{ position: 'absolute', left: '10px', top: '12px', color: '#94a3b8' }}
-                  />
+                <div className="input-with-icon">
+                  <Lock size={18} className="input-icon" />
                   <input
                     type="password"
-                    className="input"
-                    style={{ paddingLeft: '2.2rem' }}
+                    className="form-input-premium"
                     placeholder="Repite la contraseña"
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
@@ -844,12 +794,17 @@ export const CreateOngWizard: React.FC = () => {
               </div>
             </div>
 
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '1.5rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '1.8rem' }}>
               <button
                 type="button"
                 className="btn btn-outline"
                 onClick={() => setStep(1)}
-                style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  borderRadius: '10px',
+                }}
               >
                 <ArrowLeft size={18} /> Atrás
               </button>
@@ -861,7 +816,9 @@ export const CreateOngWizard: React.FC = () => {
                   display: 'flex',
                   alignItems: 'center',
                   gap: '0.5rem',
-                  padding: '0.75rem 1.5rem',
+                  padding: '0.85rem 1.75rem',
+                  fontWeight: 700,
+                  borderRadius: '10px',
                 }}
               >
                 Siguiente: Verificación <ArrowRight size={18} />
@@ -876,15 +833,19 @@ export const CreateOngWizard: React.FC = () => {
         {step === 3 && (
           <form
             onSubmit={handleSubmitFinal}
-            style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem' }}
+            style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}
           >
             <div
-              style={{ borderBottom: '1px solid #e2e8f0', pb: '0.5rem', marginBottom: '0.5rem' }}
+              style={{
+                borderBottom: '1px solid #f1f5f9',
+                paddingBottom: '0.75rem',
+                marginBottom: '0.5rem',
+              }}
             >
               <h3
                 style={{
                   margin: 0,
-                  fontSize: '1.15rem',
+                  fontSize: '1.2rem',
                   color: 'var(--primary)',
                   fontWeight: 700,
                   display: 'flex',
@@ -892,10 +853,10 @@ export const CreateOngWizard: React.FC = () => {
                   gap: '0.5rem',
                 }}
               >
-                <ShieldCheck size={20} /> Verificación de Seguridad y Confirmación
+                <ShieldCheck size={22} /> Verificación de Seguridad
               </h3>
-              <p style={{ fontSize: '0.82rem', color: '#64748b', margin: '0.2rem 0 0 0' }}>
-                Revisión anti-spam y declaración de responsabilidad legal.
+              <p style={{ fontSize: '0.82rem', color: '#64748b', margin: '0.25rem 0 0 0' }}>
+                Revisión anti-spam y declaración jurada para activar tu Trial de 14 días.
               </p>
             </div>
 
@@ -904,39 +865,56 @@ export const CreateOngWizard: React.FC = () => {
               style={{
                 backgroundColor: '#f8fafc',
                 border: '1px solid #e2e8f0',
-                borderRadius: 'var(--radius-md)',
-                padding: '1rem',
+                borderRadius: '12px',
+                padding: '1.2rem',
                 fontSize: '0.85rem',
               }}
             >
-              <strong style={{ color: 'var(--primary)', display: 'block', marginBottom: '0.5rem' }}>
+              <strong
+                style={{
+                  color: 'var(--primary)',
+                  display: 'block',
+                  marginBottom: '0.75rem',
+                  fontSize: '0.9rem',
+                }}
+              >
                 Resumen de tu Registro:
               </strong>
               <div
                 style={{
                   display: 'grid',
                   gridTemplateColumns: '1fr 1fr',
-                  gap: '0.5rem',
-                  color: 'var(--neutral-dark)',
+                  gap: '0.75rem',
+                  color: '#334155',
                 }}
               >
                 <div>
-                  <strong>ONG:</strong> {nombreOng}
+                  <span style={{ color: '#94a3b8', display: 'block', fontSize: '0.75rem' }}>
+                    ORGANIZACIÓN
+                  </span>
+                  <strong>{nombreOng}</strong>
                 </div>
                 <div>
-                  <strong>RIF:</strong> {rif}
+                  <span style={{ color: '#94a3b8', display: 'block', fontSize: '0.75rem' }}>
+                    RIF / FISCAL
+                  </span>
+                  <strong>{rif}</strong>
                 </div>
                 <div>
-                  <strong>País:</strong> {pais}
+                  <span style={{ color: '#94a3b8', display: 'block', fontSize: '0.75rem' }}>
+                    PAÍS & TELÉFONO
+                  </span>
+                  <strong>
+                    {pais} ({telefono})
+                  </strong>
                 </div>
                 <div>
-                  <strong>Teléfono:</strong> {telefono}
-                </div>
-                <div>
-                  <strong>Admin:</strong> {nombreAdmin} ({cargo})
-                </div>
-                <div>
-                  <strong>Email:</strong> {emailAdmin}
+                  <span style={{ color: '#94a3b8', display: 'block', fontSize: '0.75rem' }}>
+                    ADMINISTRADOR
+                  </span>
+                  <strong>
+                    {nombreAdmin} ({cargo})
+                  </strong>
                 </div>
               </div>
             </div>
@@ -944,16 +922,8 @@ export const CreateOngWizard: React.FC = () => {
             {/* Protección Anti-Bot reCAPTCHA */}
             {!isSimulationMode && (
               <div>
-                <label
-                  style={{
-                    display: 'block',
-                    fontSize: '0.85rem',
-                    fontWeight: 600,
-                    marginBottom: '0.5rem',
-                    color: 'var(--neutral-dark)',
-                  }}
-                >
-                  Verificación Anti-Bot (reCAPTCHA) *
+                <label className="form-field-label" style={{ marginBottom: '0.5rem' }}>
+                  Verificación Anti-Bot (reCAPTCHA) <span className="form-field-required">*</span>
                 </label>
                 <div
                   id="wizard-recaptcha-container"
@@ -963,24 +933,19 @@ export const CreateOngWizard: React.FC = () => {
             )}
 
             {/* Declaración de Responsabilidad Legal */}
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'flex-start',
-                gap: '0.75rem',
-                marginTop: '0.5rem',
-              }}
+            <label
+              className={`checkbox-card-container ${declaracionLegal ? 'checked' : ''}`}
+              htmlFor="declaracionLegal"
             >
               <input
                 type="checkbox"
                 id="declaracionLegal"
                 checked={declaracionLegal}
                 onChange={(e) => setDeclaracionLegal(e.target.checked)}
-                style={{ marginTop: '0.25rem', width: '18px', height: '18px', cursor: 'pointer' }}
+                style={{ marginTop: '0.2rem', width: '20px', height: '20px', cursor: 'pointer' }}
                 required
               />
-              <label
-                htmlFor="declaracionLegal"
+              <span
                 style={{
                   fontSize: '0.82rem',
                   color: 'var(--neutral-dark)',
@@ -988,19 +953,24 @@ export const CreateOngWizard: React.FC = () => {
                   cursor: 'pointer',
                 }}
               >
-                Declaro bajo fe de juramento que la información legal de la ONG ingresada es
-                verídica y que poseo la facultad de representar legalmente a la organización para su
-                alta en MATEO.
-              </label>
-            </div>
+                Declaro bajo fe de juramento que la información legal de la ONG es verídica y que
+                poseo las facultades legales para representar a la organización y activar su espacio
+                en MATEO.
+              </span>
+            </label>
 
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '1.5rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '1.8rem' }}>
               <button
                 type="button"
                 className="btn btn-outline"
                 onClick={() => setStep(2)}
                 disabled={loading}
-                style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  borderRadius: '10px',
+                }}
               >
                 <ArrowLeft size={18} /> Atrás
               </button>
@@ -1012,9 +982,11 @@ export const CreateOngWizard: React.FC = () => {
                 style={{
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '0.5rem',
-                  padding: '0.75rem 1.5rem',
+                  gap: '0.6rem',
+                  padding: '0.85rem 1.8rem',
                   fontWeight: 700,
+                  borderRadius: '10px',
+                  boxShadow: '0 4px 12px rgba(47, 90, 174, 0.25)',
                 }}
               >
                 {loading ? (
@@ -1038,15 +1010,23 @@ export const CreateOngWizard: React.FC = () => {
               style={{
                 display: 'flex',
                 justifyContent: 'center',
-                marginBottom: '1rem',
+                marginBottom: '1.25rem',
                 color: '#10b981',
               }}
             >
-              <CheckCircle2 size={72} strokeWidth={1.5} />
+              <CheckCircle2 size={80} strokeWidth={1.5} />
             </div>
 
-            <h2 style={{ color: 'var(--primary)', fontWeight: 800, fontSize: '1.5rem', margin: 0 }}>
-              ¡Organización Creada Exitosamente!
+            <h2
+              style={{
+                color: 'var(--primary)',
+                fontWeight: 900,
+                fontSize: '1.65rem',
+                margin: 0,
+                letterSpacing: '-0.5px',
+              }}
+            >
+              ¡Organización Registrada con Éxito!
             </h2>
 
             <p
@@ -1057,7 +1037,7 @@ export const CreateOngWizard: React.FC = () => {
                 lineHeight: '1.6',
               }}
             >
-              Tu organización <strong>{createdOngData.nombre}</strong> ha sido registrada con una
+              Tu organización <strong>{createdOngData.nombre}</strong> ha sido activada con una
               prueba gratuita de 14 días.
             </p>
 
@@ -1065,15 +1045,22 @@ export const CreateOngWizard: React.FC = () => {
               style={{
                 backgroundColor: 'rgba(16, 185, 129, 0.08)',
                 border: '1px solid rgba(16, 185, 129, 0.25)',
-                borderRadius: 'var(--radius-md)',
-                padding: '1.2rem',
-                margin: '1.5rem 0',
-                fontSize: '0.85rem',
+                borderRadius: '14px',
+                padding: '1.4rem',
+                margin: '1.8rem 0',
+                fontSize: '0.88rem',
                 color: 'var(--neutral-dark)',
                 textAlign: 'left',
               }}
             >
-              <strong style={{ color: '#047857', display: 'block', marginBottom: '0.5rem' }}>
+              <strong
+                style={{
+                  color: '#047857',
+                  display: 'block',
+                  marginBottom: '0.6rem',
+                  fontSize: '0.95rem',
+                }}
+              >
                 Detalles de tu Período de Prueba (Trial):
               </strong>
               <ul
@@ -1082,11 +1069,11 @@ export const CreateOngWizard: React.FC = () => {
                   paddingLeft: '1.2rem',
                   display: 'flex',
                   flexDirection: 'column',
-                  gap: '0.3rem',
+                  gap: '0.4rem',
                 }}
               >
                 <li>
-                  <strong>Plan Activo:</strong> Prueba Completa (14 días).
+                  <strong>Plan Asignado:</strong> Prueba Completa (14 días).
                 </li>
                 <li>
                   <strong>Fecha de Vencimiento:</strong> {createdOngData.trialEndsAt}.
@@ -1101,23 +1088,31 @@ export const CreateOngWizard: React.FC = () => {
               style={{
                 backgroundColor: '#f8fafc',
                 border: '1px solid #e2e8f0',
-                borderRadius: 'var(--radius-md)',
-                padding: '1rem',
-                fontSize: '0.82rem',
-                color: '#64748b',
+                borderRadius: '12px',
+                padding: '1.2rem',
+                fontSize: '0.85rem',
+                color: '#475569',
                 marginBottom: '2rem',
                 textAlign: 'left',
+                lineHeight: '1.5',
               }}
             >
-              📩 <strong>Verificación de Correo Electrónico:</strong> Hemos enviado un mensaje de
-              confirmación a <strong>{emailAdmin}</strong>. Por favor haz clic en el enlace del
-              correo para validar tu cuenta e ingresar al sistema.
+              📩 <strong>Verificación de Correo Electrónico:</strong> Hemos enviado un enlace de
+              confirmación a <strong>{emailAdmin}</strong>. Por favor revisa tu bandeja de entrada y
+              haz clic en el enlace para habilitar tu cuenta e ingresar al sistema.
             </div>
 
             <button
               onClick={() => navigate('/login')}
               className="btn btn-primary"
-              style={{ width: '100%', padding: '0.85rem', fontWeight: 700, fontSize: '1rem' }}
+              style={{
+                width: '100%',
+                padding: '0.9rem',
+                fontWeight: 700,
+                fontSize: '1rem',
+                borderRadius: '10px',
+                boxShadow: '0 4px 12px rgba(47, 90, 174, 0.25)',
+              }}
             >
               Ir al Inicio de Sesión
             </button>
