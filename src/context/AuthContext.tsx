@@ -61,7 +61,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               email: currentUser.email,
               nombre_completo: meta?.nombre_completo || 'Usuario',
               rol: meta?.rol || 'donante',
-              aprobado: false,
+              aprobado: meta?.aprobado !== undefined ? Boolean(meta.aprobado) : false,
               ong_id: meta?.ong_id || '11111111-1111-1111-1111-111111111111',
             };
 

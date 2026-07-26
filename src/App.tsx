@@ -96,6 +96,11 @@ const CreateOngWizard = lazy(() =>
     default: module.CreateOngWizard,
   })),
 );
+const EmailUnverified = lazy(() =>
+  import('./features/auth/EmailUnverified').then((module) => ({
+    default: module.EmailUnverified,
+  })),
+);
 
 // SaaS lazy loaded features
 const SaasLogin = lazy(() =>
@@ -153,6 +158,13 @@ const MainAppContent: React.FC = () => {
   }
 
   // Si no hay sesión válida, se manejará con PrivateRoute en lugar de redirigir aquí.
+
+  // Si el usuario está registrado en Supabase pero no ha verificado su correo electrónico
+  const isEmailVerified =
+    isSimulationMode || !user || !!user.email_confirmed_at || !!user.confirmed_at;
+  if (user && !isEmailVerified) {
+    return <EmailUnverified email={user.email} logout={logout} />;
+  }
 
   if (!profile) return null; // Satisfy TypeScript since PrivateRoute already guards this
 

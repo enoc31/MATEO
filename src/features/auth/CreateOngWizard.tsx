@@ -194,7 +194,7 @@ export const CreateOngWizard: React.FC = () => {
 
       // 2. Registrar la cuenta del Administrador en Supabase Auth
       if (!isSimulationMode) {
-        const { error: authErr } = await supabase.auth.signUp({
+        const { data: authData, error: authErr } = await supabase.auth.signUp({
           email: emailAdmin.trim(),
           password,
           options: {
@@ -208,6 +208,21 @@ export const CreateOngWizard: React.FC = () => {
           },
         });
         if (authErr) throw authErr;
+
+        // Asegurar la inserción/actualización directa con rol administrador y aprobado=true
+        if (authData?.user) {
+          const { error: profileUpsertErr } = await supabase.from('usuarios_perfiles').upsert({
+            id: authData.user.id,
+            email: emailAdmin.trim(),
+            nombre_completo: nombreAdmin.trim(),
+            rol: 'administrador',
+            aprobado: true,
+            ong_id: newOng.id,
+          });
+          if (profileUpsertErr) {
+            console.warn('Aviso al sincronizar perfil de administrador:', profileUpsertErr.message);
+          }
+        }
 
         // 3. Notificar al Super Admin vía Edge Function
         supabase.functions

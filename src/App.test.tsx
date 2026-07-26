@@ -32,7 +32,7 @@ describe('Security & Access Control (App.tsx)', () => {
   it('debería bloquear el acceso al Dashboard a un auxiliar_campo', async () => {
     // Simulamos un usuario logueado con rol auxiliar_campo
     (AuthContextModule.useAuth as any).mockReturnValue({
-      user: { id: '123' },
+      user: { id: '123', email_confirmed_at: '2026-01-01T00:00:00Z' },
       profile: { rol: 'auxiliar_campo', aprobado: true },
       loading: false,
     });
