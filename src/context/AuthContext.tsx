@@ -100,10 +100,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         } else {
           let profileData = data as UserProfile;
           const metaRol = currentUser.user_metadata?.rol;
+          const metaOngId = currentUser.user_metadata?.ong_id;
           const isSuperAdminEmail =
             currentUser.email?.toLowerCase() === 'gerardoh31@gmail.com' ||
             metaRol === 'super_admin' ||
             profileData.rol === 'super_admin';
+
+          // Auto-sincronizar el ong_id correcto desde el metadata de autenticación
+          if (metaOngId && metaOngId !== profileData.ong_id && !isSuperAdminEmail) {
+            profileData = { ...profileData, ong_id: metaOngId };
+            supabase
+              .from('usuarios_perfiles')
+              .update({ ong_id: metaOngId })
+              .eq('id', currentUser.id)
+              .then();
+          }
 
           // Auto-corregir perfil si es SuperAdmin o Administrador
           if (isSuperAdminEmail && (profileData.rol !== 'super_admin' || !profileData.aprobado)) {
