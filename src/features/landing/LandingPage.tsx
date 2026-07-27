@@ -15,7 +15,6 @@ import {
   ArrowRightLeft,
   CalendarDays,
   UserCheck,
-  ChevronRight,
 } from 'lucide-react';
 
 const modules = [
@@ -217,25 +216,6 @@ export const LandingPage: React.FC = () => {
             MATEO es la plataforma integral de gestión humanitaria diseñada para ONGs. Controla
             presupuestos, audita gastos y asegura la transparencia financiera en cada proyecto.
           </p>
-          <button
-            onClick={() => navigate('/login')}
-            style={{
-              padding: '1rem 2.5rem',
-              backgroundColor: '#1e3a8a',
-              color: 'white',
-              border: 'none',
-              borderRadius: '8px',
-              fontWeight: 700,
-              fontSize: '1.1rem',
-              cursor: 'pointer',
-              boxShadow: '0 4px 14px rgba(30, 58, 138, 0.35)',
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '0.5rem',
-            }}
-          >
-            Ingresar a la Plataforma <ChevronRight size={20} />
-          </button>
         </section>
 
         {/* Pilares */}
