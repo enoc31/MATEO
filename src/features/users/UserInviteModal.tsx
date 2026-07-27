@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Mail, ShieldCheck, Copy, Check, X, Send, Sparkles } from 'lucide-react';
-import { api, type UserRole } from '../../services/api';
+import { requisitionsApi, type UserRole, type Invitation } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 import { supabase } from '../../supabaseClient';
 
@@ -42,7 +42,7 @@ export const UserInviteModal: React.FC<UserInviteModalProps> = ({ isOpen, onClos
     setLoading(true);
     setEmailWarning(null);
     try {
-      const invite = await (api as any).createInvitation({
+      const invite: Invitation = await requisitionsApi.createInvitation({
         email: email.trim(),
         rol,
         ong_id: profile.ong_id,
@@ -51,6 +51,7 @@ export const UserInviteModal: React.FC<UserInviteModalProps> = ({ isOpen, onClos
 
       const inviteUrl = `${window.location.origin}/aceptar-invitacion?token=${invite.token}`;
       setCreatedInviteLink(inviteUrl);
+
 
       // Invocar la Edge Function y esperar la respuesta para detectar errores de envío
       try {
