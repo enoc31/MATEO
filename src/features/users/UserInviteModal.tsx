@@ -18,6 +18,7 @@ export const UserInviteModal: React.FC<UserInviteModalProps> = ({ isOpen, onClos
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [emailWarning, setEmailWarning] = useState<string | null>(null);
   const [createdInviteLink, setCreatedInviteLink] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
 
@@ -39,6 +40,7 @@ export const UserInviteModal: React.FC<UserInviteModalProps> = ({ isOpen, onClos
     }
 
     setLoading(true);
+    setEmailWarning(null);
     try {
       const invite = await (api as any).createInvitation({
         email: email.trim(),
@@ -50,20 +52,38 @@ export const UserInviteModal: React.FC<UserInviteModalProps> = ({ isOpen, onClos
       const inviteUrl = `${window.location.origin}/aceptar-invitacion?token=${invite.token}`;
       setCreatedInviteLink(inviteUrl);
 
-      // Invocar la Edge Function para enviar el correo mediante la API de Resend
-      supabase.functions
-        .invoke('notify-invitation', {
-          body: {
-            email: email.trim(),
-            rol,
-            ongNombre: activeOng?.nombre || 'la Organización',
-            inviteUrl,
-            invitadoPorNombre: profile.nombre_completo || 'Un Administrador',
+      // Invocar la Edge Function y esperar la respuesta para detectar errores de envío
+      try {
+        const { data: fnData, error: fnError } = await supabase.functions.invoke(
+          'notify-invitation',
+          {
+            body: {
+              email: email.trim(),
+              rol,
+              ongNombre: activeOng?.nombre || 'la Organización',
+              inviteUrl,
+              invitadoPorNombre: profile.nombre_completo || 'Un Administrador',
+            },
           },
-        })
-        .catch((fnErr) => {
-          console.error('Error invoking notify-invitation:', fnErr);
-        });
+        );
+
+        if (fnError) {
+          console.error('Error en notify-invitation:', fnError);
+          setEmailWarning(
+            `La invitación fue creada, pero el correo no pudo enviarse (${fnError.message || 'error desconocido'}). Comparte el enlace manualmente.`,
+          );
+        } else if (fnData?.error) {
+          console.error('Error de Resend en notify-invitation:', fnData.error);
+          setEmailWarning(
+            `La invitación fue creada, pero Resend reportó un error: "${fnData.error}". Comparte el enlace manualmente.`,
+          );
+        }
+      } catch (fnErr: any) {
+        console.error('Excepción al invocar notify-invitation:', fnErr);
+        setEmailWarning(
+          'La invitación fue creada, pero el servicio de correo no respondió. Comparte el enlace manualmente.',
+        );
+      }
 
       if (onSuccess) onSuccess();
     } catch (err: any) {
@@ -171,6 +191,24 @@ export const UserInviteModal: React.FC<UserInviteModalProps> = ({ isOpen, onClos
             }}
           >
             ⚠️ {error}
+          </div>
+        )}
+
+        {emailWarning && (
+          <div
+            style={{
+              padding: '0.85rem 1rem',
+              backgroundColor: 'rgba(245, 158, 11, 0.08)',
+              border: '1px solid rgba(245, 158, 11, 0.35)',
+              borderRadius: '10px',
+              color: '#b45309',
+              fontSize: '0.82rem',
+              fontWeight: 500,
+              marginBottom: '1.25rem',
+              lineHeight: 1.5,
+            }}
+          >
+            📧 {emailWarning}
           </div>
         )}
 
