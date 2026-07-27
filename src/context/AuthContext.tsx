@@ -98,7 +98,29 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           setProfile(null);
           setActiveOng(null);
         } else {
-          const profileData = data as UserProfile;
+          let profileData = data as UserProfile;
+          const metaRol = currentUser.user_metadata?.rol;
+
+          // Auto-corregir perfil si la metadata de autenticación indica rol Administrador
+          if (
+            metaRol === 'administrador' &&
+            (profileData.rol !== 'administrador' || !profileData.aprobado)
+          ) {
+            profileData = { ...profileData, rol: 'administrador', aprobado: true };
+            supabase
+              .from('usuarios_perfiles')
+              .update({ rol: 'administrador', aprobado: true })
+              .eq('id', currentUser.id)
+              .then();
+          } else if (profileData.rol === 'administrador' && !profileData.aprobado) {
+            profileData = { ...profileData, aprobado: true };
+            supabase
+              .from('usuarios_perfiles')
+              .update({ aprobado: true })
+              .eq('id', currentUser.id)
+              .then();
+          }
+
           setProfile(profileData);
           setAuthError(null);
 

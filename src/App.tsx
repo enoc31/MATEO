@@ -179,7 +179,7 @@ const MainAppContent: React.FC = () => {
   }
 
   // Si está logueado pero no ha sido aprobado por un administrador
-  if (profile.aprobado === false) {
+  if (profile.aprobado === false && profile.rol !== 'administrador') {
     return <PendingApproval logout={logout} refreshProfile={refreshProfile} userId={user?.id} />;
   }
 
