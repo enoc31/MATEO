@@ -10,7 +10,7 @@ import {
   ArrowRight,
   KeyRound,
 } from 'lucide-react';
-import { api, type Invitation } from '../../services/api';
+import { requisitionsApi, type Invitation } from '../../services/api';
 
 export const AcceptInvitation: React.FC = () => {
   const [searchParams] = useSearchParams();
@@ -36,7 +36,7 @@ export const AcceptInvitation: React.FC = () => {
     setLoadingInv(true);
     setInvError(null);
     try {
-      const data = await (api as any).getInvitationByToken(tokenToFetch.trim());
+      const data = await requisitionsApi.getInvitationByToken(tokenToFetch.trim());
       setInvitation(data);
     } catch (err: any) {
       console.error('Error al cargar la invitación:', err);
@@ -77,7 +77,7 @@ export const AcceptInvitation: React.FC = () => {
 
     setSubmitting(true);
     try {
-      await (api as any).acceptInvitation({
+      await requisitionsApi.acceptInvitation({
         token: invitation?.token || inputToken,
         nombreCompleto: nombreCompleto.trim(),
         password,
