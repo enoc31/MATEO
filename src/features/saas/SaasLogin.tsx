@@ -1,11 +1,9 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../supabaseClient';
 import { isSimulationMode } from '../../services/api';
 import { ShieldAlert, KeyRound, Mail, ArrowRight } from 'lucide-react';
 
 export const SaasLogin: React.FC = () => {
-  const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -26,27 +24,37 @@ export const SaasLogin: React.FC = () => {
 
       if (signInError) throw signInError;
 
-      // Verify that this user profile actually has the super_admin role
-      const { data: profile, error: profileError } = await supabase
+      // Auto-asegurar que si es gerardoh31@gmail.com o metadata de super_admin, se aplique rol super_admin
+      const isSuperAdminEmail =
+        email.trim().toLowerCase() === 'gerardoh31@gmail.com' ||
+        data.user.user_metadata?.rol === 'super_admin';
+
+      if (isSuperAdminEmail) {
+        await supabase.from('usuarios_perfiles').upsert({
+          id: data.user.id,
+          email: data.user.email,
+          nombre_completo: data.user.user_metadata?.nombre_completo || 'Super Administrador',
+          rol: 'super_admin',
+          aprobado: true,
+        });
+      }
+
+      // Verify profile
+      const { data: profile } = await supabase
         .from('usuarios_perfiles')
         .select('rol')
         .eq('id', data.user.id)
         .single();
 
-      if (profileError || !profile) {
-        await supabase.auth.signOut();
-        throw new Error('No se pudo verificar el perfil del usuario.');
-      }
-
-      if (profile.rol !== 'super_admin') {
+      if (!profile || (profile.rol !== 'super_admin' && !isSuperAdminEmail)) {
         await supabase.auth.signOut();
         throw new Error(
           'Acceso denegado. Este portal es de uso exclusivo para Super Administradores del SaaS.',
         );
       }
 
-      // If valid super_admin, redirect to saas dashboard
-      navigate('/saas-admin/dashboard');
+      // Force full window reload to enter SaasLayout
+      window.location.href = '/saas-admin/dashboard';
     } catch (err: any) {
       setError(err.message || 'Error al iniciar sesión');
     } finally {

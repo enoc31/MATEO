@@ -100,9 +100,26 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         } else {
           let profileData = data as UserProfile;
           const metaRol = currentUser.user_metadata?.rol;
+          const isSuperAdminEmail =
+            currentUser.email?.toLowerCase() === 'gerardoh31@gmail.com' ||
+            metaRol === 'super_admin' ||
+            profileData.rol === 'super_admin';
 
-          // Auto-corregir perfil si la metadata de autenticación indica rol Administrador
-          if (
+          // Auto-corregir perfil si es SuperAdmin o Administrador
+          if (isSuperAdminEmail && (profileData.rol !== 'super_admin' || !profileData.aprobado)) {
+            profileData = { ...profileData, rol: 'super_admin', aprobado: true };
+            supabase
+              .from('usuarios_perfiles')
+              .upsert({
+                id: currentUser.id,
+                email: currentUser.email,
+                nombre_completo:
+                  currentUser.user_metadata?.nombre_completo || 'Super Administrador',
+                rol: 'super_admin',
+                aprobado: true,
+              })
+              .then();
+          } else if (
             metaRol === 'administrador' &&
             (profileData.rol !== 'administrador' || !profileData.aprobado)
           ) {
