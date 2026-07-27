@@ -118,8 +118,17 @@ export const UserManagement: React.FC = () => {
     setError(null);
     setSuccess(null);
     try {
-      await api.adminCreateUser(newUserData);
-      setSuccess('Usuario creado y aprobado exitosamente.');
+      const result = await api.adminCreateUser(newUserData);
+      const emailWarning = (result as any)?.emailWarning;
+      if (emailWarning) {
+        setSuccess(
+          `✅ Usuario creado exitosamente. ⚠️ ${emailWarning} — Comparte las credenciales de acceso manualmente.`,
+        );
+      } else {
+        setSuccess(
+          '✅ Usuario creado y aprobado exitosamente. Se envió un correo de bienvenida con sus credenciales.',
+        );
+      }
       setShowNewUserModal(false);
       setNewUserData({
         nombre_completo: '',

@@ -155,6 +155,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               .update({ aprobado: true })
               .eq('id', currentUser.id)
               .then();
+          } else if (!profileData.aprobado && !isSuperAdminEmail) {
+            // PRIMER INICIO DE SESIÓN: el usuario fue creado por un administrador con
+            // aprobado=false (pendiente de activación). Al autenticarse exitosamente
+            // con sus credenciales, lo activamos automáticamente.
+            profileData = { ...profileData, aprobado: true };
+            supabase
+              .from('usuarios_perfiles')
+              .update({ aprobado: true })
+              .eq('id', currentUser.id)
+              .then();
           }
 
           setProfile(profileData);
