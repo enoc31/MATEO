@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Mail, ShieldCheck, Copy, Check, X, Send, Sparkles } from 'lucide-react';
 import { api, type UserRole } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
+import { supabase } from '../../supabaseClient';
 
 interface UserInviteModalProps {
   isOpen: boolean;
@@ -10,7 +11,7 @@ interface UserInviteModalProps {
 }
 
 export const UserInviteModal: React.FC<UserInviteModalProps> = ({ isOpen, onClose, onSuccess }) => {
-  const { profile } = useAuth();
+  const { profile, activeOng } = useAuth();
 
   const [email, setEmail] = useState('');
   const [rol, setRol] = useState<UserRole>('coordinador');
@@ -48,6 +49,21 @@ export const UserInviteModal: React.FC<UserInviteModalProps> = ({ isOpen, onClos
 
       const inviteUrl = `${window.location.origin}/aceptar-invitacion?token=${invite.token}`;
       setCreatedInviteLink(inviteUrl);
+
+      // Invocar la Edge Function para enviar el correo mediante la API de Resend
+      supabase.functions
+        .invoke('notify-invitation', {
+          body: {
+            email: email.trim(),
+            rol,
+            ongNombre: activeOng?.nombre || 'la Organización',
+            inviteUrl,
+            invitadoPorNombre: profile.nombre_completo || 'Un Administrador',
+          },
+        })
+        .catch((fnErr) => {
+          console.error('Error invoking notify-invitation:', fnErr);
+        });
 
       if (onSuccess) onSuccess();
     } catch (err: any) {

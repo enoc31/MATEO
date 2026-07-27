@@ -2602,9 +2602,17 @@ export const requisitionsApi = {
       });
       if (authErr) throw authErr;
 
-      if (authData.user) {
+      // Iniciar sesión inmediatamente para autenticar al cliente y garantizar permisos RLS
+      const { data: sessionData } = await supabase.auth.signInWithPassword({
+        email: inv.email,
+        password: params.password,
+      });
+
+      const currentUserId = sessionData?.user?.id || authData?.user?.id;
+
+      if (currentUserId) {
         await supabase.from('usuarios_perfiles').upsert({
-          id: authData.user.id,
+          id: currentUserId,
           email: inv.email,
           nombre_completo: params.nombreCompleto.trim(),
           rol: inv.rol,
