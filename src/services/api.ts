@@ -2588,6 +2588,7 @@ export const requisitionsApi = {
     const inv = await this.getInvitationByToken(params.token);
 
     if (!isSimulationMode) {
+      // PASO 1: Crear el usuario en Supabase Auth con toda la metadata correcta
       const { data: authData, error: authErr } = await supabase.auth.signUp({
         email: inv.email,
         password: params.password,
@@ -2602,26 +2603,54 @@ export const requisitionsApi = {
       });
       if (authErr) throw authErr;
 
-      // Iniciar sesión inmediatamente para autenticar al cliente y garantizar permisos RLS
-      const { data: sessionData } = await supabase.auth.signInWithPassword({
-        email: inv.email,
-        password: params.password,
-      });
+      // PASO 2: Obtener el ID del usuario recién creado directamente del signUp.
+      // No dependemos de signInWithPassword ya que puede fallar si la confirmación
+      // de correo está habilitada. El trigger handle_new_user() ya creó el perfil,
+      // pero puede haber asignado la ONG incorrecta si el trigger está desactualizado.
+      const newUserId = authData?.user?.id;
+      if (!newUserId) throw new Error('No se pudo obtener el ID del usuario recién creado.');
 
-      const currentUserId = sessionData?.user?.id || authData?.user?.id;
-
-      if (currentUserId) {
-        await supabase.from('usuarios_perfiles').upsert({
-          id: currentUserId,
+      // PASO 3: Sobrescribir el perfil con los datos correctos de la invitación.
+      // Usamos upsert para garantizar que ong_id, rol y aprobado sean correctos
+      // independientemente de lo que haya escrito el trigger de la BD.
+      const { error: upsertError } = await supabase.from('usuarios_perfiles').upsert(
+        {
+          id: newUserId,
           email: inv.email,
           nombre_completo: params.nombreCompleto.trim(),
           rol: inv.rol,
           aprobado: true,
           ong_id: inv.ong_id,
+        },
+        { onConflict: 'id' },
+      );
+
+      if (upsertError) {
+        // Si el upsert falla por RLS (el usuario no está autenticado aún),
+        // iniciamos sesión y reintentamos.
+        const { data: sessionData, error: signInErr } = await supabase.auth.signInWithPassword({
+          email: inv.email,
+          password: params.password,
         });
+        if (signInErr) throw signInErr;
+
+        if (sessionData?.user?.id) {
+          const { error: retryError } = await supabase.from('usuarios_perfiles').upsert(
+            {
+              id: sessionData.user.id,
+              email: inv.email,
+              nombre_completo: params.nombreCompleto.trim(),
+              rol: inv.rol,
+              aprobado: true,
+              ong_id: inv.ong_id,
+            },
+            { onConflict: 'id' },
+          );
+          if (retryError) console.error('Error en reintento de upsert de perfil:', retryError);
+        }
       }
 
-      // Marcar la invitación como aceptada
+      // PASO 4: Marcar la invitación como aceptada
       await supabase.from('invitaciones').update({ estado: 'aceptada' }).eq('token', params.token);
     } else {
       const list = JSON.parse(localStorage.getItem('cnbv_invitations') || '[]') as Invitation[];

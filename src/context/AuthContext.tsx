@@ -56,13 +56,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (error) {
           if (error.code === 'PGRST116' || error.message?.includes('0 rows')) {
             const meta = currentUser.user_metadata;
+            // IMPORTANTE: No usar ONG por defecto como fallback.
+            // Si el usuario no tiene ong_id en su metadata, quedará sin ONG (null)
+            // hasta que un SuperAdmin lo configure, evitando contaminación entre tenants.
+            const metaOngIdRaw = meta?.ong_id;
+            let parsedOngId: string | null = null;
+            if (metaOngIdRaw && typeof metaOngIdRaw === 'string' && metaOngIdRaw.length > 0) {
+              parsedOngId = metaOngIdRaw;
+            }
             const newProfile = {
               id: currentUser.id,
               email: currentUser.email,
               nombre_completo: meta?.nombre_completo || 'Usuario',
               rol: meta?.rol || 'donante',
               aprobado: meta?.aprobado !== undefined ? Boolean(meta.aprobado) : false,
-              ong_id: meta?.ong_id || '11111111-1111-1111-1111-111111111111',
+              ong_id: parsedOngId,
             };
 
             const { data: insertedData, error: insertError } = await supabase
