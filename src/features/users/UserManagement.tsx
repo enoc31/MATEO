@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, X, Eye, EyeOff } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import { api } from '../../services/api';
 import type { UserRole } from '../../context/AuthContext';
+import { UserInviteModal } from './UserInviteModal';
 
 interface UserItem {
   id: string;
@@ -25,16 +26,8 @@ export const UserManagement: React.FC = () => {
   // Roles modificados localmente antes de guardar
   const [tempRoles, setTempRoles] = useState<{ [userId: string]: UserRole }>({});
 
-  // New User Modal State
-  const [showNewUserModal, setShowNewUserModal] = useState(false);
-  const [creatingUser, setCreatingUser] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
-  const [newUserData, setNewUserData] = useState({
-    nombre_completo: '',
-    email: '',
-    password: '',
-    rol: 'coordinador' as UserRole,
-  });
+  // Invite Modal
+  const [showInviteModal, setShowInviteModal] = useState(false);
 
   const loadUsers = async () => {
     setLoading(true);
@@ -112,40 +105,6 @@ export const UserManagement: React.FC = () => {
     }
   };
 
-  const handleCreateUser = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setCreatingUser(true);
-    setError(null);
-    setSuccess(null);
-    try {
-      const result = await api.adminCreateUser(newUserData);
-      const emailWarning = (result as any)?.emailWarning;
-      if (emailWarning) {
-        setSuccess(
-          `✅ Usuario creado exitosamente. ⚠️ ${emailWarning} — Comparte las credenciales de acceso manualmente.`,
-        );
-      } else {
-        setSuccess(
-          '✅ Usuario creado y aprobado exitosamente. Se envió un correo de bienvenida con sus credenciales.',
-        );
-      }
-      setShowNewUserModal(false);
-      setNewUserData({
-        nombre_completo: '',
-        email: '',
-        password: '',
-        rol: 'coordinador' as UserRole,
-      });
-      await loadUsers();
-    } catch (err: any) {
-      setError(
-        err.message || 'Error al crear el usuario. Asegúrate de configurar la Edge Function.',
-      );
-    } finally {
-      setCreatingUser(false);
-    }
-  };
-
   // Filtrado de usuarios
   // Se excluye al Super Administrador global del SaaS: los admins de ONG no deben verlo ni gestionarlo
   const filteredUsers = users.filter((user) => {
@@ -210,7 +169,7 @@ export const UserManagement: React.FC = () => {
         <button
           className="btn btn-primary"
           style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 600 }}
-          onClick={() => setShowNewUserModal(true)}
+          onClick={() => setShowInviteModal(true)}
         >
           <Plus size={18} /> Nuevo Usuario
         </button>
@@ -523,158 +482,18 @@ export const UserManagement: React.FC = () => {
         )}
       </div>
 
-      {/* Modal Crear Usuario */}
-      {showNewUserModal && (
-        <div
-          style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            backgroundColor: 'rgba(0,0,0,0.5)',
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-            zIndex: 1000,
-          }}
-        >
-          <div
-            className="card animate-fade-in"
-            style={{
-              width: '100%',
-              maxWidth: '450px',
-              padding: '2rem',
-              margin: '1rem',
-              maxHeight: '90vh',
-              overflowY: 'auto',
-            }}
-          >
-            <div
-              style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                marginBottom: '1.5rem',
-              }}
-            >
-              <h3 style={{ margin: 0, color: 'var(--primary)', fontWeight: 700 }}>
-                Crear Nuevo Usuario
-              </h3>
-              <button
-                onClick={() => setShowNewUserModal(false)}
-                style={{
-                  background: 'none',
-                  border: 'none',
-                  cursor: 'pointer',
-                  color: 'var(--neutral)',
-                }}
-              >
-                <X size={20} />
-              </button>
-            </div>
-
-            <form
-              onSubmit={handleCreateUser}
-              style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}
-            >
-              <div>
-                <label className="app-label">Nombre Completo *</label>
-                <input
-                  type="text"
-                  className="app-input"
-                  required
-                  value={newUserData.nombre_completo}
-                  onChange={(e) =>
-                    setNewUserData({ ...newUserData, nombre_completo: e.target.value })
-                  }
-                  placeholder="Ej. Juan Pérez"
-                />
-              </div>
-
-              <div>
-                <label className="app-label">Correo Electrónico *</label>
-                <input
-                  type="email"
-                  className="app-input"
-                  required
-                  value={newUserData.email}
-                  onChange={(e) => setNewUserData({ ...newUserData, email: e.target.value })}
-                  placeholder="usuario@organizacion.org"
-                />
-              </div>
-
-              <div>
-                <label className="app-label">Contraseña Provisional *</label>
-                <div style={{ position: 'relative' }}>
-                  <input
-                    type={showPassword ? 'text' : 'password'}
-                    className="app-input"
-                    required
-                    value={newUserData.password}
-                    onChange={(e) => setNewUserData({ ...newUserData, password: e.target.value })}
-                    placeholder="Mínimo 6 caracteres"
-                    minLength={6}
-                    style={{ paddingRight: '40px' }}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    style={{
-                      position: 'absolute',
-                      right: '10px',
-                      top: '50%',
-                      transform: 'translateY(-50%)',
-                      background: 'none',
-                      border: 'none',
-                      cursor: 'pointer',
-                      color: 'var(--neutral)',
-                    }}
-                  >
-                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                  </button>
-                </div>
-              </div>
-
-              <div>
-                <label className="app-label">Rol Asignado *</label>
-                <select
-                  className="app-input"
-                  required
-                  value={newUserData.rol}
-                  onChange={(e) =>
-                    setNewUserData({ ...newUserData, rol: e.target.value as UserRole })
-                  }
-                >
-                  <option value="coordinador">Coordinador de Terreno</option>
-                  <option value="director">Director (Doble Firma)</option>
-                  <option value="auditor">Auditor (Lectura global)</option>
-                  <option value="administrador">Administrador del Sistema</option>
-                </select>
-              </div>
-
-              <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
-                <button
-                  type="button"
-                  className="btn btn-outline"
-                  style={{ flex: 1 }}
-                  onClick={() => setShowNewUserModal(false)}
-                >
-                  Cancelar
-                </button>
-                <button
-                  type="submit"
-                  className="btn btn-primary"
-                  style={{ flex: 1 }}
-                  disabled={creatingUser}
-                >
-                  {creatingUser ? 'Creando...' : 'Crear Usuario'}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+      {/* Modal de Invitación — el nuevo usuario crea su propia contraseña */}
+      <UserInviteModal
+        isOpen={showInviteModal}
+        onClose={() => setShowInviteModal(false)}
+        onSuccess={() => {
+          setShowInviteModal(false);
+          setSuccess(
+            '✅ Invitación enviada exitosamente. El nuevo usuario recibirá un correo para activar su cuenta y crear su contraseña.',
+          );
+          loadUsers();
+        }}
+      />
     </div>
   );
 };
