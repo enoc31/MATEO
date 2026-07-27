@@ -156,20 +156,6 @@ export const LandingPage: React.FC = () => {
             onClick={() => navigate('/login')}
             style={{
               padding: '0.6rem 1.5rem',
-              backgroundColor: 'transparent',
-              border: 'none',
-              color: '#3b82f6',
-              fontWeight: 600,
-              cursor: 'pointer',
-              fontSize: '1rem',
-            }}
-          >
-            Iniciar Sesión
-          </button>
-          <button
-            onClick={() => navigate('/login')}
-            style={{
-              padding: '0.6rem 1.5rem',
               backgroundColor: '#1e3a8a',
               color: 'white',
               border: 'none',
@@ -182,7 +168,7 @@ export const LandingPage: React.FC = () => {
               gap: '0.5rem',
             }}
           >
-            Portal de ONGs <ArrowRight size={16} />
+            Iniciar Sesión <ArrowRight size={16} />
           </button>
         </div>
       </header>
