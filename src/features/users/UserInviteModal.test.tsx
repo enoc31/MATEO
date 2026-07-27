@@ -38,7 +38,7 @@ describe('UserInviteModal Component', () => {
   });
 
   it('generates invitation link when submitted', async () => {
-    (api.createInvitation as any).mockResolvedValue({
+    ((api as any).createInvitation as any).mockResolvedValue({
       token: 'inv-test-12345',
       email: 'nuevo@ong.org',
       rol: 'coordinador',
@@ -54,7 +54,7 @@ describe('UserInviteModal Component', () => {
     fireEvent.click(screen.getByText(/Generar Invitación/i));
 
     await waitFor(() => {
-      expect(api.createInvitation).toHaveBeenCalledWith({
+      expect((api as any).createInvitation).toHaveBeenCalledWith({
         email: 'nuevo@ong.org',
         rol: 'coordinador',
         ong_id: 'ong-456',

@@ -35,7 +35,7 @@ describe('AcceptInvitation Component', () => {
   });
 
   it('fetches invitation automatically when token is present in URL', async () => {
-    (api.getInvitationByToken as any).mockResolvedValue({
+    ((api as any).getInvitationByToken as any).mockResolvedValue({
       token: 'inv-valid-token',
       email: 'maria@ong.org',
       rol: 'coordinador',
@@ -51,7 +51,7 @@ describe('AcceptInvitation Component', () => {
     );
 
     await waitFor(() => {
-      expect(api.getInvitationByToken).toHaveBeenCalledWith('inv-valid-token');
+      expect((api as any).getInvitationByToken).toHaveBeenCalledWith('inv-valid-token');
       expect(screen.getAllByText(/Fundación Manos de Esperanza/i)[0]).toBeInTheDocument();
       expect(screen.getByText(/COORDINADOR/i)).toBeInTheDocument();
       expect(screen.getByText(/maria@ong.org/i)).toBeInTheDocument();
@@ -59,13 +59,13 @@ describe('AcceptInvitation Component', () => {
   });
 
   it('submits account activation with user credentials', async () => {
-    (api.getInvitationByToken as any).mockResolvedValue({
+    ((api as any).getInvitationByToken as any).mockResolvedValue({
       token: 'inv-valid-token',
       email: 'maria@ong.org',
       rol: 'coordinador',
       ong_nombre: 'Fundación Manos de Esperanza',
     });
-    (api.acceptInvitation as any).mockResolvedValue(undefined);
+    ((api as any).acceptInvitation as any).mockResolvedValue(undefined);
 
     render(
       <MemoryRouter initialEntries={['/aceptar-invitacion?token=inv-valid-token']}>
@@ -92,7 +92,7 @@ describe('AcceptInvitation Component', () => {
     fireEvent.click(screen.getByRole('button', { name: /Activar mi Cuenta/i }));
 
     await waitFor(() => {
-      expect(api.acceptInvitation).toHaveBeenCalledWith({
+      expect((api as any).acceptInvitation).toHaveBeenCalledWith({
         token: 'inv-valid-token',
         nombreCompleto: 'María Pérez',
         password: 'password123',

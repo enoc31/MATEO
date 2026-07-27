@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { UserRole } from '../../services/api';
+import type { UserRole } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 import { supabase } from '../../supabaseClient';
 import { isSimulationMode } from '../../services/api';

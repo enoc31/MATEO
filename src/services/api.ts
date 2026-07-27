@@ -1,5 +1,6 @@
 import { supabase } from '../supabaseClient';
 import type { UserRole } from '../context/AuthContext';
+export type { UserRole };
 import { uploadToGCS } from './storage';
 
 // Interfaces del Dominio
@@ -2579,12 +2580,12 @@ export const requisitionsApi = {
     }
   },
 
-  acceptInvitation: async (params: {
+  acceptInvitation: async function (params: {
     token: string;
     nombreCompleto: string;
     password: string;
-  }): Promise<void> => {
-    const inv = await api.getInvitationByToken(params.token);
+  }): Promise<void> {
+    const inv = await this.getInvitationByToken(params.token);
 
     if (!isSimulationMode) {
       const { data: authData, error: authErr } = await supabase.auth.signUp({
