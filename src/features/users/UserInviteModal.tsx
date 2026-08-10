@@ -52,7 +52,6 @@ export const UserInviteModal: React.FC<UserInviteModalProps> = ({ isOpen, onClos
       const inviteUrl = `${window.location.origin}/aceptar-invitacion?token=${invite.token}`;
       setCreatedInviteLink(inviteUrl);
 
-
       // Invocar la Edge Function y esperar la respuesta para detectar errores de envío
       try {
         const { data: fnData, error: fnError } = await supabase.functions.invoke(
@@ -61,7 +60,7 @@ export const UserInviteModal: React.FC<UserInviteModalProps> = ({ isOpen, onClos
             body: {
               email: email.trim(),
               rol,
-              ongNombre: activeOng?.nombre || 'la Organización',
+              ongNombre: activeOng?.nombre || 'la Iglesia',
               inviteUrl,
               invitadoPorNombre: profile.nombre_completo || 'Un Administrador',
             },
@@ -156,7 +155,7 @@ export const UserInviteModal: React.FC<UserInviteModalProps> = ({ isOpen, onClos
                 gap: '0.5rem',
               }}
             >
-              <Send size={22} /> Invitar Nuevo Usuario a la ONG
+              <Send size={22} /> Invitar Nuevo Usuario a la Iglesia
             </h3>
             <p style={{ fontSize: '0.82rem', color: '#64748b', margin: '0.25rem 0 0 0' }}>
               El usuario recibirá una invitación con su rol pre-asignado por ti.
@@ -295,7 +294,7 @@ export const UserInviteModal: React.FC<UserInviteModalProps> = ({ isOpen, onClos
                 <input
                   type="email"
                   className="form-input-premium"
-                  placeholder="usuario@tu-ong.org"
+                  placeholder="usuario@tu-iglesia.org"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
@@ -305,7 +304,7 @@ export const UserInviteModal: React.FC<UserInviteModalProps> = ({ isOpen, onClos
 
             <div className="form-field">
               <label className="form-field-label">
-                Rol Pre-Asignado en la ONG <span className="form-field-required">*</span>
+                Rol Pre-Asignado en la Iglesia <span className="form-field-required">*</span>
               </label>
               <div className="input-with-icon">
                 <ShieldCheck size={18} className="input-icon" />
@@ -315,14 +314,24 @@ export const UserInviteModal: React.FC<UserInviteModalProps> = ({ isOpen, onClos
                   onChange={(e) => setRol(e.target.value as UserRole)}
                   style={{ cursor: 'pointer' }}
                 >
-                  <option value="coordinador">Coordinador (Gestión de proyectos e ingresos)</option>
-                  <option value="director">Director (Visualización estratégica)</option>
-                  <option value="auditor">Auditor (Revisión y auditoría de egresos)</option>
-                  <option value="auxiliar_campo">
-                    Auxiliar de Campo (Registro de beneficiarios)
+                  <option value="coordinador">
+                    Coordinador / Pastor de Área (Gestión de ministerios, diezmos y ofrendas)
                   </option>
-                  <option value="donante">Donante (Visualización de reportes públicos)</option>
-                  <option value="administrador">Administrador (Control total del Tenant)</option>
+                  <option value="director">
+                    Pastor Principal / Consejo (Visualización estratégica)
+                  </option>
+                  <option value="auditor">
+                    Tesorero / Auditor (Revisión y auditoría de egresos)
+                  </option>
+                  <option value="auxiliar_campo">
+                    Servidor / Voluntario (Registro de miembros y asistencia)
+                  </option>
+                  <option value="donante">
+                    Feligrés / Aportante (Visualización de reportes de transparencia)
+                  </option>
+                  <option value="administrador">
+                    Administrador General (Control total de la Iglesia)
+                  </option>
                 </select>
               </div>
             </div>

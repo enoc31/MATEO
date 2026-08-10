@@ -3,6 +3,7 @@ import { Plus } from 'lucide-react';
 import { api } from '../../services/api';
 import type { UserRole } from '../../context/AuthContext';
 import { UserInviteModal } from './UserInviteModal';
+import { SlackIntegrationPanel } from './SlackIntegrationPanel';
 
 interface UserItem {
   id: string;
@@ -405,12 +406,12 @@ export const UserManagement: React.FC = () => {
                           value={currentTempRole}
                           onChange={(e) => handleRoleChange(user.id, e.target.value as UserRole)}
                         >
-                          <option value="coordinador">Coordinador de Campo</option>
-                          <option value="auxiliar_campo">Auxiliar de Campo</option>
-                          <option value="auditor">Auditor (Finanzas)</option>
-                          <option value="director">Director</option>
-                          <option value="donante">Donante</option>
-                          <option value="administrador">Administrador</option>
+                          <option value="coordinador">Coordinador / Pastor de Área</option>
+                          <option value="auxiliar_campo">Servidor / Voluntario</option>
+                          <option value="auditor">Auditor / Tesorero</option>
+                          <option value="director">Pastor Principal / Consejo</option>
+                          <option value="donante">Feligrés / Aportante</option>
+                          <option value="administrador">Administrador General</option>
                         </select>
                       </div>
                     </td>
@@ -494,6 +495,11 @@ export const UserManagement: React.FC = () => {
           loadUsers();
         }}
       />
+
+      {/* Panel de Integración con Slack */}
+      <div style={{ marginTop: '2rem' }}>
+        <SlackIntegrationPanel />
+      </div>
     </div>
   );
 };
