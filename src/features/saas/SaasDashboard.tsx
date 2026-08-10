@@ -39,7 +39,7 @@ export const SaasDashboard: React.FC = () => {
 
   const statCards = [
     {
-      title: 'Organizaciones (ONGs)',
+      title: 'ONGs e Iglesias',
       value: stats.ongsCount,
       icon: <Building size={24} color="#0d9488" />,
       bgColor: '#f0fdfa',
@@ -79,9 +79,9 @@ export const SaasDashboard: React.FC = () => {
           ¡Bienvenido al Panel del Control del SaaS!
         </h2>
         <p style={{ color: '#64748b', fontSize: '0.85rem', lineHeight: '1.5' }}>
-          Desde esta consola central puedes administrar todos los inquilinos (organizaciones)
-          registrados en la plataforma MATEO, subir o actualizar sus logotipos corporativos,
-          autorizar nuevos usuarios y reasignar perfiles según corresponda.
+          Desde esta consola central puedes administrar todos los inquilinos (ONGs e Iglesias)
+          registrados en la plataforma MATEO (Humanitaria & ekklesia), subir o actualizar sus
+          logotipos, autorizar nuevos usuarios y reasignar perfiles.
         </p>
       </div>
 

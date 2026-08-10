@@ -111,10 +111,10 @@ export const SaasOngs: React.FC = () => {
               marginBottom: '0.25rem',
             }}
           >
-            Gestión de Organizaciones
+            Gestión de ONGs e Iglesias
           </h2>
           <p style={{ color: '#64748b', fontSize: '0.8rem' }}>
-            Registra y edita la información básica de las ONGs del sistema.
+            Registra y edita la información básica de las ONGs e Iglesias del sistema.
           </p>
         </div>
 
@@ -135,7 +135,7 @@ export const SaasOngs: React.FC = () => {
           }}
         >
           {showCreateForm ? <X size={16} /> : <Plus size={16} />}
-          {showCreateForm ? 'Cancelar' : 'Registrar Nueva ONG'}
+          {showCreateForm ? 'Cancelar' : 'Registrar ONG / Iglesia'}
         </button>
       </div>
 
@@ -184,7 +184,7 @@ export const SaasOngs: React.FC = () => {
           <h3
             style={{ fontSize: '0.95rem', fontWeight: 700, color: '#1e293b', marginBottom: '1rem' }}
           >
-            Nueva Organización
+            Nueva Organización / Iglesia
           </h3>
           <form
             onSubmit={handleCreateOng}
@@ -200,14 +200,14 @@ export const SaasOngs: React.FC = () => {
                   marginBottom: '0.4rem',
                 }}
               >
-                Nombre de la ONG
+                Nombre de la ONG / Iglesia
               </label>
               <input
                 type="text"
                 required
                 value={newName}
                 onChange={(e) => setNewName(e.target.value)}
-                placeholder="Ej. Fundación Manos Unidas"
+                placeholder="Ej. Fundación Manos Unidas / Iglesia Vida Nueva"
                 style={{
                   width: '100%',
                   padding: '0.6rem',
@@ -275,7 +275,7 @@ export const SaasOngs: React.FC = () => {
       {/* Grid of registered ONGs */}
       {loading ? (
         <div style={{ display: 'flex', justifyContent: 'center', padding: '2rem' }}>
-          Cargando organizaciones...
+          Cargando organizaciones e iglesias...
         </div>
       ) : (
         <div
@@ -475,7 +475,7 @@ export const SaasOngs: React.FC = () => {
                         e.currentTarget.style.borderColor = '#e2e8f0';
                       }}
                     >
-                      <Edit2 size={12} /> Editar ONG
+                      <Edit2 size={12} /> Editar Entidad
                     </button>
                   )}
                 </div>
