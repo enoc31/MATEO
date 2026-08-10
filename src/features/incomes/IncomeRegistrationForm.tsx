@@ -256,10 +256,10 @@ export const IncomeRegistrationForm: React.FC = () => {
         vinculo_transaccion_ids: selectedTxIds.length > 0 ? selectedTxIds : undefined,
       });
 
-      alert('✅ Ingreso registrado con éxito.');
+      alert('✅ Ofrenda / Diezmo registrado con éxito.');
       navigate(-1);
     } catch (err: any) {
-      alert('Error al registrar el ingreso: ' + (err.message || ''));
+      alert('Error al registrar la ofrenda: ' + (err.message || ''));
     } finally {
       setSubmitting(false);
     }
@@ -309,11 +309,11 @@ export const IncomeRegistrationForm: React.FC = () => {
                   gap: '0.5rem',
                 }}
               >
-                <Wallet size={18} /> Registrar Nuevo Ingreso
+                <Wallet size={18} /> Registrar Nueva Ofrenda / Diezmo
               </span>
             </h1>
             <p style={{ margin: '0.25rem 0 0', opacity: 0.6, fontSize: '0.85rem' }}>
-              Complete el formulario para registrar un aporte o donación en el sistema.
+              Complete el formulario para registrar una ofrenda, diezmo o donación en el sistema.
             </p>
           </div>
           <button
@@ -368,7 +368,7 @@ export const IncomeRegistrationForm: React.FC = () => {
               >
                 {t === 'manual' ? (
                   <span style={{ display: 'flex', gap: '0.4rem', alignItems: 'center' }}>
-                    <Pencil size={16} /> Registro de Ingreso Manual
+                    <Pencil size={16} /> Registro de Ofrenda / Diezmo Manual
                   </span>
                 ) : (
                   <span style={{ display: 'flex', gap: '0.4rem', alignItems: 'center' }}>
@@ -434,7 +434,7 @@ export const IncomeRegistrationForm: React.FC = () => {
                       color: 'var(--danger)',
                     }}
                   >
-                    No hay transacciones de ingreso pendientes de conciliar en el extracto bancario.
+                    No hay transacciones de ofrenda pendientes de conciliar en el extracto bancario.
                   </div>
                 ) : (
                   <div
@@ -548,7 +548,7 @@ export const IncomeRegistrationForm: React.FC = () => {
 
               <div className="form-group" style={{ marginBottom: 0 }}>
                 <label className="form-label" style={{ fontWeight: 700 }}>
-                  Donante / Fuente de Fondos *
+                  Feligrés / Donante *
                 </label>
                 <select
                   className="form-input"
@@ -557,7 +557,7 @@ export const IncomeRegistrationForm: React.FC = () => {
                   required
                   disabled={submitting}
                 >
-                  <option value="">Selecciona el donante...</option>
+                  <option value="">Selecciona el feligrés o donante...</option>
                   <optgroup label="🇻🇪 Nacionales">
                     {donantes
                       .filter((d) => d.tipo === 'nacional')
@@ -662,7 +662,7 @@ export const IncomeRegistrationForm: React.FC = () => {
               </div>
               <div className="form-group" style={{ marginBottom: 0 }}>
                 <label className="form-label" style={{ fontWeight: 700 }}>
-                  Monto del Ingreso ({moneda}) *
+                  Monto de la Ofrenda / Diezmo ({moneda}) *
                 </label>
                 <input
                   type="number"
@@ -866,12 +866,12 @@ export const IncomeRegistrationForm: React.FC = () => {
             {/* Descripción / Referencia */}
             <div className="form-group" style={{ marginBottom: 0 }}>
               <label className="form-label" style={{ fontWeight: 700 }}>
-                Descripción y Detalles del Ingreso *
+                Descripción y Detalles de la Ofrenda / Diezmo *
               </label>
               <textarea
                 className="form-input"
                 rows={4}
-                placeholder="Ej: Aporte inicial de fondos del donante, detallando transferencias conciliadas o conceptos de la donación..."
+                placeholder="Ej: Diezmo mensual del feligrés, ofrenda especial de temporada, donación para proyecto misionero..."
                 value={descripcion}
                 onChange={(e) => setDescripcion(e.target.value)}
                 required
@@ -917,7 +917,7 @@ export const IncomeRegistrationForm: React.FC = () => {
                       gap: '0.5rem',
                     }}
                   >
-                    <Save size={18} /> Guardar y Finalizar Ingreso
+                    <Save size={18} /> Guardar Ofrenda / Diezmo
                   </span>
                 )}
               </button>

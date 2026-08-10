@@ -150,7 +150,7 @@ export const IncomesManager: React.FC = () => {
         <div style={{ marginBottom: '1rem', display: 'flex', justifyContent: 'center' }}>
           <Wallet size={36} color="var(--primary)" />
         </div>
-        <strong>Cargando ingresos...</strong>
+        <strong>Cargando diezmos y ofrendas...</strong>
       </div>
     );
   }
@@ -171,11 +171,11 @@ export const IncomesManager: React.FC = () => {
         <div>
           <h2 style={{ color: 'var(--primary)', fontWeight: 800, margin: 0, fontSize: '1.6rem' }}>
             <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <Wallet size={18} /> Registro de Ingresos
+              <Wallet size={18} /> Registro de Diezmos y Ofrendas
             </span>
           </h2>
           <p style={{ margin: '0.25rem 0 0', opacity: 0.6, fontSize: '0.85rem' }}>
-            Donaciones y aportes confirmados por proyecto y donante
+            Diezmos, ofrendas y aportes confirmados por proyecto y feligrés
           </p>
         </div>
         {['administrador', 'director'].includes(profile?.rol || '') && (
@@ -194,7 +194,7 @@ export const IncomesManager: React.FC = () => {
               onClick={() => navigate('/app/nuevo-ingreso')}
               style={{ fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.5rem' }}
             >
-              ＋ Registrar Ingreso
+              ＋ Registrar Ofrenda / Diezmo
             </button>
           </div>
         )}
@@ -229,7 +229,7 @@ export const IncomesManager: React.FC = () => {
               marginBottom: '0.5rem',
             }}
           >
-            Total Ingresos Registrados
+            Total Diezmos y Ofrendas Registrados
           </div>
           <div style={{ fontSize: '1.7rem', fontWeight: 800 }}>
             {formatCurrency(totalIngresosUsd)}
@@ -305,7 +305,7 @@ export const IncomesManager: React.FC = () => {
               )}
             </div>
             <div style={{ fontSize: '0.75rem', opacity: 0.55, marginTop: '0.5rem' }}>
-              {p.count} {p.count === 1 ? 'ingreso' : 'ingresos'}
+              {p.count} {p.count === 1 ? 'ofrenda' : 'ofrendas'}
             </div>
           </div>
         ))}
@@ -358,7 +358,7 @@ export const IncomesManager: React.FC = () => {
             alignItems: 'center',
           }}
         >
-          <span style={{ fontWeight: 700 }}>Historial de Ingresos</span>
+          <span style={{ fontWeight: 700 }}>Historial de Diezmos y Ofrendas</span>
           <span style={{ fontWeight: 800, color: 'var(--primary)', fontSize: '1.05rem' }}>
             {formatCurrency(totalIngresosUsd)}
           </span>
@@ -369,9 +369,9 @@ export const IncomesManager: React.FC = () => {
             <div style={{ marginBottom: '1rem', display: 'flex', justifyContent: 'center' }}>
               <Mailbox size={48} color="var(--neutral-dark)" style={{ opacity: 0.5 }} />
             </div>
-            <p style={{ fontWeight: 600 }}>No hay ingresos registrados aún.</p>
+            <p style={{ fontWeight: 600 }}>No hay ofrendas o diezmos registrados aún.</p>
             <p style={{ fontSize: '0.85rem' }}>
-              Haz clic en <strong>"Registrar Ingreso"</strong> para comenzar.
+              Haz clic en <strong>"Registrar Ofrenda / Diezmo"</strong> para comenzar.
             </p>
           </div>
         ) : (
@@ -402,7 +402,7 @@ export const IncomesManager: React.FC = () => {
                       opacity: 0.7,
                     }}
                   >
-                    Donante
+                    Feligrés / Donante
                   </th>
                   <th
                     style={{
@@ -664,7 +664,7 @@ export const IncomesManager: React.FC = () => {
             }}
           >
             <div style={{ fontSize: '0.85rem', color: 'var(--neutral-dark)' }}>
-              Mostrando {paginatedDonations.length} de {filteredDonations.length} ingresos (Página{' '}
+              Mostrando {paginatedDonations.length} de {filteredDonations.length} ofrendas (Página{' '}
               {currentPage})
             </div>
             <div style={{ display: 'flex', gap: '0.5rem' }}>
