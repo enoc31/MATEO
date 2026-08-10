@@ -47,7 +47,7 @@ export const CreateOngWizard: React.FC = () => {
 
   // Paso 2: Datos del Administrador
   const [nombreAdmin, setNombreAdmin] = useState('');
-  const [cargo, setCargo] = useState('Director Ejecutivo');
+  const [cargo, setCargo] = useState('Pastor Principal');
   const [emailAdmin, setEmailAdmin] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -312,7 +312,7 @@ export const CreateOngWizard: React.FC = () => {
                 lineHeight: 1,
               }}
             >
-              MATEO
+              MATEO ekklesia
             </h1>
             <span
               style={{
@@ -323,7 +323,7 @@ export const CreateOngWizard: React.FC = () => {
                 textTransform: 'uppercase',
               }}
             >
-              Plataforma de Auditoría & Donaciones
+              Plataforma Financiera para Iglesias
             </span>
           </div>
         </div>
@@ -416,9 +416,9 @@ export const CreateOngWizard: React.FC = () => {
                     color: step === 1 ? 'var(--primary)' : step > 1 ? '#10b981' : '#64748b',
                   }}
                 >
-                  ONG Legal
+                  Iglesia
                 </span>
-                <span style={{ fontSize: '0.7rem', color: '#94a3b8' }}>Datos Fiscales</span>
+                <span style={{ fontSize: '0.7rem', color: '#94a3b8' }}>Datos Legales</span>
               </div>
             </div>
 
@@ -534,24 +534,26 @@ export const CreateOngWizard: React.FC = () => {
                   gap: '0.5rem',
                 }}
               >
-                <Building2 size={22} /> Información Legal de la ONG
+                <Building2 size={22} /> Información Legal de la Iglesia
               </h3>
               <p style={{ fontSize: '0.82rem', color: '#64748b', margin: '0.25rem 0 0 0' }}>
-                Ingresa los datos institucionales de tu organización para configurar su espacio.
+                Ingresa los datos institucionales de tu iglesia o ministerio para configurar su
+                espacio.
               </p>
             </div>
 
             {/* Nombre Legal */}
             <div className="form-field">
               <label className="form-field-label">
-                Nombre Legal de la Organización <span className="form-field-required">*</span>
+                Nombre Legal de la Iglesia / Ministerio{' '}
+                <span className="form-field-required">*</span>
               </label>
               <div className="input-with-icon">
                 <Building2 size={18} className="input-icon" />
                 <input
                   type="text"
                   className="form-input-premium"
-                  placeholder="Ej. Fundación Manos de Esperanza"
+                  placeholder="Ej. Iglesia Evangelica Gracia y Verdad"
                   value={nombreOng}
                   onChange={(e) => setNombreOng(e.target.value)}
                   required
@@ -563,7 +565,7 @@ export const CreateOngWizard: React.FC = () => {
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
               <div className="form-field">
                 <label className="form-field-label">
-                  RIF / Identificación Fiscal <span className="form-field-required">*</span>
+                  RIF / Registro Legal <span className="form-field-required">*</span>
                 </label>
                 <div className="input-with-icon">
                   <FileText size={18} className="input-icon" />
@@ -622,7 +624,7 @@ export const CreateOngWizard: React.FC = () => {
                   <input
                     type="text"
                     className="form-input-premium"
-                    placeholder="https://fundacion.org"
+                    placeholder="https://iglesia.org o @iglesia"
                     value={sitioWeb}
                     onChange={(e) => setSitioWeb(e.target.value)}
                   />
@@ -713,7 +715,8 @@ export const CreateOngWizard: React.FC = () => {
                 <User size={22} /> Perfil del Administrador Principal
               </h3>
               <p style={{ fontSize: '0.82rem', color: '#64748b', margin: '0.25rem 0 0 0' }}>
-                Establece las credenciales maestras para acceder y administrar tu ONG.
+                Establece las credenciales maestras para acceder y administrar tu iglesia en MATEO
+                ekklesia.
               </p>
             </div>
 
@@ -739,14 +742,14 @@ export const CreateOngWizard: React.FC = () => {
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
               <div className="form-field">
                 <label className="form-field-label">
-                  Cargo / Posición en la ONG <span className="form-field-required">*</span>
+                  Cargo en la Iglesia <span className="form-field-required">*</span>
                 </label>
                 <div className="input-with-icon">
                   <Briefcase size={18} className="input-icon" />
                   <input
                     type="text"
                     className="form-input-premium"
-                    placeholder="Director Ejecutivo / Administrador"
+                    placeholder="Pastor Principal / Tesorero / Diácono"
                     value={cargo}
                     onChange={(e) => setCargo(e.target.value)}
                     required
@@ -763,7 +766,7 @@ export const CreateOngWizard: React.FC = () => {
                   <input
                     type="email"
                     className="form-input-premium"
-                    placeholder="direccion@fundacion.org"
+                    placeholder="pastor@iglesia.org"
                     value={emailAdmin}
                     onChange={(e) => setEmailAdmin(e.target.value)}
                     required
@@ -905,7 +908,7 @@ export const CreateOngWizard: React.FC = () => {
               >
                 <div>
                   <span style={{ color: '#94a3b8', display: 'block', fontSize: '0.75rem' }}>
-                    ORGANIZACIÓN
+                    IGLESIA / MINISTERIO
                   </span>
                   <strong>{nombreOng}</strong>
                 </div>
@@ -968,9 +971,9 @@ export const CreateOngWizard: React.FC = () => {
                   cursor: 'pointer',
                 }}
               >
-                Declaro bajo fe de juramento que la información legal de la ONG es verídica y que
-                poseo las facultades legales para representar a la organización y activar su espacio
-                en MATEO.
+                Declaro bajo fe de juramento que la información legal de la iglesia es verídica y
+                que poseo las facultades para representar a la organización y activar su espacio en
+                MATEO ekklesia.
               </span>
             </label>
 
@@ -1008,7 +1011,7 @@ export const CreateOngWizard: React.FC = () => {
                   <span>Creando Organización...</span>
                 ) : (
                   <>
-                    Crear ONG e Iniciar Trial <Sparkles size={18} />
+                    Registrar Iglesia e Iniciar Trial <Sparkles size={18} />
                   </>
                 )}
               </button>
@@ -1041,7 +1044,7 @@ export const CreateOngWizard: React.FC = () => {
                 letterSpacing: '-0.5px',
               }}
             >
-              ¡Organización Registrada con Éxito!
+              ¡Iglesia Registrada con Éxito!
             </h2>
 
             <p
@@ -1052,8 +1055,8 @@ export const CreateOngWizard: React.FC = () => {
                 lineHeight: '1.6',
               }}
             >
-              Tu organización <strong>{createdOngData.nombre}</strong> ha sido activada con una
-              prueba gratuita de 14 días.
+              Tu iglesia <strong>{createdOngData.nombre}</strong> ha sido activada con una prueba
+              gratuita de 14 días.
             </p>
 
             <div
@@ -1094,7 +1097,7 @@ export const CreateOngWizard: React.FC = () => {
                   <strong>Fecha de Vencimiento:</strong> {createdOngData.trialEndsAt}.
                 </li>
                 <li>
-                  <strong>Tu Rol:</strong> Administrador Principal de la ONG.
+                  <strong>Tu Rol:</strong> Administrador Principal de la Iglesia.
                 </li>
               </ul>
             </div>
