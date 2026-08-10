@@ -78,7 +78,7 @@ export const JornadasManager: React.FC = () => {
         },
         profile?.ong_id,
       );
-      addNotification('Jornada creada exitosamente', 'success');
+      addNotification('Actividad creada exitosamente', 'success');
       setShowForm(false);
       loadData();
 
@@ -89,7 +89,7 @@ export const JornadasManager: React.FC = () => {
       setProyectoId('');
     } catch (err) {
       console.error(err);
-      addNotification('Error al crear la jornada', 'warning');
+      addNotification('Error al crear la actividad', 'warning');
     } finally {
       setSubmitting(false);
     }
@@ -102,7 +102,7 @@ export const JornadasManager: React.FC = () => {
         prev.map((j) => (j.id === jornada.id ? { ...j, activa: !j.activa } : j)),
       );
       addNotification(
-        jornada.activa ? 'Jornada desactivada' : 'Jornada habilitada para captura',
+        jornada.activa ? 'Actividad desactivada' : 'Actividad habilitada para registro',
         'success',
       );
     } catch (err) {
@@ -129,7 +129,7 @@ export const JornadasManager: React.FC = () => {
       setJornadaBeneficiaries(filtered);
     } catch (err) {
       console.error(err);
-      addNotification('Error al cargar beneficiarios de la jornada', 'warning');
+      addNotification('Error al cargar asistentes de la actividad', 'warning');
     } finally {
       setLoadingDetails(false);
     }
@@ -141,7 +141,7 @@ export const JornadasManager: React.FC = () => {
       await generateBeneficiariesReport({
         records: jornadaBeneficiaries,
         jornadas: [selectedJornadaForDetails],
-        title: `Reporte de Entregas - Jornada ${selectedJornadaForDetails.nombre}`,
+        title: `Reporte de Asistencia - Actividad ${selectedJornadaForDetails.nombre}`,
         logoUrl: activeOng?.logo_url,
       });
       addNotification('Reporte PDF generado correctamente', 'success');
@@ -156,21 +156,21 @@ export const JornadasManager: React.FC = () => {
     setDeletingJornada(true);
     try {
       await api.deleteJornada(selectedJornadaForDetails.id, deleteBeneficiariesOpt);
-      addNotification('Jornada eliminada correctamente', 'success');
+      addNotification('Actividad eliminada correctamente', 'success');
       setShowDeleteConfirm(false);
       setSelectedJornadaForDetails(null);
       setDeleteBeneficiariesOpt(false);
       await loadData();
     } catch (err) {
       console.error(err);
-      addNotification('Error al eliminar la jornada', 'warning');
+      addNotification('Error al eliminar la actividad', 'warning');
     } finally {
       setDeletingJornada(false);
     }
   };
 
   if (loading) {
-    return <div style={{ padding: '2rem', textAlign: 'center' }}>Cargando jornadas...</div>;
+    return <div style={{ padding: '2rem', textAlign: 'center' }}>Cargando actividades...</div>;
   }
 
   return (
@@ -185,10 +185,10 @@ export const JornadasManager: React.FC = () => {
       >
         <div>
           <h2 style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--neutral-dark)' }}>
-            Jornadas Sociales
+            Actividades y Eventos Ministeriales
           </h2>
           <p style={{ color: 'var(--neutral-gray)', margin: 0 }}>
-            Administra los eventos de ayuda para la captura de firmas
+            Administra las actividades y eventos ministeriales de la iglesia
           </p>
         </div>
         <button
@@ -200,7 +200,7 @@ export const JornadasManager: React.FC = () => {
             'Volver a la Lista'
           ) : (
             <>
-              <Plus size={18} /> Nueva Jornada
+              <Plus size={18} /> Nueva Actividad
             </>
           )}
         </button>
@@ -216,7 +216,7 @@ export const JornadasManager: React.FC = () => {
               paddingBottom: '1rem',
             }}
           >
-            Crear Nueva Jornada
+            Crear Nueva Actividad Ministerial
           </h3>
           <form
             onSubmit={handleSubmit}
@@ -234,7 +234,7 @@ export const JornadasManager: React.FC = () => {
                 <input
                   type="text"
                   className="app-input"
-                  placeholder="Ej. Gran Jornada Medica Sur"
+                  placeholder="Ej. Conferencia de Varones / Retiro de Jóvenes"
                   value={nombre}
                   onChange={(e) => setNombre(e.target.value)}
                   required
@@ -270,10 +270,10 @@ export const JornadasManager: React.FC = () => {
             </div>
 
             <div>
-              <label className="form-label">Beneficios a Entregar (Descripción)</label>
+              <label className="form-label">Recursos / Materiales Entregados (Descripción)</label>
               <textarea
                 className="app-input"
-                placeholder="Describe qué se entregará (Ej. 100 Mercados, 50 Kits de Medicina General...)"
+                placeholder="Describe los recursos o kits a entregar (Ej. Biblias, Guías de Estudio, Alimentos...)"
                 value={beneficios}
                 onChange={(e) => setBeneficios(e.target.value)}
                 rows={3}
@@ -283,7 +283,7 @@ export const JornadasManager: React.FC = () => {
 
             <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '1rem' }}>
               <button type="submit" className="btn btn-primary" disabled={submitting}>
-                {submitting ? 'Creando...' : 'Guardar y Habilitar Jornada'}
+                {submitting ? 'Creando...' : 'Guardar y Habilitar Actividad'}
               </button>
             </div>
           </form>
@@ -306,10 +306,10 @@ export const JornadasManager: React.FC = () => {
                 style={{ margin: '0 auto', opacity: 0.5, marginBottom: '1rem' }}
               />
               <h3 style={{ color: 'var(--neutral-dark)', marginBottom: '0.5rem' }}>
-                No hay jornadas creadas
+                No hay actividades creadas
               </h3>
               <p style={{ color: 'var(--neutral-gray)' }}>
-                Crea tu primera jornada para empezar a capturar beneficiarios.
+                Crea tu primera actividad o evento para empezar a registrar participantes.
               </p>
             </div>
           ) : (
@@ -512,7 +512,7 @@ export const JornadasManager: React.FC = () => {
                     fontWeight: 700,
                   }}
                 >
-                  Detalles de Entregas: {selectedJornadaForDetails.nombre}
+                  Detalles de Asistencia: {selectedJornadaForDetails.nombre}
                 </h3>
                 <span style={{ fontSize: '0.85rem', color: 'var(--neutral-gray)' }}>
                   Beneficios Habilitados: {selectedJornadaForDetails.beneficios_entregados}
@@ -551,7 +551,7 @@ export const JornadasManager: React.FC = () => {
                     }}
                   >
                     <span style={{ fontWeight: 600, color: 'var(--neutral-dark)' }}>
-                      Beneficiarios Registrados ({jornadaBeneficiaries.length})
+                      Participantes Registrados ({jornadaBeneficiaries.length})
                     </span>
                     <button
                       className="btn btn-secondary"
@@ -564,7 +564,7 @@ export const JornadasManager: React.FC = () => {
                         padding: '0.5rem 1rem',
                       }}
                     >
-                      <Download size={16} /> Exportar PDF de la Jornada
+                      <Download size={16} /> Exportar PDF de la Actividad
                     </button>
                   </div>
 
@@ -578,7 +578,7 @@ export const JornadasManager: React.FC = () => {
                         color: 'var(--neutral-gray)',
                       }}
                     >
-                      No se han registrado entregas de beneficios en esta jornada.
+                      No se han registrado participantes en esta actividad.
                     </div>
                   ) : (
                     <div style={{ overflowX: 'auto' }}>
@@ -708,7 +708,7 @@ export const JornadasManager: React.FC = () => {
                   border: 'none',
                 }}
               >
-                <Trash2 size={16} /> Eliminar Jornada
+                <Trash2 size={16} /> Eliminar Actividad
               </button>
               <button
                 className="btn btn-secondary"
@@ -759,7 +759,7 @@ export const JornadasManager: React.FC = () => {
               <Trash2 size={24} /> ¿Confirmar Eliminación?
             </h3>
             <p style={{ margin: '1rem 0', color: 'var(--neutral-dark)' }}>
-              Estás a punto de eliminar la jornada{' '}
+              Estás a punto de eliminar la actividad{' '}
               <strong>{selectedJornadaForDetails.nombre}</strong>. Esta acción es irreversible.
             </p>
 
@@ -787,7 +787,9 @@ export const JornadasManager: React.FC = () => {
                   onChange={(e) => setDeleteBeneficiariesOpt(e.target.checked)}
                   style={{ width: '18px', height: '18px', cursor: 'pointer' }}
                 />
-                <span>También borrar los beneficiarios asociados en la Base de Datos</span>
+                <span>
+                  También borrar los miembros y participantes asociados en la Base de Datos
+                </span>
               </label>
               <p
                 style={{
@@ -797,8 +799,8 @@ export const JornadasManager: React.FC = () => {
                 }}
               >
                 {deleteBeneficiariesOpt
-                  ? 'Se eliminarán de forma permanente todos los beneficiados registrados en esta jornada.'
-                  : 'Los beneficiarios se conservarán en la base de datos pero se desvincularán de esta jornada.'}
+                  ? 'Se eliminarán de forma permanente todos los participantes registrados en esta actividad.'
+                  : 'Los miembros y participantes se conservarán en la base de datos pero se desvincularán de esta actividad.'}
               </p>
             </div>
 
