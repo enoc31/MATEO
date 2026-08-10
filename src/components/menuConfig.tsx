@@ -32,35 +32,35 @@ export const menuItems: MenuItemConfig[] = [
   },
   {
     id: 'incomes',
-    label: 'Ingresos',
+    label: 'Diezmos y Ofrendas',
     iconName: 'Wallet',
     color: '#10B981', // Emerald
     roles: ['administrador', 'director', 'auditor'],
   },
   {
     id: 'requisitions',
-    label: 'Requisiciones',
+    label: 'Solicitudes',
     iconName: 'ClipboardList',
     color: '#3B82F6', // Indigo/Blue
     roles: ['administrador', 'coordinador', 'director'],
   },
   {
     id: 'field-entry',
-    label: 'Cargar Gastos',
+    label: 'Gastos',
     iconName: 'Camera',
     color: '#8B5CF6', // Purple/Violet
     roles: ['administrador', 'coordinador', 'director'],
   },
   {
     id: 'beneficiaries',
-    label: 'Beneficiarios',
+    label: 'Miembros',
     iconName: 'UserCheck',
     color: '#EC4899', // Pink/Rose
     roles: ['administrador', 'coordinador', 'director', 'auxiliar_campo'],
   },
   {
     id: 'jornadas',
-    label: 'Jornadas',
+    label: 'Actividades',
     iconName: 'CalendarDays',
     color: '#F59E0B', // Orange/Amber
     roles: ['administrador', 'director', 'coordinador'],
@@ -95,7 +95,7 @@ export const menuItems: MenuItemConfig[] = [
   },
   {
     id: 'catalog',
-    label: 'Catálogo de Partidas',
+    label: 'Catálogo Ministerial',
     iconName: 'Tag',
     color: '#059669', // Emerald green
     roles: ['administrador', 'director'],
@@ -109,7 +109,7 @@ export const menuItems: MenuItemConfig[] = [
   },
   {
     id: 'saas-ongs',
-    label: 'Gestión de ONGs',
+    label: 'Gestión de Iglesias',
     iconName: 'Building',
     color: '#0D9488', // Teal
     roles: ['super_admin'],
