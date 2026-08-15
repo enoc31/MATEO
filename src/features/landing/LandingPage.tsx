@@ -12,12 +12,14 @@ import {
   UserCheck,
   Sparkles,
   CheckCircle2,
-  BookOpen,
-  HeartHandshake,
-  FileCheck2,
   HelpCircle,
   ChevronLeft,
   ChevronRight,
+  Shield,
+  Award,
+  Star,
+  Plus,
+  Minus,
 } from 'lucide-react';
 
 const heroCarouselSlides = [
@@ -49,102 +51,103 @@ const heroCarouselSlides = [
 
 const churchModules = [
   {
-    icon: <Wallet size={28} />,
+    icon: <Wallet size={26} />,
     color: '#10b981',
-    bg: '#ecfdf5',
+    bg: 'rgba(16, 185, 129, 0.12)',
     title: 'Diezmos y Ofrendas',
-    desc: 'Registra aportes en la moneda de tu preferencia con conversión automática según la tasa de cambio oficial o personalizada. Mantén la cuenta clara por feligrés, ministerio y fecha.',
+    desc: 'Registra diezmos y aportes voluntariamente con conversión automática multi-moneda (USD/VES) según la tasa oficial.',
   },
   {
-    icon: <ClipboardList size={28} />,
+    icon: <ClipboardList size={26} />,
     color: '#3b82f6',
-    bg: '#eff6ff',
-    title: 'Solicitudes de Fondos',
-    desc: 'Permite a los líderes ministeriales solicitar compras o viáticos. Cada solicitud requiere aprobación del Tesorero o Pastor antes de desembolsar.',
+    bg: 'rgba(59, 130, 246, 0.12)',
+    title: 'Solicitudes Ministeriales',
+    desc: 'Permite a los líderes de jóvenes, damas y misiones solicitar presupuestos con aprobación previa del Tesorero o Pastor.',
   },
   {
-    icon: <Camera size={28} />,
+    icon: <Camera size={26} />,
     color: '#8b5cf6',
-    bg: '#f5f3ff',
+    bg: 'rgba(139, 92, 246, 0.12)',
     title: 'Registro de Gastos con Foto',
-    desc: 'Carga facturas, recibos y fotos de comprobantes desde el celular. Elimina el desorden de facturas en papel y las pérdidas de caja.',
+    desc: 'Carga recibos y facturas directamente desde el celular para rendición de fondos transparente y eliminación de papel.',
   },
   {
-    icon: <UserCheck size={28} />,
+    icon: <UserCheck size={26} />,
     color: '#ec4899',
-    bg: '#fdf2f8',
+    bg: 'rgba(236, 72, 153, 0.12)',
     title: 'Padrón de Miembros',
-    desc: 'Mantén un registro digital ordenado de los miembros de tu congregación, sus roles ministeriales, datos de contacto e historial de actividad.',
+    desc: 'Mantén la base digital ordenada de feligreses, roles ministeriales, bautismos, fechas especiales y contacto.',
   },
   {
-    icon: <CalendarDays size={28} />,
+    icon: <CalendarDays size={26} />,
     color: '#f59e0b',
-    bg: '#fffbeb',
-    title: 'Actividades y Eventos',
-    desc: 'Organiza conferencias, retiros, cultos especiales y jornadas comunitarias. Lleva el control de asistencia y recursos entregados.',
+    bg: 'rgba(245, 158, 11, 0.12)',
+    title: 'Actividades Eclesiásticas',
+    desc: 'Organiza cultos especiales, retiros, conferencias y jornadas comunitarias controlando asistencia y recursos.',
   },
   {
-    icon: <PieChart size={28} />,
+    icon: <PieChart size={26} />,
     color: '#0ea5e9',
-    bg: '#f0f9ff',
-    title: 'Presupuestos Ministeriales',
-    desc: 'Asigna presupuestos por ministerio (Alabanza, Jóvenes, Damas, Misiones) y monitorea en tiempo real cuánto se ha ejecutado.',
+    bg: 'rgba(14, 165, 233, 0.12)',
+    title: 'Presupuesto Parroquial',
+    desc: 'Monitorea en tiempo real el cumplimiento presupuestario por departamento ministerial y fondo asignado.',
   },
   {
-    icon: <Scale size={28} />,
+    icon: <Scale size={26} />,
     color: '#14b8a6',
-    bg: '#f0fdfa',
+    bg: 'rgba(20, 184, 166, 0.12)',
     title: 'Conciliación Bancaria',
-    desc: 'Importa extractos bancarios de la iglesia y verifica fácilmente que las transferencias coincidan con las ofrendas y diezmos reportados.',
+    desc: 'Vincula extractos bancarios de la iglesia para verificar movimientos y cuadres de cuenta de forma automática.',
   },
   {
-    icon: <Search size={28} />,
+    icon: <Search size={26} />,
     color: '#ef4444',
-    bg: '#fef2f2',
-    title: 'Auditoría e Historial',
-    desc: 'Trazabilidad total: revisa quién aprobó cada gasto, cuándo se registró cada ingreso y consulta evidencias en cualquier momento.',
-  },
-];
-
-const stepsToUse = [
-  {
-    num: '1',
-    title: 'Registra Diezmos y Ofrendas en Segundos',
-    desc: 'Anota los ingresos en efectivo o transferencia. El sistema calcula automáticamente la equivalencia entre monedas usando la tasa de cambio registrada.',
-    icon: <HeartHandshake size={24} color="#10b981" />,
-  },
-  {
-    num: '2',
-    title: 'Controla las Compras y Salidas de Dinero',
-    desc: 'Los encargados de ministerio envían sus solicitudes de gasto. Tú apruebas o rechazas con un clic y exiges la foto del recibo como respaldo.',
-    icon: <FileCheck2 size={24} color="#3b82f6" />,
-  },
-  {
-    num: '3',
-    title: 'Presenta Cuentas Claras en Asambleas',
-    desc: 'Genera reportes PDF resumidos o detallados listos para imprimir y compartir con el Consejo Pastoral y la congregación en cada reunión.',
-    icon: <BookOpen size={24} color="#8b5cf6" />,
+    bg: 'rgba(239, 68, 68, 0.12)',
+    title: 'Auditoría & Trazabilidad',
+    desc: 'Firma digital, historial inmutable de aprobaciones y trazabilidad total para presentar cuentas claras a la asamblea.',
   },
 ];
 
 const faqs = [
   {
-    q: '¿Es fácil de usar para personas sin experiencia contable?',
-    a: 'Sí, 100%. MATEO ekklesia está diseñado pensando en pastores, tesoreros y líderes de iglesia, no en contadores. La interfaz es intuitiva, didáctica y guiada.',
+    q: '¿Cómo funciona el período de prueba de 14 días gratis?',
+    a: 'Al registrar tu iglesia obtienes 14 días completos de acceso sin costo, sin requerir tarjeta de crédito. Puedes crear usuarios para tu pastor, tesorero y líderes ministeriales para probar todas las herramientas sin compromiso.',
   },
   {
-    q: '¿Cómo maneja la contabilidad en Multi-moneda?',
-    a: 'MATEO permite registrar aportes y gastos en cualquier divisa (Dólares, Bolívares, Pesos, Euros, etc.), integrando tasas de cambio oficiales y personalizadas para llevar un balance consolidado sin enredos.',
+    q: '¿Cómo maneja MATEO la conversión de divisas (USD / Bolívares)?',
+    a: 'MATEO integra la tasa del Banco Central de Venezuela (BCV) en tiempo real y permite definir tasas personalizadas de la iglesia. Cada diezmo o gasto registrado en bolívares calcula automáticamente su equivalente en dólares.',
   },
   {
-    q: '¿Los datos de mi iglesia están protegidos?',
-    a: 'Totalmente. Cada iglesia opera en su propio espacio privado aislado con encriptación de grado bancario. Solo las personas autorizadas por la iglesia pueden ver la información.',
+    q: '¿Los datos de nuestra congregación están protegidos y aislados?',
+    a: 'Sí, 100%. MATEO opera en una arquitectura multi-inquilino aislada con cifrado de grado bancario. Ninguna otra iglesia u organización puede ver ni acceder a los datos de tu congregación.',
+  },
+  {
+    q: '¿Podemos generar reportes en PDF e imprimir cuentas claras?',
+    a: 'Por supuesto. Con un solo clic puedes generar e imprimir reportes contables oficiales, balances por ministerio y resúmenes de auditoría listos para presentar en asambleas congregacionales.',
+  },
+];
+
+const testimonials = [
+  {
+    quote:
+      'MATEO ekklesia nos devolvió la paz administrativa. Ahora la tesorería aprueba solicitudes en minutos y la congregación ve cuentas claras en cada asamblea.',
+    author: 'Pr. Carlos Mendoza',
+    role: 'Pastor Principal — Iglesia Ekklesia Central',
+    rating: 5,
+  },
+  {
+    quote:
+      'Llevar diezmos y ofrendas en dos monedas solía ser un dolor de cabeza. Con la tasa BCV automática y las fotos de comprobantes, cuadramos caja en la mitad del tiempo.',
+    author: 'Lic. Carmen Rodríguez',
+    role: 'Directora de Tesorería — Ministerio de Fe & Esperanza',
+    rating: 5,
   },
 ];
 
 export const LandingPage: React.FC = () => {
   const navigate = useNavigate();
   const [currentSlide, setCurrentSlide] = useState(0);
+  const [openFaq, setOpenFaq] = useState<number | null>(0);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -164,707 +167,877 @@ export const LandingPage: React.FC = () => {
   return (
     <div
       style={{
-        fontFamily: 'Inter, system-ui, sans-serif',
+        fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif",
         minHeight: '100vh',
-        display: 'flex',
-        flexDirection: 'column',
-        backgroundColor: '#f8fafc',
-        color: '#0f172a',
+        backgroundColor: '#090e34', // Deep Play Astro Dark Navy
+        color: '#f8fafc',
       }}
     >
-      {/* Header */}
+      {/* 1. STICKY NAVBAR estilo Play Astro */}
       <header
         style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          padding: '1.2rem 2rem',
-          borderBottom: '1px solid #e2e8f0',
-          backgroundColor: 'white',
           position: 'sticky',
           top: 0,
           zIndex: 100,
-          boxShadow: '0 2px 4px rgba(0,0,0,0.03)',
+          backgroundColor: 'rgba(9, 14, 52, 0.85)',
+          backdropFilter: 'blur(12px)',
+          borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
+          padding: '1rem 2rem',
         }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-          <img
-            src="/mateo_logo.png"
-            alt="MATEO ekklesia"
-            style={{ height: '44px', width: '44px', objectFit: 'contain', borderRadius: '10px' }}
-          />
-          <div>
-            <div
+        <div
+          style={{
+            maxWidth: '1200px',
+            margin: '0 auto',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+          }}
+        >
+          {/* Logo */}
+          <div
+            onClick={() => navigate('/')}
+            style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', cursor: 'pointer' }}
+          >
+            <img
+              src="/mateo_logo.png"
+              alt="MATEO ekklesia"
+              style={{ height: '42px', width: '42px', objectFit: 'contain', borderRadius: '10px' }}
+            />
+            <div>
+              <div
+                style={{
+                  fontSize: '1.35rem',
+                  fontWeight: 900,
+                  color: 'white',
+                  letterSpacing: '0.5px',
+                }}
+              >
+                MATEO <span style={{ color: '#5eead4' }}>ekklesia</span>
+              </div>
+              <span style={{ fontSize: '0.65rem', color: '#94a3b8', fontWeight: 600 }}>
+                Gestión Financiera &amp; Ministerial
+              </span>
+            </div>
+          </div>
+
+          {/* Links de Navegación */}
+          <nav
+            style={{
+              display: 'flex',
+              gap: '2rem',
+              alignItems: 'center',
+              fontSize: '0.92rem',
+              fontWeight: 600,
+            }}
+          >
+            <a
+              href="#inicio"
+              style={{ color: '#e2e8f0', textDecoration: 'none', transition: 'color 0.2s' }}
+            >
+              Inicio
+            </a>
+            <a
+              href="#modulos"
+              style={{ color: '#94a3b8', textDecoration: 'none', transition: 'color 0.2s' }}
+            >
+              Módulos
+            </a>
+            <a
+              href="#precios"
+              style={{ color: '#94a3b8', textDecoration: 'none', transition: 'color 0.2s' }}
+            >
+              Planes
+            </a>
+            <a
+              href="#faq"
+              style={{ color: '#94a3b8', textDecoration: 'none', transition: 'color 0.2s' }}
+            >
+              Preguntas
+            </a>
+          </nav>
+
+          {/* Botones Header */}
+          <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+            <button
+              onClick={() => navigate('/login')}
               style={{
-                fontSize: '1.4rem',
-                fontWeight: 900,
-                color: '#1e3a8a',
-                letterSpacing: '1px',
-                lineHeight: 1,
+                backgroundColor: 'transparent',
+                color: '#e2e8f0',
+                border: 'none',
+                fontWeight: 700,
+                fontSize: '0.9rem',
+                cursor: 'pointer',
               }}
             >
-              MATEO <span style={{ color: '#0d9488', fontWeight: 700 }}>ekklesia</span>
-            </div>
-            <span style={{ fontSize: '0.65rem', color: '#64748b', fontWeight: 600 }}>
-              Gestión Financiera &amp; Ministerial
-            </span>
+              Iniciar Sesión
+            </button>
+            <button
+              onClick={() => navigate('/registro-ong')}
+              style={{
+                padding: '0.65rem 1.4rem',
+                backgroundColor: '#3758f9', // Play Astro signature blue button
+                color: 'white',
+                border: 'none',
+                borderRadius: '8px',
+                fontWeight: 700,
+                fontSize: '0.9rem',
+                cursor: 'pointer',
+                boxShadow: '0 4px 14px rgba(55, 88, 249, 0.4)',
+              }}
+            >
+              Registrar Iglesia
+            </button>
           </div>
-        </div>
-
-        <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
-          <button
-            onClick={() => navigate('/registro-ong')}
-            style={{
-              padding: '0.6rem 1.2rem',
-              backgroundColor: '#f1f5f9',
-              color: '#1e3a8a',
-              border: '1px solid #cbd5e1',
-              borderRadius: '8px',
-              fontWeight: 700,
-              cursor: 'pointer',
-              fontSize: '0.88rem',
-            }}
-          >
-            Registrar Iglesia
-          </button>
-          <button
-            onClick={() => navigate('/login')}
-            style={{
-              padding: '0.6rem 1.4rem',
-              backgroundColor: '#1e3a8a',
-              color: 'white',
-              border: 'none',
-              borderRadius: '8px',
-              fontWeight: 700,
-              cursor: 'pointer',
-              fontSize: '0.88rem',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.4rem',
-            }}
-          >
-            Iniciar Sesión <ArrowRight size={16} />
-          </button>
         </div>
       </header>
 
-      {/* Main Content */}
-      <main style={{ flex: 1 }}>
-        {/* HERO BANNER PRINCIPAL CON VISOR DE CARRUSEL INTEGRADO */}
+      <main>
+        {/* 2. HERO SECTION estilo Play Astro */}
         <section
+          id="inicio"
           style={{
-            background: 'linear-gradient(135deg, #1e3a8a 0%, #0f172a 100%)',
-            color: 'white',
-            padding: '3.5rem 1.5rem 4.5rem',
             position: 'relative',
+            padding: '5rem 1.5rem 6rem',
+            background: 'radial-gradient(ellipse at top, #111a62 0%, #090e34 70%)',
             overflow: 'hidden',
           }}
         >
-          {/* Sombra de fondo decorativa */}
+          {/* SVG Dot Pattern Decorativo Play Astro */}
           <div
             style={{
               position: 'absolute',
-              top: '-10%',
-              left: '50%',
-              transform: 'translateX(-50%)',
-              width: '800px',
-              height: '500px',
-              background: 'radial-gradient(circle, rgba(13, 148, 136, 0.22) 0%, transparent 70%)',
+              top: '5%',
+              right: '3%',
+              opacity: 0.15,
               pointerEvents: 'none',
             }}
-          />
+          >
+            <svg width="200" height="200" fill="none">
+              <pattern
+                id="dot-pattern-1"
+                x="0"
+                y="0"
+                width="20"
+                height="20"
+                patternUnits="userSpaceOnUse"
+              >
+                <circle cx="2" cy="2" r="2" fill="#ffffff" />
+              </pattern>
+              <rect width="200" height="200" fill="url(#dot-pattern-1)" />
+            </svg>
+          </div>
 
           <div
             style={{
-              maxWidth: '1200px',
+              maxWidth: '1000px',
               margin: '0 auto',
+              textAlign: 'center',
               position: 'relative',
-              zIndex: 1,
+              zIndex: 2,
             }}
           >
-            <div
+            <span
               style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))',
-                gap: '3rem',
+                display: 'inline-flex',
                 alignItems: 'center',
+                gap: '0.5rem',
+                backgroundColor: 'rgba(55, 88, 249, 0.15)',
+                border: '1px solid rgba(55, 88, 249, 0.3)',
+                color: '#60a5fa',
+                fontWeight: 700,
+                fontSize: '0.82rem',
+                padding: '0.45rem 1.2rem',
+                borderRadius: '999px',
+                marginBottom: '1.5rem',
               }}
             >
-              {/* Columna Izquierda: Mensaje Principal y CTAs */}
-              <div>
-                <span
-                  style={{
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: '0.5rem',
-                    backgroundColor: 'rgba(255, 255, 255, 0.12)',
-                    border: '1px solid rgba(255, 255, 255, 0.2)',
-                    color: '#5eead4',
-                    fontWeight: 700,
-                    fontSize: '0.82rem',
-                    padding: '0.4rem 1.1rem',
-                    borderRadius: '999px',
-                    marginBottom: '1.25rem',
-                  }}
-                >
-                  <Sparkles size={16} /> Diseñado específicamente para Pastores, Tesoreros y
-                  Consejos
-                </span>
+              <Sparkles size={16} /> Diseñado específicamente para Pastores, Tesoreros y Consejos
+            </span>
 
-                <h1
-                  style={{
-                    fontSize: 'clamp(2rem, 3.8vw, 3.2rem)',
-                    fontWeight: 900,
-                    lineHeight: 1.2,
-                    marginBottom: '1.25rem',
-                    letterSpacing: '-0.5px',
-                  }}
-                >
-                  La administración de tu Iglesia,{' '}
-                  <span
-                    style={{
-                      background: 'linear-gradient(90deg, #5eead4, #38bdf8)',
-                      WebkitBackgroundClip: 'text',
-                      WebkitTextFillColor: 'transparent',
-                    }}
-                  >
-                    fácil, transparente y en orden
-                  </span>
-                </h1>
-
-                <p
-                  style={{
-                    fontSize: '1.08rem',
-                    color: '#94a3b8',
-                    lineHeight: 1.6,
-                    marginBottom: '2rem',
-                  }}
-                >
-                  Olvídate del desorden en cuadernos o hojas de cálculo complejas. MATEO ekklesia te
-                  ayuda a registrar diezmos, controlar presupuestos ministeriales, gestionar
-                  actividades y presentar cuentas claras a tu congregación.
-                </p>
-
-                {/* CTAs */}
-                <div
-                  style={{
-                    display: 'flex',
-                    gap: '1rem',
-                    flexWrap: 'wrap',
-                    marginBottom: '2rem',
-                  }}
-                >
-                  <button
-                    onClick={() => navigate('/registro-ong')}
-                    style={{
-                      padding: '0.95rem 2.2rem',
-                      backgroundColor: '#0d9488',
-                      color: 'white',
-                      border: 'none',
-                      borderRadius: '10px',
-                      fontWeight: 800,
-                      fontSize: '1rem',
-                      cursor: 'pointer',
-                      boxShadow: '0 4px 14px rgba(13, 148, 136, 0.4)',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '0.6rem',
-                    }}
-                  >
-                    Registrar Mi Iglesia (14 Días Gratis) <Sparkles size={18} />
-                  </button>
-
-                  <button
-                    onClick={() => navigate('/login')}
-                    style={{
-                      padding: '0.95rem 1.8rem',
-                      backgroundColor: 'rgba(255,255,255,0.08)',
-                      color: 'white',
-                      border: '1px solid rgba(255,255,255,0.25)',
-                      borderRadius: '10px',
-                      fontWeight: 700,
-                      fontSize: '1rem',
-                      cursor: 'pointer',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '0.5rem',
-                    }}
-                  >
-                    Ingresar al Sistema <ArrowRight size={18} />
-                  </button>
-                </div>
-
-                {/* Píldoras de confianza */}
-                <div
-                  style={{
-                    display: 'flex',
-                    gap: '1.25rem',
-                    flexWrap: 'wrap',
-                    fontSize: '0.85rem',
-                    color: '#cbd5e1',
-                    fontWeight: 600,
-                  }}
-                >
-                  <span style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
-                    <CheckCircle2 size={16} color="#5eead4" /> Sin tarjeta de crédito
-                  </span>
-                  <span style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
-                    <CheckCircle2 size={16} color="#5eead4" /> Multi-moneda automática
-                  </span>
-                  <span style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
-                    <CheckCircle2 size={16} color="#5eead4" /> Reportes PDF instantáneos
-                  </span>
-                </div>
-              </div>
-
-              {/* Columna Derecha: Visor del Carrusel Integrado */}
-              <div
+            <h1
+              style={{
+                fontSize: 'clamp(2.2rem, 5vw, 3.8rem)',
+                fontWeight: 900,
+                lineHeight: 1.15,
+                marginBottom: '1.4rem',
+                letterSpacing: '-1px',
+                color: 'white',
+              }}
+            >
+              La Administración de tu Iglesia,{' '}
+              <span
                 style={{
-                  backgroundColor: 'rgba(15, 23, 42, 0.75)',
-                  backdropFilter: 'blur(12px)',
-                  borderRadius: '20px',
-                  border: '1px solid rgba(255, 255, 255, 0.15)',
-                  overflow: 'hidden',
-                  boxShadow: '0 20px 40px rgba(0, 0, 0, 0.35)',
-                  position: 'relative',
-                  display: 'flex',
-                  flexDirection: 'column',
+                  background: 'linear-gradient(90deg, #3758f9, #5eead4)',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
                 }}
               >
-                {/* Cabecera del Carrusel Integrado */}
-                <div
-                  style={{
-                    padding: '0.9rem 1.25rem',
-                    backgroundColor: 'rgba(255, 255, 255, 0.05)',
-                    borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                  }}
-                >
+                Fácil, Transparente y en Orden
+              </span>
+            </h1>
+
+            <p
+              style={{
+                fontSize: '1.15rem',
+                color: '#94a3b8',
+                lineHeight: 1.65,
+                maxWidth: '740px',
+                margin: '0 auto 2.5rem',
+              }}
+            >
+              Olvídate del desorden en cuadernos o tablas complejas. MATEO ekklesia ayuda a tu
+              congregación a registrar diezmos, controlar presupuestos ministeriales, gestionar
+              actividades y presentar cuentas claras con un solo clic.
+            </p>
+
+            {/* CTAs */}
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'center',
+                gap: '1.2rem',
+                flexWrap: 'wrap',
+                marginBottom: '3rem',
+              }}
+            >
+              <button
+                onClick={() => navigate('/registro-ong')}
+                style={{
+                  padding: '1rem 2.4rem',
+                  backgroundColor: '#3758f9',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '10px',
+                  fontWeight: 800,
+                  fontSize: '1.02rem',
+                  cursor: 'pointer',
+                  boxShadow: '0 10px 25px rgba(55, 88, 249, 0.4)',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '0.6rem',
+                }}
+              >
+                Registrar Mi Iglesia (14 Días Gratis) <Sparkles size={18} />
+              </button>
+
+              <button
+                onClick={() => navigate('/login')}
+                style={{
+                  padding: '1rem 2rem',
+                  backgroundColor: 'rgba(255, 255, 255, 0.06)',
+                  color: 'white',
+                  border: '1px solid rgba(255, 255, 255, 0.2)',
+                  borderRadius: '10px',
+                  fontWeight: 700,
+                  fontSize: '1.02rem',
+                  cursor: 'pointer',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                }}
+              >
+                Ingresar al Sistema <ArrowRight size={18} />
+              </button>
+            </div>
+
+            {/* Píldoras de confianza */}
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'center',
+                gap: '1.8rem',
+                flexWrap: 'wrap',
+                fontSize: '0.88rem',
+                color: '#cbd5e1',
+                fontWeight: 600,
+                marginBottom: '3.5rem',
+              }}
+            >
+              <span style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                <CheckCircle2 size={16} color="#5eead4" /> Sin tarjeta de crédito
+              </span>
+              <span style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                <CheckCircle2 size={16} color="#5eead4" /> Tasa BCV y multi-moneda automática
+              </span>
+              <span style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                <CheckCircle2 size={16} color="#5eead4" /> Reportes contables PDF
+              </span>
+            </div>
+
+            {/* PLAY ASTRO SHOWCASE CONTAINER (Visor Flotante estilo Play Astro) */}
+            <div
+              style={{
+                maxWidth: '960px',
+                margin: '0 auto',
+                backgroundColor: '#111746',
+                borderRadius: '20px',
+                border: '1px solid rgba(255, 255, 255, 0.15)',
+                boxShadow: '0 30px 60px -15px rgba(0, 0, 0, 0.6)',
+                overflow: 'hidden',
+                textAlign: 'left',
+              }}
+            >
+              {/* Header del Visor */}
+              <div
+                style={{
+                  padding: '0.9rem 1.4rem',
+                  backgroundColor: 'rgba(255, 255, 255, 0.04)',
+                  borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                   <span
                     style={{
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      gap: '0.4rem',
-                      color: heroCarouselSlides[currentSlide].tagColor,
-                      fontWeight: 800,
-                      fontSize: '0.82rem',
-                    }}
-                  >
-                    {heroCarouselSlides[currentSlide].badge}
-                  </span>
-
-                  {/* Indicadores de Puntos */}
-                  <div style={{ display: 'flex', gap: '0.4rem' }}>
-                    {heroCarouselSlides.map((_, idx) => (
-                      <button
-                        key={idx}
-                        onClick={() => setCurrentSlide(idx)}
-                        style={{
-                          width: currentSlide === idx ? '22px' : '8px',
-                          height: '8px',
-                          borderRadius: '4px',
-                          backgroundColor:
-                            currentSlide === idx ? '#0d9488' : 'rgba(255, 255, 255, 0.3)',
-                          border: 'none',
-                          cursor: 'pointer',
-                          transition: 'all 0.3s ease',
-                        }}
-                      />
-                    ))}
-                  </div>
-                </div>
-
-                {/* Contenedor de Imagen de Alta Resolución */}
-                <div
-                  style={{
-                    position: 'relative',
-                    height: '310px',
-                    overflow: 'hidden',
-                    backgroundColor: '#020617',
-                  }}
-                >
-                  <img
-                    src={heroCarouselSlides[currentSlide].image}
-                    alt={heroCarouselSlides[currentSlide].title}
-                    style={{
-                      width: '100%',
-                      height: '100%',
-                      objectFit: 'cover',
-                      transition: 'all 0.5s ease-in-out',
+                      width: '10px',
+                      height: '10px',
+                      borderRadius: '50%',
+                      backgroundColor: '#ef4444',
                     }}
                   />
-
-                  {/* Flechas de Navegación sobre la Imagen */}
-                  <button
-                    onClick={handlePrevSlide}
-                    aria-label="Anterior"
+                  <span
                     style={{
-                      position: 'absolute',
-                      left: '12px',
-                      top: '50%',
-                      transform: 'translateY(-50%)',
-                      width: '36px',
-                      height: '36px',
+                      width: '10px',
+                      height: '10px',
                       borderRadius: '50%',
-                      backgroundColor: 'rgba(15, 23, 42, 0.7)',
-                      color: 'white',
-                      border: '1px solid rgba(255, 255, 255, 0.2)',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      cursor: 'pointer',
-                      backdropFilter: 'blur(4px)',
+                      backgroundColor: '#f59e0b',
+                    }}
+                  />
+                  <span
+                    style={{
+                      width: '10px',
+                      height: '10px',
+                      borderRadius: '50%',
+                      backgroundColor: '#10b981',
+                    }}
+                  />
+                  <span
+                    style={{
+                      fontSize: '0.78rem',
+                      color: '#94a3b8',
+                      marginLeft: '0.5rem',
+                      fontWeight: 600,
                     }}
                   >
-                    <ChevronLeft size={18} />
-                  </button>
-
-                  <button
-                    onClick={handleNextSlide}
-                    aria-label="Siguiente"
-                    style={{
-                      position: 'absolute',
-                      right: '12px',
-                      top: '50%',
-                      transform: 'translateY(-50%)',
-                      width: '36px',
-                      height: '36px',
-                      borderRadius: '50%',
-                      backgroundColor: 'rgba(15, 23, 42, 0.7)',
-                      color: 'white',
-                      border: '1px solid rgba(255, 255, 255, 0.2)',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      cursor: 'pointer',
-                      backdropFilter: 'blur(4px)',
-                    }}
-                  >
-                    <ChevronRight size={18} />
-                  </button>
+                    MATEO ekklesia — Plataforma Ministerial
+                  </span>
                 </div>
 
-                {/* Pie del Slide Integrado */}
-                <div
-                  style={{ padding: '1.2rem 1.4rem', backgroundColor: 'rgba(15, 23, 42, 0.95)' }}
+                <span
+                  style={{
+                    color: heroCarouselSlides[currentSlide].tagColor,
+                    fontWeight: 800,
+                    fontSize: '0.8rem',
+                  }}
                 >
+                  {heroCarouselSlides[currentSlide].badge}
+                </span>
+              </div>
+
+              {/* Imagen en Alta Resolución */}
+              <div
+                style={{
+                  position: 'relative',
+                  height: '360px',
+                  overflow: 'hidden',
+                  backgroundColor: '#020617',
+                }}
+              >
+                <img
+                  src={heroCarouselSlides[currentSlide].image}
+                  alt={heroCarouselSlides[currentSlide].title}
+                  style={{
+                    width: '100%',
+                    height: '100%',
+                    objectFit: 'cover',
+                    transition: 'all 0.5s ease',
+                  }}
+                />
+
+                {/* Controles de Navegación sobre Imagen */}
+                <button
+                  onClick={handlePrevSlide}
+                  aria-label="Anterior"
+                  style={{
+                    position: 'absolute',
+                    left: '16px',
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    width: '40px',
+                    height: '40px',
+                    borderRadius: '50%',
+                    backgroundColor: 'rgba(9, 14, 52, 0.75)',
+                    color: 'white',
+                    border: '1px solid rgba(255, 255, 255, 0.2)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    cursor: 'pointer',
+                    backdropFilter: 'blur(6px)',
+                  }}
+                >
+                  <ChevronLeft size={20} />
+                </button>
+
+                <button
+                  onClick={handleNextSlide}
+                  aria-label="Siguiente"
+                  style={{
+                    position: 'absolute',
+                    right: '16px',
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    width: '40px',
+                    height: '40px',
+                    borderRadius: '50%',
+                    backgroundColor: 'rgba(9, 14, 52, 0.75)',
+                    color: 'white',
+                    border: '1px solid rgba(255, 255, 255, 0.2)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    cursor: 'pointer',
+                    backdropFilter: 'blur(6px)',
+                  }}
+                >
+                  <ChevronRight size={20} />
+                </button>
+              </div>
+
+              {/* Pie del Visor */}
+              <div
+                style={{
+                  padding: '1.25rem 1.6rem',
+                  backgroundColor: '#0c1033',
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  flexWrap: 'wrap',
+                  gap: '1rem',
+                }}
+              >
+                <div>
                   <h4
                     style={{
-                      fontSize: '1.05rem',
+                      fontSize: '1.1rem',
                       fontWeight: 800,
-                      margin: '0 0 0.35rem 0',
-                      color: '#f8fafc',
+                      margin: '0 0 0.3rem 0',
+                      color: 'white',
                     }}
                   >
                     {heroCarouselSlides[currentSlide].title}
                   </h4>
-                  <p style={{ fontSize: '0.85rem', color: '#94a3b8', margin: 0, lineHeight: 1.5 }}>
+                  <p style={{ fontSize: '0.88rem', color: '#94a3b8', margin: 0, lineHeight: 1.5 }}>
                     {heroCarouselSlides[currentSlide].subtitle}
                   </p>
+                </div>
+
+                <div style={{ display: 'flex', gap: '0.4rem' }}>
+                  {heroCarouselSlides.map((_, idx) => (
+                    <button
+                      key={idx}
+                      onClick={() => setCurrentSlide(idx)}
+                      style={{
+                        width: currentSlide === idx ? '24px' : '8px',
+                        height: '8px',
+                        borderRadius: '4px',
+                        backgroundColor:
+                          currentSlide === idx ? '#3758f9' : 'rgba(255, 255, 255, 0.25)',
+                        border: 'none',
+                        cursor: 'pointer',
+                        transition: 'all 0.3s ease',
+                      }}
+                    />
+                  ))}
                 </div>
               </div>
             </div>
           </div>
         </section>
 
-        {/* SECCIÓN DIDÁCTICA: ¿CÓMO FUNCIONA? */}
-        <section style={{ padding: '4.5rem 1.5rem', maxWidth: '1100px', margin: '0 auto' }}>
-          <div style={{ textAlign: 'center', marginBottom: '3.5rem' }}>
+        {/* 3. SECCIÓN SOBRE LA PLATAFORMA (Layout 2 Columnas estilo Play Astro) */}
+        <section
+          style={{
+            backgroundColor: '#0c1142',
+            padding: '5.5rem 1.5rem',
+            borderTop: '1px solid rgba(255, 255, 255, 0.06)',
+          }}
+        >
+          <div style={{ maxWidth: '1150px', margin: '0 auto' }}>
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
+                gap: '4rem',
+                alignItems: 'center',
+              }}
+            >
+              {/* Imagen con tarjeta flotante Play Astro */}
+              <div style={{ position: 'relative' }}>
+                <img
+                  src="/images/hero_admin_team.png"
+                  alt="Equipo Pastoral y Administrativo"
+                  style={{
+                    width: '100%',
+                    borderRadius: '18px',
+                    boxShadow: '0 20px 40px rgba(0,0,0,0.4)',
+                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                  }}
+                />
+                <div
+                  style={{
+                    position: 'absolute',
+                    bottom: '-20px',
+                    right: '-20px',
+                    backgroundColor: '#3758f9',
+                    color: 'white',
+                    padding: '1.2rem 1.5rem',
+                    borderRadius: '16px',
+                    boxShadow: '0 10px 25px rgba(55, 88, 249, 0.4)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '1rem',
+                  }}
+                >
+                  <Award size={36} />
+                  <div>
+                    <div style={{ fontSize: '1.2rem', fontWeight: 900 }}>100% Auditabilidad</div>
+                    <div style={{ fontSize: '0.78rem', opacity: 0.9 }}>
+                      Trazabilidad &amp; Cuentas Claras
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Contenido Explicativo */}
+              <div>
+                <span
+                  style={{
+                    color: '#5eead4',
+                    fontWeight: 800,
+                    fontSize: '0.8rem',
+                    letterSpacing: '2px',
+                    textTransform: 'uppercase',
+                  }}
+                >
+                  PROPÓSITO &amp; TRANSPARENCIA
+                </span>
+                <h2
+                  style={{
+                    fontSize: 'clamp(1.8rem, 3vw, 2.5rem)',
+                    fontWeight: 800,
+                    color: 'white',
+                    margin: '0.6rem 0 1.2rem 0',
+                    lineHeight: 1.25,
+                  }}
+                >
+                  Diseñado para servir al liderazgo eclesial con excelencia
+                </h2>
+                <p
+                  style={{
+                    color: '#94a3b8',
+                    fontSize: '1rem',
+                    lineHeight: 1.65,
+                    marginBottom: '2rem',
+                  }}
+                >
+                  MATEO ekklesia fue concebido para eliminar las fricciones administrativas en las
+                  iglesias. Permite que el equipo pastoral y de tesorería trabaje de forma
+                  colaborativa y sin estrés.
+                </p>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
+                  <div
+                    style={{
+                      backgroundColor: 'rgba(255,255,255,0.03)',
+                      padding: '1.2rem',
+                      borderRadius: '12px',
+                      border: '1px solid rgba(255,255,255,0.06)',
+                    }}
+                  >
+                    <Shield size={24} color="#5eead4" style={{ marginBottom: '0.5rem' }} />
+                    <h4
+                      style={{
+                        fontSize: '0.98rem',
+                        fontWeight: 800,
+                        color: 'white',
+                        margin: '0 0 0.3rem 0',
+                      }}
+                    >
+                      Firma &amp; Permisos
+                    </h4>
+                    <p style={{ fontSize: '0.82rem', color: '#94a3b8', margin: 0 }}>
+                      Roles diferenciados para pastores, tesoreros y líderes.
+                    </p>
+                  </div>
+
+                  <div
+                    style={{
+                      backgroundColor: 'rgba(255,255,255,0.03)',
+                      padding: '1.2rem',
+                      borderRadius: '12px',
+                      border: '1px solid rgba(255,255,255,0.06)',
+                    }}
+                  >
+                    <Camera size={24} color="#60a5fa" style={{ marginBottom: '0.5rem' }} />
+                    <h4
+                      style={{
+                        fontSize: '0.98rem',
+                        fontWeight: 800,
+                        color: 'white',
+                        margin: '0 0 0.3rem 0',
+                      }}
+                    >
+                      Fotos de Recibos
+                    </h4>
+                    <p style={{ fontSize: '0.82rem', color: '#94a3b8', margin: 0 }}>
+                      Digitaliza comprobantes al momento del gasto.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* 4. MÓDULOS DEL SISTEMA (Grid 3 Columnas estilo Play Astro Feature Cards) */}
+        <section
+          id="modulos"
+          style={{ padding: '5.5rem 1.5rem', maxWidth: '1200px', margin: '0 auto' }}
+        >
+          <div style={{ textAlign: 'center', marginBottom: '4rem' }}>
             <span
               style={{
-                color: '#0d9488',
+                color: '#3758f9',
                 fontWeight: 800,
-                fontSize: '0.78rem',
+                fontSize: '0.8rem',
                 letterSpacing: '2px',
                 textTransform: 'uppercase',
               }}
             >
-              Simplicidad y Didáctica
+              HERRAMIENTAS INCLUIDAS
             </span>
             <h2
               style={{
-                fontSize: 'clamp(1.75rem, 3.2vw, 2.4rem)',
+                fontSize: 'clamp(1.8rem, 3.2vw, 2.6rem)',
                 fontWeight: 800,
-                color: '#0f172a',
-                marginTop: '0.4rem',
+                color: 'white',
+                marginTop: '0.5rem',
               }}
             >
-              ¿Cómo simplifica MATEO ekklesia el día a día de tu Iglesia?
+              Todo lo que necesitas para una gestión transparente
             </h2>
             <p
               style={{
-                color: '#64748b',
-                fontSize: '1rem',
+                color: '#94a3b8',
+                fontSize: '1.02rem',
                 maxWidth: '650px',
-                margin: '0.5rem auto 0',
+                margin: '0.6rem auto 0',
               }}
             >
-              Diseñado en 3 pasos sencillos para que todo el equipo trabaje en armonía y sin estrés.
+              Módulos nativos integrados y adaptados al vocabulario eclesial.
             </p>
           </div>
 
           <div
             style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-              gap: '2rem',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
+              gap: '1.8rem',
             }}
           >
-            {stepsToUse.map((step, idx) => (
+            {churchModules.map((m, i) => (
               <div
-                key={idx}
+                key={i}
                 style={{
-                  backgroundColor: 'white',
+                  backgroundColor: '#111746',
                   borderRadius: '16px',
                   padding: '2rem',
-                  border: '1px solid #e2e8f0',
-                  boxShadow: '0 4px 12px rgba(0,0,0,0.03)',
-                  position: 'relative',
+                  border: '1px solid rgba(255, 255, 255, 0.08)',
                   display: 'flex',
                   flexDirection: 'column',
+                  gap: '1rem',
+                  transition: 'transform 0.25s ease, border-color 0.25s ease',
+                }}
+                onMouseEnter={(e) => {
+                  (e.currentTarget as HTMLElement).style.transform = 'translateY(-5px)';
+                  (e.currentTarget as HTMLElement).style.borderColor = '#3758f9';
+                }}
+                onMouseLeave={(e) => {
+                  (e.currentTarget as HTMLElement).style.transform = 'translateY(0)';
+                  (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255, 255, 255, 0.08)';
                 }}
               >
                 <div
                   style={{
+                    backgroundColor: m.bg,
+                    color: m.color,
+                    width: '52px',
+                    height: '52px',
+                    borderRadius: '14px',
                     display: 'flex',
                     alignItems: 'center',
-                    justifyContent: 'space-between',
-                    marginBottom: '1.25rem',
+                    justifyContent: 'center',
                   }}
                 >
-                  <div
-                    style={{
-                      width: '46px',
-                      height: '46px',
-                      borderRadius: '12px',
-                      backgroundColor: '#f8fafc',
-                      border: '1px solid #e2e8f0',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                    }}
-                  >
-                    {step.icon}
-                  </div>
-                  <span
-                    style={{
-                      fontSize: '1.5rem',
-                      fontWeight: 900,
-                      color: '#cbd5e1',
-                    }}
-                  >
-                    Paso 0{step.num}
-                  </span>
+                  {m.icon}
                 </div>
-
-                <h3
-                  style={{
-                    fontSize: '1.15rem',
-                    fontWeight: 800,
-                    color: '#1e293b',
-                    marginBottom: '0.6rem',
-                    lineHeight: 1.3,
-                  }}
-                >
-                  {step.title}
-                </h3>
-                <p
-                  style={{
-                    color: '#64748b',
-                    fontSize: '0.92rem',
-                    lineHeight: 1.6,
-                    margin: 0,
-                  }}
-                >
-                  {step.desc}
-                </p>
+                <div>
+                  <h3
+                    style={{
+                      fontSize: '1.15rem',
+                      fontWeight: 800,
+                      color: 'white',
+                      marginBottom: '0.4rem',
+                    }}
+                  >
+                    {m.title}
+                  </h3>
+                  <p
+                    style={{
+                      color: '#94a3b8',
+                      fontSize: '0.9rem',
+                      lineHeight: 1.6,
+                      margin: 0,
+                    }}
+                  >
+                    {m.desc}
+                  </p>
+                </div>
               </div>
             ))}
           </div>
         </section>
 
-        {/* SECCIÓN MÓDULOS DE LA IGLESIA */}
-        <section
-          style={{
-            backgroundColor: '#ffffff',
-            padding: '4.5rem 1.5rem',
-            borderTop: '1px solid #e2e8f0',
-            borderBottom: '1px solid #e2e8f0',
-          }}
-        >
-          <div style={{ maxWidth: '1100px', margin: '0 auto' }}>
-            <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
-              <span
-                style={{
-                  display: 'inline-block',
-                  backgroundColor: '#f0fdfa',
-                  color: '#0d9488',
-                  fontWeight: 800,
-                  fontSize: '0.75rem',
-                  letterSpacing: '2px',
-                  textTransform: 'uppercase',
-                  padding: '0.35rem 1rem',
-                  borderRadius: '999px',
-                  marginBottom: '0.75rem',
-                }}
-              >
-                Herramientas Incluidas
-              </span>
+        {/* 5. CALL TO ACTION BANNER estilo Play Astro */}
+        <section style={{ padding: '0 1.5rem', margin: '2rem 0 4rem' }}>
+          <div
+            style={{
+              maxWidth: '1150px',
+              margin: '0 auto',
+              background: 'linear-gradient(135deg, #3758f9 0%, #1e3a8a 100%)',
+              borderRadius: '24px',
+              padding: '4rem 2rem',
+              textAlign: 'center',
+              position: 'relative',
+              overflow: 'hidden',
+              boxShadow: '0 20px 40px rgba(55, 88, 249, 0.3)',
+            }}
+          >
+            <div
+              style={{
+                maxWidth: '720px',
+                margin: '0 auto',
+                position: 'relative',
+                zIndex: 2,
+              }}
+            >
               <h2
                 style={{
-                  fontSize: 'clamp(1.75rem, 3.2vw, 2.4rem)',
-                  fontWeight: 800,
-                  color: '#0f172a',
-                  lineHeight: 1.2,
+                  fontSize: 'clamp(1.8rem, 3.5vw, 2.6rem)',
+                  fontWeight: 900,
+                  color: 'white',
+                  marginBottom: '1rem',
                 }}
               >
-                Todo lo que necesitas para una administración excelente
+                Comienza la transformación administrativa de tu Iglesia hoy
               </h2>
               <p
                 style={{
-                  color: '#64748b',
-                  fontSize: '1rem',
-                  maxWidth: '600px',
-                  margin: '0.5rem auto 0',
+                  color: '#cbd5e1',
+                  fontSize: '1.1rem',
+                  marginBottom: '2.2rem',
+                  lineHeight: 1.6,
                 }}
               >
-                Módulos integrados y adaptados al vocabulario eclesial.
+                Pruébalo durante 14 días con acceso completo sin costo ni tarjeta de crédito.
               </p>
-            </div>
-
-            <div
-              style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))',
-                gap: '1.25rem',
-              }}
-            >
-              {churchModules.map((m, i) => (
-                <div
-                  key={i}
-                  style={{
-                    backgroundColor: '#f8fafc',
-                    border: '1px solid #e2e8f0',
-                    borderRadius: '14px',
-                    padding: '1.5rem',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: '0.85rem',
-                    transition: 'transform 0.2s, box-shadow 0.2s',
-                  }}
-                  onMouseEnter={(e) => {
-                    (e.currentTarget as HTMLElement).style.transform = 'translateY(-3px)';
-                    (e.currentTarget as HTMLElement).style.boxShadow =
-                      '0 8px 24px rgba(0,0,0,0.06)';
-                  }}
-                  onMouseLeave={(e) => {
-                    (e.currentTarget as HTMLElement).style.transform = 'translateY(0)';
-                    (e.currentTarget as HTMLElement).style.boxShadow = 'none';
-                  }}
-                >
-                  <div
-                    style={{
-                      backgroundColor: m.bg,
-                      color: m.color,
-                      width: '48px',
-                      height: '48px',
-                      borderRadius: '12px',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                    }}
-                  >
-                    {m.icon}
-                  </div>
-                  <div>
-                    <h4
-                      style={{
-                        fontWeight: 800,
-                        fontSize: '1rem',
-                        color: '#1e293b',
-                        marginBottom: '0.35rem',
-                      }}
-                    >
-                      {m.title}
-                    </h4>
-                    <p
-                      style={{ color: '#64748b', fontSize: '0.85rem', lineHeight: 1.55, margin: 0 }}
-                    >
-                      {m.desc}
-                    </p>
-                  </div>
-                </div>
-              ))}
+              <button
+                onClick={() => navigate('/registro-ong')}
+                style={{
+                  padding: '1.1rem 2.6rem',
+                  backgroundColor: '#0d9488',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '12px',
+                  fontWeight: 900,
+                  fontSize: '1.05rem',
+                  cursor: 'pointer',
+                  boxShadow: '0 6px 20px rgba(13, 148, 136, 0.4)',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '0.6rem',
+                }}
+              >
+                Activar Espacio de Mi Iglesia (14 Días Gratis) <Sparkles size={20} />
+              </button>
             </div>
           </div>
         </section>
 
-        {/* SECCIÓN DE PLANES Y MEMBRESÍAS */}
+        {/* 6. TABLA DE PLANES DE PRECIOS estilo Play Astro */}
         <section
+          id="precios"
           style={{
-            backgroundColor: '#f8fafc',
-            padding: '4.5rem 1.5rem',
-            borderBottom: '1px solid #e2e8f0',
+            backgroundColor: '#0c1142',
+            padding: '5.5rem 1.5rem',
+            borderTop: '1px solid rgba(255, 255, 255, 0.06)',
           }}
         >
           <div style={{ maxWidth: '1100px', margin: '0 auto' }}>
-            <div style={{ textAlign: 'center', marginBottom: '3.5rem' }}>
+            <div style={{ textAlign: 'center', marginBottom: '4rem' }}>
               <span
                 style={{
-                  display: 'inline-block',
-                  backgroundColor: '#eff6ff',
-                  color: '#1e3a8a',
+                  color: '#5eead4',
                   fontWeight: 800,
-                  fontSize: '0.75rem',
+                  fontSize: '0.8rem',
                   letterSpacing: '2px',
                   textTransform: 'uppercase',
-                  padding: '0.35rem 1rem',
-                  borderRadius: '999px',
-                  marginBottom: '0.75rem',
                 }}
               >
-                Inversión Transparente
+                INVERSIÓN TRANSPARENTE
               </span>
               <h2
                 style={{
-                  fontSize: 'clamp(1.75rem, 3.2vw, 2.4rem)',
+                  fontSize: 'clamp(1.8rem, 3.2vw, 2.6rem)',
                   fontWeight: 800,
-                  color: '#0f172a',
-                  lineHeight: 1.2,
+                  color: 'white',
+                  marginTop: '0.5rem',
                 }}
               >
                 Planes diseñados para cada etapa de tu Iglesia
               </h2>
               <p
                 style={{
-                  color: '#64748b',
-                  fontSize: '1rem',
+                  color: '#94a3b8',
+                  fontSize: '1.02rem',
                   maxWidth: '600px',
-                  margin: '0.5rem auto 0',
+                  margin: '0.6rem auto 0',
                 }}
               >
-                Comienza con 14 días gratis sin compromisos ni tarjetas de crédito.
+                Comienza con 14 días gratis sin compromisos ni requisitos de pago.
               </p>
             </div>
 
             <div
               style={{
                 display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-                gap: '2rem',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
+                gap: '2.5rem',
                 alignItems: 'stretch',
               }}
             >
-              {/* Plan Trial 14 Días */}
+              {/* Plan Trial 14 Días (POPULAR) */}
               <div
                 style={{
-                  backgroundColor: 'white',
-                  borderRadius: '18px',
-                  padding: '2.2rem 1.8rem',
-                  border: '2px solid #0d9488',
-                  boxShadow: '0 12px 30px rgba(13, 148, 136, 0.12)',
+                  backgroundColor: '#111746',
+                  borderRadius: '20px',
+                  padding: '2.5rem 2rem',
+                  border: '2px solid #3758f9',
+                  boxShadow: '0 15px 35px rgba(55, 88, 249, 0.25)',
                   position: 'relative',
                   display: 'flex',
                   flexDirection: 'column',
@@ -874,23 +1047,23 @@ export const LandingPage: React.FC = () => {
                   style={{
                     position: 'absolute',
                     top: '-14px',
-                    right: '20px',
-                    backgroundColor: '#0d9488',
+                    right: '24px',
+                    backgroundColor: '#3758f9',
                     color: 'white',
-                    fontWeight: 800,
-                    fontSize: '0.72rem',
-                    padding: '0.25rem 0.85rem',
+                    fontWeight: 900,
+                    fontSize: '0.75rem',
+                    padding: '0.3rem 0.95rem',
                     borderRadius: '999px',
                     letterSpacing: '0.5px',
                   }}
                 >
-                  RECOMENDADO PARA EMPEZAR
+                  RECOMENDADO / POPULAR
                 </span>
                 <h3
                   style={{
-                    fontSize: '1.25rem',
+                    fontSize: '1.35rem',
                     fontWeight: 800,
-                    color: '#0f172a',
+                    color: 'white',
                     margin: '0 0 0.5rem 0',
                   }}
                 >
@@ -898,50 +1071,50 @@ export const LandingPage: React.FC = () => {
                 </h3>
                 <p
                   style={{
-                    color: '#64748b',
-                    fontSize: '0.88rem',
-                    margin: '0 0 1.5rem 0',
+                    color: '#94a3b8',
+                    fontSize: '0.9rem',
+                    margin: '0 0 1.6rem 0',
                     lineHeight: 1.5,
                   }}
                 >
-                  Ideal para evaluar todas las funciones con tu equipo pastoral durante 14 días.
+                  Ideal para evaluar todas las herramientas con tu equipo pastoral durante 14 días.
                 </p>
                 <div
                   style={{
-                    fontSize: '2.5rem',
+                    fontSize: '2.8rem',
                     fontWeight: 900,
-                    color: '#0f172a',
-                    marginBottom: '1.5rem',
+                    color: 'white',
+                    marginBottom: '1.8rem',
                   }}
                 >
                   $0{' '}
-                  <span style={{ fontSize: '0.9rem', color: '#64748b', fontWeight: 600 }}>
-                    / 14 días
+                  <span style={{ fontSize: '0.92rem', color: '#94a3b8', fontWeight: 600 }}>
+                    / 14 días completos
                   </span>
                 </div>
                 <ul
                   style={{
                     listStyle: 'none',
                     padding: 0,
-                    margin: '0 0 2rem 0',
+                    margin: '0 0 2.2rem 0',
                     display: 'flex',
                     flexDirection: 'column',
-                    gap: '0.75rem',
-                    fontSize: '0.9rem',
-                    color: '#334155',
+                    gap: '0.85rem',
+                    fontSize: '0.92rem',
+                    color: '#e2e8f0',
                   }}
                 >
-                  <li style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                    <CheckCircle2 size={18} color="#0d9488" /> Acceso Completo a Todos los Módulos
+                  <li style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                    <CheckCircle2 size={18} color="#5eead4" /> Acceso Completo a Todos los Módulos
                   </li>
-                  <li style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                    <CheckCircle2 size={18} color="#0d9488" /> Diezmos, Ofrendas y Solicitudes
+                  <li style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                    <CheckCircle2 size={18} color="#5eead4" /> Diezmos, Ofrendas y Solicitudes
                   </li>
-                  <li style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                    <CheckCircle2 size={18} color="#0d9488" /> Usuarios Ilimitados para el Equipo
+                  <li style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                    <CheckCircle2 size={18} color="#5eead4" /> Usuarios Ilimitados para el Equipo
                   </li>
-                  <li style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                    <CheckCircle2 size={18} color="#0d9488" /> Reportes Financieros en PDF
+                  <li style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                    <CheckCircle2 size={18} color="#5eead4" /> Reportes Financieros en PDF
                   </li>
                 </ul>
                 <button
@@ -949,15 +1122,15 @@ export const LandingPage: React.FC = () => {
                   style={{
                     marginTop: 'auto',
                     width: '100%',
-                    padding: '0.9rem',
-                    backgroundColor: '#0d9488',
+                    padding: '1rem',
+                    backgroundColor: '#3758f9',
                     color: 'white',
                     border: 'none',
-                    borderRadius: '10px',
+                    borderRadius: '12px',
                     fontWeight: 800,
-                    fontSize: '0.95rem',
+                    fontSize: '1rem',
                     cursor: 'pointer',
-                    boxShadow: '0 4px 12px rgba(13, 148, 136, 0.3)',
+                    boxShadow: '0 6px 18px rgba(55, 88, 249, 0.4)',
                   }}
                 >
                   Iniciar Prueba Gratis Ahora
@@ -967,20 +1140,19 @@ export const LandingPage: React.FC = () => {
               {/* Plan Ekklesia Estándar */}
               <div
                 style={{
-                  backgroundColor: 'white',
-                  borderRadius: '18px',
-                  padding: '2.2rem 1.8rem',
-                  border: '1px solid #e2e8f0',
-                  boxShadow: '0 4px 14px rgba(0,0,0,0.03)',
+                  backgroundColor: '#111746',
+                  borderRadius: '20px',
+                  padding: '2.5rem 2rem',
+                  border: '1px solid rgba(255, 255, 255, 0.1)',
                   display: 'flex',
                   flexDirection: 'column',
                 }}
               >
                 <h3
                   style={{
-                    fontSize: '1.25rem',
+                    fontSize: '1.35rem',
                     fontWeight: 800,
-                    color: '#0f172a',
+                    color: 'white',
                     margin: '0 0 0.5rem 0',
                   }}
                 >
@@ -988,9 +1160,9 @@ export const LandingPage: React.FC = () => {
                 </h3>
                 <p
                   style={{
-                    color: '#64748b',
-                    fontSize: '0.88rem',
-                    margin: '0 0 1.5rem 0',
+                    color: '#94a3b8',
+                    fontSize: '0.9rem',
+                    margin: '0 0 1.6rem 0',
                     lineHeight: 1.5,
                   }}
                 >
@@ -998,40 +1170,40 @@ export const LandingPage: React.FC = () => {
                 </p>
                 <div
                   style={{
-                    fontSize: '2.5rem',
+                    fontSize: '2.8rem',
                     fontWeight: 900,
-                    color: '#0f172a',
-                    marginBottom: '1.5rem',
+                    color: 'white',
+                    marginBottom: '1.8rem',
                   }}
                 >
                   SaaS{' '}
-                  <span style={{ fontSize: '0.9rem', color: '#64748b', fontWeight: 600 }}>
-                    / suscripción
+                  <span style={{ fontSize: '0.92rem', color: '#94a3b8', fontWeight: 600 }}>
+                    / suscripción mensual
                   </span>
                 </div>
                 <ul
                   style={{
                     listStyle: 'none',
                     padding: 0,
-                    margin: '0 0 2rem 0',
+                    margin: '0 0 2.2rem 0',
                     display: 'flex',
                     flexDirection: 'column',
-                    gap: '0.75rem',
-                    fontSize: '0.9rem',
-                    color: '#334155',
+                    gap: '0.85rem',
+                    fontSize: '0.92rem',
+                    color: '#e2e8f0',
                   }}
                 >
-                  <li style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                    <CheckCircle2 size={18} color="#1e3a8a" /> Todo lo incluido en el Plan Trial
+                  <li style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                    <CheckCircle2 size={18} color="#60a5fa" /> Todo lo incluido en el Plan Trial
                   </li>
-                  <li style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                    <CheckCircle2 size={18} color="#1e3a8a" /> Conciliación Bancaria Automática
+                  <li style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                    <CheckCircle2 size={18} color="#60a5fa" /> Conciliación Bancaria Automática
                   </li>
-                  <li style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                    <CheckCircle2 size={18} color="#1e3a8a" /> Historial de Auditoría Permanente
+                  <li style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                    <CheckCircle2 size={18} color="#60a5fa" /> Historial de Auditoría Inmutable
                   </li>
-                  <li style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                    <CheckCircle2 size={18} color="#1e3a8a" /> Soporte Técnico Dedicado
+                  <li style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                    <CheckCircle2 size={18} color="#60a5fa" /> Soporte Técnico Prioritario
                   </li>
                 </ul>
                 <button
@@ -1039,163 +1211,356 @@ export const LandingPage: React.FC = () => {
                   style={{
                     marginTop: 'auto',
                     width: '100%',
-                    padding: '0.9rem',
-                    backgroundColor: '#1e3a8a',
+                    padding: '1rem',
+                    backgroundColor: 'rgba(255, 255, 255, 0.08)',
                     color: 'white',
-                    border: 'none',
-                    borderRadius: '10px',
+                    border: '1px solid rgba(255, 255, 255, 0.2)',
+                    borderRadius: '12px',
                     fontWeight: 800,
-                    fontSize: '0.95rem',
+                    fontSize: '1rem',
                     cursor: 'pointer',
                   }}
                 >
-                  Solicitar Información de Registro
+                  Solicitar Información de Licencia
                 </button>
               </div>
             </div>
           </div>
         </section>
 
-        {/* PREGUNTAS FRECUENTES (DIDÁCTICA PARA ADMINISTRADORES) */}
-        <section style={{ padding: '4.5rem 1.5rem', maxWidth: '850px', margin: '0 auto' }}>
-          <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
+        {/* 7. TESTIMONIOS estilo Play Astro */}
+        <section style={{ padding: '5.5rem 1.5rem', maxWidth: '1100px', margin: '0 auto' }}>
+          <div style={{ textAlign: 'center', marginBottom: '4rem' }}>
             <span
               style={{
-                color: '#1e3a8a',
+                color: '#5eead4',
                 fontWeight: 800,
-                fontSize: '0.78rem',
+                fontSize: '0.8rem',
                 letterSpacing: '2px',
                 textTransform: 'uppercase',
               }}
             >
-              Respuestas Claras
+              TESTIMONIOS
             </span>
             <h2
               style={{
-                fontSize: 'clamp(1.6rem, 3vw, 2.2rem)',
+                fontSize: 'clamp(1.8rem, 3.2vw, 2.6rem)',
                 fontWeight: 800,
-                color: '#0f172a',
-                marginTop: '0.4rem',
+                color: 'white',
+                marginTop: '0.5rem',
               }}
             >
-              Preguntas Frecuentes de Administradores e Iglesias
+              Lo que opinan los líderes y tesoreros
             </h2>
           </div>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-            {faqs.map((faq, idx) => (
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
+              gap: '2rem',
+            }}
+          >
+            {testimonials.map((t, idx) => (
               <div
                 key={idx}
                 style={{
-                  backgroundColor: 'white',
-                  borderRadius: '14px',
-                  padding: '1.6rem',
-                  border: '1px solid #e2e8f0',
-                  boxShadow: '0 2px 4px rgba(0,0,0,0.02)',
+                  backgroundColor: '#111746',
+                  borderRadius: '18px',
+                  padding: '2.2rem',
+                  border: '1px solid rgba(255, 255, 255, 0.08)',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  justifyContent: 'space-between',
                 }}
               >
-                <h4
-                  style={{
-                    fontSize: '1.05rem',
-                    fontWeight: 800,
-                    color: '#1e293b',
-                    marginBottom: '0.6rem',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.6rem',
-                  }}
-                >
-                  <HelpCircle size={20} color="#0d9488" /> {faq.q}
-                </h4>
-                <p style={{ color: '#64748b', fontSize: '0.92rem', lineHeight: 1.6, margin: 0 }}>
-                  {faq.a}
-                </p>
+                <div>
+                  <div
+                    style={{
+                      display: 'flex',
+                      gap: '0.3rem',
+                      color: '#f59e0b',
+                      marginBottom: '1.2rem',
+                    }}
+                  >
+                    {[...Array(t.rating)].map((_, i) => (
+                      <Star key={i} size={18} fill="#f59e0b" stroke="none" />
+                    ))}
+                  </div>
+                  <p
+                    style={{
+                      color: '#e2e8f0',
+                      fontSize: '1rem',
+                      lineHeight: 1.65,
+                      fontStyle: 'italic',
+                      marginBottom: '1.8rem',
+                    }}
+                  >
+                    "{t.quote}"
+                  </p>
+                </div>
+                <div>
+                  <div style={{ fontWeight: 800, color: 'white', fontSize: '1.02rem' }}>
+                    {t.author}
+                  </div>
+                  <div style={{ color: '#94a3b8', fontSize: '0.85rem' }}>{t.role}</div>
+                </div>
               </div>
             ))}
           </div>
         </section>
 
-        {/* CTA FINAL */}
+        {/* 8. PREGUNTAS FRECUENTES (Acordeón Interactivo estilo Play Astro) */}
         <section
+          id="faq"
           style={{
-            backgroundColor: '#1e3a8a',
-            color: 'white',
-            padding: '4rem 1.5rem',
-            textAlign: 'center',
+            backgroundColor: '#0c1142',
+            padding: '5.5rem 1.5rem',
+            borderTop: '1px solid rgba(255, 255, 255, 0.06)',
           }}
         >
-          <div style={{ maxWidth: '700px', margin: '0 auto' }}>
-            <h2 style={{ fontSize: '2rem', fontWeight: 900, marginBottom: '1rem' }}>
-              Comienza hoy mismo la transformación administrativa de tu Iglesia
-            </h2>
-            <p style={{ color: '#94a3b8', fontSize: '1.05rem', marginBottom: '2rem' }}>
-              Pruébalo durante 14 días con acceso completo sin costo ni compromiso.
-            </p>
-            <button
-              onClick={() => navigate('/registro-ong')}
-              style={{
-                padding: '1rem 2.5rem',
-                backgroundColor: '#0d9488',
-                color: 'white',
-                border: 'none',
-                borderRadius: '10px',
-                fontWeight: 800,
-                fontSize: '1.05rem',
-                cursor: 'pointer',
-                boxShadow: '0 4px 16px rgba(13, 148, 136, 0.4)',
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '0.6rem',
-              }}
-            >
-              Activar Espacio de Mi Iglesia <Sparkles size={20} />
-            </button>
+          <div style={{ maxWidth: '850px', margin: '0 auto' }}>
+            <div style={{ textAlign: 'center', marginBottom: '3.5rem' }}>
+              <span
+                style={{
+                  color: '#3758f9',
+                  fontWeight: 800,
+                  fontSize: '0.8rem',
+                  letterSpacing: '2px',
+                  textTransform: 'uppercase',
+                }}
+              >
+                RESPUESTAS CLARAS
+              </span>
+              <h2
+                style={{
+                  fontSize: 'clamp(1.8rem, 3vw, 2.5rem)',
+                  fontWeight: 800,
+                  color: 'white',
+                  marginTop: '0.5rem',
+                }}
+              >
+                Preguntas Frecuentes de Administradores
+              </h2>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem' }}>
+              {faqs.map((faq, idx) => (
+                <div
+                  key={idx}
+                  style={{
+                    backgroundColor: '#111746',
+                    borderRadius: '14px',
+                    border: '1px solid rgba(255, 255, 255, 0.08)',
+                    overflow: 'hidden',
+                  }}
+                >
+                  <button
+                    onClick={() => setOpenFaq(openFaq === idx ? null : idx)}
+                    style={{
+                      width: '100%',
+                      padding: '1.4rem 1.6rem',
+                      backgroundColor: 'transparent',
+                      color: 'white',
+                      border: 'none',
+                      textAlign: 'left',
+                      fontWeight: 800,
+                      fontSize: '1.05rem',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                    }}
+                  >
+                    <span style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                      <HelpCircle size={20} color="#5eead4" /> {faq.q}
+                    </span>
+                    {openFaq === idx ? (
+                      <Minus size={20} color="#5eead4" />
+                    ) : (
+                      <Plus size={20} color="#94a3b8" />
+                    )}
+                  </button>
+
+                  {openFaq === idx && (
+                    <div
+                      style={{
+                        padding: '0 1.6rem 1.5rem 3.25rem',
+                        color: '#94a3b8',
+                        fontSize: '0.95rem',
+                        lineHeight: 1.65,
+                      }}
+                    >
+                      {faq.a}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
           </div>
         </section>
       </main>
 
-      {/* Footer */}
+      {/* 9. FOOTER estilo Play Astro */}
       <footer
         style={{
-          backgroundColor: '#0f172a',
+          backgroundColor: '#070b28',
           color: '#94a3b8',
-          padding: '2.5rem 2rem',
-          textAlign: 'center',
-          fontSize: '0.88rem',
+          padding: '4rem 2rem 2rem',
+          borderTop: '1px solid rgba(255, 255, 255, 0.08)',
         }}
       >
         <div
           style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: '0.6rem',
-            marginBottom: '0.75rem',
+            maxWidth: '1200px',
+            margin: '0 auto',
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+            gap: '3rem',
+            marginBottom: '3rem',
           }}
         >
-          <img
-            src="/mateo_logo.png"
-            alt="MATEO ekklesia"
-            style={{
-              height: '32px',
-              width: '32px',
-              objectFit: 'contain',
-              borderRadius: '6px',
-            }}
-          />
-          <span
-            style={{
-              fontWeight: 900,
-              color: '#e2e8f0',
-              letterSpacing: '1px',
-              fontSize: '1.1rem',
-            }}
-          >
-            MATEO <span style={{ color: '#5eead4' }}>ekklesia</span>
-          </span>
+          <div>
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.6rem',
+                marginBottom: '1rem',
+              }}
+            >
+              <img
+                src="/mateo_logo.png"
+                alt="MATEO ekklesia"
+                style={{
+                  height: '36px',
+                  width: '36px',
+                  objectFit: 'contain',
+                  borderRadius: '8px',
+                }}
+              />
+              <span
+                style={{
+                  fontWeight: 900,
+                  color: 'white',
+                  fontSize: '1.2rem',
+                  letterSpacing: '0.5px',
+                }}
+              >
+                MATEO <span style={{ color: '#5eead4' }}>ekklesia</span>
+              </span>
+            </div>
+            <p style={{ fontSize: '0.88rem', lineHeight: 1.6, color: '#94a3b8' }}>
+              Plataforma de Gestión Financiera &amp; Ministerial para Iglesias. Transparencia, orden
+              y buen testimonio.
+            </p>
+          </div>
+
+          <div>
+            <h4
+              style={{
+                color: 'white',
+                fontWeight: 800,
+                fontSize: '1rem',
+                marginBottom: '1.2rem',
+              }}
+            >
+              Navegación
+            </h4>
+            <ul
+              style={{
+                listStyle: 'none',
+                padding: 0,
+                margin: 0,
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '0.65rem',
+                fontSize: '0.88rem',
+              }}
+            >
+              <li>
+                <a href="#inicio" style={{ color: '#94a3b8', textDecoration: 'none' }}>
+                  Inicio
+                </a>
+              </li>
+              <li>
+                <a href="#modulos" style={{ color: '#94a3b8', textDecoration: 'none' }}>
+                  Módulos
+                </a>
+              </li>
+              <li>
+                <a href="#precios" style={{ color: '#94a3b8', textDecoration: 'none' }}>
+                  Planes
+                </a>
+              </li>
+              <li>
+                <a href="#faq" style={{ color: '#94a3b8', textDecoration: 'none' }}>
+                  Preguntas Frecuentes
+                </a>
+              </li>
+            </ul>
+          </div>
+
+          <div>
+            <h4
+              style={{
+                color: 'white',
+                fontWeight: 800,
+                fontSize: '1rem',
+                marginBottom: '1.2rem',
+              }}
+            >
+              Acceso Rápido
+            </h4>
+            <ul
+              style={{
+                listStyle: 'none',
+                padding: 0,
+                margin: 0,
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '0.65rem',
+                fontSize: '0.88rem',
+              }}
+            >
+              <li>
+                <a
+                  onClick={() => navigate('/registro-ong')}
+                  style={{ color: '#94a3b8', textDecoration: 'none', cursor: 'pointer' }}
+                >
+                  Registrar Iglesia (14 Días Gratis)
+                </a>
+              </li>
+              <li>
+                <a
+                  onClick={() => navigate('/login')}
+                  style={{ color: '#94a3b8', textDecoration: 'none', cursor: 'pointer' }}
+                >
+                  Iniciar Sesión
+                </a>
+              </li>
+              <li>
+                <a
+                  onClick={() => navigate('/saas-admin')}
+                  style={{ color: '#94a3b8', textDecoration: 'none', cursor: 'pointer' }}
+                >
+                  Portal SaaS Admin
+                </a>
+              </li>
+            </ul>
+          </div>
         </div>
-        Plataforma de Gestión Financiera &amp; Ministerial para Iglesias ©{' '}
-        {new Date().getFullYear()} — Orden, transparencia y buen testimonio.
+
+        <div
+          style={{
+            borderTop: '1px solid rgba(255, 255, 255, 0.08)',
+            paddingTop: '2rem',
+            textAlign: 'center',
+            fontSize: '0.85rem',
+          }}
+        >
+          MATEO ekklesia © {new Date().getFullYear()} — Todos los derechos reservados.
+        </div>
       </footer>
     </div>
   );
