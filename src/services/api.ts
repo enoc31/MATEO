@@ -2011,14 +2011,38 @@ export const api = {
 
   updateOng: async (id: string, updates: UpdateOngParams): Promise<Ong> => {
     if (!isSimulationMode) {
+      let finalData: Ong;
       const { data, error } = await supabase
         .from('ongs')
         .update(updates)
         .eq('id', id)
         .select()
         .single();
-      if (error) throw error;
-      return data as Ong;
+
+      if (error && (error.message?.includes('column') || error.code === 'PGRST204')) {
+        console.warn(
+          'Aviso de esquema Supabase: Intentando actualización fallback sin tipo_organizacion...',
+          error.message,
+        );
+        const { tipo_organizacion, ...basicUpdates } = updates;
+        const basicRes = await supabase
+          .from('ongs')
+          .update(basicUpdates)
+          .eq('id', id)
+          .select()
+          .single();
+        if (basicRes.error) throw basicRes.error;
+        finalData = {
+          ...basicRes.data,
+          ...(tipo_organizacion ? { tipo_organizacion } : {}),
+        } as Ong;
+      } else if (error) {
+        throw error;
+      } else {
+        finalData = data as Ong;
+      }
+
+      return finalData;
     } else {
       const ongs = JSON.parse(localStorage.getItem('cnbv_ongs') || '[]') as Ong[];
       const idx = ongs.findIndex((o) => o.id === id);
