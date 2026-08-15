@@ -79,30 +79,32 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               ong_id: parsedOngId,
             };
 
-            const { data: insertedData, error: insertError } = await supabase
+            const { data: upsertedData, error: upsertError } = await supabase
               .from('usuarios_perfiles')
-              .insert([newProfile])
+              .upsert(newProfile)
               .select()
               .single();
 
-            if (!insertError && insertedData) {
-              const insertedProfile = insertedData as UserProfile;
+            if (!upsertError && upsertedData) {
+              const insertedProfile = upsertedData as UserProfile;
               setProfile(insertedProfile);
               setAuthError(null);
               // Fetch active ONG for the newly created profile
-              const { data: ongData } = await supabase
-                .from('ongs')
-                .select('nombre, logo_url, tipo_organizacion')
-                .eq('id', insertedProfile.ong_id)
-                .single();
-              if (ongData) {
-                setActiveOng(ongData);
+              if (insertedProfile.ong_id) {
+                const { data: ongData } = await supabase
+                  .from('ongs')
+                  .select('nombre, logo_url, tipo_organizacion')
+                  .eq('id', insertedProfile.ong_id)
+                  .single();
+                if (ongData) {
+                  setActiveOng(ongData);
+                }
               }
               return;
             } else {
-              console.error('Error auto-creating profile:', insertError);
+              console.error('Error auto-creating profile:', upsertError);
               setAuthError(
-                `No se pudo crear el perfil: ${insertError?.message || 'Error desconocido'}`,
+                `No se pudo crear el perfil: ${upsertError?.message || 'Error desconocido'}`,
               );
             }
           } else {
