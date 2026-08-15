@@ -24,7 +24,7 @@ const churchModules = [
     color: '#10b981',
     bg: '#ecfdf5',
     title: 'Diezmos y Ofrendas',
-    desc: 'Registra aportes en USD y Bolívares con conversión a la tasa BCV oficial. Mantén la cuenta clara por feligrés, ministerio y fecha.',
+    desc: 'Registra aportes en la moneda de tu preferencia con conversión automática según la tasa de cambio oficial o personalizada. Mantén la cuenta clara por feligrés, ministerio y fecha.',
   },
   {
     icon: <ClipboardList size={28} />,
@@ -81,7 +81,7 @@ const stepsToUse = [
   {
     num: '1',
     title: 'Registra Diezmos y Ofrendas en Segundos',
-    desc: 'Anota los ingresos en efectivo o transferencia. El sistema calcula automáticamente la equivalencia en Bolívares usando la Tasa Oficial BCV.',
+    desc: 'Anota los ingresos en efectivo o transferencia. El sistema calcula automáticamente la equivalencia entre monedas usando la tasa de cambio registrada.',
     icon: <HeartHandshake size={24} color="#10b981" />,
   },
   {
@@ -104,8 +104,8 @@ const faqs = [
     a: 'Sí, 100%. MATEO ekklesia está diseñado pensando en pastores, tesoreros y líderes de iglesia, no en contadores. La interfaz es intuitiva, didáctica y guiada.',
   },
   {
-    q: '¿Cómo maneja las dos monedas (Dólares y Bolívares)?',
-    a: 'MATEO se sincroniza diariamente con la Tasa Oficial del Banco Central de Venezuela (BCV). Puedes registrar aportes en USD o Bs y el sistema lleva la cuenta exacta sin enredos.',
+    q: '¿Cómo maneja la contabilidad en Multi-moneda?',
+    a: 'MATEO permite registrar aportes y gastos en cualquier divisa (Dólares, Bolívares, Pesos, Euros, etc.), integrando tasas de cambio oficiales y personalizadas para llevar un balance consolidado sin enredos.',
   },
   {
     q: '¿Los datos de mi iglesia están protegidos?',
@@ -351,7 +351,7 @@ export const LandingPage: React.FC = () => {
                 <CheckCircle2 size={16} color="#5eead4" /> Sin tarjeta de crédito
               </span>
               <span style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
-                <CheckCircle2 size={16} color="#5eead4" /> Dólares y Bolívares (Tasa BCV)
+                <CheckCircle2 size={16} color="#5eead4" /> Gestión Multi-moneda automática
               </span>
               <span style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
                 <CheckCircle2 size={16} color="#5eead4" /> Reportes PDF instantáneos

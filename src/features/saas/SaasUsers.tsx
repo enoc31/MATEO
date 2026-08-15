@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { api } from '../../services/api';
 import type { UserRole } from '../../context/AuthContext';
-import { Search, Filter, UserCheck, ShieldAlert, Check, X } from 'lucide-react';
+import { Search, Filter, UserCheck, ShieldAlert, Check, X, UserPlus } from 'lucide-react';
 
 interface UserItem {
   id: string;
@@ -38,6 +38,14 @@ export const SaasUsers: React.FC = () => {
   const [editRole, setEditRole] = useState<UserRole>('coordinador');
   const [editOngId, setEditOngId] = useState('');
   const [submitting, setSubmitting] = useState(false);
+
+  // Create User Modal States
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [newNombre, setNewNombre] = useState('');
+  const [newEmail, setNewEmail] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [newRole, setNewRole] = useState<UserRole>('administrador');
+  const [newOngId, setNewOngId] = useState('');
 
   const loadData = async () => {
     setLoading(true);
@@ -76,7 +84,7 @@ export const SaasUsers: React.FC = () => {
   const handleStartEdit = (user: UserItem) => {
     setIsEditingId(user.id);
     setEditRole(user.rol);
-    setEditOngId(user.ong_id);
+    setEditOngId(user.ong_id || (ongs.length > 0 ? ongs[0].id : ''));
   };
 
   const handleCancelEdit = () => {
@@ -143,23 +151,96 @@ export const SaasUsers: React.FC = () => {
     return matchesSearch && matchesOng && matchesStatus;
   });
 
+  const handleCreateUser = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    setSuccess(null);
+    if (!newEmail.trim() || !newPassword.trim() || !newNombre.trim()) {
+      setError('Por favor completa todos los campos requeridos.');
+      return;
+    }
+    const targetOng = newOngId || (ongs.length > 0 ? ongs[0].id : '');
+    if (!targetOng && newRole !== 'super_admin') {
+      setError('Debes seleccionar una Organización/ONG válida.');
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      await api.adminCreateUser({
+        email: newEmail.trim(),
+        password: newPassword,
+        nombre_completo: newNombre.trim(),
+        rol: newRole,
+        ong_id: targetOng,
+      });
+
+      setSuccess(`Usuario ${newNombre} creado correctamente.`);
+      setShowCreateModal(false);
+      setNewNombre('');
+      setNewEmail('');
+      setNewPassword('');
+      await loadData();
+    } catch (err: any) {
+      setError(err.message || 'Error al crear usuario.');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   return (
     <div>
-      <div style={{ marginBottom: '2rem' }}>
-        <h2
+      <div
+        style={{
+          marginBottom: '2rem',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          flexWrap: 'wrap',
+          gap: '1rem',
+        }}
+      >
+        <div>
+          <h2
+            style={{
+              fontSize: '1.25rem',
+              fontWeight: 800,
+              color: '#1e293b',
+              marginBottom: '0.25rem',
+            }}
+          >
+            Usuarios del SaaS
+          </h2>
+          <p style={{ color: '#64748b', fontSize: '0.8rem' }}>
+            Autoriza nuevos accesos, asigna roles de sistema y gestiona la ONG de cada usuario de
+            forma global.
+          </p>
+        </div>
+
+        <button
+          onClick={() => {
+            setShowCreateModal(true);
+            if (ongs.length > 0 && !newOngId) {
+              setNewOngId(ongs[0].id);
+            }
+          }}
           style={{
-            fontSize: '1.25rem',
-            fontWeight: 800,
-            color: '#1e293b',
-            marginBottom: '0.25rem',
+            backgroundColor: '#0d9488',
+            color: 'white',
+            border: 'none',
+            borderRadius: '8px',
+            padding: '0.6rem 1.2rem',
+            cursor: 'pointer',
+            fontSize: '0.85rem',
+            fontWeight: 700,
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.5rem',
+            boxShadow: '0 2px 4px rgba(13, 148, 136, 0.2)',
           }}
         >
-          Usuarios del SaaS
-        </h2>
-        <p style={{ color: '#64748b', fontSize: '0.8rem' }}>
-          Autoriza nuevos accesos, asigna roles de sistema y gestiona la ONG de cada usuario de
-          forma global.
-        </p>
+          <UserPlus size={16} /> + Nuevo Usuario
+        </button>
       </div>
 
       {error && (
@@ -276,20 +357,16 @@ export const SaasUsers: React.FC = () => {
                 onClick={() => setStatusFilter(status)}
                 style={{
                   padding: '0.55rem 1rem',
+                  backgroundColor: isActive ? '#0d9488' : 'white',
+                  color: isActive ? 'white' : '#475569',
                   border: 'none',
-                  backgroundColor: isActive ? '#f1f5f9' : 'white',
-                  color: isActive ? '#1e293b' : '#64748b',
                   fontSize: '0.8rem',
                   fontWeight: isActive ? 700 : 500,
                   cursor: 'pointer',
-                  borderRight: status !== 'aprobados' ? '1px solid #cbd5e1' : 'none',
+                  textTransform: 'capitalize',
                 }}
               >
-                {status === 'todos'
-                  ? 'Todos'
-                  : status === 'pendientes'
-                    ? 'Pendientes'
-                    : 'Aprobados'}
+                {status}
               </button>
             );
           })}
@@ -348,10 +425,13 @@ export const SaasUsers: React.FC = () => {
               ) : (
                 filteredUsers.map((user) => {
                   const isEditing = isEditingId === user.id;
+                  const matchedOng = ongs.find((o) => o.id === user.ong_id);
                   const displayOng =
                     user.rol === 'super_admin'
                       ? 'No aplica (Super Admin SaaS)'
-                      : user.ongs?.nombre || 'Convención Nacional Bautista';
+                      : user.ongs?.nombre ||
+                        matchedOng?.nombre ||
+                        (user.ong_id ? `ONG (${user.ong_id.slice(0, 8)}...)` : 'Sin ONG asignada');
                   return (
                     <tr key={user.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
                       {/* Name / Email */}
@@ -552,6 +632,279 @@ export const SaasUsers: React.FC = () => {
               )}
             </tbody>
           </table>
+        </div>
+      )}
+
+      {/* Modal de Creación de Usuario */}
+      {showCreateModal && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(15, 23, 42, 0.6)',
+            backdropFilter: 'blur(4px)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 9999,
+            padding: '1rem',
+          }}
+        >
+          <div
+            style={{
+              backgroundColor: 'white',
+              borderRadius: '16px',
+              width: '100%',
+              maxWidth: '520px',
+              padding: '2rem',
+              boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)',
+            }}
+          >
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                marginBottom: '1.5rem',
+              }}
+            >
+              <h3
+                style={{
+                  fontSize: '1.1rem',
+                  fontWeight: 800,
+                  color: '#0f172a',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  margin: 0,
+                }}
+              >
+                <UserPlus size={20} color="#0d9488" /> Crear Nuevo Usuario de Sistema
+              </h3>
+              <button
+                onClick={() => setShowCreateModal(false)}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: '#64748b',
+                  cursor: 'pointer',
+                  padding: '0.2rem',
+                }}
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <form
+              onSubmit={handleCreateUser}
+              style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem' }}
+            >
+              <div>
+                <label
+                  style={{
+                    display: 'block',
+                    fontSize: '0.8rem',
+                    fontWeight: 700,
+                    color: '#334155',
+                    marginBottom: '0.4rem',
+                  }}
+                >
+                  Nombre Completo *
+                </label>
+                <input
+                  type="text"
+                  required
+                  placeholder="Ej: Carlos Mendoza"
+                  value={newNombre}
+                  onChange={(e) => setNewNombre(e.target.value)}
+                  style={{
+                    width: '100%',
+                    padding: '0.6rem 0.8rem',
+                    border: '1px solid #cbd5e1',
+                    borderRadius: '8px',
+                    fontSize: '0.85rem',
+                    outline: 'none',
+                  }}
+                />
+              </div>
+
+              <div>
+                <label
+                  style={{
+                    display: 'block',
+                    fontSize: '0.8rem',
+                    fontWeight: 700,
+                    color: '#334155',
+                    marginBottom: '0.4rem',
+                  }}
+                >
+                  Correo Electrónico *
+                </label>
+                <input
+                  type="email"
+                  required
+                  placeholder="ejemplo@organizacion.com"
+                  value={newEmail}
+                  onChange={(e) => setNewEmail(e.target.value)}
+                  style={{
+                    width: '100%',
+                    padding: '0.6rem 0.8rem',
+                    border: '1px solid #cbd5e1',
+                    borderRadius: '8px',
+                    fontSize: '0.85rem',
+                    outline: 'none',
+                  }}
+                />
+              </div>
+
+              <div>
+                <label
+                  style={{
+                    display: 'block',
+                    fontSize: '0.8rem',
+                    fontWeight: 700,
+                    color: '#334155',
+                    marginBottom: '0.4rem',
+                  }}
+                >
+                  Contraseña Inicial *
+                </label>
+                <input
+                  type="password"
+                  required
+                  placeholder="••••••••"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  style={{
+                    width: '100%',
+                    padding: '0.6rem 0.8rem',
+                    border: '1px solid #cbd5e1',
+                    borderRadius: '8px',
+                    fontSize: '0.85rem',
+                    outline: 'none',
+                  }}
+                />
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                <div>
+                  <label
+                    style={{
+                      display: 'block',
+                      fontSize: '0.8rem',
+                      fontWeight: 700,
+                      color: '#334155',
+                      marginBottom: '0.4rem',
+                    }}
+                  >
+                    Rol de Sistema *
+                  </label>
+                  <select
+                    value={newRole}
+                    onChange={(e) => setNewRole(e.target.value as UserRole)}
+                    style={{
+                      width: '100%',
+                      padding: '0.6rem 0.8rem',
+                      border: '1px solid #cbd5e1',
+                      borderRadius: '8px',
+                      fontSize: '0.85rem',
+                      outline: 'none',
+                      backgroundColor: 'white',
+                    }}
+                  >
+                    <option value="administrador">Administrador de ONG</option>
+                    <option value="coordinador">Coordinador de Campo</option>
+                    <option value="auditor">Auditor de Finanzas</option>
+                    <option value="director">Director de Proyecto</option>
+                    <option value="auxiliar_campo">Auxiliar de Campo</option>
+                    <option value="donante">Donante</option>
+                    <option value="super_admin">Super Admin SaaS</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label
+                    style={{
+                      display: 'block',
+                      fontSize: '0.8rem',
+                      fontWeight: 700,
+                      color: '#334155',
+                      marginBottom: '0.4rem',
+                    }}
+                  >
+                    Organización (ONG) *
+                  </label>
+                  <select
+                    value={newOngId}
+                    onChange={(e) => setNewOngId(e.target.value)}
+                    style={{
+                      width: '100%',
+                      padding: '0.6rem 0.8rem',
+                      border: '1px solid #cbd5e1',
+                      borderRadius: '8px',
+                      fontSize: '0.85rem',
+                      outline: 'none',
+                      backgroundColor: 'white',
+                    }}
+                  >
+                    {ongs.map((o) => (
+                      <option key={o.id} value={o.id}>
+                        {o.nombre}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div
+                style={{
+                  display: 'flex',
+                  justifyContent: 'flex-end',
+                  gap: '0.8rem',
+                  marginTop: '1rem',
+                }}
+              >
+                <button
+                  type="button"
+                  onClick={() => setShowCreateModal(false)}
+                  style={{
+                    padding: '0.6rem 1.2rem',
+                    border: '1px solid #cbd5e1',
+                    borderRadius: '8px',
+                    backgroundColor: 'white',
+                    color: '#475569',
+                    fontSize: '0.85rem',
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                  }}
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  disabled={submitting}
+                  style={{
+                    padding: '0.6rem 1.4rem',
+                    border: 'none',
+                    borderRadius: '8px',
+                    backgroundColor: '#0d9488',
+                    color: 'white',
+                    fontSize: '0.85rem',
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.4rem',
+                  }}
+                >
+                  {submitting ? 'Creando...' : 'Crear Usuario'}
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
       )}
     </div>
