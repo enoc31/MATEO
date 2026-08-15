@@ -149,7 +149,7 @@ export const LandingPage: React.FC = () => {
           left: 0,
           right: 0,
           zIndex: 100,
-          backgroundColor: scrolled ? 'rgba(9, 14, 52, 0.95)' : 'transparent',
+          backgroundColor: scrolled ? '#0b1035' : 'transparent',
           backdropFilter: scrolled ? 'blur(12px)' : 'none',
           borderBottom: scrolled ? '1px solid rgba(255, 255, 255, 0.08)' : '1px solid transparent',
           padding: '1rem 2rem',
@@ -271,7 +271,7 @@ export const LandingPage: React.FC = () => {
           style={{
             position: 'relative',
             padding: '5rem 1.5rem 6rem',
-            background: 'radial-gradient(ellipse at top, #111a62 0%, #090e34 70%)',
+            backgroundColor: '#090e34',
             overflow: 'hidden',
           }}
         >
@@ -988,111 +988,111 @@ export const LandingPage: React.FC = () => {
         </section>
 
         {/* 4. MÓDULOS DEL SISTEMA (Grid 3 Columnas estilo Play Astro Feature Cards) */}
-        <section
-          id="modulos"
-          style={{ padding: '5.5rem 1.5rem', maxWidth: '1200px', margin: '0 auto' }}
-        >
-          <div style={{ textAlign: 'center', marginBottom: '4rem' }}>
-            <span
-              style={{
-                color: '#3758f9',
-                fontWeight: 800,
-                fontSize: '0.8rem',
-                letterSpacing: '2px',
-                textTransform: 'uppercase',
-              }}
-            >
-              HERRAMIENTAS INCLUIDAS
-            </span>
-            <h2
-              style={{
-                fontSize: 'clamp(1.8rem, 3.2vw, 2.6rem)',
-                fontWeight: 800,
-                color: 'white',
-                marginTop: '0.5rem',
-              }}
-            >
-              Todo lo que necesitas para una gestión transparente
-            </h2>
-            <p
-              style={{
-                color: '#94a3b8',
-                fontSize: '1.02rem',
-                maxWidth: '650px',
-                margin: '0.6rem auto 0',
-              }}
-            >
-              Módulos nativos integrados y adaptados al vocabulario eclesial.
-            </p>
-          </div>
-
-          <div
-            style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
-              gap: '1.8rem',
-            }}
-          >
-            {churchModules.map((m, i) => (
-              <div
-                key={i}
+        <section id="modulos" style={{ padding: '5.5rem 1.5rem', backgroundColor: '#101840' }}>
+          <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
+            <div style={{ textAlign: 'center', marginBottom: '4rem' }}>
+              <span
                 style={{
-                  backgroundColor: '#111746',
-                  borderRadius: '16px',
-                  padding: '2rem',
-                  border: '1px solid rgba(255, 255, 255, 0.08)',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: '1rem',
-                  transition: 'transform 0.25s ease, border-color 0.25s ease',
-                }}
-                onMouseEnter={(e) => {
-                  (e.currentTarget as HTMLElement).style.transform = 'translateY(-5px)';
-                  (e.currentTarget as HTMLElement).style.borderColor = '#3758f9';
-                }}
-                onMouseLeave={(e) => {
-                  (e.currentTarget as HTMLElement).style.transform = 'translateY(0)';
-                  (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255, 255, 255, 0.08)';
+                  color: '#3758f9',
+                  fontWeight: 800,
+                  fontSize: '0.8rem',
+                  letterSpacing: '2px',
+                  textTransform: 'uppercase',
                 }}
               >
+                HERRAMIENTAS INCLUIDAS
+              </span>
+              <h2
+                style={{
+                  fontSize: 'clamp(1.8rem, 3.2vw, 2.6rem)',
+                  fontWeight: 800,
+                  color: 'white',
+                  marginTop: '0.5rem',
+                }}
+              >
+                Todo lo que necesitas para una gestión transparente
+              </h2>
+              <p
+                style={{
+                  color: '#94a3b8',
+                  fontSize: '1.02rem',
+                  maxWidth: '650px',
+                  margin: '0.6rem auto 0',
+                }}
+              >
+                Módulos nativos integrados y adaptados al vocabulario eclesial.
+              </p>
+            </div>
+
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
+                gap: '1.8rem',
+              }}
+            >
+              {churchModules.map((m, i) => (
                 <div
+                  key={i}
                   style={{
-                    backgroundColor: m.bg,
-                    color: m.color,
-                    width: '52px',
-                    height: '52px',
-                    borderRadius: '14px',
+                    backgroundColor: '#111746',
+                    borderRadius: '16px',
+                    padding: '2rem',
+                    border: '1px solid rgba(255, 255, 255, 0.08)',
                     display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
+                    flexDirection: 'column',
+                    gap: '1rem',
+                    transition: 'transform 0.25s ease, border-color 0.25s ease',
+                  }}
+                  onMouseEnter={(e) => {
+                    (e.currentTarget as HTMLElement).style.transform = 'translateY(-5px)';
+                    (e.currentTarget as HTMLElement).style.borderColor = '#3758f9';
+                  }}
+                  onMouseLeave={(e) => {
+                    (e.currentTarget as HTMLElement).style.transform = 'translateY(0)';
+                    (e.currentTarget as HTMLElement).style.borderColor =
+                      'rgba(255, 255, 255, 0.08)';
                   }}
                 >
-                  {m.icon}
-                </div>
-                <div>
-                  <h3
+                  <div
                     style={{
-                      fontSize: '1.15rem',
-                      fontWeight: 800,
-                      color: 'white',
-                      marginBottom: '0.4rem',
+                      backgroundColor: m.bg,
+                      color: m.color,
+                      width: '52px',
+                      height: '52px',
+                      borderRadius: '14px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
                     }}
                   >
-                    {m.title}
-                  </h3>
-                  <p
-                    style={{
-                      color: '#94a3b8',
-                      fontSize: '0.9rem',
-                      lineHeight: 1.6,
-                      margin: 0,
-                    }}
-                  >
-                    {m.desc}
-                  </p>
+                    {m.icon}
+                  </div>
+                  <div>
+                    <h3
+                      style={{
+                        fontSize: '1.15rem',
+                        fontWeight: 800,
+                        color: 'white',
+                        marginBottom: '0.4rem',
+                      }}
+                    >
+                      {m.title}
+                    </h3>
+                    <p
+                      style={{
+                        color: '#94a3b8',
+                        fontSize: '0.9rem',
+                        lineHeight: 1.6,
+                        margin: 0,
+                      }}
+                    >
+                      {m.desc}
+                    </p>
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
         </section>
 
