@@ -144,8 +144,10 @@ export const LandingPage: React.FC = () => {
       {/* 1. STICKY NAVBAR estilo Play Astro */}
       <header
         style={{
-          position: 'sticky',
+          position: 'fixed',
           top: 0,
+          left: 0,
+          right: 0,
           zIndex: 100,
           backgroundColor: scrolled ? 'rgba(9, 14, 52, 0.95)' : 'transparent',
           backdropFilter: scrolled ? 'blur(12px)' : 'none',
@@ -262,7 +264,7 @@ export const LandingPage: React.FC = () => {
         </div>
       </header>
 
-      <main>
+      <main style={{ paddingTop: '74px' }}>
         {/* 2. HERO SECTION estilo Play Astro (100% Vectorial, sin fotografías) */}
         <section
           id="inicio"
