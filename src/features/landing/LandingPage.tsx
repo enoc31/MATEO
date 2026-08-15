@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   ArrowRight,
@@ -13,41 +13,15 @@ import {
   Sparkles,
   CheckCircle2,
   HelpCircle,
-  ChevronLeft,
-  ChevronRight,
   Shield,
   Award,
   Star,
   Plus,
   Minus,
+  FileCheck,
+  Layers,
+  Lock,
 } from 'lucide-react';
-
-const heroCarouselSlides = [
-  {
-    image: '/images/hero_congregation.png',
-    badge: '⛪ Congregación & Comunidad',
-    title: 'Una Iglesia Conectada, Transparente y Organizada',
-    subtitle:
-      'Fortalece la comunión de tu iglesia y mantén la trazabilidad transparente de aportes, actividades y membresía.',
-    tagColor: '#5eead4',
-  },
-  {
-    image: '/images/hero_admin_team.png',
-    badge: '💼 Gestión & Liderazgo Ministerial',
-    title: 'Control Administrativo Fluido para tu Equipo de Trabajo',
-    subtitle:
-      'Aprobación de compras con un clic, rendición de caja chica con fotos de recibos y trabajo colaborativo para líderes ministeriales.',
-    tagColor: '#38bdf8',
-  },
-  {
-    image: '/images/hero_finance_dash.png',
-    badge: '📊 Tableros Financieros & Auditoría',
-    title: 'Finanzas Claras, Diezmos y Reportes Multi-moneda Instantáneos',
-    subtitle:
-      'Gráficos de ejecución presupuestaria en tiempo real, conciliación bancaria automática e informes contables impecables.',
-    tagColor: '#c084fc',
-  },
-];
 
 const churchModules = [
   {
@@ -146,23 +120,7 @@ const testimonials = [
 
 export const LandingPage: React.FC = () => {
   const navigate = useNavigate();
-  const [currentSlide, setCurrentSlide] = useState(0);
   const [openFaq, setOpenFaq] = useState<number | null>(0);
-
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentSlide((prev) => (prev + 1) % heroCarouselSlides.length);
-    }, 5000);
-    return () => clearInterval(timer);
-  }, []);
-
-  const handlePrevSlide = () => {
-    setCurrentSlide((prev) => (prev === 0 ? heroCarouselSlides.length - 1 : prev - 1));
-  };
-
-  const handleNextSlide = () => {
-    setCurrentSlide((prev) => (prev + 1) % heroCarouselSlides.length);
-  };
 
   return (
     <div
@@ -293,7 +251,7 @@ export const LandingPage: React.FC = () => {
       </header>
 
       <main>
-        {/* 2. HERO SECTION estilo Play Astro */}
+        {/* 2. HERO SECTION estilo Play Astro (100% Vectorial, sin fotografías) */}
         <section
           id="inicio"
           style={{
@@ -303,7 +261,7 @@ export const LandingPage: React.FC = () => {
             overflow: 'hidden',
           }}
         >
-          {/* SVG Dot Pattern Decorativo Play Astro */}
+          {/* SVG Dot Pattern Decorativo Play Astro (Arriba Derecha) */}
           <div
             style={{
               position: 'absolute',
@@ -465,200 +423,297 @@ export const LandingPage: React.FC = () => {
               </span>
             </div>
 
-            {/* PLAY ASTRO SHOWCASE CONTAINER (Visor Flotante estilo Play Astro) */}
+            {/* PLAY ASTRO VECTOR UI DASHBOARD CONTAINER (MOCKUP 100% VECTORIAL, SIN FOTOS) */}
             <div
               style={{
-                maxWidth: '960px',
+                maxWidth: '920px',
                 margin: '0 auto',
                 backgroundColor: '#111746',
                 borderRadius: '20px',
                 border: '1px solid rgba(255, 255, 255, 0.15)',
-                boxShadow: '0 30px 60px -15px rgba(0, 0, 0, 0.6)',
+                boxShadow: '0 30px 60px -15px rgba(0, 0, 0, 0.7)',
                 overflow: 'hidden',
                 textAlign: 'left',
+                padding: '1.5rem',
               }}
             >
-              {/* Header del Visor */}
+              {/* Header de la ventana estilo terminal/browser */}
               <div
                 style={{
-                  padding: '0.9rem 1.4rem',
-                  backgroundColor: 'rgba(255, 255, 255, 0.04)',
-                  borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
                   display: 'flex',
-                  justifyContent: 'space-between',
                   alignItems: 'center',
+                  justifyContent: 'space-between',
+                  paddingBottom: '1rem',
+                  marginBottom: '1.5rem',
+                  borderBottom: '1px solid rgba(255,255,255,0.08)',
                 }}
               >
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                   <span
                     style={{
-                      width: '10px',
-                      height: '10px',
+                      width: '12px',
+                      height: '12px',
                       borderRadius: '50%',
                       backgroundColor: '#ef4444',
                     }}
                   />
                   <span
                     style={{
-                      width: '10px',
-                      height: '10px',
+                      width: '12px',
+                      height: '12px',
                       borderRadius: '50%',
                       backgroundColor: '#f59e0b',
                     }}
                   />
                   <span
                     style={{
-                      width: '10px',
-                      height: '10px',
+                      width: '12px',
+                      height: '12px',
                       borderRadius: '50%',
                       backgroundColor: '#10b981',
                     }}
                   />
                   <span
                     style={{
-                      fontSize: '0.78rem',
+                      fontSize: '0.8rem',
                       color: '#94a3b8',
-                      marginLeft: '0.5rem',
+                      marginLeft: '0.75rem',
                       fontWeight: 600,
                     }}
                   >
-                    MATEO ekklesia — Plataforma Ministerial
+                    MATEO ekklesia v2.4 — Tablero Principal de Administración
                   </span>
                 </div>
-
                 <span
                   style={{
-                    color: heroCarouselSlides[currentSlide].tagColor,
-                    fontWeight: 800,
-                    fontSize: '0.8rem',
+                    backgroundColor: 'rgba(55,88,249,0.2)',
+                    color: '#60a5fa',
+                    fontSize: '0.75rem',
+                    padding: '0.25rem 0.75rem',
+                    borderRadius: '999px',
+                    fontWeight: 700,
                   }}
                 >
-                  {heroCarouselSlides[currentSlide].badge}
+                  ● SISTEMA ACTIVO
                 </span>
               </div>
 
-              {/* Imagen en Alta Resolución */}
+              {/* Grid de Métricas Vectoriales Pure UI */}
               <div
                 style={{
-                  position: 'relative',
-                  height: '360px',
-                  overflow: 'hidden',
-                  backgroundColor: '#020617',
-                }}
-              >
-                <img
-                  src={heroCarouselSlides[currentSlide].image}
-                  alt={heroCarouselSlides[currentSlide].title}
-                  style={{
-                    width: '100%',
-                    height: '100%',
-                    objectFit: 'cover',
-                    transition: 'all 0.5s ease',
-                  }}
-                />
-
-                {/* Controles de Navegación sobre Imagen */}
-                <button
-                  onClick={handlePrevSlide}
-                  aria-label="Anterior"
-                  style={{
-                    position: 'absolute',
-                    left: '16px',
-                    top: '50%',
-                    transform: 'translateY(-50%)',
-                    width: '40px',
-                    height: '40px',
-                    borderRadius: '50%',
-                    backgroundColor: 'rgba(9, 14, 52, 0.75)',
-                    color: 'white',
-                    border: '1px solid rgba(255, 255, 255, 0.2)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    cursor: 'pointer',
-                    backdropFilter: 'blur(6px)',
-                  }}
-                >
-                  <ChevronLeft size={20} />
-                </button>
-
-                <button
-                  onClick={handleNextSlide}
-                  aria-label="Siguiente"
-                  style={{
-                    position: 'absolute',
-                    right: '16px',
-                    top: '50%',
-                    transform: 'translateY(-50%)',
-                    width: '40px',
-                    height: '40px',
-                    borderRadius: '50%',
-                    backgroundColor: 'rgba(9, 14, 52, 0.75)',
-                    color: 'white',
-                    border: '1px solid rgba(255, 255, 255, 0.2)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    cursor: 'pointer',
-                    backdropFilter: 'blur(6px)',
-                  }}
-                >
-                  <ChevronRight size={20} />
-                </button>
-              </div>
-
-              {/* Pie del Visor */}
-              <div
-                style={{
-                  padding: '1.25rem 1.6rem',
-                  backgroundColor: '#0c1033',
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                  flexWrap: 'wrap',
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
                   gap: '1rem',
+                  marginBottom: '1.5rem',
                 }}
               >
-                <div>
-                  <h4
+                <div
+                  style={{
+                    backgroundColor: 'rgba(255,255,255,0.03)',
+                    padding: '1.2rem',
+                    borderRadius: '14px',
+                    border: '1px solid rgba(255,255,255,0.06)',
+                  }}
+                >
+                  <div
                     style={{
-                      fontSize: '1.1rem',
-                      fontWeight: 800,
-                      margin: '0 0 0.3rem 0',
-                      color: 'white',
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      color: '#94a3b8',
+                      fontSize: '0.8rem',
+                      fontWeight: 600,
+                      marginBottom: '0.5rem',
                     }}
                   >
-                    {heroCarouselSlides[currentSlide].title}
-                  </h4>
-                  <p style={{ fontSize: '0.88rem', color: '#94a3b8', margin: 0, lineHeight: 1.5 }}>
-                    {heroCarouselSlides[currentSlide].subtitle}
-                  </p>
+                    <span>Diezmos &amp; Ofrendas (Mes)</span>
+                    <Wallet size={16} color="#10b981" />
+                  </div>
+                  <div style={{ fontSize: '1.5rem', fontWeight: 900, color: 'white' }}>
+                    $14,850.00
+                  </div>
+                  <div
+                    style={{
+                      fontSize: '0.75rem',
+                      color: '#10b981',
+                      marginTop: '0.25rem',
+                      fontWeight: 600,
+                    }}
+                  >
+                    +12.4% vs mes anterior
+                  </div>
                 </div>
 
-                <div style={{ display: 'flex', gap: '0.4rem' }}>
-                  {heroCarouselSlides.map((_, idx) => (
-                    <button
-                      key={idx}
-                      onClick={() => setCurrentSlide(idx)}
+                <div
+                  style={{
+                    backgroundColor: 'rgba(255,255,255,0.03)',
+                    padding: '1.2rem',
+                    borderRadius: '14px',
+                    border: '1px solid rgba(255,255,255,0.06)',
+                  }}
+                >
+                  <div
+                    style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      color: '#94a3b8',
+                      fontSize: '0.8rem',
+                      fontWeight: 600,
+                      marginBottom: '0.5rem',
+                    }}
+                  >
+                    <span>Ejecución Presupuestaria</span>
+                    <PieChart size={16} color="#3b82f6" />
+                  </div>
+                  <div style={{ fontSize: '1.5rem', fontWeight: 900, color: 'white' }}>84.2%</div>
+                  <div
+                    style={{
+                      fontSize: '0.75rem',
+                      color: '#60a5fa',
+                      marginTop: '0.25rem',
+                      fontWeight: 600,
+                    }}
+                  >
+                    6 de 7 ministerios al día
+                  </div>
+                </div>
+
+                <div
+                  style={{
+                    backgroundColor: 'rgba(255,255,255,0.03)',
+                    padding: '1.2rem',
+                    borderRadius: '14px',
+                    border: '1px solid rgba(255,255,255,0.06)',
+                  }}
+                >
+                  <div
+                    style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      color: '#94a3b8',
+                      fontSize: '0.8rem',
+                      fontWeight: 600,
+                      marginBottom: '0.5rem',
+                    }}
+                  >
+                    <span>Tasa Oficial BCV</span>
+                    <Scale size={16} color="#f59e0b" />
+                  </div>
+                  <div style={{ fontSize: '1.5rem', fontWeight: 900, color: 'white' }}>
+                    Bs. 36.42 / $
+                  </div>
+                  <div
+                    style={{
+                      fontSize: '0.75rem',
+                      color: '#f59e0b',
+                      marginTop: '0.25rem',
+                      fontWeight: 600,
+                    }}
+                  >
+                    Sincronizado automáticamente
+                  </div>
+                </div>
+              </div>
+
+              {/* Trazabilidad y Aprobaciones Vectoriales */}
+              <div
+                style={{
+                  backgroundColor: 'rgba(0,0,0,0.2)',
+                  padding: '1.2rem',
+                  borderRadius: '14px',
+                  border: '1px solid rgba(255,255,255,0.05)',
+                }}
+              >
+                <div
+                  style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    marginBottom: '0.8rem',
+                  }}
+                >
+                  <span style={{ fontSize: '0.88rem', fontWeight: 800, color: 'white' }}>
+                    Últimas Solicitudes &amp; Aprobaciones Ministeriales
+                  </span>
+                  <span
+                    style={{
+                      fontSize: '0.75rem',
+                      color: '#5eead4',
+                      fontWeight: 700,
+                      cursor: 'pointer',
+                    }}
+                  >
+                    Ver trazabilidad completa &rarr;
+                  </span>
+                </div>
+                <div
+                  style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '0.6rem',
+                    fontSize: '0.82rem',
+                  }}
+                >
+                  <div
+                    style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      backgroundColor: 'rgba(255,255,255,0.02)',
+                      padding: '0.65rem 0.85rem',
+                      borderRadius: '8px',
+                    }}
+                  >
+                    <span style={{ color: '#e2e8f0', fontWeight: 600 }}>
+                      #REQ-402 — Viáticos Retiro de Jóvenes
+                    </span>
+                    <span style={{ color: '#94a3b8' }}>$350.00</span>
+                    <span
                       style={{
-                        width: currentSlide === idx ? '24px' : '8px',
-                        height: '8px',
-                        borderRadius: '4px',
-                        backgroundColor:
-                          currentSlide === idx ? '#3758f9' : 'rgba(255, 255, 255, 0.25)',
-                        border: 'none',
-                        cursor: 'pointer',
-                        transition: 'all 0.3s ease',
+                        backgroundColor: 'rgba(16,185,129,0.15)',
+                        color: '#10b981',
+                        padding: '0.2rem 0.6rem',
+                        borderRadius: '6px',
+                        fontWeight: 700,
+                        fontSize: '0.72rem',
                       }}
-                    />
-                  ))}
+                    >
+                      APROBADO POR TESORERÍA
+                    </span>
+                  </div>
+                  <div
+                    style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      backgroundColor: 'rgba(255,255,255,0.02)',
+                      padding: '0.65rem 0.85rem',
+                      borderRadius: '8px',
+                    }}
+                  >
+                    <span style={{ color: '#e2e8f0', fontWeight: 600 }}>
+                      #REQ-401 — Mantenimiento Sonido Templo
+                    </span>
+                    <span style={{ color: '#94a3b8' }}>$120.00</span>
+                    <span
+                      style={{
+                        backgroundColor: 'rgba(16,185,129,0.15)',
+                        color: '#10b981',
+                        padding: '0.2rem 0.6rem',
+                        borderRadius: '6px',
+                        fontWeight: 700,
+                        fontSize: '0.72rem',
+                      }}
+                    >
+                      APROBADO POR TESORERÍA
+                    </span>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
         </section>
 
-        {/* 3. SECCIÓN SOBRE LA PLATAFORMA (Layout 2 Columnas estilo Play Astro) */}
+        {/* 3. SECCIÓN SOBRE LA PLATAFORMA (Pure Vector Layout a 2 Columnas estilo Play Astro) */}
         <section
           style={{
             backgroundColor: '#0c1142',
@@ -675,37 +730,152 @@ export const LandingPage: React.FC = () => {
                 alignItems: 'center',
               }}
             >
-              {/* Imagen con tarjeta flotante Play Astro */}
+              {/* Bloque Ilustrativo Vectorial */}
               <div style={{ position: 'relative' }}>
-                <img
-                  src="/images/hero_admin_team.png"
-                  alt="Equipo Pastoral y Administrativo"
+                <div
                   style={{
-                    width: '100%',
-                    borderRadius: '18px',
-                    boxShadow: '0 20px 40px rgba(0,0,0,0.4)',
+                    backgroundColor: '#111746',
+                    borderRadius: '20px',
+                    padding: '2.5rem 2rem',
                     border: '1px solid rgba(255, 255, 255, 0.1)',
+                    boxShadow: '0 20px 40px rgba(0,0,0,0.4)',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '1.5rem',
                   }}
-                />
+                >
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '1rem',
+                      paddingBottom: '1.2rem',
+                      borderBottom: '1px solid rgba(255,255,255,0.08)',
+                    }}
+                  >
+                    <div
+                      style={{
+                        width: '48px',
+                        height: '48px',
+                        borderRadius: '12px',
+                        backgroundColor: 'rgba(55, 88, 249, 0.2)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        color: '#60a5fa',
+                      }}
+                    >
+                      <Layers size={26} />
+                    </div>
+                    <div>
+                      <h4
+                        style={{
+                          fontSize: '1.1rem',
+                          fontWeight: 800,
+                          color: 'white',
+                          margin: '0 0 0.2rem 0',
+                        }}
+                      >
+                        Arquitectura Multi-Moneda
+                      </h4>
+                      <p style={{ fontSize: '0.82rem', color: '#94a3b8', margin: 0 }}>
+                        Conversión automática al registrar diezmos en USD o Bolívares.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '1rem',
+                      paddingBottom: '1.2rem',
+                      borderBottom: '1px solid rgba(255,255,255,0.08)',
+                    }}
+                  >
+                    <div
+                      style={{
+                        width: '48px',
+                        height: '48px',
+                        borderRadius: '12px',
+                        backgroundColor: 'rgba(16, 185, 129, 0.2)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        color: '#10b981',
+                      }}
+                    >
+                      <FileCheck size={26} />
+                    </div>
+                    <div>
+                      <h4
+                        style={{
+                          fontSize: '1.1rem',
+                          fontWeight: 800,
+                          color: 'white',
+                          margin: '0 0 0.2rem 0',
+                        }}
+                      >
+                        Firma &amp; Aprobaciones
+                      </h4>
+                      <p style={{ fontSize: '0.82rem', color: '#94a3b8', margin: 0 }}>
+                        Flujo seguro de 3 pasos: Solicitud, Verificación y Aprobación.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                    <div
+                      style={{
+                        width: '48px',
+                        height: '48px',
+                        borderRadius: '12px',
+                        backgroundColor: 'rgba(245, 158, 11, 0.2)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        color: '#f59e0b',
+                      }}
+                    >
+                      <Lock size={26} />
+                    </div>
+                    <div>
+                      <h4
+                        style={{
+                          fontSize: '1.1rem',
+                          fontWeight: 800,
+                          color: 'white',
+                          margin: '0 0 0.2rem 0',
+                        }}
+                      >
+                        Auditoría Inmutable
+                      </h4>
+                      <p style={{ fontSize: '0.82rem', color: '#94a3b8', margin: 0 }}>
+                        Registro inalterable de todos los ingresos, egresos y comprobantes.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
                 <div
                   style={{
                     position: 'absolute',
-                    bottom: '-20px',
-                    right: '-20px',
+                    bottom: '-18px',
+                    right: '-18px',
                     backgroundColor: '#3758f9',
                     color: 'white',
-                    padding: '1.2rem 1.5rem',
+                    padding: '1.1rem 1.4rem',
                     borderRadius: '16px',
                     boxShadow: '0 10px 25px rgba(55, 88, 249, 0.4)',
                     display: 'flex',
                     alignItems: 'center',
-                    gap: '1rem',
+                    gap: '0.85rem',
                   }}
                 >
-                  <Award size={36} />
+                  <Award size={32} />
                   <div>
-                    <div style={{ fontSize: '1.2rem', fontWeight: 900 }}>100% Auditabilidad</div>
-                    <div style={{ fontSize: '0.78rem', opacity: 0.9 }}>
+                    <div style={{ fontSize: '1.1rem', fontWeight: 900 }}>100% Auditabilidad</div>
+                    <div style={{ fontSize: '0.75rem', opacity: 0.9 }}>
                       Trazabilidad &amp; Cuentas Claras
                     </div>
                   </div>
