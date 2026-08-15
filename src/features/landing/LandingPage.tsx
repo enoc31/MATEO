@@ -63,7 +63,7 @@ const churchModules = [
     icon: <PieChart size={26} />,
     color: '#0ea5e9',
     bg: 'rgba(14, 165, 233, 0.12)',
-    title: 'Presupuesto Parroquial',
+    title: 'Presupuesto Ministerial',
     desc: 'Monitorea en tiempo real el cumplimiento presupuestario por departamento ministerial y fondo asignado.',
   },
   {
