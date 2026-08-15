@@ -1615,7 +1615,7 @@ export const api = {
     if (!isSimulationMode) {
       const { data, error } = await supabase
         .from('usuarios_perfiles')
-        .select('*, ongs(nombre)')
+        .select('*, ongs(id, nombre, logo_url)')
         .order('nombre_completo');
       if (error) throw error;
       return data as UserWithOng[];
@@ -1649,15 +1649,25 @@ export const api = {
           updated_at: new Date().toISOString(),
         })
         .eq('id', userId)
-        .select()
-        .single();
-      if (error) throw error;
+        .select('*, ongs(id, nombre, logo_url)');
+
+      if (error) {
+        throw new Error(`Error en Supabase al actualizar usuario: ${error.message}`);
+      }
+
+      if (!data || data.length === 0) {
+        throw new Error(
+          'No se pudo actualizar el perfil en la base de datos debido a las políticas RLS. Por favor ejecuta el script de migración fix_user_update_rls.sql en el SQL Editor de Supabase.',
+        );
+      }
+
+      const updatedUser = data[0] as UserWithOng;
 
       // Si se aprobó el usuario, enviar correo de notificación usando la Edge Function
-      if (updates.aprobado === true && data) {
+      if (updates.aprobado === true && updatedUser) {
         supabase.functions
           .invoke('notify-approval', {
-            body: { email: data.email, nombre: data.nombre_completo },
+            body: { email: updatedUser.email, nombre: updatedUser.nombre_completo },
           })
           .then(({ error: fnErr }) => {
             if (fnErr) console.error('Error invoking notify-approval Edge Function:', fnErr);
@@ -1665,7 +1675,7 @@ export const api = {
           .catch((e) => console.error('Exception calling notify-approval Edge Function:', e));
       }
 
-      return data as UserWithOng;
+      return updatedUser;
     } else {
       const profiles = JSON.parse(localStorage.getItem('cnbv_profiles') || '{}') as Record<
         string,
@@ -1696,6 +1706,7 @@ export const api = {
     password: string;
     nombre_completo: string;
     rol: UserRole;
+    ong_id?: string;
   }): Promise<{ user?: unknown; message?: string; error?: string }> => {
     if (!isSimulationMode) {
       // Import { supabase } from '../supabaseClient'
