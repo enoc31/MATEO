@@ -22,106 +22,98 @@ export interface MenuItemConfig {
   roles: string[];
 }
 
-export const menuItems: MenuItemConfig[] = [
-  {
-    id: 'dashboard',
-    label: 'Tableros',
-    iconName: 'LayoutDashboard',
-    color: '#714B67', // Odoo purple
-    roles: ['administrador', 'auditor', 'director', 'donante'],
-  },
-  {
-    id: 'incomes',
-    label: 'Diezmos y Ofrendas',
-    iconName: 'Wallet',
-    color: '#10B981', // Emerald
-    roles: ['administrador', 'director', 'auditor'],
-  },
-  {
-    id: 'requisitions',
-    label: 'Solicitudes',
-    iconName: 'ClipboardList',
-    color: '#3B82F6', // Indigo/Blue
-    roles: ['administrador', 'coordinador', 'director'],
-  },
-  {
-    id: 'field-entry',
-    label: 'Gastos',
-    iconName: 'Camera',
-    color: '#8B5CF6', // Purple/Violet
-    roles: ['administrador', 'coordinador', 'director'],
-  },
-  {
-    id: 'beneficiaries',
-    label: 'Miembros',
-    iconName: 'UserCheck',
-    color: '#EC4899', // Pink/Rose
-    roles: ['administrador', 'coordinador', 'director', 'auxiliar_campo'],
-  },
-  {
-    id: 'jornadas',
-    label: 'Actividades',
-    iconName: 'CalendarDays',
-    color: '#F59E0B', // Orange/Amber
-    roles: ['administrador', 'director', 'coordinador'],
-  },
-  {
-    id: 'reconciliation',
-    label: 'Conciliación',
-    iconName: 'Scale',
-    color: '#14B8A6', // Teal
-    roles: ['administrador'],
-  },
-  {
-    id: 'audit',
-    label: 'Auditoría',
-    iconName: 'Search',
-    color: '#06B6D4', // Cyan
-    roles: ['administrador', 'auditor'],
-  },
-  {
-    id: 'budgets',
-    label: 'Presupuestos',
-    iconName: 'PieChart',
-    color: '#EF4444', // Red/Rose
-    roles: ['administrador', 'auditor', 'director'],
-  },
-  {
-    id: 'tasas',
-    label: 'Tasas BCV',
-    iconName: 'ArrowRightLeft',
-    color: '#64748B', // Slate/Grey
-    roles: ['administrador', 'director'],
-  },
-  {
-    id: 'catalog',
-    label: 'Catálogo Ministerial',
-    iconName: 'Tag',
-    color: '#059669', // Emerald green
-    roles: ['administrador', 'director'],
-  },
-  {
-    id: 'users',
-    label: 'Usuarios',
-    iconName: 'Users',
-    color: '#1E3A8A', // Navy/Blue
-    roles: ['administrador'],
-  },
-  {
-    id: 'saas-ongs',
-    label: 'Gestión de Iglesias',
-    iconName: 'Building',
-    color: '#0D9488', // Teal
-    roles: ['super_admin'],
-  },
-  {
-    id: 'saas-users',
-    label: 'Usuarios del SaaS',
-    iconName: 'Users',
-    color: '#1E3A8A', // Navy
-    roles: ['super_admin'],
-  },
-];
+export const getMenuItems = (tipoOrganizacion?: 'ong' | 'ekklesia'): MenuItemConfig[] => {
+  const isEkklesia = tipoOrganizacion === 'ekklesia';
+
+  return [
+    {
+      id: 'dashboard',
+      label: 'Tableros',
+      iconName: 'LayoutDashboard',
+      color: '#714B67', // Odoo purple
+      roles: ['administrador', 'auditor', 'director', 'donante'],
+    },
+    {
+      id: 'incomes',
+      label: isEkklesia ? 'Diezmos y Ofrendas' : 'Donaciones e Ingresos',
+      iconName: 'Wallet',
+      color: '#10B981', // Emerald
+      roles: ['administrador', 'director', 'auditor'],
+    },
+    {
+      id: 'requisitions',
+      label: isEkklesia ? 'Solicitudes Ministeriales' : 'Solicitudes de Gasto',
+      iconName: 'ClipboardList',
+      color: '#3B82F6', // Indigo/Blue
+      roles: ['administrador', 'coordinador', 'director'],
+    },
+    {
+      id: 'field-entry',
+      label: isEkklesia ? 'Comprobantes y Fondos' : 'Comprobantes y Gastos',
+      iconName: 'Camera',
+      color: '#8B5CF6', // Purple/Violet
+      roles: ['administrador', 'coordinador', 'director'],
+    },
+    {
+      id: 'beneficiaries',
+      label: isEkklesia ? 'Miembros y Fieles' : 'Beneficiarios',
+      iconName: 'UserCheck',
+      color: '#EC4899', // Pink/Rose
+      roles: ['administrador', 'coordinador', 'director', 'auxiliar_campo'],
+    },
+    {
+      id: 'jornadas',
+      label: isEkklesia ? 'Actividades Eclesiásticas' : 'Jornadas de Campo',
+      iconName: 'CalendarDays',
+      color: '#F59E0B', // Orange/Amber
+      roles: ['administrador', 'director', 'coordinador'],
+    },
+    {
+      id: 'reconciliation',
+      label: 'Conciliación Bancaria',
+      iconName: 'Scale',
+      color: '#14B8A6', // Teal
+      roles: ['administrador'],
+    },
+    {
+      id: 'audit',
+      label: 'Auditoría de Fondos',
+      iconName: 'Search',
+      color: '#06B6D4', // Cyan
+      roles: ['administrador', 'auditor'],
+    },
+    {
+      id: 'budgets',
+      label: isEkklesia ? 'Presupuesto Parroquial' : 'Presupuestos y Proyectos',
+      iconName: 'PieChart',
+      color: '#EF4444', // Red/Rose
+      roles: ['administrador', 'auditor', 'director'],
+    },
+    {
+      id: 'tasas',
+      label: 'Tasas BCV',
+      iconName: 'ArrowRightLeft',
+      color: '#64748B', // Slate/Grey
+      roles: ['administrador', 'director'],
+    },
+    {
+      id: 'catalog',
+      label: isEkklesia ? 'Catálogo Ministerial' : 'Catálogo de Partidas',
+      iconName: 'Tag',
+      color: '#059669', // Emerald green
+      roles: ['administrador', 'director'],
+    },
+    {
+      id: 'users',
+      label: 'Gestión de Usuarios',
+      iconName: 'Users',
+      color: '#1E3A8A', // Navy/Blue
+      roles: ['administrador'],
+    },
+  ];
+};
+
+export const menuItems: MenuItemConfig[] = getMenuItems('ong');
 
 export const getMenuIcon = (name: string, size = 20) => {
   const props = { size, strokeWidth: 1.5 };

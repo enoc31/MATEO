@@ -5,7 +5,7 @@ import { api, isSimulationMode } from '../services/api';
 import { InternalControlModal } from './InternalControlModal';
 import { getCaracasDateParts } from '../utils/formatters';
 import { useLocation, NavLink, useNavigate } from 'react-router-dom';
-import { menuItems, getMenuIcon } from './menuConfig';
+import { getMenuItems, getMenuIcon } from './menuConfig';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -63,7 +63,9 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
     setIsCosoModalOpen(false);
   };
 
-  const visibleMenuItems = menuItems.filter((item) => item.roles.includes(role));
+  const visibleMenuItems = getMenuItems(activeOng?.tipo_organizacion).filter((item) =>
+    item.roles.includes(role),
+  );
 
   const handleResetSimulation = () => {
     if (

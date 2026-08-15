@@ -1,7 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { menuItems, getMenuIcon } from './menuConfig';
+import { getMenuItems, getMenuIcon } from './menuConfig';
 import { LogOut, Building } from 'lucide-react';
 
 export const AppsDashboard: React.FC = () => {
@@ -10,8 +10,10 @@ export const AppsDashboard: React.FC = () => {
 
   if (!profile) return null;
 
-  // Filter apps permitted for current user role
-  const visibleApps = menuItems.filter((app) => app.roles.includes(profile.rol));
+  // Filter apps permitted for current user role and organization type
+  const visibleApps = getMenuItems(activeOng?.tipo_organizacion).filter((app) =>
+    app.roles.includes(profile.rol),
+  );
 
   return (
     <div
