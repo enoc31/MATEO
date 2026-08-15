@@ -183,6 +183,7 @@ export interface CreateOngParams {
   sitio_web?: string | null;
   plan?: 'trial' | 'pro' | 'enterprise';
   estado?: 'trial' | 'activo' | 'suspendido';
+  tipo_organizacion?: 'ong' | 'ekklesia';
 }
 
 export interface Ong {
@@ -196,6 +197,7 @@ export interface Ong {
   sitio_web?: string | null;
   plan?: 'trial' | 'pro' | 'enterprise';
   estado?: 'trial' | 'activo' | 'suspendido';
+  tipo_organizacion?: 'ong' | 'ekklesia';
   trial_ends_at?: string | null;
   created_at?: string;
 }
@@ -1952,6 +1954,7 @@ export const api = {
       sitio_web: params.sitio_web || null,
       plan: params.plan || 'trial',
       estado: params.estado || 'trial',
+      tipo_organizacion: params.tipo_organizacion || 'ong',
       trial_ends_at: fourteenDaysLater,
     };
 

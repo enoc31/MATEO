@@ -26,7 +26,11 @@ export interface UserProfile {
 interface AuthContextType {
   user: User | null;
   profile: UserProfile | null;
-  activeOng: { nombre: string; logo_url: string | null } | null;
+  activeOng: {
+    nombre: string;
+    logo_url: string | null;
+    tipo_organizacion?: 'ong' | 'ekklesia';
+  } | null;
   loading: boolean;
   authError: string | null;
   logout: () => Promise<void>;
@@ -38,9 +42,11 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [activeOng, setActiveOng] = useState<{ nombre: string; logo_url: string | null } | null>(
-    null,
-  );
+  const [activeOng, setActiveOng] = useState<{
+    nombre: string;
+    logo_url: string | null;
+    tipo_organizacion?: 'ong' | 'ekklesia';
+  } | null>(null);
   const [loading, setLoading] = useState(true);
   const [authError, setAuthError] = useState<string | null>(null);
 
@@ -86,7 +92,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               // Fetch active ONG for the newly created profile
               const { data: ongData } = await supabase
                 .from('ongs')
-                .select('nombre, logo_url')
+                .select('nombre, logo_url, tipo_organizacion')
                 .eq('id', insertedProfile.ong_id)
                 .single();
               if (ongData) {
@@ -163,7 +169,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           if (profileData.ong_id) {
             const { data: ongData, error: ongError } = await supabase
               .from('ongs')
-              .select('nombre, logo_url')
+              .select('nombre, logo_url, tipo_organizacion')
               .eq('id', profileData.ong_id)
               .single();
             if (!ongError && ongData) {

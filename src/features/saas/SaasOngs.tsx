@@ -17,6 +17,7 @@ export const SaasOngs: React.FC = () => {
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [newName, setNewName] = useState('');
   const [newLogoUrl, setNewLogoUrl] = useState('');
+  const [tipoOrganizacion, setTipoOrganizacion] = useState<'ong' | 'ekklesia'>('ong');
 
   // Admin user fields
   const [adminNombre, setAdminNombre] = useState('');
@@ -51,7 +52,11 @@ export const SaasOngs: React.FC = () => {
     setSuccess(null);
 
     try {
-      const createdOng = await api.createOng(newName.trim(), newLogoUrl.trim() || null);
+      const createdOng = await api.createOng({
+        nombre: newName.trim(),
+        logoUrl: newLogoUrl.trim() || null,
+        tipo_organizacion: tipoOrganizacion,
+      });
 
       // Si se ingresaron datos para el Administrador inicial, crearlo de inmediato
       if (adminEmail.trim() && adminPassword.trim()) {
@@ -249,6 +254,36 @@ export const SaasOngs: React.FC = () => {
                 }}
               />
             </div>
+            <div>
+              <label
+                style={{
+                  display: 'block',
+                  fontSize: '0.75rem',
+                  fontWeight: 700,
+                  color: '#64748b',
+                  marginBottom: '0.4rem',
+                }}
+              >
+                Tipo de Organización
+              </label>
+              <select
+                value={tipoOrganizacion}
+                onChange={(e) => setTipoOrganizacion(e.target.value as 'ong' | 'ekklesia')}
+                style={{
+                  width: '100%',
+                  padding: '0.6rem',
+                  border: '1px solid #cbd5e1',
+                  borderRadius: '6px',
+                  fontSize: '0.85rem',
+                  backgroundColor: 'white',
+                  fontWeight: 600,
+                }}
+              >
+                <option value="ong">🏢 ONG Humanitaria (MATEO ONG)</option>
+                <option value="ekklesia">⛪ Iglesia / Religiosa (MATEO Ekklesia)</option>
+              </select>
+            </div>
+
             <div>
               <label
                 style={{

@@ -181,6 +181,7 @@ export const CreateOngWizard: React.FC = () => {
     setLoading(true);
     try {
       // 1. Crear la ONG con datos legales y trial de 14 días
+      const isEkklesiaDomain = window.location.hostname.includes('ekklesia');
       const newOng = await api.createOng({
         nombre: nombreOng.trim(),
         rif_identificacion: rif.trim(),
@@ -190,6 +191,7 @@ export const CreateOngWizard: React.FC = () => {
         sitio_web: sitioWeb.trim() || null,
         plan: 'trial',
         estado: 'trial',
+        tipo_organizacion: isEkklesiaDomain ? 'ekklesia' : 'ong',
       });
 
       // 2. Registrar la cuenta del Administrador en Supabase Auth

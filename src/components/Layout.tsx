@@ -171,7 +171,11 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
             title="Volver al Panel"
           >
             <span className="header-title">{activeOng?.nombre || 'MATEO'}</span>
-            <span className="header-subtitle">Gestión Humanitaria</span>
+            <span className="header-subtitle">
+              {activeOng?.tipo_organizacion === 'ekklesia'
+                ? 'Gestión Eclesiástica'
+                : 'Gestión Humanitaria'}
+            </span>
           </div>
         </div>
 
