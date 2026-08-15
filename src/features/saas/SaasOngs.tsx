@@ -13,6 +13,7 @@ export const SaasOngs: React.FC = () => {
   const [isEditingId, setIsEditingId] = useState<string | null>(null);
   const [editName, setEditName] = useState('');
   const [editLogoUrl, setEditLogoUrl] = useState('');
+  const [editTipoOrganizacion, setEditTipoOrganizacion] = useState<'ong' | 'ekklesia'>('ong');
 
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [newName, setNewName] = useState('');
@@ -99,12 +100,14 @@ export const SaasOngs: React.FC = () => {
     setIsEditingId(ong.id);
     setEditName(ong.nombre);
     setEditLogoUrl(ong.logo_url || '');
+    setEditTipoOrganizacion(ong.tipo_organizacion || 'ong');
   };
 
   const handleCancelEdit = () => {
     setIsEditingId(null);
     setEditName('');
     setEditLogoUrl('');
+    setEditTipoOrganizacion('ong');
   };
 
   const handleUpdateOng = async (id: string) => {
@@ -118,6 +121,7 @@ export const SaasOngs: React.FC = () => {
       await api.updateOng(id, {
         nombre: editName.trim(),
         logo_url: editLogoUrl.trim() || null,
+        tipo_organizacion: editTipoOrganizacion,
       });
       setSuccess('Organización actualizada exitosamente.');
       setIsEditingId(null);
@@ -512,19 +516,38 @@ export const SaasOngs: React.FC = () => {
                         }}
                       />
                     ) : (
-                      <h4
-                        style={{
-                          fontSize: '0.9rem',
-                          fontWeight: 700,
-                          color: '#1e293b',
-                          margin: 0,
-                          whiteSpace: 'nowrap',
-                          overflow: 'hidden',
-                          textOverflow: 'ellipsis',
-                        }}
-                      >
-                        {ong.nombre}
-                      </h4>
+                      <>
+                        <h4
+                          style={{
+                            fontSize: '0.9rem',
+                            fontWeight: 700,
+                            color: '#1e293b',
+                            margin: 0,
+                            whiteSpace: 'nowrap',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                          }}
+                        >
+                          {ong.nombre}
+                        </h4>
+                        <span
+                          style={{
+                            display: 'inline-block',
+                            fontSize: '0.65rem',
+                            fontWeight: 700,
+                            padding: '2px 8px',
+                            borderRadius: '12px',
+                            marginTop: '4px',
+                            backgroundColor:
+                              ong.tipo_organizacion === 'ekklesia' ? '#f3e8ff' : '#ccfbf1',
+                            color: ong.tipo_organizacion === 'ekklesia' ? '#6b21a8' : '#0f766e',
+                          }}
+                        >
+                          {ong.tipo_organizacion === 'ekklesia'
+                            ? '⛪ Iglesia / Ekklesia'
+                            : '🏢 ONG Humanitaria'}
+                        </span>
+                      </>
                     )}
                     <span
                       style={{
@@ -541,30 +564,64 @@ export const SaasOngs: React.FC = () => {
 
                 {/* Edit Fields (expanded when editing) */}
                 {isEditing && (
-                  <div>
-                    <label
-                      style={{
-                        display: 'block',
-                        fontSize: '0.7rem',
-                        fontWeight: 700,
-                        color: '#64748b',
-                        marginBottom: '0.2rem',
-                      }}
-                    >
-                      URL del Logo
-                    </label>
-                    <input
-                      type="url"
-                      value={editLogoUrl}
-                      onChange={(e) => setEditLogoUrl(e.target.value)}
-                      style={{
-                        width: '100%',
-                        padding: '0.4rem',
-                        border: '1px solid #cbd5e1',
-                        borderRadius: '4px',
-                        fontSize: '0.8rem',
-                      }}
-                    />
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
+                    <div>
+                      <label
+                        style={{
+                          display: 'block',
+                          fontSize: '0.7rem',
+                          fontWeight: 700,
+                          color: '#64748b',
+                          marginBottom: '0.2rem',
+                        }}
+                      >
+                        Tipo de Organización
+                      </label>
+                      <select
+                        value={editTipoOrganizacion}
+                        onChange={(e) =>
+                          setEditTipoOrganizacion(e.target.value as 'ong' | 'ekklesia')
+                        }
+                        style={{
+                          width: '100%',
+                          padding: '0.4rem',
+                          border: '1px solid #cbd5e1',
+                          borderRadius: '4px',
+                          fontSize: '0.8rem',
+                          backgroundColor: 'white',
+                          fontWeight: 600,
+                        }}
+                      >
+                        <option value="ong">🏢 ONG Humanitaria (MATEO ONG)</option>
+                        <option value="ekklesia">⛪ Iglesia / Religiosa (MATEO Ekklesia)</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label
+                        style={{
+                          display: 'block',
+                          fontSize: '0.7rem',
+                          fontWeight: 700,
+                          color: '#64748b',
+                          marginBottom: '0.2rem',
+                        }}
+                      >
+                        URL del Logo
+                      </label>
+                      <input
+                        type="url"
+                        value={editLogoUrl}
+                        onChange={(e) => setEditLogoUrl(e.target.value)}
+                        style={{
+                          width: '100%',
+                          padding: '0.4rem',
+                          border: '1px solid #cbd5e1',
+                          borderRadius: '4px',
+                          fontSize: '0.8rem',
+                        }}
+                      />
+                    </div>
                   </div>
                 )}
 
