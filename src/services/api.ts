@@ -186,6 +186,17 @@ export interface CreateOngParams {
   tipo_organizacion?: 'ong' | 'ekklesia';
 }
 
+export interface UpdateOngParams {
+  nombre?: string;
+  logo_url?: string | null;
+  tipo_organizacion?: 'ong' | 'ekklesia';
+  rif_identificacion?: string | null;
+  pais?: string | null;
+  telefono?: string | null;
+  direccion?: string | null;
+  sitio_web?: string | null;
+}
+
 export interface Ong {
   id: string;
   nombre: string;
@@ -1998,10 +2009,7 @@ export const api = {
     }
   },
 
-  updateOng: async (
-    id: string,
-    updates: { nombre?: string; logo_url?: string | null },
-  ): Promise<Ong> => {
+  updateOng: async (id: string, updates: UpdateOngParams): Promise<Ong> => {
     if (!isSimulationMode) {
       const { data, error } = await supabase
         .from('ongs')

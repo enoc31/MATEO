@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { api } from '../../services/api';
-import type { Ong } from '../../services/api';
+import type { Ong, UpdateOngParams } from '../../services/api';
 import { Plus, Edit2, Check, X, Image as ImageIcon } from 'lucide-react';
 
 export const SaasOngs: React.FC = () => {
@@ -118,11 +118,12 @@ export const SaasOngs: React.FC = () => {
     setSuccess(null);
 
     try {
-      await api.updateOng(id, {
+      const updatePayload: UpdateOngParams = {
         nombre: editName.trim(),
         logo_url: editLogoUrl.trim() || null,
         tipo_organizacion: editTipoOrganizacion,
-      });
+      };
+      await api.updateOng(id, updatePayload);
       setSuccess('Organización actualizada exitosamente.');
       setIsEditingId(null);
       await fetchOngs();
