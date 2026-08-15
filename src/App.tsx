@@ -784,6 +784,8 @@ function App() {
                 </PublicRoute>
               }
             />
+            <Route path="/register" element={<Navigate to="/registro-ong" replace />} />
+            <Route path="/wizard" element={<Navigate to="/registro-ong" replace />} />
             <Route
               path="/aceptar-invitacion"
               element={
