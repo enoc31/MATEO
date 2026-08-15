@@ -168,7 +168,7 @@ export const LandingPage: React.FC = () => {
 
         <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
           <button
-            onClick={() => navigate('/register')}
+            onClick={() => navigate('/registro-ong')}
             style={{
               padding: '0.6rem 1.2rem',
               backgroundColor: '#f1f5f9',
@@ -296,7 +296,7 @@ export const LandingPage: React.FC = () => {
               }}
             >
               <button
-                onClick={() => navigate('/register')}
+                onClick={() => navigate('/registro-ong')}
                 style={{
                   padding: '0.95rem 2.2rem',
                   backgroundColor: '#0d9488',
@@ -668,7 +668,7 @@ export const LandingPage: React.FC = () => {
               Pruébalo durante 14 días con acceso completo sin costo ni compromiso.
             </p>
             <button
-              onClick={() => navigate('/register')}
+              onClick={() => navigate('/registro-ong')}
               style={{
                 padding: '1rem 2.5rem',
                 backgroundColor: '#0d9488',
