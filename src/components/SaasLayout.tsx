@@ -25,7 +25,7 @@ export const SaasLayout: React.FC<SaasLayoutProps> = ({ children }) => {
     },
     {
       id: 'ongs',
-      label: 'Gestión de ONGs',
+      label: 'ONGs e Iglesias',
       path: '/saas-admin/ongs',
       icon: <Building size={20} strokeWidth={1.5} />,
     },
