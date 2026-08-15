@@ -122,9 +122,20 @@ export const LandingPage: React.FC = () => {
   const navigate = useNavigate();
   const [openFaq, setOpenFaq] = useState<number | null>(0);
   const [scrolled, setScrolled] = useState(false);
+  const [activeSection, setActiveSection] = useState('inicio');
+  const [hoveredLink, setHoveredLink] = useState<string | null>(null);
+  const [hoveredBtn, setHoveredBtn] = useState<string | null>(null);
 
   const handleScroll = useCallback(() => {
     setScrolled(window.scrollY > 50);
+    const sections = ['faq', 'precios', 'modulos', 'inicio'];
+    for (const id of sections) {
+      const el = document.getElementById(id);
+      if (el && el.getBoundingClientRect().top <= 200) {
+        setActiveSection(id);
+        break;
+      }
+    }
   }, []);
 
   useEffect(() => {
@@ -203,59 +214,72 @@ export const LandingPage: React.FC = () => {
               fontWeight: 600,
             }}
           >
-            <a
-              href="#inicio"
-              style={{ color: '#e2e8f0', textDecoration: 'none', transition: 'color 0.2s' }}
-            >
-              Inicio
-            </a>
-            <a
-              href="#modulos"
-              style={{ color: '#94a3b8', textDecoration: 'none', transition: 'color 0.2s' }}
-            >
-              Módulos
-            </a>
-            <a
-              href="#precios"
-              style={{ color: '#94a3b8', textDecoration: 'none', transition: 'color 0.2s' }}
-            >
-              Planes
-            </a>
-            <a
-              href="#faq"
-              style={{ color: '#94a3b8', textDecoration: 'none', transition: 'color 0.2s' }}
-            >
-              Preguntas
-            </a>
+            {[
+              { id: 'inicio', label: 'Inicio' },
+              { id: 'modulos', label: 'Módulos' },
+              { id: 'precios', label: 'Planes' },
+              { id: 'faq', label: 'Preguntas' },
+            ].map((link) => {
+              const isActive = activeSection === link.id;
+              const isHovered = hoveredLink === link.id;
+              return (
+                <a
+                  key={link.id}
+                  href={`#${link.id}`}
+                  onMouseEnter={() => setHoveredLink(link.id)}
+                  onMouseLeave={() => setHoveredLink(null)}
+                  style={{
+                    color: isActive ? '#3758f9' : isHovered ? '#e2e8f0' : '#94a3b8',
+                    textDecoration: 'none',
+                    transition: 'color 0.25s ease',
+                    position: 'relative',
+                    paddingBottom: '0.25rem',
+                    borderBottom: isActive ? '2px solid #3758f9' : '2px solid transparent',
+                  }}
+                >
+                  {link.label}
+                </a>
+              );
+            })}
           </nav>
 
           {/* Botones Header */}
           <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
             <button
               onClick={() => navigate('/login')}
+              onMouseEnter={() => setHoveredBtn('login')}
+              onMouseLeave={() => setHoveredBtn(null)}
               style={{
                 backgroundColor: 'transparent',
-                color: '#e2e8f0',
+                color: hoveredBtn === 'login' ? 'white' : '#e2e8f0',
                 border: 'none',
                 fontWeight: 700,
                 fontSize: '0.9rem',
                 cursor: 'pointer',
+                transition: 'color 0.25s ease',
               }}
             >
               Iniciar Sesión
             </button>
             <button
               onClick={() => navigate('/registro-ong')}
+              onMouseEnter={() => setHoveredBtn('register')}
+              onMouseLeave={() => setHoveredBtn(null)}
               style={{
                 padding: '0.65rem 1.4rem',
-                backgroundColor: '#3758f9', // Play Astro signature blue button
+                backgroundColor: hoveredBtn === 'register' ? '#2a47d4' : '#3758f9',
                 color: 'white',
                 border: 'none',
                 borderRadius: '8px',
                 fontWeight: 700,
                 fontSize: '0.9rem',
                 cursor: 'pointer',
-                boxShadow: '0 4px 14px rgba(55, 88, 249, 0.4)',
+                boxShadow:
+                  hoveredBtn === 'register'
+                    ? '0 8px 24px rgba(55, 88, 249, 0.55)'
+                    : '0 4px 14px rgba(55, 88, 249, 0.4)',
+                transform: hoveredBtn === 'register' ? 'translateY(-2px)' : 'translateY(0)',
+                transition: 'all 0.25s ease',
               }}
             >
               Registrar Iglesia
