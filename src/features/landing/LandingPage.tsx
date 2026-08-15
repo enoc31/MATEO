@@ -801,6 +801,261 @@ export const LandingPage: React.FC = () => {
           </div>
         </section>
 
+        {/* SECCIÓN DE PLANES Y MEMBRESÍAS */}
+        <section
+          style={{
+            backgroundColor: '#f8fafc',
+            padding: '4.5rem 1.5rem',
+            borderBottom: '1px solid #e2e8f0',
+          }}
+        >
+          <div style={{ maxWidth: '1100px', margin: '0 auto' }}>
+            <div style={{ textAlign: 'center', marginBottom: '3.5rem' }}>
+              <span
+                style={{
+                  display: 'inline-block',
+                  backgroundColor: '#eff6ff',
+                  color: '#1e3a8a',
+                  fontWeight: 800,
+                  fontSize: '0.75rem',
+                  letterSpacing: '2px',
+                  textTransform: 'uppercase',
+                  padding: '0.35rem 1rem',
+                  borderRadius: '999px',
+                  marginBottom: '0.75rem',
+                }}
+              >
+                Inversión Transparente
+              </span>
+              <h2
+                style={{
+                  fontSize: 'clamp(1.75rem, 3.2vw, 2.4rem)',
+                  fontWeight: 800,
+                  color: '#0f172a',
+                  lineHeight: 1.2,
+                }}
+              >
+                Planes diseñados para cada etapa de tu Iglesia
+              </h2>
+              <p
+                style={{
+                  color: '#64748b',
+                  fontSize: '1rem',
+                  maxWidth: '600px',
+                  margin: '0.5rem auto 0',
+                }}
+              >
+                Comienza con 14 días gratis sin compromisos ni tarjetas de crédito.
+              </p>
+            </div>
+
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+                gap: '2rem',
+                alignItems: 'stretch',
+              }}
+            >
+              {/* Plan Trial 14 Días */}
+              <div
+                style={{
+                  backgroundColor: 'white',
+                  borderRadius: '18px',
+                  padding: '2.2rem 1.8rem',
+                  border: '2px solid #0d9488',
+                  boxShadow: '0 12px 30px rgba(13, 148, 136, 0.12)',
+                  position: 'relative',
+                  display: 'flex',
+                  flexDirection: 'column',
+                }}
+              >
+                <span
+                  style={{
+                    position: 'absolute',
+                    top: '-14px',
+                    right: '20px',
+                    backgroundColor: '#0d9488',
+                    color: 'white',
+                    fontWeight: 800,
+                    fontSize: '0.72rem',
+                    padding: '0.25rem 0.85rem',
+                    borderRadius: '999px',
+                    letterSpacing: '0.5px',
+                  }}
+                >
+                  RECOMENDADO PARA EMPEZAR
+                </span>
+                <h3
+                  style={{
+                    fontSize: '1.25rem',
+                    fontWeight: 800,
+                    color: '#0f172a',
+                    margin: '0 0 0.5rem 0',
+                  }}
+                >
+                  Prueba Gratuita
+                </h3>
+                <p
+                  style={{
+                    color: '#64748b',
+                    fontSize: '0.88rem',
+                    margin: '0 0 1.5rem 0',
+                    lineHeight: 1.5,
+                  }}
+                >
+                  Ideal para evaluar todas las funciones con tu equipo pastoral durante 14 días.
+                </p>
+                <div
+                  style={{
+                    fontSize: '2.5rem',
+                    fontWeight: 900,
+                    color: '#0f172a',
+                    marginBottom: '1.5rem',
+                  }}
+                >
+                  $0{' '}
+                  <span style={{ fontSize: '0.9rem', color: '#64748b', fontWeight: 600 }}>
+                    / 14 días
+                  </span>
+                </div>
+                <ul
+                  style={{
+                    listStyle: 'none',
+                    padding: 0,
+                    margin: '0 0 2rem 0',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '0.75rem',
+                    fontSize: '0.9rem',
+                    color: '#334155',
+                  }}
+                >
+                  <li style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <CheckCircle2 size={18} color="#0d9488" /> Acceso Completo a Todos los Módulos
+                  </li>
+                  <li style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <CheckCircle2 size={18} color="#0d9488" /> Diezmos, Ofrendas y Solicitudes
+                  </li>
+                  <li style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <CheckCircle2 size={18} color="#0d9488" /> Usuarios Ilimitados para el Equipo
+                  </li>
+                  <li style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <CheckCircle2 size={18} color="#0d9488" /> Reportes Financieros en PDF
+                  </li>
+                </ul>
+                <button
+                  onClick={() => navigate('/registro-ong')}
+                  style={{
+                    marginTop: 'auto',
+                    width: '100%',
+                    padding: '0.9rem',
+                    backgroundColor: '#0d9488',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '10px',
+                    fontWeight: 800,
+                    fontSize: '0.95rem',
+                    cursor: 'pointer',
+                    boxShadow: '0 4px 12px rgba(13, 148, 136, 0.3)',
+                  }}
+                >
+                  Iniciar Prueba Gratis Ahora
+                </button>
+              </div>
+
+              {/* Plan Ekklesia Estándar */}
+              <div
+                style={{
+                  backgroundColor: 'white',
+                  borderRadius: '18px',
+                  padding: '2.2rem 1.8rem',
+                  border: '1px solid #e2e8f0',
+                  boxShadow: '0 4px 14px rgba(0,0,0,0.03)',
+                  display: 'flex',
+                  flexDirection: 'column',
+                }}
+              >
+                <h3
+                  style={{
+                    fontSize: '1.25rem',
+                    fontWeight: 800,
+                    color: '#0f172a',
+                    margin: '0 0 0.5rem 0',
+                  }}
+                >
+                  Congregación Estándar
+                </h3>
+                <p
+                  style={{
+                    color: '#64748b',
+                    fontSize: '0.88rem',
+                    margin: '0 0 1.5rem 0',
+                    lineHeight: 1.5,
+                  }}
+                >
+                  Para congregaciones locales que buscan mantener su administración al día.
+                </p>
+                <div
+                  style={{
+                    fontSize: '2.5rem',
+                    fontWeight: 900,
+                    color: '#0f172a',
+                    marginBottom: '1.5rem',
+                  }}
+                >
+                  SaaS{' '}
+                  <span style={{ fontSize: '0.9rem', color: '#64748b', fontWeight: 600 }}>
+                    / suscripción
+                  </span>
+                </div>
+                <ul
+                  style={{
+                    listStyle: 'none',
+                    padding: 0,
+                    margin: '0 0 2rem 0',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '0.75rem',
+                    fontSize: '0.9rem',
+                    color: '#334155',
+                  }}
+                >
+                  <li style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <CheckCircle2 size={18} color="#1e3a8a" /> Todo lo incluido en el Plan Trial
+                  </li>
+                  <li style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <CheckCircle2 size={18} color="#1e3a8a" /> Conciliación Bancaria Automática
+                  </li>
+                  <li style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <CheckCircle2 size={18} color="#1e3a8a" /> Historial de Auditoría Permanente
+                  </li>
+                  <li style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <CheckCircle2 size={18} color="#1e3a8a" /> Soporte Técnico Dedicado
+                  </li>
+                </ul>
+                <button
+                  onClick={() => navigate('/registro-ong')}
+                  style={{
+                    marginTop: 'auto',
+                    width: '100%',
+                    padding: '0.9rem',
+                    backgroundColor: '#1e3a8a',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '10px',
+                    fontWeight: 800,
+                    fontSize: '0.95rem',
+                    cursor: 'pointer',
+                  }}
+                >
+                  Solicitar Información de Registro
+                </button>
+              </div>
+            </div>
+          </div>
+        </section>
+
         {/* PREGUNTAS FRECUENTES (DIDÁCTICA PARA ADMINISTRADORES) */}
         <section style={{ padding: '4.5rem 1.5rem', maxWidth: '850px', margin: '0 auto' }}>
           <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
