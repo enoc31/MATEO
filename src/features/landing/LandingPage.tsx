@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   ArrowRight,
@@ -121,6 +121,16 @@ const testimonials = [
 export const LandingPage: React.FC = () => {
   const navigate = useNavigate();
   const [openFaq, setOpenFaq] = useState<number | null>(0);
+  const [scrolled, setScrolled] = useState(false);
+
+  const handleScroll = useCallback(() => {
+    setScrolled(window.scrollY > 50);
+  }, []);
+
+  useEffect(() => {
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [handleScroll]);
 
   return (
     <div
@@ -137,10 +147,12 @@ export const LandingPage: React.FC = () => {
           position: 'sticky',
           top: 0,
           zIndex: 100,
-          backgroundColor: 'rgba(9, 14, 52, 0.85)',
-          backdropFilter: 'blur(12px)',
-          borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
+          backgroundColor: scrolled ? 'rgba(9, 14, 52, 0.95)' : 'transparent',
+          backdropFilter: scrolled ? 'blur(12px)' : 'none',
+          borderBottom: scrolled ? '1px solid rgba(255, 255, 255, 0.08)' : '1px solid transparent',
           padding: '1rem 2rem',
+          transition:
+            'background-color 0.3s ease, backdrop-filter 0.3s ease, border-bottom 0.3s ease',
         }}
       >
         <div
