@@ -250,13 +250,12 @@ export const LandingPage: React.FC = () => {
 
       {/* Main Content */}
       <main style={{ flex: 1 }}>
-        {/* HERO SECTION DIDÁCTICO */}
+        {/* HERO BANNER PRINCIPAL CON VISOR DE CARRUSEL INTEGRADO */}
         <section
           style={{
             background: 'linear-gradient(135deg, #1e3a8a 0%, #0f172a 100%)',
             color: 'white',
-            padding: '4.5rem 1.5rem 5rem',
-            textAlign: 'center',
+            padding: '3.5rem 1.5rem 4.5rem',
             position: 'relative',
             overflow: 'hidden',
           }}
@@ -268,249 +267,206 @@ export const LandingPage: React.FC = () => {
               top: '-10%',
               left: '50%',
               transform: 'translateX(-50%)',
-              width: '600px',
-              height: '400px',
-              background: 'radial-gradient(circle, rgba(13, 148, 136, 0.25) 0%, transparent 70%)',
+              width: '800px',
+              height: '500px',
+              background: 'radial-gradient(circle, rgba(13, 148, 136, 0.22) 0%, transparent 70%)',
               pointerEvents: 'none',
             }}
           />
 
-          <div style={{ maxWidth: '840px', margin: '0 auto', position: 'relative', zIndex: 1 }}>
-            <span
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '0.5rem',
-                backgroundColor: 'rgba(255, 255, 255, 0.12)',
-                border: '1px solid rgba(255, 255, 255, 0.2)',
-                color: '#5eead4',
-                fontWeight: 700,
-                fontSize: '0.82rem',
-                padding: '0.4rem 1.1rem',
-                borderRadius: '999px',
-                marginBottom: '1.5rem',
-              }}
-            >
-              <Sparkles size={16} /> Diseñado específicamente para Pastores, Tesoreros y Consejos
-            </span>
-
-            <h1
-              style={{
-                fontSize: 'clamp(2rem, 4.5vw, 3.4rem)',
-                fontWeight: 900,
-                lineHeight: 1.2,
-                marginBottom: '1.25rem',
-                letterSpacing: '-0.5px',
-              }}
-            >
-              La administración de tu Iglesia,{' '}
-              <span
-                style={{
-                  background: 'linear-gradient(90deg, #5eead4, #38bdf8)',
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent',
-                }}
-              >
-                fácil, transparente y en orden
-              </span>
-            </h1>
-
-            <p
-              style={{
-                fontSize: '1.15rem',
-                color: '#94a3b8',
-                lineHeight: 1.6,
-                marginBottom: '2.5rem',
-                maxWidth: '720px',
-                margin: '0 auto 2.5rem auto',
-              }}
-            >
-              Olvídate del desorden en cuadernos o hojas de cálculo complejas. MATEO ekklesia es la
-              plataforma que te ayuda a registrar diezmos, controlar presupuestos ministeriales,
-              gestionar actividades y presentar cuentas claras a tu congregación.
-            </p>
-
-            {/* CTAs */}
-            <div
-              style={{
-                display: 'flex',
-                justifyContent: 'center',
-                gap: '1rem',
-                flexWrap: 'wrap',
-                marginBottom: '2.5rem',
-              }}
-            >
-              <button
-                onClick={() => navigate('/registro-ong')}
-                style={{
-                  padding: '0.95rem 2.2rem',
-                  backgroundColor: '#0d9488',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '10px',
-                  fontWeight: 800,
-                  fontSize: '1rem',
-                  cursor: 'pointer',
-                  boxShadow: '0 4px 14px rgba(13, 148, 136, 0.4)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.6rem',
-                }}
-              >
-                Registrar Mi Iglesia (14 Días Gratis) <Sparkles size={18} />
-              </button>
-
-              <button
-                onClick={() => navigate('/login')}
-                style={{
-                  padding: '0.95rem 2rem',
-                  backgroundColor: 'rgba(255,255,255,0.08)',
-                  color: 'white',
-                  border: '1px solid rgba(255,255,255,0.25)',
-                  borderRadius: '10px',
-                  fontWeight: 700,
-                  fontSize: '1rem',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.5rem',
-                }}
-              >
-                Ingresar al Sistema <ArrowRight size={18} />
-              </button>
-            </div>
-
-            {/* Píldoras de confianza */}
-            <div
-              style={{
-                display: 'flex',
-                justifyContent: 'center',
-                gap: '1.5rem',
-                flexWrap: 'wrap',
-                fontSize: '0.85rem',
-                color: '#cbd5e1',
-                fontWeight: 600,
-              }}
-            >
-              <span style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
-                <CheckCircle2 size={16} color="#5eead4" /> Sin tarjeta de crédito
-              </span>
-              <span style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
-                <CheckCircle2 size={16} color="#5eead4" /> Gestión Multi-moneda automática
-              </span>
-              <span style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
-                <CheckCircle2 size={16} color="#5eead4" /> Reportes PDF instantáneos
-              </span>
-            </div>
-          </div>
-        </section>
-
-        {/* CARROUSEL DE PRESENTACIÓN HIGH-RES */}
-        <section
-          style={{
-            padding: '0 1.5rem',
-            marginTop: '-2.5rem',
-            position: 'relative',
-            zIndex: 10,
-          }}
-        >
           <div
             style={{
-              maxWidth: '1100px',
+              maxWidth: '1200px',
               margin: '0 auto',
-              backgroundColor: '#0f172a',
-              borderRadius: '24px',
-              overflow: 'hidden',
-              boxShadow: '0 25px 50px -12px rgba(15, 23, 42, 0.4)',
-              border: '1px solid rgba(255, 255, 255, 0.12)',
+              position: 'relative',
+              zIndex: 1,
             }}
           >
             <div
               style={{
                 display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))',
+                gap: '3rem',
                 alignItems: 'center',
-                minHeight: '440px',
               }}
             >
-              {/* Texto explicativo del Slide */}
-              <div style={{ padding: '3rem 2.5rem', color: 'white' }}>
+              {/* Columna Izquierda: Mensaje Principal y CTAs */}
+              <div>
                 <span
                   style={{
                     display: 'inline-flex',
                     alignItems: 'center',
-                    gap: '0.4rem',
-                    backgroundColor: 'rgba(255, 255, 255, 0.08)',
-                    color: heroCarouselSlides[currentSlide].tagColor,
-                    fontWeight: 800,
+                    gap: '0.5rem',
+                    backgroundColor: 'rgba(255, 255, 255, 0.12)',
+                    border: '1px solid rgba(255, 255, 255, 0.2)',
+                    color: '#5eead4',
+                    fontWeight: 700,
                     fontSize: '0.82rem',
-                    padding: '0.4rem 1rem',
+                    padding: '0.4rem 1.1rem',
                     borderRadius: '999px',
                     marginBottom: '1.25rem',
-                    border: '1px solid rgba(255, 255, 255, 0.15)',
                   }}
                 >
-                  {heroCarouselSlides[currentSlide].badge}
+                  <Sparkles size={16} /> Diseñado específicamente para Pastores, Tesoreros y
+                  Consejos
                 </span>
 
-                <h3
+                <h1
                   style={{
-                    fontSize: 'clamp(1.5rem, 2.5vw, 2.1rem)',
+                    fontSize: 'clamp(2rem, 3.8vw, 3.2rem)',
                     fontWeight: 900,
-                    lineHeight: 1.25,
-                    marginBottom: '1rem',
-                    color: '#f8fafc',
+                    lineHeight: 1.2,
+                    marginBottom: '1.25rem',
                     letterSpacing: '-0.5px',
                   }}
                 >
-                  {heroCarouselSlides[currentSlide].title}
-                </h3>
+                  La administración de tu Iglesia,{' '}
+                  <span
+                    style={{
+                      background: 'linear-gradient(90deg, #5eead4, #38bdf8)',
+                      WebkitBackgroundClip: 'text',
+                      WebkitTextFillColor: 'transparent',
+                    }}
+                  >
+                    fácil, transparente y en orden
+                  </span>
+                </h1>
 
                 <p
                   style={{
+                    fontSize: '1.08rem',
                     color: '#94a3b8',
-                    fontSize: '1.02rem',
                     lineHeight: 1.6,
-                    marginBottom: '2.2rem',
+                    marginBottom: '2rem',
                   }}
                 >
-                  {heroCarouselSlides[currentSlide].subtitle}
+                  Olvídate del desorden en cuadernos o hojas de cálculo complejas. MATEO ekklesia te
+                  ayuda a registrar diezmos, controlar presupuestos ministeriales, gestionar
+                  actividades y presentar cuentas claras a tu congregación.
                 </p>
 
-                {/* Controles de Navegación del Carrusel */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem' }}>
+                {/* CTAs */}
+                <div
+                  style={{
+                    display: 'flex',
+                    gap: '1rem',
+                    flexWrap: 'wrap',
+                    marginBottom: '2rem',
+                  }}
+                >
                   <button
-                    onClick={handlePrevSlide}
-                    aria-label="Anterior"
+                    onClick={() => navigate('/registro-ong')}
                     style={{
-                      width: '42px',
-                      height: '42px',
-                      borderRadius: '50%',
-                      backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                      padding: '0.95rem 2.2rem',
+                      backgroundColor: '#0d9488',
                       color: 'white',
-                      border: '1px solid rgba(255, 255, 255, 0.2)',
+                      border: 'none',
+                      borderRadius: '10px',
+                      fontWeight: 800,
+                      fontSize: '1rem',
+                      cursor: 'pointer',
+                      boxShadow: '0 4px 14px rgba(13, 148, 136, 0.4)',
                       display: 'flex',
                       alignItems: 'center',
-                      justifyContent: 'center',
-                      cursor: 'pointer',
-                      transition: 'all 0.2s ease',
+                      gap: '0.6rem',
                     }}
                   >
-                    <ChevronLeft size={20} />
+                    Registrar Mi Iglesia (14 Días Gratis) <Sparkles size={18} />
                   </button>
 
-                  <div style={{ display: 'flex', gap: '0.5rem' }}>
+                  <button
+                    onClick={() => navigate('/login')}
+                    style={{
+                      padding: '0.95rem 1.8rem',
+                      backgroundColor: 'rgba(255,255,255,0.08)',
+                      color: 'white',
+                      border: '1px solid rgba(255,255,255,0.25)',
+                      borderRadius: '10px',
+                      fontWeight: 700,
+                      fontSize: '1rem',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.5rem',
+                    }}
+                  >
+                    Ingresar al Sistema <ArrowRight size={18} />
+                  </button>
+                </div>
+
+                {/* Píldoras de confianza */}
+                <div
+                  style={{
+                    display: 'flex',
+                    gap: '1.25rem',
+                    flexWrap: 'wrap',
+                    fontSize: '0.85rem',
+                    color: '#cbd5e1',
+                    fontWeight: 600,
+                  }}
+                >
+                  <span style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                    <CheckCircle2 size={16} color="#5eead4" /> Sin tarjeta de crédito
+                  </span>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                    <CheckCircle2 size={16} color="#5eead4" /> Multi-moneda automática
+                  </span>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                    <CheckCircle2 size={16} color="#5eead4" /> Reportes PDF instantáneos
+                  </span>
+                </div>
+              </div>
+
+              {/* Columna Derecha: Visor del Carrusel Integrado */}
+              <div
+                style={{
+                  backgroundColor: 'rgba(15, 23, 42, 0.75)',
+                  backdropFilter: 'blur(12px)',
+                  borderRadius: '20px',
+                  border: '1px solid rgba(255, 255, 255, 0.15)',
+                  overflow: 'hidden',
+                  boxShadow: '0 20px 40px rgba(0, 0, 0, 0.35)',
+                  position: 'relative',
+                  display: 'flex',
+                  flexDirection: 'column',
+                }}
+              >
+                {/* Cabecera del Carrusel Integrado */}
+                <div
+                  style={{
+                    padding: '0.9rem 1.25rem',
+                    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                    borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                  }}
+                >
+                  <span
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '0.4rem',
+                      color: heroCarouselSlides[currentSlide].tagColor,
+                      fontWeight: 800,
+                      fontSize: '0.82rem',
+                    }}
+                  >
+                    {heroCarouselSlides[currentSlide].badge}
+                  </span>
+
+                  {/* Indicadores de Puntos */}
+                  <div style={{ display: 'flex', gap: '0.4rem' }}>
                     {heroCarouselSlides.map((_, idx) => (
                       <button
                         key={idx}
                         onClick={() => setCurrentSlide(idx)}
-                        aria-label={`Slide ${idx + 1}`}
                         style={{
-                          width: currentSlide === idx ? '28px' : '10px',
-                          height: '10px',
-                          borderRadius: '5px',
+                          width: currentSlide === idx ? '22px' : '8px',
+                          height: '8px',
+                          borderRadius: '4px',
                           backgroundColor:
-                            currentSlide === idx ? '#0d9488' : 'rgba(255, 255, 255, 0.25)',
+                            currentSlide === idx ? '#0d9488' : 'rgba(255, 255, 255, 0.3)',
                           border: 'none',
                           cursor: 'pointer',
                           transition: 'all 0.3s ease',
@@ -518,62 +474,96 @@ export const LandingPage: React.FC = () => {
                       />
                     ))}
                   </div>
+                </div>
 
-                  <button
-                    onClick={handleNextSlide}
-                    aria-label="Siguiente"
+                {/* Contenedor de Imagen de Alta Resolución */}
+                <div
+                  style={{
+                    position: 'relative',
+                    height: '310px',
+                    overflow: 'hidden',
+                    backgroundColor: '#020617',
+                  }}
+                >
+                  <img
+                    src={heroCarouselSlides[currentSlide].image}
+                    alt={heroCarouselSlides[currentSlide].title}
                     style={{
-                      width: '42px',
-                      height: '42px',
+                      width: '100%',
+                      height: '100%',
+                      objectFit: 'cover',
+                      transition: 'all 0.5s ease-in-out',
+                    }}
+                  />
+
+                  {/* Flechas de Navegación sobre la Imagen */}
+                  <button
+                    onClick={handlePrevSlide}
+                    aria-label="Anterior"
+                    style={{
+                      position: 'absolute',
+                      left: '12px',
+                      top: '50%',
+                      transform: 'translateY(-50%)',
+                      width: '36px',
+                      height: '36px',
                       borderRadius: '50%',
-                      backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                      backgroundColor: 'rgba(15, 23, 42, 0.7)',
                       color: 'white',
                       border: '1px solid rgba(255, 255, 255, 0.2)',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
                       cursor: 'pointer',
-                      transition: 'all 0.2s ease',
+                      backdropFilter: 'blur(4px)',
                     }}
                   >
-                    <ChevronRight size={20} />
+                    <ChevronLeft size={18} />
+                  </button>
+
+                  <button
+                    onClick={handleNextSlide}
+                    aria-label="Siguiente"
+                    style={{
+                      position: 'absolute',
+                      right: '12px',
+                      top: '50%',
+                      transform: 'translateY(-50%)',
+                      width: '36px',
+                      height: '36px',
+                      borderRadius: '50%',
+                      backgroundColor: 'rgba(15, 23, 42, 0.7)',
+                      color: 'white',
+                      border: '1px solid rgba(255, 255, 255, 0.2)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      cursor: 'pointer',
+                      backdropFilter: 'blur(4px)',
+                    }}
+                  >
+                    <ChevronRight size={18} />
                   </button>
                 </div>
-              </div>
 
-              {/* Imagen en Alta Resolución */}
-              <div
-                style={{
-                  position: 'relative',
-                  height: '100%',
-                  minHeight: '340px',
-                  overflow: 'hidden',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  backgroundColor: '#020617',
-                }}
-              >
-                <img
-                  src={heroCarouselSlides[currentSlide].image}
-                  alt={heroCarouselSlides[currentSlide].title}
-                  style={{
-                    width: '100%',
-                    height: '100%',
-                    maxHeight: '440px',
-                    objectFit: 'cover',
-                    transition: 'all 0.5s ease-in-out',
-                  }}
-                />
+                {/* Pie del Slide Integrado */}
                 <div
-                  style={{
-                    position: 'absolute',
-                    inset: 0,
-                    background:
-                      'linear-gradient(to right, #0f172a 0%, transparent 15%, transparent 85%, #0f172a 100%)',
-                    pointerEvents: 'none',
-                  }}
-                />
+                  style={{ padding: '1.2rem 1.4rem', backgroundColor: 'rgba(15, 23, 42, 0.95)' }}
+                >
+                  <h4
+                    style={{
+                      fontSize: '1.05rem',
+                      fontWeight: 800,
+                      margin: '0 0 0.35rem 0',
+                      color: '#f8fafc',
+                    }}
+                  >
+                    {heroCarouselSlides[currentSlide].title}
+                  </h4>
+                  <p style={{ fontSize: '0.85rem', color: '#94a3b8', margin: 0, lineHeight: 1.5 }}>
+                    {heroCarouselSlides[currentSlide].subtitle}
+                  </p>
+                </div>
               </div>
             </div>
           </div>
