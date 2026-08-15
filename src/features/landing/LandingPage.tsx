@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   ArrowRight,
@@ -16,7 +16,36 @@ import {
   HeartHandshake,
   FileCheck2,
   HelpCircle,
+  ChevronLeft,
+  ChevronRight,
 } from 'lucide-react';
+
+const heroCarouselSlides = [
+  {
+    image: '/images/hero_congregation.png',
+    badge: '⛪ Congregación & Comunidad',
+    title: 'Una Iglesia Conectada, Transparente y Organizada',
+    subtitle:
+      'Fortalece la comunión de tu iglesia y mantén la trazabilidad transparente de aportes, actividades y membresía.',
+    tagColor: '#5eead4',
+  },
+  {
+    image: '/images/hero_admin_team.png',
+    badge: '💼 Gestión & Liderazgo Ministerial',
+    title: 'Control Administrativo Fluido para tu Equipo de Trabajo',
+    subtitle:
+      'Aprobación de compras con un clic, rendición de caja chica con fotos de recibos y trabajo colaborativo para líderes ministeriales.',
+    tagColor: '#38bdf8',
+  },
+  {
+    image: '/images/hero_finance_dash.png',
+    badge: '📊 Tableros Financieros & Auditoría',
+    title: 'Finanzas Claras, Diezmos y Reportes Multi-moneda Instantáneos',
+    subtitle:
+      'Gráficos de ejecución presupuestaria en tiempo real, conciliación bancaria automática e informes contables impecables.',
+    tagColor: '#c084fc',
+  },
+];
 
 const churchModules = [
   {
@@ -115,6 +144,22 @@ const faqs = [
 
 export const LandingPage: React.FC = () => {
   const navigate = useNavigate();
+  const [currentSlide, setCurrentSlide] = useState(0);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentSlide((prev) => (prev + 1) % heroCarouselSlides.length);
+    }, 5000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const handlePrevSlide = () => {
+    setCurrentSlide((prev) => (prev === 0 ? heroCarouselSlides.length - 1 : prev - 1));
+  };
+
+  const handleNextSlide = () => {
+    setCurrentSlide((prev) => (prev + 1) % heroCarouselSlides.length);
+  };
 
   return (
     <div
@@ -356,6 +401,180 @@ export const LandingPage: React.FC = () => {
               <span style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
                 <CheckCircle2 size={16} color="#5eead4" /> Reportes PDF instantáneos
               </span>
+            </div>
+          </div>
+        </section>
+
+        {/* CARROUSEL DE PRESENTACIÓN HIGH-RES */}
+        <section
+          style={{
+            padding: '0 1.5rem',
+            marginTop: '-2.5rem',
+            position: 'relative',
+            zIndex: 10,
+          }}
+        >
+          <div
+            style={{
+              maxWidth: '1100px',
+              margin: '0 auto',
+              backgroundColor: '#0f172a',
+              borderRadius: '24px',
+              overflow: 'hidden',
+              boxShadow: '0 25px 50px -12px rgba(15, 23, 42, 0.4)',
+              border: '1px solid rgba(255, 255, 255, 0.12)',
+            }}
+          >
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
+                alignItems: 'center',
+                minHeight: '440px',
+              }}
+            >
+              {/* Texto explicativo del Slide */}
+              <div style={{ padding: '3rem 2.5rem', color: 'white' }}>
+                <span
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '0.4rem',
+                    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+                    color: heroCarouselSlides[currentSlide].tagColor,
+                    fontWeight: 800,
+                    fontSize: '0.82rem',
+                    padding: '0.4rem 1rem',
+                    borderRadius: '999px',
+                    marginBottom: '1.25rem',
+                    border: '1px solid rgba(255, 255, 255, 0.15)',
+                  }}
+                >
+                  {heroCarouselSlides[currentSlide].badge}
+                </span>
+
+                <h3
+                  style={{
+                    fontSize: 'clamp(1.5rem, 2.5vw, 2.1rem)',
+                    fontWeight: 900,
+                    lineHeight: 1.25,
+                    marginBottom: '1rem',
+                    color: '#f8fafc',
+                    letterSpacing: '-0.5px',
+                  }}
+                >
+                  {heroCarouselSlides[currentSlide].title}
+                </h3>
+
+                <p
+                  style={{
+                    color: '#94a3b8',
+                    fontSize: '1.02rem',
+                    lineHeight: 1.6,
+                    marginBottom: '2.2rem',
+                  }}
+                >
+                  {heroCarouselSlides[currentSlide].subtitle}
+                </p>
+
+                {/* Controles de Navegación del Carrusel */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem' }}>
+                  <button
+                    onClick={handlePrevSlide}
+                    aria-label="Anterior"
+                    style={{
+                      width: '42px',
+                      height: '42px',
+                      borderRadius: '50%',
+                      backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                      color: 'white',
+                      border: '1px solid rgba(255, 255, 255, 0.2)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s ease',
+                    }}
+                  >
+                    <ChevronLeft size={20} />
+                  </button>
+
+                  <div style={{ display: 'flex', gap: '0.5rem' }}>
+                    {heroCarouselSlides.map((_, idx) => (
+                      <button
+                        key={idx}
+                        onClick={() => setCurrentSlide(idx)}
+                        aria-label={`Slide ${idx + 1}`}
+                        style={{
+                          width: currentSlide === idx ? '28px' : '10px',
+                          height: '10px',
+                          borderRadius: '5px',
+                          backgroundColor:
+                            currentSlide === idx ? '#0d9488' : 'rgba(255, 255, 255, 0.25)',
+                          border: 'none',
+                          cursor: 'pointer',
+                          transition: 'all 0.3s ease',
+                        }}
+                      />
+                    ))}
+                  </div>
+
+                  <button
+                    onClick={handleNextSlide}
+                    aria-label="Siguiente"
+                    style={{
+                      width: '42px',
+                      height: '42px',
+                      borderRadius: '50%',
+                      backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                      color: 'white',
+                      border: '1px solid rgba(255, 255, 255, 0.2)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s ease',
+                    }}
+                  >
+                    <ChevronRight size={20} />
+                  </button>
+                </div>
+              </div>
+
+              {/* Imagen en Alta Resolución */}
+              <div
+                style={{
+                  position: 'relative',
+                  height: '100%',
+                  minHeight: '340px',
+                  overflow: 'hidden',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  backgroundColor: '#020617',
+                }}
+              >
+                <img
+                  src={heroCarouselSlides[currentSlide].image}
+                  alt={heroCarouselSlides[currentSlide].title}
+                  style={{
+                    width: '100%',
+                    height: '100%',
+                    maxHeight: '440px',
+                    objectFit: 'cover',
+                    transition: 'all 0.5s ease-in-out',
+                  }}
+                />
+                <div
+                  style={{
+                    position: 'absolute',
+                    inset: 0,
+                    background:
+                      'linear-gradient(to right, #0f172a 0%, transparent 15%, transparent 85%, #0f172a 100%)',
+                    pointerEvents: 'none',
+                  }}
+                />
+              </div>
             </div>
           </div>
         </section>
