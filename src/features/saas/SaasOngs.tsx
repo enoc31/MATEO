@@ -17,6 +17,12 @@ export const SaasOngs: React.FC = () => {
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [newName, setNewName] = useState('');
   const [newLogoUrl, setNewLogoUrl] = useState('');
+
+  // Admin user fields
+  const [adminNombre, setAdminNombre] = useState('');
+  const [adminEmail, setAdminEmail] = useState('');
+  const [adminPassword, setAdminPassword] = useState('');
+
   const [submitting, setSubmitting] = useState(false);
 
   const fetchOngs = async () => {
@@ -45,10 +51,36 @@ export const SaasOngs: React.FC = () => {
     setSuccess(null);
 
     try {
-      await api.createOng(newName.trim(), newLogoUrl.trim() || null);
-      setSuccess('Organización creada exitosamente.');
+      const createdOng = await api.createOng(newName.trim(), newLogoUrl.trim() || null);
+
+      // Si se ingresaron datos para el Administrador inicial, crearlo de inmediato
+      if (adminEmail.trim() && adminPassword.trim()) {
+        try {
+          await api.adminCreateUser({
+            email: adminEmail.trim(),
+            password: adminPassword,
+            nombre_completo: adminNombre.trim() || 'Administrador Principal',
+            rol: 'administrador',
+            ong_id: createdOng.id,
+          });
+          setSuccess(
+            `Organización "${newName}" y Administrador "${adminNombre || adminEmail}" creados exitosamente. Credenciales enviadas por correo.`,
+          );
+        } catch (userErr: any) {
+          console.error('Error creating admin user:', userErr);
+          setSuccess(
+            `Organización "${newName}" creada, pero hubo un detalle al crear el administrador: ${userErr.message}`,
+          );
+        }
+      } else {
+        setSuccess(`Organización "${newName}" creada exitosamente.`);
+      }
+
       setNewName('');
       setNewLogoUrl('');
+      setAdminNombre('');
+      setAdminEmail('');
+      setAdminPassword('');
       setShowCreateForm(false);
       await fetchOngs();
     } catch (err: any) {
@@ -243,6 +275,108 @@ export const SaasOngs: React.FC = () => {
                 }}
               />
             </div>
+
+            {/* Sección: Administrador Principal Inicial */}
+            <div
+              style={{
+                gridColumn: 'span 2',
+                marginTop: '0.5rem',
+                paddingTop: '1rem',
+                borderTop: '1px dashed #cbd5e1',
+              }}
+            >
+              <h4
+                style={{
+                  fontSize: '0.85rem',
+                  fontWeight: 800,
+                  color: '#0d9488',
+                  marginBottom: '0.8rem',
+                }}
+              >
+                👤 Administrador Inicial (Envío automático de credenciales por correo)
+              </h4>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem' }}>
+                <div>
+                  <label
+                    style={{
+                      display: 'block',
+                      fontSize: '0.75rem',
+                      fontWeight: 700,
+                      color: '#64748b',
+                      marginBottom: '0.4rem',
+                    }}
+                  >
+                    Nombre del Administrador
+                  </label>
+                  <input
+                    type="text"
+                    value={adminNombre}
+                    onChange={(e) => setAdminNombre(e.target.value)}
+                    placeholder="Ej. Carlos Mendoza"
+                    style={{
+                      width: '100%',
+                      padding: '0.6rem',
+                      border: '1px solid #cbd5e1',
+                      borderRadius: '6px',
+                      fontSize: '0.85rem',
+                    }}
+                  />
+                </div>
+                <div>
+                  <label
+                    style={{
+                      display: 'block',
+                      fontSize: '0.75rem',
+                      fontWeight: 700,
+                      color: '#64748b',
+                      marginBottom: '0.4rem',
+                    }}
+                  >
+                    Correo del Administrador
+                  </label>
+                  <input
+                    type="email"
+                    value={adminEmail}
+                    onChange={(e) => setAdminEmail(e.target.value)}
+                    placeholder="admin@organizacion.com"
+                    style={{
+                      width: '100%',
+                      padding: '0.6rem',
+                      border: '1px solid #cbd5e1',
+                      borderRadius: '6px',
+                      fontSize: '0.85rem',
+                    }}
+                  />
+                </div>
+                <div>
+                  <label
+                    style={{
+                      display: 'block',
+                      fontSize: '0.75rem',
+                      fontWeight: 700,
+                      color: '#64748b',
+                      marginBottom: '0.4rem',
+                    }}
+                  >
+                    Contraseña Inicial
+                  </label>
+                  <input
+                    type="password"
+                    value={adminPassword}
+                    onChange={(e) => setAdminPassword(e.target.value)}
+                    placeholder="••••••••"
+                    style={{
+                      width: '100%',
+                      padding: '0.6rem',
+                      border: '1px solid #cbd5e1',
+                      borderRadius: '6px',
+                      fontSize: '0.85rem',
+                    }}
+                  />
+                </div>
+              </div>
+            </div>
+
             <div
               style={{
                 gridColumn: 'span 2',
