@@ -1624,12 +1624,18 @@ export const api = {
   },
 
   // --- GESTIÓN DE USUARIOS ---
-  getUsers: async (): Promise<UserWithOng[]> => {
+  getUsers: async (ongId?: string): Promise<UserWithOng[]> => {
     if (!isSimulationMode) {
-      const { data, error } = await supabase
+      let query = supabase
         .from('usuarios_perfiles')
         .select('*, ongs(id, nombre, logo_url)')
         .order('nombre_completo');
+
+      if (ongId) {
+        query = query.eq('ong_id', ongId);
+      }
+
+      const { data, error } = await query;
       if (error) throw error;
       return data as UserWithOng[];
     } else {
@@ -1638,15 +1644,17 @@ export const api = {
         UserWithOng
       >;
       const ongs = JSON.parse(localStorage.getItem('cnbv_ongs') || '[]') as Ong[];
-      return Object.values(profiles).map((p) => {
-        const ong = ongs.find((o) => o.id === p.ong_id);
-        return {
-          ...p,
-          ongs: ong
-            ? { nombre: ong.nombre }
-            : { nombre: 'Convención Nacional Bautista de Venezuela' },
-        };
-      });
+      return Object.values(profiles)
+        .filter((p) => !ongId || p.ong_id === ongId)
+        .map((p) => {
+          const ong = ongs.find((o) => o.id === p.ong_id);
+          return {
+            ...p,
+            ongs: ong
+              ? { nombre: ong.nombre }
+              : { nombre: 'Convención Nacional Bautista de Venezuela' },
+          };
+        });
     }
   },
 

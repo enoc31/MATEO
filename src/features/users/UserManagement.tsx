@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Plus } from 'lucide-react';
 import { api } from '../../services/api';
-import type { UserRole } from '../../context/AuthContext';
+import { useAuth, type UserRole } from '../../context/AuthContext';
 import { UserInviteModal } from './UserInviteModal';
-import { SlackIntegrationPanel } from './SlackIntegrationPanel';
 
 interface UserItem {
   id: string;
@@ -11,10 +10,13 @@ interface UserItem {
   nombre_completo: string;
   rol: UserRole;
   aprobado: boolean;
+  ong_id?: string;
   created_at: string;
 }
 
 export const UserManagement: React.FC = () => {
+  const { activeOng, profile } = useAuth();
+
   const [users, setUsers] = useState<UserItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -34,7 +36,8 @@ export const UserManagement: React.FC = () => {
     setLoading(true);
     setError(null);
     try {
-      const data = await api.getUsers();
+      const targetOngId = activeOng?.id || profile?.ong_id;
+      const data = await api.getUsers(targetOngId);
       setUsers(data as UserItem[]);
 
       // Inicializar roles temporales con los roles actuales
@@ -52,7 +55,7 @@ export const UserManagement: React.FC = () => {
 
   useEffect(() => {
     loadUsers();
-  }, []);
+  }, [activeOng?.id, profile?.ong_id]);
 
   const handleRoleChange = (userId: string, newRole: UserRole) => {
     setTempRoles((prev) => ({
@@ -106,10 +109,12 @@ export const UserManagement: React.FC = () => {
     }
   };
 
-  // Filtrado de usuarios
-  // Se excluye al Super Administrador global del SaaS: los admins de ONG no deben verlo ni gestionarlo
+  // Filtrado de usuarios: aislados estrictamente por la Iglesia/ONG activa del usuario
+  const targetOngId = activeOng?.id || profile?.ong_id;
+
   const filteredUsers = users.filter((user) => {
     if (user.rol === 'super_admin') return false;
+    if (targetOngId && user.ong_id && user.ong_id !== targetOngId) return false;
 
     const matchesSearch =
       user.nombre_completo.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -495,11 +500,6 @@ export const UserManagement: React.FC = () => {
           loadUsers();
         }}
       />
-
-      {/* Panel de Integración con Slack */}
-      <div style={{ marginTop: '2rem' }}>
-        <SlackIntegrationPanel />
-      </div>
     </div>
   );
 };

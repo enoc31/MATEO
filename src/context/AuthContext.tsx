@@ -27,6 +27,7 @@ interface AuthContextType {
   user: User | null;
   profile: UserProfile | null;
   activeOng: {
+    id?: string;
     nombre: string;
     logo_url: string | null;
     tipo_organizacion?: 'ong' | 'ekklesia';
@@ -43,6 +44,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [activeOng, setActiveOng] = useState<{
+    id?: string;
     nombre: string;
     logo_url: string | null;
     tipo_organizacion?: 'ong' | 'ekklesia';
@@ -93,7 +95,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               if (insertedProfile.ong_id) {
                 const { data: ongData } = await supabase
                   .from('ongs')
-                  .select('nombre, logo_url, tipo_organizacion')
+                  .select('id, nombre, logo_url, tipo_organizacion')
                   .eq('id', insertedProfile.ong_id)
                   .single();
                 if (ongData) {
@@ -171,7 +173,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           if (profileData.ong_id) {
             const { data: ongData, error: ongError } = await supabase
               .from('ongs')
-              .select('nombre, logo_url, tipo_organizacion')
+              .select('id, nombre, logo_url, tipo_organizacion')
               .eq('id', profileData.ong_id)
               .single();
             if (!ongError && ongData) {
