@@ -1,41 +1,48 @@
-@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&family=Sora:wght@400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@500;600;700;800&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap');
 
 /* =========================================================================
-   1. VARIABLES DE DISEÑO (DESIGN SYSTEM - CNBV BRANDING)
+   1. VARIABLES DE DISEÑO (MATEO BRANDING SYSTEM)
    ========================================================================= */
 :root {
-  /* Colores Corporativos */
-  --primary: #2f5aae; /* Azul Bautista */
-  --primary-hover: #1e3f82;
-  --secondary: #073a11; /* Verde Iglesia */
-  --secondary-hover: #04250a;
-  --accent: #008fa6; /* Teal/Turquesa */
-  --accent-hover: #007082;
-  --neutral-dark: #272626; /* Gris Oscuro / Texto */
-  --neutral-light: #f4f5f7; /* Fondo del sitio */
+  /* Colores Corporativos MATEO */
+  --primary: #1b5cb6; /* Azul Zafiro Isotipo MATEO */
+  --primary-hover: #154b96;
+  --secondary: #2d6a4f; /* Verde Salvia Orgánico */
+  --secondary-hover: #1b4332;
+  --accent: #469be7; /* Azul Horizonte Wordmark MATEO */
+  --accent-hover: #2b82d3;
+  --neutral-dark: #0f172a; /* Slate 900 - Contraste WCAG 2.1 AAA */
+  --neutral-light: #f8fafc; /* Slate 50 - Fondo Ultra Limpio */
   --border-color: #e2e8f0;
 
   /* Estados de Auditoría */
-  --success: #10b981; /* Aprobado */
+  --success: #10b981; /* Aprobado Esmeralda */
   --warning: #f59e0b; /* Pendiente revisión */
   --danger: #ef4444; /* Rechazado */
-  --info: #3b82f6; /* Pendiente soporte */
+  --info: #469be7; /* Info */
 
   /* Tipografías */
-  --font-headings: 'Sora', 'Arial', sans-serif;
-  --font-body: 'Roboto', 'Helvetica Neue', sans-serif;
+  --font-headings: 'Outfit', 'Plus Jakarta Sans', sans-serif;
+  --font-body: 'Inter', sans-serif;
 
-  /* Sombras y Bordes */
-  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1);
-  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
-  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.03);
-  --radius-sm: 6px;
+  /* Sombras Ambientales & Bordes Redondeados */
+  --shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.05);
+  --shadow-md: 0 4px 15px -2px rgba(27, 92, 182, 0.08);
+  --shadow-lg: 0 12px 25px -4px rgba(27, 92, 182, 0.12);
+  --radius-sm: 8px;
   --radius-md: 12px;
-  --radius-lg: 20px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+  --radius-squircle: 18px;
 
   /* Transiciones */
   --transition-fast: 0.15s ease;
   --transition-normal: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.font-numeric {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum' 1;
 }
 
 /* =========================================================================
