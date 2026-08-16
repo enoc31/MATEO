@@ -1,14 +1,18 @@
 import React, { useState, useEffect } from 'react';
-import { History, CalendarDays, UserCheck } from 'lucide-react';
+import { CalendarDays, UserCheck, Users } from 'lucide-react';
 import { RegistrationForm } from './RegistrationForm';
 import { CapturedRecords } from './CapturedRecords';
 import { SuccessScreen } from './SuccessScreen';
 import { api } from '../../services/api';
 import type { Jornada } from '../../services/api';
+import { useAuth } from '../../context/AuthContext';
 
 type Tab = 'form' | 'history' | 'success';
 
 export const BeneficiaryRegistry: React.FC = () => {
+  const { activeOng } = useAuth();
+  const isEkklesia = activeOng?.tipo_organizacion === 'ekklesia';
+
   const [activeTab, setActiveTab] = useState<Tab>('form');
   const [jornadas, setJornadas] = useState<Jornada[]>([]);
   const [selectedJornadaId, setSelectedJornadaId] = useState<string>('');
@@ -205,8 +209,8 @@ export const BeneficiaryRegistry: React.FC = () => {
       )}
 
       <div style={{ marginBottom: '1.5rem' }}>
-        <h2 style={{ color: 'var(--primary)', fontSize: '1.75rem', fontWeight: 700 }}>
-          Módulo de Beneficiarios
+        <h2 style={{ color: 'var(--primary)', fontSize: '1.75rem', fontWeight: 800 }}>
+          {isEkklesia ? '👤 Miembros y Fieles' : '🤝 Beneficiarios y Atención Social'}
         </h2>
         <p
           style={{
@@ -216,7 +220,9 @@ export const BeneficiaryRegistry: React.FC = () => {
             marginTop: '0.25rem',
           }}
         >
-          Captura de datos y firma autógrafa en campo.
+          {isEkklesia
+            ? 'Padrón consolidado de miembros de la congregación, fichas 360°, control de asistencias y vinculación de diezmos/ofrendas.'
+            : 'Padrón consolidado de beneficiarios, entregas de ayudas sociales y firma autógrafa en campo.'}
         </p>
       </div>
 
@@ -254,7 +260,7 @@ export const BeneficiaryRegistry: React.FC = () => {
               activeTab === 'form' || activeTab === 'success' ? 'var(--shadow-sm)' : 'none',
           }}
         >
-          <UserCheck size={18} /> Registro
+          <UserCheck size={18} /> {isEkklesia ? 'Nuevo Miembro' : 'Registro de Campo'}
         </button>
         <button
           onClick={() => setActiveTab('history')}
@@ -275,7 +281,7 @@ export const BeneficiaryRegistry: React.FC = () => {
             boxShadow: activeTab === 'history' ? 'var(--shadow-sm)' : 'none',
           }}
         >
-          <History size={18} /> Historial
+          <Users size={18} /> {isEkklesia ? 'Padrón de Miembros 360°' : 'Beneficiarios Registrados'}
         </button>
       </div>
 

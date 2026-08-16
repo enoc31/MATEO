@@ -1,11 +1,21 @@
 import React, { useEffect, useState } from 'react';
 import { api, isSimulationMode } from '../../services/api';
 import type { Beneficiary, Jornada } from '../../services/api';
-import { Search, Calendar, Filter, CalendarDays, Download, Activity, History } from 'lucide-react';
+import {
+  Search,
+  Calendar,
+  Filter,
+  CalendarDays,
+  Download,
+  Activity,
+  History,
+  Eye,
+} from 'lucide-react';
 import { useNotifications } from '../../components/NotificationProvider';
 import { generateBeneficiariesReport } from '../../utils/pdfReport';
 import { supabase } from '../../supabaseClient';
 import { useAuth } from '../../context/AuthContext';
+import { MemberProfileModal } from './MemberProfileModal';
 
 export const CapturedRecords: React.FC = () => {
   const { activeOng } = useAuth();
@@ -17,6 +27,8 @@ export const CapturedRecords: React.FC = () => {
   const [dateFilter, setDateFilter] = useState<'hoy' | 'ayer' | 'semana' | 'todos'>('todos');
   const [jornadaFilter, setJornadaFilter] = useState<string>('todas');
   const [subTab, setSubTab] = useState<'live' | 'history'>('live');
+  const [selectedMember, setSelectedMember] = useState<Beneficiary | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const { addNotification } = useNotifications();
 
   const loadRecords = async () => {
@@ -603,34 +615,59 @@ export const CapturedRecords: React.FC = () => {
                           </div>
                         </div>
 
-                        {record.url_firma ? (
-                          <div
-                            style={{
-                              width: '80px',
-                              height: '40px',
-                              border: '1px solid var(--border-color)',
-                              borderRadius: '4px',
-                              backgroundImage: `url(${record.url_firma})`,
-                              backgroundSize: 'contain',
-                              backgroundRepeat: 'no-repeat',
-                              backgroundPosition: 'center',
-                              backgroundColor: '#f9f9f9',
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                          {record.url_firma ? (
+                            <div
+                              style={{
+                                width: '80px',
+                                height: '40px',
+                                border: '1px solid var(--border-color)',
+                                borderRadius: '4px',
+                                backgroundImage: `url(${record.url_firma})`,
+                                backgroundSize: 'contain',
+                                backgroundRepeat: 'no-repeat',
+                                backgroundPosition: 'center',
+                                backgroundColor: '#f9f9f9',
+                              }}
+                              title="Firma capturada"
+                            />
+                          ) : (
+                            <div
+                              style={{
+                                fontSize: '0.7rem',
+                                opacity: 0.5,
+                                border: '1px dashed var(--border-color)',
+                                padding: '0.25rem',
+                                borderRadius: '4px',
+                              }}
+                            >
+                              Sin firma
+                            </div>
+                          )}
+
+                          <button
+                            onClick={() => {
+                              setSelectedMember(record);
+                              setIsModalOpen(true);
                             }}
-                            title="Firma capturada"
-                          />
-                        ) : (
-                          <div
                             style={{
-                              fontSize: '0.7rem',
-                              opacity: 0.5,
-                              border: '1px dashed var(--border-color)',
-                              padding: '0.25rem',
-                              borderRadius: '4px',
+                              padding: '0.5rem 0.9rem',
+                              backgroundColor: '#1B5CB6',
+                              color: '#FFFFFF',
+                              border: 'none',
+                              borderRadius: '8px',
+                              fontSize: '0.82rem',
+                              fontWeight: 700,
+                              cursor: 'pointer',
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '0.4rem',
+                              boxShadow: '0 2px 6px rgba(27, 92, 182, 0.2)',
                             }}
                           >
-                            Sin firma
-                          </div>
-                        )}
+                            <Eye size={15} /> Ver Ficha 360°
+                          </button>
+                        </div>
                       </div>
                     </React.Fragment>
                   );
@@ -640,6 +677,16 @@ export const CapturedRecords: React.FC = () => {
           </div>
         </>
       )}
+
+      {/* Modal Ficha 360° del Miembro */}
+      <MemberProfileModal
+        member={selectedMember}
+        isOpen={isModalOpen}
+        onClose={() => {
+          setIsModalOpen(false);
+          setSelectedMember(null);
+        }}
+      />
     </div>
   );
 };
