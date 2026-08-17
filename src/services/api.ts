@@ -1898,6 +1898,7 @@ export const api = {
   },
 
   getBeneficiaries: async (): Promise<Beneficiary[]> => {
+    let rawList: Beneficiary[];
     if (!isSimulationMode) {
       const { data, error } = await supabase
         .from('beneficiarios')
@@ -1906,10 +1907,29 @@ export const api = {
       if (error && error.code !== '42P01') {
         console.warn('Error getBeneficiaries', error);
       }
-      return data || [];
+      rawList = (data as Beneficiary[]) || [];
     } else {
-      return JSON.parse(localStorage.getItem('cnbv_beneficiaries') || '[]');
+      rawList = JSON.parse(localStorage.getItem('cnbv_beneficiaries') || '[]');
     }
+
+    // Desempaquetar metadata de Ekklesia
+    return rawList.map((b) => {
+      if (b.tipo_donacion && Array.isArray(b.tipo_donacion)) {
+        const metaTag = b.tipo_donacion.find((t) => typeof t === 'string' && t.startsWith('META:'));
+        if (metaTag) {
+          try {
+            const metaJson = JSON.parse(metaTag.replace('META:', ''));
+            return {
+              ...b,
+              ...metaJson,
+            };
+          } catch (e) {
+            console.warn('Error desempaquetando meta de beneficiario:', e);
+          }
+        }
+      }
+      return b;
+    });
   },
 
   saveBeneficiary: async (
@@ -1979,7 +1999,40 @@ export const api = {
     };
 
     if (!isSimulationMode) {
-      const { error } = await supabase.from('beneficiarios').insert([newBen]);
+      // Empaquetar campos extendidos de Ekklesia en tipo_donacion bajo la etiqueta META:
+      const ekklesiaMeta = JSON.stringify({
+        direccion: beneficiary.direccion,
+        telefono: beneficiary.telefono,
+        email: beneficiary.email,
+        redes_sociales: beneficiary.redes_sociales,
+        foto_url: beneficiary.foto_url,
+        foto_cedula_url: beneficiary.foto_cedula_url,
+        bautizado: beneficiary.bautizado,
+        grado_instruccion: beneficiary.grado_instruccion,
+        enfermedad: beneficiary.enfermedad,
+        fecha_membresia: beneficiary.fecha_membresia,
+        cargo_eclesiastico: beneficiary.cargo_eclesiastico,
+        areas_ministeriales: beneficiary.areas_ministeriales,
+      });
+
+      const updatedTipoDonacion = [...(beneficiary.tipo_donacion || []), `META:${ekklesiaMeta}`];
+
+      // Insertar ÚNICAMENTE las columnas existentes en el schema de Supabase
+      const dbPayload = {
+        id: newBen.id,
+        jornada_id: newBen.jornada_id,
+        nombre: newBen.nombre,
+        apellido: newBen.apellido,
+        cedula: newBen.cedula,
+        sexo: newBen.sexo,
+        fecha_nacimiento: newBen.fecha_nacimiento,
+        tipo_donacion: updatedTipoDonacion,
+        url_firma: newBen.url_firma || beneficiary.foto_url || null,
+        ...(ongId ? { ong_id: ongId } : {}),
+        created_at: newBen.created_at,
+      };
+
+      const { error } = await supabase.from('beneficiarios').insert([dbPayload]);
 
       if (error) throw error;
       return newBen;
