@@ -68,7 +68,7 @@ export const ChurchMembersManager: React.FC = () => {
           sexo: newSexo,
           fecha_nacimiento: newFechaNacimiento,
           jornada_id: 'general-ekklesia',
-          tipo_donacion: [newEstado, ...(newTelefono ? [`Tel: ${newTelefono}`] : [])],
+          tipo_donacion: [newEstado, 'Ekklesia', ...(newTelefono ? [`Tel: ${newTelefono}`] : [])],
         },
         undefined,
         activeOng?.id,

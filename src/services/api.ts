@@ -1908,24 +1908,35 @@ export const api = {
     }
 
     let finalJornadaId = beneficiary.jornada_id;
+    const isEkklesiaSource = finalJornadaId === 'general-ekklesia';
 
-    // Asegurar que jornada_id cumpla con la Foreign Key de la base de datos
+    // Asegurar que jornada_id cumpla con la Foreign Key de la base de datos marcando el origen Ekklesia
     if (!finalJornadaId || finalJornadaId === 'general-ekklesia' || finalJornadaId === 'general') {
       try {
         const existingJornadas = await api.getJornadas();
-        const validJornada = existingJornadas.find(
-          (j) => !ongId || j.ong_id === ongId || (j as any).ong_id === ongId,
+        let validJornada = existingJornadas.find(
+          (j) =>
+            j.nombre.includes('Ekklesia') &&
+            (!ongId || j.ong_id === ongId || (j as any).ong_id === ongId),
         );
+
+        if (!validJornada) {
+          validJornada = existingJornadas.find(
+            (j) => !ongId || j.ong_id === ongId || (j as any).ong_id === ongId,
+          );
+        }
 
         if (validJornada) {
           finalJornadaId = validJornada.id;
         } else {
-          // Auto-crear una jornada de sistema para cumplir con la FK de la base de datos
+          // Auto-crear una jornada de sistema identificada como Ekklesia
           const newSystemJornada = await api.createJornada(
             {
-              nombre: 'Padrón Congregacional General',
+              nombre: isEkklesiaSource ? 'Padrón Congregacional Ekklesia' : 'Padrón General',
               fecha: new Date().toISOString().split('T')[0],
-              beneficios_entregados: 'Registro Congregacional de Miembros',
+              beneficios_entregados: isEkklesiaSource
+                ? 'Ekklesia - Registro de Miembro Congregacional'
+                : 'Registro General',
               proyecto_id: '',
               activa: true,
             },
