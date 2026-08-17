@@ -1,5 +1,19 @@
 import React, { useState, useEffect } from 'react';
-import { Users, Search, Plus, LayoutList, Kanban, Eye, X, CheckSquare, Square } from 'lucide-react';
+import {
+  Users,
+  Search,
+  Plus,
+  LayoutList,
+  Kanban,
+  Eye,
+  ArrowLeft,
+  Upload,
+  Camera,
+  FileText,
+  CheckSquare,
+  Square,
+  Trash2,
+} from 'lucide-react';
 import { api, type Beneficiary } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 import { MemberProfileModal } from './MemberProfileModal';
@@ -14,6 +28,8 @@ export const ChurchMembersManager: React.FC = () => {
   const [members, setMembers] = useState<Beneficiary[]>([]);
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState<'list' | 'kanban'>('list');
+  const [screenMode, setScreenMode] = useState<'directory' | 'form'>('directory');
+
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('todos');
 
@@ -21,8 +37,7 @@ export const ChurchMembersManager: React.FC = () => {
   const [selectedMember, setSelectedMember] = useState<Beneficiary | null>(null);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
 
-  // Modal nuevo miembro
-  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  // Form state para la Pantalla Dedicada de Registro de Miembro
   const [newNombre, setNewNombre] = useState('');
   const [newApellido, setNewApellido] = useState('');
   const [newCedula, setNewCedula] = useState('');
@@ -32,8 +47,11 @@ export const ChurchMembersManager: React.FC = () => {
   const [newTelefono, setNewTelefono] = useState('');
   const [newEmail, setNewEmail] = useState('');
   const [newRedesSociales, setNewRedesSociales] = useState('');
+
+  // Carga de Fotos (Previsualizaciones e imágenes en base64)
   const [newFotoUrl, setNewFotoUrl] = useState('');
   const [newFotoCedulaUrl, setNewFotoCedulaUrl] = useState('');
+
   const [newBautizado, setNewBautizado] = useState(false);
   const [newGradoInstruccion, setNewGradoInstruccion] = useState('Universitario');
   const [newEnfermedad, setNewEnfermedad] = useState('');
@@ -71,6 +89,42 @@ export const ChurchMembersManager: React.FC = () => {
     area: 'PROCLAMACIÓN' | 'ENSEÑANZA' | 'SERVICIO' | 'COMPAÑERISMO' | 'ADORACIÓN',
   ) => {
     setNewAreas((prev) => (prev.includes(area) ? prev.filter((a) => a !== area) : [...prev, area]));
+  };
+
+  // Carga e previsualización directa de la Foto del Miembro
+  const handleMemberPhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 5 * 1024 * 1024) {
+      addNotification('La foto no debe pesar más de 5MB', 'warning');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setNewFotoUrl(reader.result as string);
+      addNotification('Foto del miembro cargada correctamente', 'info');
+    };
+    reader.readAsDataURL(file);
+  };
+
+  // Carga e previsualización directa de la Foto de Cédula
+  const handleCedulaPhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 5 * 1024 * 1024) {
+      addNotification('La imagen de la cédula no debe pesar más de 5MB', 'warning');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setNewFotoCedulaUrl(reader.result as string);
+      addNotification('Foto de la cédula cargada correctamente', 'info');
+    };
+    reader.readAsDataURL(file);
   };
 
   const handleCreateMember = async (e: React.FormEvent) => {
@@ -118,7 +172,7 @@ export const ChurchMembersManager: React.FC = () => {
         `Miembro ${saved.nombre} ${saved.apellido} registrado exitosamente`,
         'success',
       );
-      setIsAddModalOpen(false);
+      setScreenMode('directory');
 
       // Reset form fields
       setNewNombre('');
@@ -192,6 +246,671 @@ export const ChurchMembersManager: React.FC = () => {
     { id: 'Inactivo', label: '⚪ Inactivos', color: '#64748B', bg: '#F8FAFC' },
   ];
 
+  // --- PANTALLA 2: FORMULARIO DEDICADO DE REGISTRO DE MIEMBRO (NUEVA PANTALLA COMPLETA) ---
+  if (screenMode === 'form') {
+    return (
+      <div
+        className="animate-fade-in-up"
+        style={{ maxWidth: '1000px', margin: '0 auto', padding: '1rem' }}
+      >
+        {/* Encabezado con Botón de Regreso */}
+        <div
+          style={{
+            marginBottom: '1.5rem',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+          }}
+        >
+          <div>
+            <button
+              type="button"
+              onClick={() => setScreenMode('directory')}
+              style={{
+                backgroundColor: 'transparent',
+                border: 'none',
+                color: '#1B5CB6',
+                fontWeight: 800,
+                fontSize: '0.95rem',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+                marginBottom: '0.5rem',
+              }}
+            >
+              <ArrowLeft size={18} /> Volver al Padrón de Miembros
+            </button>
+            <h2
+              style={{ color: 'var(--primary)', fontSize: '1.85rem', fontWeight: 900, margin: 0 }}
+            >
+              📝 Ficha de Registro de Miembro
+            </h2>
+            <p style={{ color: '#64748B', fontSize: '0.9rem', marginTop: '0.2rem', margin: 0 }}>
+              Ingresa de forma cómoda y detallada la información personal, eclesiástica y multimedia
+              del feligrés.
+            </p>
+          </div>
+        </div>
+
+        {formError && (
+          <div
+            style={{
+              backgroundColor: '#FEE2E2',
+              color: '#991B1B',
+              padding: '1rem',
+              borderRadius: '12px',
+              fontWeight: 700,
+              fontSize: '0.9rem',
+              marginBottom: '1.5rem',
+              border: '1px solid #FCA5A5',
+            }}
+          >
+            {formError}
+          </div>
+        )}
+
+        <form
+          onSubmit={handleCreateMember}
+          style={{ display: 'flex', flexDirection: 'column', gap: '1.8rem' }}
+        >
+          {/* SECCIÓN 1: FOTO DEL MIEMBRO Y FOTO DE CÉDULA (SUBIDA INTERACTIVA) */}
+          <div
+            style={{
+              backgroundColor: '#FFFFFF',
+              borderRadius: '20px',
+              padding: '1.8rem',
+              border: '1px solid #E2E8F0',
+              boxShadow: '0 4px 14px rgba(0,0,0,0.03)',
+            }}
+          >
+            <h3
+              style={{
+                fontSize: '1.1rem',
+                fontWeight: 900,
+                color: '#1B5CB6',
+                marginTop: 0,
+                marginBottom: '1.2rem',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+              }}
+            >
+              <Camera size={20} /> 1. Fotografías e Identificación Digital
+            </h3>
+
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+                gap: '1.8rem',
+              }}
+            >
+              {/* Carga de Foto del Miembro */}
+              <div
+                style={{
+                  border: '2px dashed #CBD5E1',
+                  borderRadius: '16px',
+                  padding: '1.5rem',
+                  textAlign: 'center',
+                  backgroundColor: '#F8FAFC',
+                  position: 'relative',
+                }}
+              >
+                <span
+                  style={{
+                    fontSize: '0.85rem',
+                    fontWeight: 800,
+                    color: '#0F172A',
+                    display: 'block',
+                    marginBottom: '0.8rem',
+                  }}
+                >
+                  FOTO DEL MIEMBRO (*Foto)
+                </span>
+
+                {newFotoUrl ? (
+                  <div
+                    style={{
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      gap: '0.8rem',
+                    }}
+                  >
+                    <img
+                      src={newFotoUrl}
+                      alt="Previsualización Miembro"
+                      style={{
+                        width: '130px',
+                        height: '130px',
+                        borderRadius: '50%',
+                        objectFit: 'cover',
+                        border: '3px solid #1B5CB6',
+                        boxShadow: '0 6px 16px rgba(0,0,0,0.1)',
+                      }}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setNewFotoUrl('')}
+                      style={{
+                        backgroundColor: '#FEE2E2',
+                        color: '#991B1B',
+                        border: 'none',
+                        padding: '0.4rem 0.8rem',
+                        borderRadius: '8px',
+                        fontWeight: 700,
+                        fontSize: '0.8rem',
+                        cursor: 'pointer',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '0.3rem',
+                      }}
+                    >
+                      <Trash2 size={14} /> Eliminar / Cambiar Foto
+                    </button>
+                  </div>
+                ) : (
+                  <div>
+                    <Camera size={36} color="#94A3B8" style={{ margin: '0 auto 0.6rem auto' }} />
+                    <p
+                      style={{ margin: 0, fontSize: '0.85rem', fontWeight: 700, color: '#475569' }}
+                    >
+                      Arrastra o haz clic para subir la foto del feligrés
+                    </p>
+                    <p style={{ margin: '0.3rem 0 1rem 0', fontSize: '0.75rem', color: '#94A3B8' }}>
+                      Formatos JPG, PNG (Máx 5MB)
+                    </p>
+                    <label
+                      style={{
+                        backgroundColor: '#1B5CB6',
+                        color: 'white',
+                        padding: '0.6rem 1.2rem',
+                        borderRadius: '10px',
+                        fontWeight: 800,
+                        fontSize: '0.85rem',
+                        cursor: 'pointer',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '0.4rem',
+                      }}
+                    >
+                      <Upload size={16} /> Buscar Archivo de Foto
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleMemberPhotoUpload}
+                        style={{ display: 'none' }}
+                      />
+                    </label>
+                  </div>
+                )}
+              </div>
+
+              {/* Carga de Foto de la Cédula */}
+              <div
+                style={{
+                  border: '2px dashed #CBD5E1',
+                  borderRadius: '16px',
+                  padding: '1.5rem',
+                  textAlign: 'center',
+                  backgroundColor: '#F8FAFC',
+                  position: 'relative',
+                }}
+              >
+                <span
+                  style={{
+                    fontSize: '0.85rem',
+                    fontWeight: 800,
+                    color: '#0F172A',
+                    display: 'block',
+                    marginBottom: '0.8rem',
+                  }}
+                >
+                  FOTO DE CÉDULA DE IDENTIDAD
+                </span>
+
+                {newFotoCedulaUrl ? (
+                  <div
+                    style={{
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      gap: '0.8rem',
+                    }}
+                  >
+                    <img
+                      src={newFotoCedulaUrl}
+                      alt="Previsualización Cédula"
+                      style={{
+                        maxHeight: '130px',
+                        maxWidth: '100%',
+                        borderRadius: '12px',
+                        objectFit: 'contain',
+                        border: '2px solid #CBD5E1',
+                        boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
+                      }}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setNewFotoCedulaUrl('')}
+                      style={{
+                        backgroundColor: '#FEE2E2',
+                        color: '#991B1B',
+                        border: 'none',
+                        padding: '0.4rem 0.8rem',
+                        borderRadius: '8px',
+                        fontWeight: 700,
+                        fontSize: '0.8rem',
+                        cursor: 'pointer',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '0.3rem',
+                      }}
+                    >
+                      <Trash2 size={14} /> Eliminar / Cambiar Cédula
+                    </button>
+                  </div>
+                ) : (
+                  <div>
+                    <FileText size={36} color="#94A3B8" style={{ margin: '0 auto 0.6rem auto' }} />
+                    <p
+                      style={{ margin: 0, fontSize: '0.85rem', fontWeight: 700, color: '#475569' }}
+                    >
+                      Arrastra o haz clic para subir imagen de la Cédula
+                    </p>
+                    <p style={{ margin: '0.3rem 0 1rem 0', fontSize: '0.75rem', color: '#94A3B8' }}>
+                      Fotografía del documento legible (Máx 5MB)
+                    </p>
+                    <label
+                      style={{
+                        backgroundColor: '#334155',
+                        color: 'white',
+                        padding: '0.6rem 1.2rem',
+                        borderRadius: '10px',
+                        fontWeight: 800,
+                        fontSize: '0.85rem',
+                        cursor: 'pointer',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '0.4rem',
+                      }}
+                    >
+                      <Upload size={16} /> Subir Imagen de Cédula
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleCedulaPhotoUpload}
+                        style={{ display: 'none' }}
+                      />
+                    </label>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* SECCIÓN 2: DATOS PERSONALES DE IDENTIFICACIÓN Y CONTACTO */}
+          <div
+            style={{
+              backgroundColor: '#FFFFFF',
+              borderRadius: '20px',
+              padding: '1.8rem',
+              border: '1px solid #E2E8F0',
+              boxShadow: '0 4px 14px rgba(0,0,0,0.03)',
+            }}
+          >
+            <h3
+              style={{
+                fontSize: '1.1rem',
+                fontWeight: 900,
+                color: '#1B5CB6',
+                marginTop: 0,
+                marginBottom: '1.2rem',
+              }}
+            >
+              👤 2. Información Personal y de Contacto
+            </h3>
+
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
+                gap: '1.2rem',
+              }}
+            >
+              <div>
+                <label className="form-label">Nombre *</label>
+                <input
+                  type="text"
+                  className="app-input"
+                  placeholder="Ej: Pedro"
+                  value={newNombre}
+                  onChange={(e) => setNewNombre(e.target.value)}
+                  required
+                />
+              </div>
+              <div>
+                <label className="form-label">Apellido *</label>
+                <input
+                  type="text"
+                  className="app-input"
+                  placeholder="Ej: Pérez"
+                  value={newApellido}
+                  onChange={(e) => setNewApellido(e.target.value)}
+                  required
+                />
+              </div>
+              <div>
+                <label className="form-label">Cédula de Identidad</label>
+                <input
+                  type="text"
+                  className="app-input"
+                  placeholder="Ej: V-12345678"
+                  value={newCedula}
+                  onChange={(e) => setNewCedula(e.target.value)}
+                />
+              </div>
+              <div>
+                <label className="form-label">Fecha de Nacimiento *</label>
+                <input
+                  type="date"
+                  className="app-input"
+                  value={newFechaNacimiento}
+                  onChange={(e) => setNewFechaNacimiento(e.target.value)}
+                  required
+                />
+              </div>
+              <div>
+                <label className="form-label">Sexo</label>
+                <select
+                  className="app-input"
+                  value={newSexo}
+                  onChange={(e) => setNewSexo(e.target.value as any)}
+                >
+                  <option value="Masculino">Masculino</option>
+                  <option value="Femenino">Femenino</option>
+                </select>
+              </div>
+              <div>
+                <label className="form-label">Teléfono de Contacto</label>
+                <input
+                  type="text"
+                  className="app-input"
+                  placeholder="Ej: 0414-1234567"
+                  value={newTelefono}
+                  onChange={(e) => setNewTelefono(e.target.value)}
+                />
+              </div>
+              <div>
+                <label className="form-label">Correo Electrónico</label>
+                <input
+                  type="email"
+                  className="app-input"
+                  placeholder="miembro@iglesia.org"
+                  value={newEmail}
+                  onChange={(e) => setNewEmail(e.target.value)}
+                />
+              </div>
+              <div>
+                <label className="form-label">Redes Sociales</label>
+                <input
+                  type="text"
+                  className="app-input"
+                  placeholder="Ej: @pedroperez (Instagram / Facebook)"
+                  value={newRedesSociales}
+                  onChange={(e) => setNewRedesSociales(e.target.value)}
+                />
+              </div>
+            </div>
+
+            <div style={{ marginTop: '1.2rem' }}>
+              <label className="form-label">Dirección de Habitación</label>
+              <input
+                type="text"
+                className="app-input"
+                placeholder="Ej: Av. Bolivar, Res. Las Palmeras, Apto 4-B, Caracas"
+                value={newDireccion}
+                onChange={(e) => setNewDireccion(e.target.value)}
+              />
+            </div>
+          </div>
+
+          {/* SECCIÓN 3: CARGO ECLESIÁSTICO, BAUTISMO Y SALUD */}
+          <div
+            style={{
+              backgroundColor: '#FFFFFF',
+              borderRadius: '20px',
+              padding: '1.8rem',
+              border: '1px solid #E2E8F0',
+              boxShadow: '0 4px 14px rgba(0,0,0,0.03)',
+            }}
+          >
+            <h3
+              style={{
+                fontSize: '1.1rem',
+                fontWeight: 900,
+                color: '#1B5CB6',
+                marginTop: 0,
+                marginBottom: '1.2rem',
+              }}
+            >
+              🛡️ 3. Cargo Eclesiástico, Membresía & Salud
+            </h3>
+
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
+                gap: '1.2rem',
+              }}
+            >
+              <div>
+                <label className="form-label">Cargo Eclesiástico</label>
+                <select
+                  className="app-input"
+                  value={newCargo}
+                  onChange={(e) => setNewCargo(e.target.value as any)}
+                >
+                  <option value="PASTOR / OBISPO O SIMILAR">👑 PASTOR / OBISPO O SIMILAR</option>
+                  <option value="DIÁCONO / ANCIANO O SIMILAR">
+                    🛡️ DIÁCONO / ANCIANO O SIMILAR
+                  </option>
+                  <option value="MINISTRO / COORDINADOR / LÍDER O SIMILAR">
+                    ⭐ MINISTRO / COORDINADOR / LÍDER O SIMILAR
+                  </option>
+                  <option value="MIEMBRO GENERAL">👤 MIEMBRO GENERAL</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="form-label">¿Está Bautizado?</label>
+                <select
+                  className="app-input"
+                  value={newBautizado ? 'si' : 'no'}
+                  onChange={(e) => setNewBautizado(e.target.value === 'si')}
+                >
+                  <option value="si">SÍ - Bautizado en Aguas</option>
+                  <option value="no">NO Bautizado</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="form-label">Fecha de Membresía</label>
+                <input
+                  type="date"
+                  className="app-input"
+                  value={newFechaMembresia}
+                  onChange={(e) => setNewFechaMembresia(e.target.value)}
+                />
+              </div>
+
+              <div>
+                <label className="form-label">Grado de Instrucción</label>
+                <select
+                  className="app-input"
+                  value={newGradoInstruccion}
+                  onChange={(e) => setNewGradoInstruccion(e.target.value)}
+                >
+                  <option value="Primaria">Primaria</option>
+                  <option value="Bachillerato">Bachillerato</option>
+                  <option value="Técnico">Técnico Medio / TSU</option>
+                  <option value="Universitario">Universitario</option>
+                  <option value="Posgrado">Posgrado / Maestría</option>
+                </select>
+              </div>
+            </div>
+
+            <div style={{ marginTop: '1.2rem' }}>
+              <label className="form-label">Enfermedades / Condiciones Médicas</label>
+              <input
+                type="text"
+                className="app-input"
+                placeholder="Ej: Alergia a medicamentos / Hipertensión / Diabetes"
+                value={newEnfermedad}
+                onChange={(e) => setNewEnfermedad(e.target.value)}
+              />
+            </div>
+          </div>
+
+          {/* SECCIÓN 4: ÁREAS MINISTERIALES ASIGNADAS */}
+          <div
+            style={{
+              backgroundColor: '#FFFFFF',
+              borderRadius: '20px',
+              padding: '1.8rem',
+              border: '1px solid #E2E8F0',
+              boxShadow: '0 4px 14px rgba(0,0,0,0.03)',
+            }}
+          >
+            <h3
+              style={{
+                fontSize: '1.1rem',
+                fontWeight: 900,
+                color: '#1B5CB6',
+                marginTop: 0,
+                marginBottom: '0.4rem',
+              }}
+            >
+              🏛️ 4. Áreas Ministeriales Asignadas (5 Pilares)
+            </h3>
+            <p style={{ fontSize: '0.85rem', color: '#64748B', marginBottom: '1.2rem' }}>
+              Selecciona las áreas de ministerio en las que sirve o apoya activamente el miembro en
+              la iglesia.
+            </p>
+
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
+                gap: '0.8rem',
+              }}
+            >
+              {[
+                { id: 'PROCLAMACIÓN', label: '📢 PROCLAMACIÓN', sub: 'Evangelismo & Misiones' },
+                { id: 'ENSEÑANZA', label: '📖 ENSEÑANZA', sub: 'Discipulado & Educación' },
+                { id: 'SERVICIO', label: '🤝 SERVICIO', sub: 'Diaconía & Logística' },
+                {
+                  id: 'COMPAÑERISMO',
+                  label: '👥 COMPAÑERISMO',
+                  sub: 'Grupos Pequeños & Integración',
+                },
+                { id: 'ADORACIÓN', label: '🎵 ADORACIÓN', sub: 'Alabanza & Música' },
+              ].map((area) => {
+                const isChecked = newAreas.includes(area.id as any);
+                return (
+                  <button
+                    key={area.id}
+                    type="button"
+                    onClick={() => toggleArea(area.id as any)}
+                    style={{
+                      padding: '1rem',
+                      border: isChecked ? '2px solid #1B5CB6' : '1px solid #CBD5E1',
+                      borderRadius: '14px',
+                      backgroundColor: isChecked ? '#EFF6FF' : '#F8FAFC',
+                      color: isChecked ? '#1B5CB6' : '#475569',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '0.3rem',
+                      textAlign: 'left',
+                      transition: 'all 0.15s ease',
+                      boxShadow: isChecked ? '0 4px 12px rgba(27, 92, 182, 0.12)' : 'none',
+                    }}
+                  >
+                    <div
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        fontWeight: 900,
+                        fontSize: '0.9rem',
+                      }}
+                    >
+                      <span>{area.label}</span>
+                      {isChecked ? (
+                        <CheckSquare size={18} color="#1B5CB6" />
+                      ) : (
+                        <Square size={18} color="#94A3B8" />
+                      )}
+                    </div>
+                    <span
+                      style={{
+                        fontSize: '0.75rem',
+                        fontWeight: 600,
+                        color: isChecked ? '#1E40AF' : '#94A3B8',
+                      }}
+                    >
+                      {area.sub}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* BARRA INFERIOR DE ACCIONES */}
+          <div
+            style={{
+              display: 'flex',
+              justifyContent: 'flex-end',
+              gap: '1rem',
+              marginTop: '1rem',
+              paddingBottom: '2rem',
+            }}
+          >
+            <button
+              type="button"
+              onClick={() => setScreenMode('directory')}
+              className="btn btn-outline"
+              style={{ padding: '0.85rem 1.8rem', borderRadius: '12px', fontWeight: 800 }}
+            >
+              Cancelar / Volver
+            </button>
+            <button
+              type="submit"
+              disabled={submitting}
+              style={{
+                backgroundColor: '#1B5CB6',
+                color: 'white',
+                border: 'none',
+                padding: '0.85rem 2.2rem',
+                borderRadius: '12px',
+                fontWeight: 900,
+                fontSize: '1rem',
+                cursor: 'pointer',
+                boxShadow: '0 6px 18px rgba(27, 92, 182, 0.3)',
+              }}
+            >
+              {submitting ? 'Guardando Registro...' : '💾 Guardar Miembro en Padrón'}
+            </button>
+          </div>
+        </form>
+      </div>
+    );
+  }
+
+  // --- PANTALLA 1: DIRECTORIO DE MIEMBROS (LISTA Y KANBAN) ---
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
       {/* Encabezado del Módulo */}
@@ -214,7 +933,7 @@ export const ChurchMembersManager: React.FC = () => {
         </div>
 
         <button
-          onClick={() => setIsAddModalOpen(true)}
+          onClick={() => setScreenMode('form')}
           style={{
             backgroundColor: '#1B5CB6',
             color: 'white',
@@ -732,465 +1451,6 @@ export const ChurchMembersManager: React.FC = () => {
               </div>
             );
           })}
-        </div>
-      )}
-
-      {/* MODAL: REGISTRAR NUEVO MIEMBRO (CON TODOS LOS CAMPOS SOLICITADOS) */}
-      {isAddModalOpen && (
-        <div
-          style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            backgroundColor: 'rgba(15, 23, 42, 0.65)',
-            backdropFilter: 'blur(4px)',
-            zIndex: 1200,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            padding: '1rem',
-          }}
-          onClick={() => setIsAddModalOpen(false)}
-        >
-          <div
-            className="animate-fade-in-up"
-            style={{
-              backgroundColor: '#FFFFFF',
-              borderRadius: '20px',
-              maxWidth: '680px',
-              width: '100%',
-              maxHeight: '90vh',
-              overflowY: 'auto',
-              padding: '2rem',
-              boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)',
-              position: 'relative',
-            }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <button
-              onClick={() => setIsAddModalOpen(false)}
-              style={{
-                position: 'absolute',
-                top: '1.2rem',
-                right: '1.2rem',
-                background: '#F1F5F9',
-                border: 'none',
-                color: '#64748B',
-                borderRadius: '50%',
-                width: '32px',
-                height: '32px',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            >
-              <X size={18} />
-            </button>
-
-            <h3
-              style={{
-                fontSize: '1.5rem',
-                fontWeight: 900,
-                color: '#1B5CB6',
-                marginBottom: '0.2rem',
-              }}
-            >
-              Registrar Nuevo Miembro
-            </h3>
-            <p style={{ fontSize: '0.85rem', color: '#64748B', marginBottom: '1.5rem' }}>
-              Completa la ficha eclesiástica del miembro para incorporarlo al padrón.
-            </p>
-
-            {formError && (
-              <div
-                style={{
-                  backgroundColor: '#FEE2E2',
-                  color: '#991B1B',
-                  padding: '0.75rem',
-                  borderRadius: '10px',
-                  fontSize: '0.85rem',
-                  marginBottom: '1rem',
-                }}
-              >
-                {formError}
-              </div>
-            )}
-
-            <form
-              onSubmit={handleCreateMember}
-              style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem' }}
-            >
-              {/* SECCIÓN 1: DATOS PERSONALES BÁSICOS */}
-              <div style={{ borderBottom: '1px solid #E2E8F0', paddingBottom: '1rem' }}>
-                <span
-                  style={{
-                    fontSize: '0.8rem',
-                    fontWeight: 800,
-                    color: '#1B5CB6',
-                    textTransform: 'uppercase',
-                  }}
-                >
-                  1. Datos Personales Básicos
-                </span>
-
-                <div
-                  style={{
-                    display: 'grid',
-                    gridTemplateColumns: '1fr 1fr',
-                    gap: '1rem',
-                    marginTop: '0.8rem',
-                  }}
-                >
-                  <div>
-                    <label className="form-label">Nombre *</label>
-                    <input
-                      type="text"
-                      className="app-input"
-                      placeholder="Ej: Pedro"
-                      value={newNombre}
-                      onChange={(e) => setNewNombre(e.target.value)}
-                      required
-                    />
-                  </div>
-                  <div>
-                    <label className="form-label">Apellido *</label>
-                    <input
-                      type="text"
-                      className="app-input"
-                      placeholder="Ej: Pérez"
-                      value={newApellido}
-                      onChange={(e) => setNewApellido(e.target.value)}
-                      required
-                    />
-                  </div>
-                </div>
-
-                <div
-                  style={{
-                    display: 'grid',
-                    gridTemplateColumns: '1fr 1fr 1fr',
-                    gap: '1rem',
-                    marginTop: '0.8rem',
-                  }}
-                >
-                  <div>
-                    <label className="form-label">Cédula</label>
-                    <input
-                      type="text"
-                      className="app-input"
-                      placeholder="Ej: V-12345678"
-                      value={newCedula}
-                      onChange={(e) => setNewCedula(e.target.value)}
-                    />
-                  </div>
-                  <div>
-                    <label className="form-label">Fecha de Nacimiento *</label>
-                    <input
-                      type="date"
-                      className="app-input"
-                      value={newFechaNacimiento}
-                      onChange={(e) => setNewFechaNacimiento(e.target.value)}
-                      required
-                    />
-                  </div>
-                  <div>
-                    <label className="form-label">Sexo</label>
-                    <select
-                      className="app-input"
-                      value={newSexo}
-                      onChange={(e) => setNewSexo(e.target.value as any)}
-                    >
-                      <option value="Masculino">Masculino</option>
-                      <option value="Femenino">Femenino</option>
-                    </select>
-                  </div>
-                </div>
-
-                <div
-                  style={{
-                    display: 'grid',
-                    gridTemplateColumns: '1fr 1fr',
-                    gap: '1rem',
-                    marginTop: '0.8rem',
-                  }}
-                >
-                  <div>
-                    <label className="form-label">Teléfono</label>
-                    <input
-                      type="text"
-                      className="app-input"
-                      placeholder="Ej: 0414-1234567"
-                      value={newTelefono}
-                      onChange={(e) => setNewTelefono(e.target.value)}
-                    />
-                  </div>
-                  <div>
-                    <label className="form-label">Correo Electrónico</label>
-                    <input
-                      type="email"
-                      className="app-input"
-                      placeholder="miembro@correo.com"
-                      value={newEmail}
-                      onChange={(e) => setNewEmail(e.target.value)}
-                    />
-                  </div>
-                </div>
-
-                <div style={{ marginTop: '0.8rem' }}>
-                  <label className="form-label">Dirección de Habitación</label>
-                  <input
-                    type="text"
-                    className="app-input"
-                    placeholder="Ej: Av. Principal, Urb. Central, Casa 45"
-                    value={newDireccion}
-                    onChange={(e) => setNewDireccion(e.target.value)}
-                  />
-                </div>
-
-                <div style={{ marginTop: '0.8rem' }}>
-                  <label className="form-label">Redes Sociales</label>
-                  <input
-                    type="text"
-                    className="app-input"
-                    placeholder="Ej: @pedroperez (Instagram / Facebook)"
-                    value={newRedesSociales}
-                    onChange={(e) => setNewRedesSociales(e.target.value)}
-                  />
-                </div>
-              </div>
-
-              {/* SECCIÓN 2: CARGO ECLESIÁSTICO Y BAUTISMO */}
-              <div style={{ borderBottom: '1px solid #E2E8F0', paddingBottom: '1rem' }}>
-                <span
-                  style={{
-                    fontSize: '0.8rem',
-                    fontWeight: 800,
-                    color: '#1B5CB6',
-                    textTransform: 'uppercase',
-                  }}
-                >
-                  2. Cargo Eclesiástico & Membresía
-                </span>
-
-                <div style={{ marginTop: '0.8rem' }}>
-                  <label className="form-label">Cargo Eclesiástico</label>
-                  <select
-                    className="app-input"
-                    value={newCargo}
-                    onChange={(e) => setNewCargo(e.target.value as any)}
-                  >
-                    <option value="PASTOR / OBISPO O SIMILAR">👑 PASTOR / OBISPO O SIMILAR</option>
-                    <option value="DIÁCONO / ANCIANO O SIMILAR">
-                      🛡️ DIÁCONO / ANCIANO O SIMILAR
-                    </option>
-                    <option value="MINISTRO / COORDINADOR / LÍDER O SIMILAR">
-                      ⭐ MINISTRO / COORDINADOR / LÍDER O SIMILAR
-                    </option>
-                    <option value="MIEMBRO GENERAL">👤 MIEMBRO GENERAL</option>
-                  </select>
-                </div>
-
-                <div
-                  style={{
-                    display: 'grid',
-                    gridTemplateColumns: '1fr 1fr',
-                    gap: '1rem',
-                    marginTop: '0.8rem',
-                  }}
-                >
-                  <div>
-                    <label className="form-label">¿Está Bautizado?</label>
-                    <select
-                      className="app-input"
-                      value={newBautizado ? 'si' : 'no'}
-                      onChange={(e) => setNewBautizado(e.target.value === 'si')}
-                    >
-                      <option value="si">SÍ - Bautizado</option>
-                      <option value="no">NO Bautizado</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="form-label">Fecha de Membresía</label>
-                    <input
-                      type="date"
-                      className="app-input"
-                      value={newFechaMembresia}
-                      onChange={(e) => setNewFechaMembresia(e.target.value)}
-                    />
-                  </div>
-                </div>
-
-                <div
-                  style={{
-                    display: 'grid',
-                    gridTemplateColumns: '1fr 1fr',
-                    gap: '1rem',
-                    marginTop: '0.8rem',
-                  }}
-                >
-                  <div>
-                    <label className="form-label">Grado de Instrucción</label>
-                    <select
-                      className="app-input"
-                      value={newGradoInstruccion}
-                      onChange={(e) => setNewGradoInstruccion(e.target.value)}
-                    >
-                      <option value="Primaria">Primaria</option>
-                      <option value="Bachillerato">Bachillerato</option>
-                      <option value="Técnico">Técnico Medio / TSU</option>
-                      <option value="Universitario">Universitario</option>
-                      <option value="Posgrado">Posgrado / Maestría</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="form-label">Enfermedades / Condición Médica</label>
-                    <input
-                      type="text"
-                      className="app-input"
-                      placeholder="Ej: Alergia a la penicilina / Hipertensión"
-                      value={newEnfermedad}
-                      onChange={(e) => setNewEnfermedad(e.target.value)}
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* SECCIÓN 3: ÁREAS MINISTERIALES / PILARES */}
-              <div style={{ borderBottom: '1px solid #E2E8F0', paddingBottom: '1rem' }}>
-                <span
-                  style={{
-                    fontSize: '0.8rem',
-                    fontWeight: 800,
-                    color: '#1B5CB6',
-                    textTransform: 'uppercase',
-                  }}
-                >
-                  3. Áreas Ministeriales Asignadas
-                </span>
-                <div
-                  style={{
-                    display: 'grid',
-                    gridTemplateColumns: '1fr 1fr',
-                    gap: '0.6rem',
-                    marginTop: '0.8rem',
-                  }}
-                >
-                  {[
-                    { id: 'PROCLAMACIÓN', label: '📢 PROCLAMACIÓN' },
-                    { id: 'ENSEÑANZA', label: '📖 ENSEÑANZA' },
-                    { id: 'SERVICIO', label: '🤝 SERVICIO' },
-                    { id: 'COMPAÑERISMO', label: '👥 COMPAÑERISMO' },
-                    { id: 'ADORACIÓN', label: '🎵 ADORACIÓN' },
-                  ].map((area) => {
-                    const isChecked = newAreas.includes(area.id as any);
-                    return (
-                      <button
-                        key={area.id}
-                        type="button"
-                        onClick={() => toggleArea(area.id as any)}
-                        style={{
-                          padding: '0.6rem 0.8rem',
-                          border: isChecked ? '2px solid #1B5CB6' : '1px solid #CBD5E1',
-                          borderRadius: '10px',
-                          backgroundColor: isChecked ? '#EFF6FF' : '#F8FAFC',
-                          color: isChecked ? '#1B5CB6' : '#475569',
-                          fontWeight: 800,
-                          fontSize: '0.82rem',
-                          cursor: 'pointer',
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '0.5rem',
-                          textAlign: 'left',
-                        }}
-                      >
-                        {isChecked ? <CheckSquare size={16} /> : <Square size={16} />}
-                        {area.label}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* SECCIÓN 4: FOTOS Y MULTIMEDIA */}
-              <div>
-                <span
-                  style={{
-                    fontSize: '0.8rem',
-                    fontWeight: 800,
-                    color: '#1B5CB6',
-                    textTransform: 'uppercase',
-                  }}
-                >
-                  4. Fotos & Documentos
-                </span>
-                <div
-                  style={{
-                    display: 'grid',
-                    gridTemplateColumns: '1fr 1fr',
-                    gap: '1rem',
-                    marginTop: '0.8rem',
-                  }}
-                >
-                  <div>
-                    <label className="form-label">URL Foto del Miembro (*Foto)</label>
-                    <input
-                      type="text"
-                      className="app-input"
-                      placeholder="https://..."
-                      value={newFotoUrl}
-                      onChange={(e) => setNewFotoUrl(e.target.value)}
-                    />
-                  </div>
-                  <div>
-                    <label className="form-label">URL Foto de la Cédula</label>
-                    <input
-                      type="text"
-                      className="app-input"
-                      placeholder="https://..."
-                      value={newFotoCedulaUrl}
-                      onChange={(e) => setNewFotoCedulaUrl(e.target.value)}
-                    />
-                  </div>
-                </div>
-              </div>
-
-              <div
-                style={{
-                  display: 'flex',
-                  justifyContent: 'flex-end',
-                  gap: '0.8rem',
-                  marginTop: '1rem',
-                }}
-              >
-                <button
-                  type="button"
-                  onClick={() => setIsAddModalOpen(false)}
-                  className="btn btn-outline"
-                >
-                  Cancelar
-                </button>
-                <button
-                  type="submit"
-                  disabled={submitting}
-                  style={{
-                    backgroundColor: '#1B5CB6',
-                    color: 'white',
-                    border: 'none',
-                    padding: '0.75rem 1.8rem',
-                    borderRadius: '12px',
-                    fontWeight: 800,
-                    fontSize: '0.95rem',
-                    cursor: 'pointer',
-                  }}
-                >
-                  {submitting ? 'Guardando...' : 'Guardar Miembro'}
-                </button>
-              </div>
-            </form>
-          </div>
         </div>
       )}
 
