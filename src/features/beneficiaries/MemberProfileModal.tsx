@@ -222,10 +222,17 @@ export const MemberProfileModal: React.FC<MemberProfileModalProps> = ({
         <div
           style={{
             display: 'flex',
-            borderBottom: '1px solid #E2E8F0',
+            alignItems: 'center',
+            gap: '0.25rem',
+            borderBottom: '2px solid #E2E8F0',
             backgroundColor: '#F8FAFC',
-            padding: '0 0.5rem',
+            padding: '0.5rem 1rem 0 1rem',
             overflowX: 'auto',
+            overflowY: 'hidden',
+            scrollbarWidth: 'none',
+            msOverflowStyle: 'none',
+            WebkitOverflowScrolling: 'touch',
+            flexShrink: 0,
           }}
         >
           {[
@@ -247,23 +254,29 @@ export const MemberProfileModal: React.FC<MemberProfileModalProps> = ({
               key={tab.id}
               onClick={() => setActiveTab(tab.id as any)}
               style={{
-                padding: '0.9rem 1rem',
+                padding: '0.75rem 1.1rem',
                 border: 'none',
-                background: 'none',
+                backgroundColor: activeTab === tab.id ? '#FFFFFF' : 'transparent',
                 fontWeight: activeTab === tab.id ? 800 : 600,
                 color: activeTab === tab.id ? '#1B5CB6' : '#64748B',
+                borderTopLeftRadius: '12px',
+                borderTopRightRadius: '12px',
                 borderBottom: activeTab === tab.id ? '3px solid #1B5CB6' : '3px solid transparent',
                 cursor: 'pointer',
-                display: 'flex',
+                display: 'inline-flex',
                 alignItems: 'center',
-                gap: '0.4rem',
-                fontSize: '0.85rem',
+                gap: '0.5rem',
+                fontSize: '0.88rem',
+                lineHeight: 1.4,
                 whiteSpace: 'nowrap',
                 transition: 'all 0.2s ease',
+                boxShadow: activeTab === tab.id ? '0 -2px 10px rgba(0,0,0,0.03)' : 'none',
+                marginBottom: '-2px',
+                flexShrink: 0,
               }}
             >
               {tab.icon}
-              {tab.label}
+              <span>{tab.label}</span>
             </button>
           ))}
         </div>
