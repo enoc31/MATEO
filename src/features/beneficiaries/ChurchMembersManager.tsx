@@ -282,7 +282,7 @@ export const ChurchMembersManager: React.FC = () => {
                 marginBottom: '0.5rem',
               }}
             >
-              <ArrowLeft size={18} /> Volver al Padrón de Miembros
+              <ArrowLeft size={18} /> Volver a Miembros y Fieles
             </button>
             <h2
               style={{ color: 'var(--primary)', fontSize: '1.85rem', fontWeight: 900, margin: 0 }}
@@ -905,7 +905,7 @@ export const ChurchMembersManager: React.FC = () => {
                 boxShadow: '0 6px 18px rgba(27, 92, 182, 0.3)',
               }}
             >
-              {submitting ? 'Guardando Registro...' : '💾 Guardar Miembro en Padrón'}
+              {submitting ? 'Guardando Registro...' : '💾 Guardar Registro de Miembro'}
             </button>
           </div>
         </form>
@@ -928,7 +928,7 @@ export const ChurchMembersManager: React.FC = () => {
       >
         <div>
           <h2 style={{ color: 'var(--primary)', fontSize: '1.75rem', fontWeight: 800, margin: 0 }}>
-            👤 Padrón de Miembros y Fieles
+            👤 Miembros y Fieles
           </h2>
           <p style={{ opacity: 0.8, fontSize: '0.9rem', marginTop: '0.25rem', color: '#475569' }}>
             Data congregacional completa, cargos eclesiásticos, ministerios y ficha 360°.

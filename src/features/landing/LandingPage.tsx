@@ -48,7 +48,7 @@ const churchModules = [
     icon: <UserCheck size={26} />,
     color: '#EC4899',
     bg: '#FCE7F3',
-    title: 'Padrón de Miembros',
+    title: 'Gestión de Miembros',
     desc: 'Mantén la base digital ordenada de feligreses, roles ministeriales, bautismos, fechas especiales y contacto.',
   },
   {
@@ -509,7 +509,7 @@ export function LandingPage() {
                 }}
               >
                 La plataforma todo en uno para gestionar diezmos en dos monedas (USD/VES),
-                presupuestos ministeriales, padrón de miembros y auditoría en tiempo real.
+                presupuestos ministeriales, gestión de miembros y auditoría en tiempo real.
               </p>
 
               <div

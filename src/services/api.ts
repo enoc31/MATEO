@@ -1979,7 +1979,7 @@ export const api = {
           // Auto-crear una jornada de sistema identificada como Ekklesia
           const newSystemJornada = await api.createJornada(
             {
-              nombre: isEkklesiaSource ? 'Padrón Congregacional Ekklesia' : 'Padrón General',
+              nombre: isEkklesiaSource ? 'Miembros Ekklesia' : 'Registro General',
               fecha: new Date().toISOString().split('T')[0],
               beneficios_entregados: isEkklesiaSource
                 ? 'Ekklesia - Registro de Miembro Congregacional'
