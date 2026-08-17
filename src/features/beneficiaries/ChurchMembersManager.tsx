@@ -69,11 +69,34 @@ export const ChurchMembersManager: React.FC = () => {
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
 
-  const loadMembers = async () => {
-    setLoading(true);
+  const loadMembers = async (isBackgroundRefresh = false) => {
+    const cacheKey = `cache_members_${activeOng?.id || 'default'}`;
+
+    // 1. Mostrar cache instantáneamente (0ms) si existe
+    if (!isBackgroundRefresh) {
+      const cached = sessionStorage.getItem(cacheKey);
+      if (cached) {
+        try {
+          const parsed = JSON.parse(cached);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            setMembers(parsed);
+            setLoading(false);
+            isBackgroundRefresh = true; // Continuar recarga en segundo plano sin spinner
+          }
+        } catch (e) {
+          // Ignorar error de parsing cache
+        }
+      }
+    }
+
+    if (!isBackgroundRefresh) {
+      setLoading(true);
+    }
+
     try {
       const data = await api.getBeneficiaries(activeOng?.id);
       setMembers(data);
+      sessionStorage.setItem(cacheKey, JSON.stringify(data));
     } catch (err) {
       console.error('Error al cargar miembros:', err);
     } finally {
@@ -82,9 +105,7 @@ export const ChurchMembersManager: React.FC = () => {
   };
 
   useEffect(() => {
-    if (activeOng?.id) {
-      loadMembers();
-    }
+    loadMembers();
   }, [activeOng?.id]);
 
   const toggleArea = (
