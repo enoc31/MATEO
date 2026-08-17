@@ -7,6 +7,7 @@ DO $$
 DECLARE
     v_ong_id UUID;
     v_jornada_id UUID;
+    v_proyecto_id UUID;
     v_nombres TEXT[] := ARRAY[
         'Carlos', 'Ana', 'María', 'José', 'Luis', 'Carmen', 'Jesús', 'Sofía', 
         'Gabriel', 'Elena', 'Pedro', 'Alejandro', 'Andrea', 'Diego', 'Daniela', 
@@ -43,51 +44,58 @@ DECLARE
     v_ben_id_str TEXT;
     i INT;
 BEGIN
-    -- 1. Obtener una ONG registrada con ID UUID válido
-    SELECT id INTO v_ong_id 
-    FROM public.ongs 
+    -- 1. Intentar reutilizar una jornada existente en la base de datos
+    SELECT id, ong_id INTO v_jornada_id, v_ong_id 
+    FROM public.jornadas 
     WHERE id::text ~* '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
     ORDER BY created_at DESC 
     LIMIT 1;
 
-    -- Si no existe ninguna ONG válida, asignar UUID genérico
+    -- 2. Si no se encontró una jornada existente, obtener una ONG
+    IF v_ong_id IS NULL THEN
+        SELECT id INTO v_ong_id 
+        FROM public.ongs 
+        WHERE id::text ~* '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+        ORDER BY created_at DESC 
+        LIMIT 1;
+    END IF;
+
     IF v_ong_id IS NULL THEN
         v_ong_id := '11111111-1111-1111-1111-111111111111'::uuid;
     END IF;
 
-    -- 2. Seleccionar una jornada existente que posea ID en formato UUID válido
-    SELECT id INTO v_jornada_id 
-    FROM public.jornadas 
-    WHERE (ong_id = v_ong_id OR ong_id IS NULL)
-      AND id::text ~* '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
-    LIMIT 1;
-
-    -- Si no existe una jornada válida con UUID, crear una nueva automáticamente
+    -- 3. Si no existía ninguna jornada, crear una jornada vinculada a un proyecto válido
     IF v_jornada_id IS NULL THEN
+        SELECT id INTO v_proyecto_id 
+        FROM public.proyectos 
+        LIMIT 1;
+
+        IF v_proyecto_id IS NULL THEN
+            v_proyecto_id := gen_random_uuid();
+            INSERT INTO public.proyectos (id, nombre, descripcion, ong_id, presu_total)
+            VALUES (
+                v_proyecto_id,
+                'Proyecto Congregacional Ekklesia',
+                'Proyecto de atención y pastoral Ekklesia',
+                v_ong_id,
+                1000
+            );
+        END IF;
+
         v_jornada_id := gen_random_uuid();
-        BEGIN
-            INSERT INTO public.jornadas (id, nombre, fecha, beneficios_entregados, activa, ong_id)
-            VALUES (
-                v_jornada_id,
-                'Padrón Congregacional Ekklesia',
-                CURRENT_DATE,
-                'Ekklesia - Registro de Miembro Congregacional',
-                TRUE,
-                v_ong_id
-            );
-        EXCEPTION WHEN OTHERS THEN
-            INSERT INTO public.jornadas (id, nombre, fecha, beneficios_entregados, activa)
-            VALUES (
-                v_jornada_id,
-                'Padrón Congregacional Ekklesia',
-                CURRENT_DATE,
-                'Ekklesia - Registro de Miembro Congregacional',
-                TRUE
-            );
-        END;
+        INSERT INTO public.jornadas (id, nombre, fecha, beneficios_entregados, activa, ong_id, proyecto_id)
+        VALUES (
+            v_jornada_id,
+            'Padrón Congregacional Ekklesia',
+            CURRENT_DATE,
+            'Ekklesia - Registro de Miembro Congregacional',
+            TRUE,
+            v_ong_id,
+            v_proyecto_id
+        );
     END IF;
 
-    -- 3. Generar e insertar 100 miembros ficticios con datos realistas
+    -- 4. Generar e insertar 100 miembros ficticios con datos realistas
     FOR i IN 1..100 LOOP
         v_nombre := v_nombres[1 + floor(random() * array_length(v_nombres, 1))::int];
         v_apellido := v_apellidos[1 + floor(random() * array_length(v_apellidos, 1))::int];
