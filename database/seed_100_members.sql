@@ -43,41 +43,48 @@ DECLARE
     v_ben_id_str TEXT;
     i INT;
 BEGIN
-    -- 1. Obtener la ONG de tipo ekklesia o la más reciente
+    -- 1. Obtener una ONG registrada con ID UUID válido
     SELECT id INTO v_ong_id 
     FROM public.ongs 
+    WHERE id::text ~* '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
     ORDER BY created_at DESC 
     LIMIT 1;
 
-    -- Si no existe ninguna ONG en la tabla ongs, asignar un UUID genérico por defecto
+    -- Si no existe ninguna ONG válida, asignar UUID genérico
     IF v_ong_id IS NULL THEN
         v_ong_id := '11111111-1111-1111-1111-111111111111'::uuid;
     END IF;
 
-    -- 2. Seleccionar o asegurar una jornada activa para Ekklesia
+    -- 2. Seleccionar una jornada existente que posea ID en formato UUID válido
     SELECT id INTO v_jornada_id 
     FROM public.jornadas 
-    WHERE nombre LIKE '%Ekklesia%' AND (ong_id = v_ong_id OR ong_id IS NULL)
+    WHERE (ong_id = v_ong_id OR ong_id IS NULL)
+      AND id::text ~* '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
     LIMIT 1;
 
-    IF v_jornada_id IS NULL THEN
-        SELECT id INTO v_jornada_id 
-        FROM public.jornadas 
-        WHERE (ong_id = v_ong_id OR ong_id IS NULL)
-        LIMIT 1;
-    END IF;
-
+    -- Si no existe una jornada válida con UUID, crear una nueva automáticamente
     IF v_jornada_id IS NULL THEN
         v_jornada_id := gen_random_uuid();
-        INSERT INTO public.jornadas (id, nombre, fecha, beneficios_entregados, activa, ong_id)
-        VALUES (
-            v_jornada_id,
-            'Padrón Congregacional Ekklesia',
-            CURRENT_DATE,
-            'Ekklesia - Registro de Miembro Congregacional',
-            TRUE,
-            v_ong_id
-        );
+        BEGIN
+            INSERT INTO public.jornadas (id, nombre, fecha, beneficios_entregados, activa, ong_id)
+            VALUES (
+                v_jornada_id,
+                'Padrón Congregacional Ekklesia',
+                CURRENT_DATE,
+                'Ekklesia - Registro de Miembro Congregacional',
+                TRUE,
+                v_ong_id
+            );
+        EXCEPTION WHEN OTHERS THEN
+            INSERT INTO public.jornadas (id, nombre, fecha, beneficios_entregados, activa)
+            VALUES (
+                v_jornada_id,
+                'Padrón Congregacional Ekklesia',
+                CURRENT_DATE,
+                'Ekklesia - Registro de Miembro Congregacional',
+                TRUE
+            );
+        END;
     END IF;
 
     -- 3. Generar e insertar 100 miembros ficticios con datos realistas
@@ -123,7 +130,7 @@ BEGIN
 
         v_ben_id_str := 'ben-seed-' || i || '-' || floor(random() * 100000)::text;
 
-        -- Inserción compatible con columnas físicas extendidas
+        -- Inserción compatible tanto si la tabla posee columnas físicas como si usa metadata
         BEGIN
             INSERT INTO public.beneficiarios (
                 id,
@@ -171,7 +178,7 @@ BEGIN
                 ARRAY['PROCLAMACIÓN', 'ADORACIÓN', 'SERVICIO']
             );
         EXCEPTION WHEN undefined_column THEN
-            -- Fallback si las columnas físicas extendidas aún no están aplicadas en la tabla
+            -- Fallback si las columnas físicas extendidas no están en la tabla
             INSERT INTO public.beneficiarios (
                 id,
                 jornada_id,
