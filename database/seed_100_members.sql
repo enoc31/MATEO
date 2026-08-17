@@ -5,8 +5,8 @@
 
 DO $$
 DECLARE
-    v_ong_id UUID;
-    v_jornada_id UUID;
+    v_ong_id TEXT;
+    v_jornada_id TEXT;
     v_nombres TEXT[] := ARRAY[
         'Carlos', 'Ana', 'María', 'José', 'Luis', 'Carmen', 'Jesús', 'Sofía', 
         'Gabriel', 'Elena', 'Pedro', 'Alejandro', 'Andrea', 'Diego', 'Daniela', 
@@ -40,35 +40,45 @@ DECLARE
     v_email TEXT;
     v_meta JSONB;
     v_tipo_donacion TEXT[];
+    v_ben_id TEXT;
     i INT;
 BEGIN
-    -- 1. Obtener la primera ONG de tipo ekklesia o la más reciente
-    SELECT id INTO v_ong_id 
+    -- 1. Obtener el ID de la primera ONG registrada
+    SELECT id::text INTO v_ong_id 
     FROM public.ongs 
     ORDER BY created_at DESC 
     LIMIT 1;
 
+    -- Si no existe ninguna ONG en la tabla ongs, asignar un ID por defecto
     IF v_ong_id IS NULL THEN
-        RAISE EXCEPTION 'No se encontró ninguna ONG registrada en la base de datos.';
+        v_ong_id := '11111111-1111-1111-1111-111111111111';
     END IF;
 
-    -- 2. Asegurar o seleccionar una jornada de sistema para Ekklesia
-    SELECT id INTO v_jornada_id 
+    -- 2. Seleccionar o asegurar una jornada activa para Ekklesia
+    SELECT id::text INTO v_jornada_id 
     FROM public.jornadas 
-    WHERE nombre LIKE '%Ekklesia%' AND (ong_id = v_ong_id OR ong_id IS NULL)
+    WHERE nombre LIKE '%Ekklesia%' AND (ong_id::text = v_ong_id OR ong_id IS NULL)
     LIMIT 1;
 
     IF v_jornada_id IS NULL THEN
+        -- Intentar seleccionar cualquier jornada existente para la ONG
+        SELECT id::text INTO v_jornada_id 
+        FROM public.jornadas 
+        WHERE (ong_id::text = v_ong_id OR ong_id IS NULL)
+        LIMIT 1;
+    END IF;
+
+    IF v_jornada_id IS NULL THEN
+        v_jornada_id := 'jor-' || floor(random() * 1000000000)::text;
         INSERT INTO public.jornadas (id, nombre, fecha, beneficios_entregados, activa, ong_id)
         VALUES (
-            uuid_generate_v4(),
+            v_jornada_id,
             'Padrón Congregacional Ekklesia',
             CURRENT_DATE,
             'Ekklesia - Registro de Miembro Congregacional',
             TRUE,
             v_ong_id
-        )
-        RETURNING id INTO v_jornada_id;
+        );
     END IF;
 
     -- 3. Generar e insertar 100 miembros ficticios con datos realistas
@@ -112,52 +122,83 @@ BEGIN
             'META:' || v_meta::text
         ];
 
-        -- Inserción compatible con columnas físicas y metadata
-        INSERT INTO public.beneficiarios (
-            id,
-            jornada_id,
-            ong_id,
-            nombre,
-            apellido,
-            cedula,
-            sexo,
-            fecha_nacimiento,
-            tipo_donacion,
-            url_firma,
-            created_at,
-            direccion,
-            telefono,
-            email,
-            redes_sociales,
-            bautizado,
-            grado_instruccion,
-            enfermedad,
-            fecha_membresia,
-            cargo_eclesiastico,
-            areas_ministeriales
-        ) VALUES (
-            'ben-seed-' || i || '-' || floor(random() * 100000)::text,
-            v_jornada_id,
-            v_ong_id,
-            v_nombre,
-            v_apellido,
-            v_cedula,
-            v_sexo,
-            v_fnac,
-            v_tipo_donacion,
-            NULL,
-            NOW() - (i || ' hours')::INTERVAL,
-            v_meta->>'direccion',
-            v_phone,
-            v_email,
-            v_meta->>'redes_sociales',
-            v_bautizado,
-            v_meta->>'grado_instruccion',
-            v_meta->>'enfermedad',
-            v_fmemb,
-            v_cargo,
-            ARRAY['PROCLAMACIÓN', 'ADORACIÓN', 'SERVICIO']
-        );
+        v_ben_id := 'ben-seed-' || i || '-' || floor(random() * 100000)::text;
+
+        -- Inserción compatible tanto si existen columnas físicas como si no
+        BEGIN
+            INSERT INTO public.beneficiarios (
+                id,
+                jornada_id,
+                ong_id,
+                nombre,
+                apellido,
+                cedula,
+                sexo,
+                fecha_nacimiento,
+                tipo_donacion,
+                url_firma,
+                created_at,
+                direccion,
+                telefono,
+                email,
+                redes_sociales,
+                bautizado,
+                grado_instruccion,
+                enfermedad,
+                fecha_membresia,
+                cargo_eclesiastico,
+                areas_ministeriales
+            ) VALUES (
+                v_ben_id,
+                v_jornada_id,
+                v_ong_id,
+                v_nombre,
+                v_apellido,
+                v_cedula,
+                v_sexo,
+                v_fnac,
+                v_tipo_donacion,
+                NULL,
+                NOW() - (i || ' hours')::INTERVAL,
+                v_meta->>'direccion',
+                v_phone,
+                v_email,
+                v_meta->>'redes_sociales',
+                v_bautizado,
+                v_meta->>'grado_instruccion',
+                v_meta->>'enfermedad',
+                v_fmemb,
+                v_cargo,
+                ARRAY['PROCLAMACIÓN', 'ADORACIÓN', 'SERVICIO']
+            );
+        EXCEPTION WHEN undefined_column THEN
+            -- Fallback si las columnas físicas extendidas aún no están aplicadas en la tabla
+            INSERT INTO public.beneficiarios (
+                id,
+                jornada_id,
+                ong_id,
+                nombre,
+                apellido,
+                cedula,
+                sexo,
+                fecha_nacimiento,
+                tipo_donacion,
+                url_firma,
+                created_at
+            ) VALUES (
+                v_ben_id,
+                v_jornada_id,
+                v_ong_id,
+                v_nombre,
+                v_apellido,
+                v_cedula,
+                v_sexo,
+                v_fnac,
+                v_tipo_donacion,
+                NULL,
+                NOW() - (i || ' hours')::INTERVAL
+            );
+        END;
 
     END LOOP;
 
