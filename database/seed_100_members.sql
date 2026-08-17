@@ -5,8 +5,8 @@
 
 DO $$
 DECLARE
-    v_ong_id TEXT;
-    v_jornada_id TEXT;
+    v_ong_id UUID;
+    v_jornada_id UUID;
     v_nombres TEXT[] := ARRAY[
         'Carlos', 'Ana', 'María', 'José', 'Luis', 'Carmen', 'Jesús', 'Sofía', 
         'Gabriel', 'Elena', 'Pedro', 'Alejandro', 'Andrea', 'Diego', 'Daniela', 
@@ -40,36 +40,35 @@ DECLARE
     v_email TEXT;
     v_meta JSONB;
     v_tipo_donacion TEXT[];
-    v_ben_id TEXT;
+    v_ben_id_str TEXT;
     i INT;
 BEGIN
-    -- 1. Obtener el ID de la primera ONG registrada
-    SELECT id::text INTO v_ong_id 
+    -- 1. Obtener la ONG de tipo ekklesia o la más reciente
+    SELECT id INTO v_ong_id 
     FROM public.ongs 
     ORDER BY created_at DESC 
     LIMIT 1;
 
-    -- Si no existe ninguna ONG en la tabla ongs, asignar un ID por defecto
+    -- Si no existe ninguna ONG en la tabla ongs, asignar un UUID genérico por defecto
     IF v_ong_id IS NULL THEN
-        v_ong_id := '11111111-1111-1111-1111-111111111111';
+        v_ong_id := '11111111-1111-1111-1111-111111111111'::uuid;
     END IF;
 
     -- 2. Seleccionar o asegurar una jornada activa para Ekklesia
-    SELECT id::text INTO v_jornada_id 
+    SELECT id INTO v_jornada_id 
     FROM public.jornadas 
-    WHERE nombre LIKE '%Ekklesia%' AND (ong_id::text = v_ong_id OR ong_id IS NULL)
+    WHERE nombre LIKE '%Ekklesia%' AND (ong_id = v_ong_id OR ong_id IS NULL)
     LIMIT 1;
 
     IF v_jornada_id IS NULL THEN
-        -- Intentar seleccionar cualquier jornada existente para la ONG
-        SELECT id::text INTO v_jornada_id 
+        SELECT id INTO v_jornada_id 
         FROM public.jornadas 
-        WHERE (ong_id::text = v_ong_id OR ong_id IS NULL)
+        WHERE (ong_id = v_ong_id OR ong_id IS NULL)
         LIMIT 1;
     END IF;
 
     IF v_jornada_id IS NULL THEN
-        v_jornada_id := 'jor-' || floor(random() * 1000000000)::text;
+        v_jornada_id := gen_random_uuid();
         INSERT INTO public.jornadas (id, nombre, fecha, beneficios_entregados, activa, ong_id)
         VALUES (
             v_jornada_id,
@@ -122,9 +121,9 @@ BEGIN
             'META:' || v_meta::text
         ];
 
-        v_ben_id := 'ben-seed-' || i || '-' || floor(random() * 100000)::text;
+        v_ben_id_str := 'ben-seed-' || i || '-' || floor(random() * 100000)::text;
 
-        -- Inserción compatible tanto si existen columnas físicas como si no
+        -- Inserción compatible con columnas físicas extendidas
         BEGIN
             INSERT INTO public.beneficiarios (
                 id,
@@ -149,7 +148,7 @@ BEGIN
                 cargo_eclesiastico,
                 areas_ministeriales
             ) VALUES (
-                v_ben_id,
+                v_ben_id_str,
                 v_jornada_id,
                 v_ong_id,
                 v_nombre,
@@ -186,7 +185,7 @@ BEGIN
                 url_firma,
                 created_at
             ) VALUES (
-                v_ben_id,
+                v_ben_id_str,
                 v_jornada_id,
                 v_ong_id,
                 v_nombre,
