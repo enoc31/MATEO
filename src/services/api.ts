@@ -1897,19 +1897,26 @@ export const api = {
     }
   },
 
-  getBeneficiaries: async (): Promise<Beneficiary[]> => {
+  getBeneficiaries: async (ongId?: string): Promise<Beneficiary[]> => {
     let rawList: Beneficiary[];
     if (!isSimulationMode) {
-      const { data, error } = await supabase
+      let query = supabase
         .from('beneficiarios')
         .select('*')
         .order('created_at', { ascending: false });
+
+      if (ongId) {
+        query = query.eq('ong_id', ongId);
+      }
+
+      const { data, error } = await query;
       if (error && error.code !== '42P01') {
         console.warn('Error getBeneficiaries', error);
       }
       rawList = (data as Beneficiary[]) || [];
     } else {
-      rawList = JSON.parse(localStorage.getItem('cnbv_beneficiaries') || '[]');
+      const all = JSON.parse(localStorage.getItem('cnbv_beneficiaries') || '[]');
+      rawList = ongId ? all.filter((b: any) => b.ong_id === ongId) : all;
     }
 
     // Desempaquetar metadata de Ekklesia

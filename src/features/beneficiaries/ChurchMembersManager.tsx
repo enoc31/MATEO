@@ -72,7 +72,7 @@ export const ChurchMembersManager: React.FC = () => {
   const loadMembers = async () => {
     setLoading(true);
     try {
-      const data = await api.getBeneficiaries();
+      const data = await api.getBeneficiaries(activeOng?.id);
       setMembers(data);
     } catch (err) {
       console.error('Error al cargar miembros:', err);
@@ -82,8 +82,10 @@ export const ChurchMembersManager: React.FC = () => {
   };
 
   useEffect(() => {
-    loadMembers();
-  }, []);
+    if (activeOng?.id) {
+      loadMembers();
+    }
+  }, [activeOng?.id]);
 
   const toggleArea = (
     area: 'PROCLAMACIÓN' | 'ENSEÑANZA' | 'SERVICIO' | 'COMPAÑERISMO' | 'ADORACIÓN',
@@ -172,6 +174,7 @@ export const ChurchMembersManager: React.FC = () => {
         `Miembro ${saved.nombre} ${saved.apellido} registrado exitosamente`,
         'success',
       );
+      setMembers((prev) => [saved, ...prev]);
       setScreenMode('directory');
 
       // Reset form fields
