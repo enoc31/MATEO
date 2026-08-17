@@ -13,7 +13,6 @@ import {
   CheckSquare,
   Square,
   Trash2,
-  Sparkles,
 } from 'lucide-react';
 import { api, type Beneficiary } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
@@ -200,113 +199,6 @@ export const ChurchMembersManager: React.FC = () => {
       setFormError(err.message || 'Error al registrar el miembro.');
     } finally {
       setSubmitting(false);
-    }
-  };
-
-  const [generatingSeeds, setGeneratingSeeds] = useState(false);
-
-  const handleGenerate100Members = async () => {
-    if (
-      !window.confirm(
-        '¿Deseas generar e insertar 100 miembros ficticios de prueba para medir la velocidad de carga de datos?',
-      )
-    ) {
-      return;
-    }
-    setGeneratingSeeds(true);
-    try {
-      const nombres = [
-        'Carlos',
-        'Ana',
-        'María',
-        'José',
-        'Luis',
-        'Carmen',
-        'Jesús',
-        'Sofía',
-        'Gabriel',
-        'Elena',
-        'Pedro',
-        'Alejandro',
-        'Andrea',
-        'Diego',
-        'Daniela',
-        'Juan',
-        'Manuel',
-        'Patricia',
-        'Ricardo',
-        'Valentina',
-      ];
-      const apellidos = [
-        'Rodríguez',
-        'González',
-        'Hernández',
-        'Pérez',
-        'Martínez',
-        'Sánchez',
-        'Díaz',
-        'López',
-        'Gómez',
-        'Flores',
-        'Morales',
-        'Romero',
-        'Mendoza',
-        'Castillo',
-        'Silva',
-      ];
-      const cargos = [
-        'PASTOR / OBISPO O SIMILAR',
-        'DIÁCONO / ANCIANO O SIMILAR',
-        'MINISTRO / COORDINADOR / LÍDER O SIMILAR',
-        'MIEMBRO GENERAL',
-        'MIEMBRO GENERAL',
-        'MIEMBRO GENERAL',
-      ];
-      const instruccion = ['Bachillerato', 'Técnico', 'Universitario', 'Posgrado'];
-
-      const generated: Beneficiary[] = [];
-
-      for (let i = 1; i <= 100; i++) {
-        const nom = nombres[Math.floor(Math.random() * nombres.length)];
-        const ape = apellidos[Math.floor(Math.random() * apellidos.length)];
-        const cargo = cargos[Math.floor(Math.random() * cargos.length)];
-        const bautizado = Math.random() > 0.25;
-
-        const newBen: Beneficiary = {
-          id: `ben-seed-${i}-${Date.now()}`,
-          jornada_id: 'general-ekklesia',
-          nombre: nom,
-          apellido: ape,
-          cedula: `V-${10000000 + Math.floor(Math.random() * 20000000)}`,
-          sexo: i % 2 === 0 ? 'Femenino' : 'Masculino',
-          fecha_nacimiento: '1988-05-14',
-          direccion: 'Av. Bolívar, Caracas',
-          telefono: `0414-${1000000 + Math.floor(Math.random() * 9000000)}`,
-          email: `${nom.toLowerCase()}.${ape.toLowerCase()}${i}@gmail.com`,
-          redes_sociales: `@${nom.toLowerCase()}${ape.toLowerCase()}`,
-          bautizado,
-          grado_instruccion: instruccion[Math.floor(Math.random() * instruccion.length)],
-          enfermedad: 'Ninguna',
-          fecha_membresia: '2021-01-15',
-          cargo_eclesiastico: cargo as any,
-          areas_ministeriales: ['PROCLAMACIÓN', 'ADORACIÓN', 'SERVICIO'],
-          tipo_donacion: [bautizado ? 'Bautizado' : 'Activo', 'Ekklesia', cargo],
-          url_firma: null,
-          created_at: new Date(Date.now() - i * 3600000).toISOString(),
-          ong_id: activeOng?.id,
-        };
-
-        await api.saveBeneficiary(newBen, undefined, activeOng?.id);
-        generated.push(newBen);
-      }
-
-      setMembers((prev) => [...generated, ...prev]);
-      addNotification('¡100 Miembros ficticios cargados exitosamente!', 'success');
-    } catch (err) {
-      console.error('Error generando miembros:', err);
-      addNotification('Error al generar miembros ficticios', 'warning');
-    } finally {
-      setGeneratingSeeds(false);
     }
   };
 
@@ -1043,48 +935,25 @@ export const ChurchMembersManager: React.FC = () => {
           </p>
         </div>
 
-        <div style={{ display: 'flex', gap: '0.8rem', alignItems: 'center', flexWrap: 'wrap' }}>
-          <button
-            onClick={handleGenerate100Members}
-            disabled={generatingSeeds}
-            style={{
-              backgroundColor: '#F1F5F9',
-              color: '#1E293B',
-              border: '1px solid #CBD5E1',
-              padding: '0.75rem 1.2rem',
-              borderRadius: '12px',
-              fontWeight: 800,
-              fontSize: '0.9rem',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.5rem',
-            }}
-          >
-            <Sparkles size={18} color="#D97706" />
-            {generatingSeeds ? 'Generando 100 Miembros...' : '⚡ Cargar 100 Miembros Ficticios'}
-          </button>
-
-          <button
-            onClick={() => setScreenMode('form')}
-            style={{
-              backgroundColor: '#1B5CB6',
-              color: 'white',
-              border: 'none',
-              padding: '0.75rem 1.4rem',
-              borderRadius: '12px',
-              fontWeight: 800,
-              fontSize: '0.95rem',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.5rem',
-              boxShadow: '0 4px 12px rgba(27, 92, 182, 0.25)',
-            }}
-          >
-            <Plus size={18} /> Registrar Nuevo Miembro
-          </button>
-        </div>
+        <button
+          onClick={() => setScreenMode('form')}
+          style={{
+            backgroundColor: '#1B5CB6',
+            color: 'white',
+            border: 'none',
+            padding: '0.75rem 1.4rem',
+            borderRadius: '12px',
+            fontWeight: 800,
+            fontSize: '0.95rem',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.5rem',
+            boxShadow: '0 4px 12px rgba(27, 92, 182, 0.25)',
+          }}
+        >
+          <Plus size={18} /> Registrar Nuevo Miembro
+        </button>
       </div>
 
       {/* Tarjetas Estadísticas Resumen */}
