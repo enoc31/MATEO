@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Users, Search, Plus, LayoutList, Kanban, Eye, X } from 'lucide-react';
+import { Users, Search, Plus, LayoutList, Kanban, Eye, X, CheckSquare, Square } from 'lucide-react';
 import { api, type Beneficiary } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 import { MemberProfileModal } from './MemberProfileModal';
@@ -28,8 +28,26 @@ export const ChurchMembersManager: React.FC = () => {
   const [newCedula, setNewCedula] = useState('');
   const [newSexo, setNewSexo] = useState<'Masculino' | 'Femenino'>('Masculino');
   const [newFechaNacimiento, setNewFechaNacimiento] = useState('');
+  const [newDireccion, setNewDireccion] = useState('');
   const [newTelefono, setNewTelefono] = useState('');
-  const [newEstado, setNewEstado] = useState<EclesiasticalStatus>('Activo');
+  const [newEmail, setNewEmail] = useState('');
+  const [newRedesSociales, setNewRedesSociales] = useState('');
+  const [newFotoUrl, setNewFotoUrl] = useState('');
+  const [newFotoCedulaUrl, setNewFotoCedulaUrl] = useState('');
+  const [newBautizado, setNewBautizado] = useState(false);
+  const [newGradoInstruccion, setNewGradoInstruccion] = useState('Universitario');
+  const [newEnfermedad, setNewEnfermedad] = useState('');
+  const [newFechaMembresia, setNewFechaMembresia] = useState('');
+  const [newCargo, setNewCargo] = useState<
+    | 'PASTOR / OBISPO O SIMILAR'
+    | 'DIÁCONO / ANCIANO O SIMILAR'
+    | 'MINISTRO / COORDINADOR / LÍDER O SIMILAR'
+    | 'MIEMBRO GENERAL'
+  >('MIEMBRO GENERAL');
+  const [newAreas, setNewAreas] = useState<
+    ('PROCLAMACIÓN' | 'ENSEÑANZA' | 'SERVICIO' | 'COMPAÑERISMO' | 'ADORACIÓN')[]
+  >([]);
+
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
 
@@ -49,17 +67,27 @@ export const ChurchMembersManager: React.FC = () => {
     loadMembers();
   }, []);
 
+  const toggleArea = (
+    area: 'PROCLAMACIÓN' | 'ENSEÑANZA' | 'SERVICIO' | 'COMPAÑERISMO' | 'ADORACIÓN',
+  ) => {
+    setNewAreas((prev) => (prev.includes(area) ? prev.filter((a) => a !== area) : [...prev, area]));
+  };
+
   const handleCreateMember = async (e: React.FormEvent) => {
     e.preventDefault();
     setFormError(null);
 
-    if (!newNombre.trim() || !newApellido.trim() || !newCedula.trim()) {
-      setFormError('Nombre, Apellido y Cédula son obligatorios.');
+    if (!newNombre.trim() || !newApellido.trim() || !newFechaNacimiento) {
+      setFormError(
+        'Los campos Nombre (*), Apellido (*) y Fecha de Nacimiento (*) son obligatorios.',
+      );
       return;
     }
 
     setSubmitting(true);
     try {
+      const statusFromBautismo: EclesiasticalStatus = newBautizado ? 'Bautizado' : 'Activo';
+
       const saved = await api.saveBeneficiary(
         {
           nombre: newNombre.trim(),
@@ -67,8 +95,20 @@ export const ChurchMembersManager: React.FC = () => {
           cedula: newCedula.trim(),
           sexo: newSexo,
           fecha_nacimiento: newFechaNacimiento,
+          direccion: newDireccion.trim(),
+          telefono: newTelefono.trim(),
+          email: newEmail.trim(),
+          redes_sociales: newRedesSociales.trim(),
+          foto_url: newFotoUrl.trim() || null,
+          foto_cedula_url: newFotoCedulaUrl.trim() || null,
+          bautizado: newBautizado,
+          grado_instruccion: newGradoInstruccion,
+          enfermedad: newEnfermedad.trim(),
+          fecha_membresia: newFechaMembresia || new Date().toISOString().split('T')[0],
+          cargo_eclesiastico: newCargo,
+          areas_ministeriales: newAreas,
           jornada_id: 'general-ekklesia',
-          tipo_donacion: [newEstado, 'Ekklesia', ...(newTelefono ? [`Tel: ${newTelefono}`] : [])],
+          tipo_donacion: [statusFromBautismo, 'Ekklesia', newCargo],
         },
         undefined,
         activeOng?.id,
@@ -79,13 +119,24 @@ export const ChurchMembersManager: React.FC = () => {
         'success',
       );
       setIsAddModalOpen(false);
-      // Reset form
+
+      // Reset form fields
       setNewNombre('');
       setNewApellido('');
       setNewCedula('');
       setNewFechaNacimiento('');
+      setNewDireccion('');
       setNewTelefono('');
-      setNewEstado('Activo');
+      setNewEmail('');
+      setNewRedesSociales('');
+      setNewFotoUrl('');
+      setNewFotoCedulaUrl('');
+      setNewBautizado(false);
+      setNewGradoInstruccion('Universitario');
+      setNewEnfermedad('');
+      setNewFechaMembresia('');
+      setNewCargo('MIEMBRO GENERAL');
+      setNewAreas([]);
       await loadMembers();
     } catch (err: any) {
       setFormError(err.message || 'Error al registrar el miembro.');
@@ -94,8 +145,10 @@ export const ChurchMembersManager: React.FC = () => {
     }
   };
 
-  // Helper to determine status from types or fallback
   const getMemberStatus = (member: Beneficiary): EclesiasticalStatus => {
+    if (member.bautizado) return 'Bautizado';
+    if (member.cargo_eclesiastico && member.cargo_eclesiastico.includes('PASTOR')) return 'Líder';
+    if (member.cargo_eclesiastico && member.cargo_eclesiastico.includes('MINISTRO')) return 'Líder';
     if (member.tipo_donacion && member.tipo_donacion.length > 0) {
       const statusCandidate = member.tipo_donacion[0];
       if (['Activo', 'Bautizado', 'En Visita', 'Líder', 'Inactivo'].includes(statusCandidate)) {
@@ -105,13 +158,14 @@ export const ChurchMembersManager: React.FC = () => {
     return 'Activo';
   };
 
-  // Filter members
   const filteredMembers = members.filter((m) => {
     const term = searchTerm.toLowerCase().trim();
     const matchesSearch =
       m.nombre.toLowerCase().includes(term) ||
       m.apellido.toLowerCase().includes(term) ||
-      m.cedula.toLowerCase().includes(term);
+      m.cedula.toLowerCase().includes(term) ||
+      (m.email && m.email.toLowerCase().includes(term)) ||
+      (m.telefono && m.telefono.includes(term));
 
     const status = getMemberStatus(m);
     const matchesStatus = statusFilter === 'todos' || status === statusFilter;
@@ -119,23 +173,28 @@ export const ChurchMembersManager: React.FC = () => {
     return matchesSearch && matchesStatus;
   });
 
-  // Calculate statistics
   const totalCount = members.length;
-  const bautizadosCount = members.filter((m) => getMemberStatus(m) === 'Bautizado').length;
-  const enVisitaCount = members.filter((m) => getMemberStatus(m) === 'En Visita').length;
-  const lideresCount = members.filter((m) => getMemberStatus(m) === 'Líder').length;
+  const bautizadosCount = members.filter(
+    (m) => m.bautizado || getMemberStatus(m) === 'Bautizado',
+  ).length;
+  const pastoresCount = members.filter(
+    (m) => m.cargo_eclesiastico === 'PASTOR / OBISPO O SIMILAR',
+  ).length;
+  const diaconosCount = members.filter(
+    (m) => m.cargo_eclesiastico === 'DIÁCONO / ANCIANO O SIMILAR',
+  ).length;
 
   const KANBAN_COLUMNS: { id: EclesiasticalStatus; label: string; color: string; bg: string }[] = [
     { id: 'Activo', label: '🟢 Activos', color: '#15803D', bg: '#F0FDF4' },
     { id: 'Bautizado', label: '🌊 Bautizados', color: '#1D4ED8', bg: '#EFF6FF' },
     { id: 'En Visita', label: '🚶 En Visita', color: '#D97706', bg: '#FFFBEB' },
-    { id: 'Líder', label: '⭐ Líderes', color: '#7E22CE', bg: '#FAF5FF' },
+    { id: 'Líder', label: '⭐ Líderes / Ministros', color: '#7E22CE', bg: '#FAF5FF' },
     { id: 'Inactivo', label: '⚪ Inactivos', color: '#64748B', bg: '#F8FAFC' },
   ];
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-      {/* Encabezado del Módulo de Miembros */}
+      {/* Encabezado del Módulo */}
       <div
         style={{
           display: 'flex',
@@ -150,8 +209,7 @@ export const ChurchMembersManager: React.FC = () => {
             👤 Padrón de Miembros y Fieles
           </h2>
           <p style={{ opacity: 0.8, fontSize: '0.9rem', marginTop: '0.25rem', color: '#475569' }}>
-            Data consolidada de la congregación, fichas 360°, vinculación de diezmos y formato
-            Lista/Kanban.
+            Data congregacional completa, cargos eclesiásticos, ministerios y ficha 360°.
           </p>
         </div>
 
@@ -194,7 +252,7 @@ export const ChurchMembersManager: React.FC = () => {
           }}
         >
           <span style={{ fontSize: '0.78rem', color: '#64748B', fontWeight: 800 }}>
-            TOTAL CONGREGACIÓN
+            TOTAL MIEMBROS
           </span>
           <div
             style={{ fontSize: '1.8rem', fontWeight: 900, color: '#1B5CB6', marginTop: '0.2rem' }}
@@ -229,13 +287,13 @@ export const ChurchMembersManager: React.FC = () => {
             boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
           }}
         >
-          <span style={{ fontSize: '0.78rem', color: '#D97706', fontWeight: 800 }}>
-            EN VISITA / NUEVOS
+          <span style={{ fontSize: '0.78rem', color: '#7E22CE', fontWeight: 800 }}>
+            PASTORES / OBISPOS
           </span>
           <div
-            style={{ fontSize: '1.8rem', fontWeight: 900, color: '#92400E', marginTop: '0.2rem' }}
+            style={{ fontSize: '1.8rem', fontWeight: 900, color: '#6B21A8', marginTop: '0.2rem' }}
           >
-            {enVisitaCount}
+            {pastoresCount}
           </div>
         </div>
 
@@ -248,13 +306,13 @@ export const ChurchMembersManager: React.FC = () => {
             boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
           }}
         >
-          <span style={{ fontSize: '0.78rem', color: '#7E22CE', fontWeight: 800 }}>
-            LÍDERES Y SERVIDORES
+          <span style={{ fontSize: '0.78rem', color: '#1D4ED8', fontWeight: 800 }}>
+            DIÁCONOS / ANCIANOS
           </span>
           <div
-            style={{ fontSize: '1.8rem', fontWeight: 900, color: '#6B21A8', marginTop: '0.2rem' }}
+            style={{ fontSize: '1.8rem', fontWeight: 900, color: '#1E3A8A', marginTop: '0.2rem' }}
           >
-            {lideresCount}
+            {diaconosCount}
           </div>
         </div>
       </div>
@@ -273,7 +331,6 @@ export const ChurchMembersManager: React.FC = () => {
           border: '1px solid #E2E8F0',
         }}
       >
-        {/* Buscador */}
         <div style={{ flex: '1 1 280px', position: 'relative' }}>
           <Search
             size={18}
@@ -287,7 +344,7 @@ export const ChurchMembersManager: React.FC = () => {
           />
           <input
             type="text"
-            placeholder="Buscar por Nombre, Apellido o Cédula..."
+            placeholder="Buscar por Nombre, Apellido, Cédula, Teléfono o Correo..."
             className="app-input"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
@@ -295,7 +352,6 @@ export const ChurchMembersManager: React.FC = () => {
           />
         </div>
 
-        {/* Filtro por Estado */}
         <div style={{ flex: '0 1 200px' }}>
           <select
             className="app-input"
@@ -307,12 +363,11 @@ export const ChurchMembersManager: React.FC = () => {
             <option value="Activo">🟢 Activos</option>
             <option value="Bautizado">🌊 Bautizados</option>
             <option value="En Visita">🚶 En Visita</option>
-            <option value="Líder">⭐ Líderes</option>
+            <option value="Líder">⭐ Líderes / Pastores</option>
             <option value="Inactivo">⚪ Inactivos</option>
           </select>
         </div>
 
-        {/* Selector de Formato: LISTA vs KANBAN */}
         <div
           style={{
             display: 'flex',
@@ -374,15 +429,12 @@ export const ChurchMembersManager: React.FC = () => {
         >
           {loading ? (
             <div style={{ textAlign: 'center', padding: '3rem', color: '#64748B' }}>
-              Cargando miembros de la congregación...
+              Cargando miembros congregacionales...
             </div>
           ) : filteredMembers.length === 0 ? (
             <div style={{ textAlign: 'center', padding: '3rem', color: '#64748B' }}>
               <Users size={48} style={{ margin: '0 auto 1rem auto', opacity: 0.3 }} />
               <p style={{ fontWeight: 700, margin: 0 }}>No se encontraron miembros</p>
-              <p style={{ fontSize: '0.85rem', marginTop: '0.2rem' }}>
-                Prueba ajustando los términos de búsqueda o registrando un nuevo miembro.
-              </p>
             </div>
           ) : (
             <div style={{ overflowX: 'auto' }}>
@@ -406,25 +458,30 @@ export const ChurchMembersManager: React.FC = () => {
                   >
                     <th style={{ padding: '1rem 1.2rem' }}>Miembro / Feligrés</th>
                     <th style={{ padding: '1rem 1.2rem' }}>Cédula</th>
-                    <th style={{ padding: '1rem 1.2rem' }}>Estado Eclesiástico</th>
-                    <th style={{ padding: '1rem 1.2rem' }}>Sexo</th>
-                    <th style={{ padding: '1rem 1.2rem' }}>Fecha Nacimiento</th>
+                    <th style={{ padding: '1rem 1.2rem' }}>Cargo Eclesiástico</th>
+                    <th style={{ padding: '1rem 1.2rem' }}>Bautizado</th>
+                    <th style={{ padding: '1rem 1.2rem' }}>Teléfono / Correo</th>
                     <th style={{ padding: '1rem 1.2rem', textAlign: 'center' }}>Acciones</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredMembers.map((member) => {
-                    const status = getMemberStatus(member);
-                    return (
-                      <tr
-                        key={member.id}
-                        style={{
-                          borderBottom: '1px solid #F1F5F9',
-                          transition: 'background 0.15s',
-                        }}
-                      >
-                        <td style={{ padding: '1rem 1.2rem' }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
+                  {filteredMembers.map((member) => (
+                    <tr key={member.id} style={{ borderBottom: '1px solid #F1F5F9' }}>
+                      <td style={{ padding: '1rem 1.2rem' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
+                          {member.foto_url ? (
+                            <img
+                              src={member.foto_url}
+                              alt="Foto"
+                              style={{
+                                width: '40px',
+                                height: '40px',
+                                borderRadius: '50%',
+                                objectFit: 'cover',
+                                flexShrink: 0,
+                              }}
+                            />
+                          ) : (
                             <div
                               style={{
                                 width: '40px',
@@ -443,84 +500,81 @@ export const ChurchMembersManager: React.FC = () => {
                               {member.nombre?.[0]?.toUpperCase()}
                               {member.apellido?.[0]?.toUpperCase()}
                             </div>
-                            <div>
-                              <div style={{ fontWeight: 800, color: '#0F172A' }}>
-                                {member.nombre} {member.apellido}
-                              </div>
-                              <div style={{ fontSize: '0.78rem', color: '#64748B' }}>
-                                Registrado el{' '}
-                                {new Date(member.created_at).toLocaleDateString('es-VE')}
-                              </div>
+                          )}
+                          <div>
+                            <div style={{ fontWeight: 800, color: '#0F172A' }}>
+                              {member.nombre} {member.apellido}
+                            </div>
+                            <div style={{ fontSize: '0.78rem', color: '#64748B' }}>
+                              F. Nac:{' '}
+                              {member.fecha_nacimiento
+                                ? new Date(member.fecha_nacimiento).toLocaleDateString('es-VE')
+                                : 'N/I'}
                             </div>
                           </div>
-                        </td>
-                        <td style={{ padding: '1rem 1.2rem', fontWeight: 700, color: '#334155' }}>
-                          {member.cedula}
-                        </td>
-                        <td style={{ padding: '1rem 1.2rem' }}>
-                          <span
-                            style={{
-                              padding: '0.25rem 0.7rem',
-                              borderRadius: '999px',
-                              fontSize: '0.78rem',
-                              fontWeight: 800,
-                              backgroundColor:
-                                status === 'Activo'
-                                  ? '#DCFCE7'
-                                  : status === 'Bautizado'
-                                    ? '#DBEAFE'
-                                    : status === 'Líder'
-                                      ? '#F3E8FF'
-                                      : status === 'En Visita'
-                                        ? '#FEF3C7'
-                                        : '#F1F5F9',
-                              color:
-                                status === 'Activo'
-                                  ? '#15803D'
-                                  : status === 'Bautizado'
-                                    ? '#1D4ED8'
-                                    : status === 'Líder'
-                                      ? '#7E22CE'
-                                      : status === 'En Visita'
-                                        ? '#D97706'
-                                        : '#64748B',
-                            }}
-                          >
-                            {status}
-                          </span>
-                        </td>
-                        <td style={{ padding: '1rem 1.2rem', color: '#475569' }}>{member.sexo}</td>
-                        <td style={{ padding: '1rem 1.2rem', color: '#475569' }}>
-                          {member.fecha_nacimiento
-                            ? new Date(member.fecha_nacimiento).toLocaleDateString('es-VE')
-                            : 'No indicada'}
-                        </td>
-                        <td style={{ padding: '1rem 1.2rem', textAlign: 'center' }}>
-                          <button
-                            onClick={() => {
-                              setSelectedMember(member);
-                              setIsProfileModalOpen(true);
-                            }}
-                            style={{
-                              padding: '0.45rem 0.9rem',
-                              backgroundColor: '#1B5CB6',
-                              color: 'white',
-                              border: 'none',
-                              borderRadius: '8px',
-                              fontWeight: 700,
-                              fontSize: '0.8rem',
-                              cursor: 'pointer',
-                              display: 'inline-flex',
-                              alignItems: 'center',
-                              gap: '0.4rem',
-                            }}
-                          >
-                            <Eye size={14} /> Ficha 360°
-                          </button>
-                        </td>
-                      </tr>
-                    );
-                  })}
+                        </div>
+                      </td>
+                      <td style={{ padding: '1rem 1.2rem', fontWeight: 700, color: '#334155' }}>
+                        {member.cedula || 'N/I'}
+                      </td>
+                      <td style={{ padding: '1rem 1.2rem' }}>
+                        <span
+                          style={{
+                            padding: '0.25rem 0.6rem',
+                            borderRadius: '999px',
+                            fontSize: '0.75rem',
+                            fontWeight: 800,
+                            backgroundColor: '#EFF6FF',
+                            color: '#1E40AF',
+                            border: '1px solid #BFDBFE',
+                          }}
+                        >
+                          {member.cargo_eclesiastico || 'MIEMBRO GENERAL'}
+                        </span>
+                      </td>
+                      <td style={{ padding: '1rem 1.2rem' }}>
+                        <span
+                          style={{
+                            padding: '0.2rem 0.6rem',
+                            borderRadius: '999px',
+                            fontSize: '0.75rem',
+                            fontWeight: 800,
+                            backgroundColor: member.bautizado ? '#DCFCE7' : '#FEF3C7',
+                            color: member.bautizado ? '#15803D' : '#D97706',
+                          }}
+                        >
+                          {member.bautizado ? 'SÍ' : 'NO'}
+                        </span>
+                      </td>
+                      <td style={{ padding: '1rem 1.2rem', color: '#475569', fontSize: '0.85rem' }}>
+                        <div>{member.telefono || 'Sin Teléfono'}</div>
+                        <div style={{ fontSize: '0.78rem', color: '#64748B' }}>{member.email}</div>
+                      </td>
+                      <td style={{ padding: '1rem 1.2rem', textAlign: 'center' }}>
+                        <button
+                          onClick={() => {
+                            setSelectedMember(member);
+                            setIsProfileModalOpen(true);
+                          }}
+                          style={{
+                            padding: '0.45rem 0.9rem',
+                            backgroundColor: '#1B5CB6',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '8px',
+                            fontWeight: 700,
+                            fontSize: '0.8rem',
+                            cursor: 'pointer',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '0.4rem',
+                          }}
+                        >
+                          <Eye size={14} /> Ficha 360°
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
                 </tbody>
               </table>
             </div>
@@ -551,7 +605,6 @@ export const ChurchMembersManager: React.FC = () => {
                   minHeight: '380px',
                 }}
               >
-                {/* Header de la Columna Kanban */}
                 <div
                   style={{
                     display: 'flex',
@@ -579,7 +632,6 @@ export const ChurchMembersManager: React.FC = () => {
                   </span>
                 </div>
 
-                {/* Tarjetas de Miembros en la Columna */}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
                   {columnMembers.length === 0 ? (
                     <div
@@ -591,7 +643,7 @@ export const ChurchMembersManager: React.FC = () => {
                         fontStyle: 'italic',
                       }}
                     >
-                      Sin miembros en esta categoría
+                      Sin miembros
                     </div>
                   ) : (
                     columnMembers.map((m) => (
@@ -609,30 +661,42 @@ export const ChurchMembersManager: React.FC = () => {
                         }}
                       >
                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.7rem' }}>
-                          <div
-                            style={{
-                              width: '36px',
-                              height: '36px',
-                              borderRadius: '50%',
-                              backgroundColor: col.color,
-                              color: 'white',
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              fontWeight: 800,
-                              fontSize: '0.85rem',
-                              flexShrink: 0,
-                            }}
-                          >
-                            {m.nombre?.[0]?.toUpperCase()}
-                            {m.apellido?.[0]?.toUpperCase()}
-                          </div>
+                          {m.foto_url ? (
+                            <img
+                              src={m.foto_url}
+                              alt="Foto"
+                              style={{
+                                width: '36px',
+                                height: '36px',
+                                borderRadius: '50%',
+                                objectFit: 'cover',
+                              }}
+                            />
+                          ) : (
+                            <div
+                              style={{
+                                width: '36px',
+                                height: '36px',
+                                borderRadius: '50%',
+                                backgroundColor: col.color,
+                                color: 'white',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                fontWeight: 800,
+                                fontSize: '0.85rem',
+                              }}
+                            >
+                              {m.nombre?.[0]?.toUpperCase()}
+                              {m.apellido?.[0]?.toUpperCase()}
+                            </div>
+                          )}
                           <div>
                             <div style={{ fontWeight: 800, fontSize: '0.92rem', color: '#0F172A' }}>
                               {m.nombre} {m.apellido}
                             </div>
                             <div style={{ fontSize: '0.75rem', color: '#64748B' }}>
-                              C.I.: {m.cedula}
+                              C.I.: {m.cedula || 'N/I'}
                             </div>
                           </div>
                         </div>
@@ -671,7 +735,7 @@ export const ChurchMembersManager: React.FC = () => {
         </div>
       )}
 
-      {/* MODAL: REGISTRAR NUEVO MIEMBRO */}
+      {/* MODAL: REGISTRAR NUEVO MIEMBRO (CON TODOS LOS CAMPOS SOLICITADOS) */}
       {isAddModalOpen && (
         <div
           style={{
@@ -695,8 +759,10 @@ export const ChurchMembersManager: React.FC = () => {
             style={{
               backgroundColor: '#FFFFFF',
               borderRadius: '20px',
-              maxWidth: '550px',
+              maxWidth: '680px',
               width: '100%',
+              maxHeight: '90vh',
+              overflowY: 'auto',
               padding: '2rem',
               boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)',
               position: 'relative',
@@ -726,16 +792,16 @@ export const ChurchMembersManager: React.FC = () => {
 
             <h3
               style={{
-                fontSize: '1.4rem',
-                fontWeight: 800,
+                fontSize: '1.5rem',
+                fontWeight: 900,
                 color: '#1B5CB6',
-                marginBottom: '0.3rem',
+                marginBottom: '0.2rem',
               }}
             >
               Registrar Nuevo Miembro
             </h3>
             <p style={{ fontSize: '0.85rem', color: '#64748B', marginBottom: '1.5rem' }}>
-              Ingresa los datos personales del miembro para incorporarlo al padrón congregacional.
+              Completa la ficha eclesiástica del miembro para incorporarlo al padrón.
             </p>
 
             {formError && (
@@ -755,91 +821,339 @@ export const ChurchMembersManager: React.FC = () => {
 
             <form
               onSubmit={handleCreateMember}
-              style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}
+              style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem' }}
             >
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                <div>
-                  <label className="form-label">Nombre *</label>
+              {/* SECCIÓN 1: DATOS PERSONALES BÁSICOS */}
+              <div style={{ borderBottom: '1px solid #E2E8F0', paddingBottom: '1rem' }}>
+                <span
+                  style={{
+                    fontSize: '0.8rem',
+                    fontWeight: 800,
+                    color: '#1B5CB6',
+                    textTransform: 'uppercase',
+                  }}
+                >
+                  1. Datos Personales Básicos
+                </span>
+
+                <div
+                  style={{
+                    display: 'grid',
+                    gridTemplateColumns: '1fr 1fr',
+                    gap: '1rem',
+                    marginTop: '0.8rem',
+                  }}
+                >
+                  <div>
+                    <label className="form-label">Nombre *</label>
+                    <input
+                      type="text"
+                      className="app-input"
+                      placeholder="Ej: Pedro"
+                      value={newNombre}
+                      onChange={(e) => setNewNombre(e.target.value)}
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="form-label">Apellido *</label>
+                    <input
+                      type="text"
+                      className="app-input"
+                      placeholder="Ej: Pérez"
+                      value={newApellido}
+                      onChange={(e) => setNewApellido(e.target.value)}
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div
+                  style={{
+                    display: 'grid',
+                    gridTemplateColumns: '1fr 1fr 1fr',
+                    gap: '1rem',
+                    marginTop: '0.8rem',
+                  }}
+                >
+                  <div>
+                    <label className="form-label">Cédula</label>
+                    <input
+                      type="text"
+                      className="app-input"
+                      placeholder="Ej: V-12345678"
+                      value={newCedula}
+                      onChange={(e) => setNewCedula(e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <label className="form-label">Fecha de Nacimiento *</label>
+                    <input
+                      type="date"
+                      className="app-input"
+                      value={newFechaNacimiento}
+                      onChange={(e) => setNewFechaNacimiento(e.target.value)}
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="form-label">Sexo</label>
+                    <select
+                      className="app-input"
+                      value={newSexo}
+                      onChange={(e) => setNewSexo(e.target.value as any)}
+                    >
+                      <option value="Masculino">Masculino</option>
+                      <option value="Femenino">Femenino</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div
+                  style={{
+                    display: 'grid',
+                    gridTemplateColumns: '1fr 1fr',
+                    gap: '1rem',
+                    marginTop: '0.8rem',
+                  }}
+                >
+                  <div>
+                    <label className="form-label">Teléfono</label>
+                    <input
+                      type="text"
+                      className="app-input"
+                      placeholder="Ej: 0414-1234567"
+                      value={newTelefono}
+                      onChange={(e) => setNewTelefono(e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <label className="form-label">Correo Electrónico</label>
+                    <input
+                      type="email"
+                      className="app-input"
+                      placeholder="miembro@correo.com"
+                      value={newEmail}
+                      onChange={(e) => setNewEmail(e.target.value)}
+                    />
+                  </div>
+                </div>
+
+                <div style={{ marginTop: '0.8rem' }}>
+                  <label className="form-label">Dirección de Habitación</label>
                   <input
                     type="text"
                     className="app-input"
-                    placeholder="Ej: Pedro"
-                    value={newNombre}
-                    onChange={(e) => setNewNombre(e.target.value)}
-                    required
+                    placeholder="Ej: Av. Principal, Urb. Central, Casa 45"
+                    value={newDireccion}
+                    onChange={(e) => setNewDireccion(e.target.value)}
                   />
                 </div>
-                <div>
-                  <label className="form-label">Apellido *</label>
+
+                <div style={{ marginTop: '0.8rem' }}>
+                  <label className="form-label">Redes Sociales</label>
                   <input
                     type="text"
                     className="app-input"
-                    placeholder="Ej: Pérez"
-                    value={newApellido}
-                    onChange={(e) => setNewApellido(e.target.value)}
-                    required
+                    placeholder="Ej: @pedroperez (Instagram / Facebook)"
+                    value={newRedesSociales}
+                    onChange={(e) => setNewRedesSociales(e.target.value)}
                   />
                 </div>
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                <div>
-                  <label className="form-label">Cédula de Identidad *</label>
-                  <input
-                    type="text"
+              {/* SECCIÓN 2: CARGO ECLESIÁSTICO Y BAUTISMO */}
+              <div style={{ borderBottom: '1px solid #E2E8F0', paddingBottom: '1rem' }}>
+                <span
+                  style={{
+                    fontSize: '0.8rem',
+                    fontWeight: 800,
+                    color: '#1B5CB6',
+                    textTransform: 'uppercase',
+                  }}
+                >
+                  2. Cargo Eclesiástico & Membresía
+                </span>
+
+                <div style={{ marginTop: '0.8rem' }}>
+                  <label className="form-label">Cargo Eclesiástico</label>
+                  <select
                     className="app-input"
-                    placeholder="Ej: V-12345678"
-                    value={newCedula}
-                    onChange={(e) => setNewCedula(e.target.value)}
-                    required
-                  />
+                    value={newCargo}
+                    onChange={(e) => setNewCargo(e.target.value as any)}
+                  >
+                    <option value="PASTOR / OBISPO O SIMILAR">👑 PASTOR / OBISPO O SIMILAR</option>
+                    <option value="DIÁCONO / ANCIANO O SIMILAR">
+                      🛡️ DIÁCONO / ANCIANO O SIMILAR
+                    </option>
+                    <option value="MINISTRO / COORDINADOR / LÍDER O SIMILAR">
+                      ⭐ MINISTRO / COORDINADOR / LÍDER O SIMILAR
+                    </option>
+                    <option value="MIEMBRO GENERAL">👤 MIEMBRO GENERAL</option>
+                  </select>
                 </div>
-                <div>
-                  <label className="form-label">Teléfono de Contacto</label>
-                  <input
-                    type="text"
-                    className="app-input"
-                    placeholder="Ej: 0414-1234567"
-                    value={newTelefono}
-                    onChange={(e) => setNewTelefono(e.target.value)}
-                  />
+
+                <div
+                  style={{
+                    display: 'grid',
+                    gridTemplateColumns: '1fr 1fr',
+                    gap: '1rem',
+                    marginTop: '0.8rem',
+                  }}
+                >
+                  <div>
+                    <label className="form-label">¿Está Bautizado?</label>
+                    <select
+                      className="app-input"
+                      value={newBautizado ? 'si' : 'no'}
+                      onChange={(e) => setNewBautizado(e.target.value === 'si')}
+                    >
+                      <option value="si">SÍ - Bautizado</option>
+                      <option value="no">NO Bautizado</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="form-label">Fecha de Membresía</label>
+                    <input
+                      type="date"
+                      className="app-input"
+                      value={newFechaMembresia}
+                      onChange={(e) => setNewFechaMembresia(e.target.value)}
+                    />
+                  </div>
+                </div>
+
+                <div
+                  style={{
+                    display: 'grid',
+                    gridTemplateColumns: '1fr 1fr',
+                    gap: '1rem',
+                    marginTop: '0.8rem',
+                  }}
+                >
+                  <div>
+                    <label className="form-label">Grado de Instrucción</label>
+                    <select
+                      className="app-input"
+                      value={newGradoInstruccion}
+                      onChange={(e) => setNewGradoInstruccion(e.target.value)}
+                    >
+                      <option value="Primaria">Primaria</option>
+                      <option value="Bachillerato">Bachillerato</option>
+                      <option value="Técnico">Técnico Medio / TSU</option>
+                      <option value="Universitario">Universitario</option>
+                      <option value="Posgrado">Posgrado / Maestría</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="form-label">Enfermedades / Condición Médica</label>
+                    <input
+                      type="text"
+                      className="app-input"
+                      placeholder="Ej: Alergia a la penicilina / Hipertensión"
+                      value={newEnfermedad}
+                      onChange={(e) => setNewEnfermedad(e.target.value)}
+                    />
+                  </div>
                 </div>
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem' }}>
-                <div>
-                  <label className="form-label">Sexo</label>
-                  <select
-                    className="app-input"
-                    value={newSexo}
-                    onChange={(e) => setNewSexo(e.target.value as any)}
-                  >
-                    <option value="Masculino">Masculino</option>
-                    <option value="Femenino">Femenino</option>
-                  </select>
+              {/* SECCIÓN 3: ÁREAS MINISTERIALES / PILARES */}
+              <div style={{ borderBottom: '1px solid #E2E8F0', paddingBottom: '1rem' }}>
+                <span
+                  style={{
+                    fontSize: '0.8rem',
+                    fontWeight: 800,
+                    color: '#1B5CB6',
+                    textTransform: 'uppercase',
+                  }}
+                >
+                  3. Áreas Ministeriales Asignadas
+                </span>
+                <div
+                  style={{
+                    display: 'grid',
+                    gridTemplateColumns: '1fr 1fr',
+                    gap: '0.6rem',
+                    marginTop: '0.8rem',
+                  }}
+                >
+                  {[
+                    { id: 'PROCLAMACIÓN', label: '📢 PROCLAMACIÓN' },
+                    { id: 'ENSEÑANZA', label: '📖 ENSEÑANZA' },
+                    { id: 'SERVICIO', label: '🤝 SERVICIO' },
+                    { id: 'COMPAÑERISMO', label: '👥 COMPAÑERISMO' },
+                    { id: 'ADORACIÓN', label: '🎵 ADORACIÓN' },
+                  ].map((area) => {
+                    const isChecked = newAreas.includes(area.id as any);
+                    return (
+                      <button
+                        key={area.id}
+                        type="button"
+                        onClick={() => toggleArea(area.id as any)}
+                        style={{
+                          padding: '0.6rem 0.8rem',
+                          border: isChecked ? '2px solid #1B5CB6' : '1px solid #CBD5E1',
+                          borderRadius: '10px',
+                          backgroundColor: isChecked ? '#EFF6FF' : '#F8FAFC',
+                          color: isChecked ? '#1B5CB6' : '#475569',
+                          fontWeight: 800,
+                          fontSize: '0.82rem',
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '0.5rem',
+                          textAlign: 'left',
+                        }}
+                      >
+                        {isChecked ? <CheckSquare size={16} /> : <Square size={16} />}
+                        {area.label}
+                      </button>
+                    );
+                  })}
                 </div>
-                <div>
-                  <label className="form-label">Fecha Nacimiento</label>
-                  <input
-                    type="date"
-                    className="app-input"
-                    value={newFechaNacimiento}
-                    onChange={(e) => setNewFechaNacimiento(e.target.value)}
-                  />
-                </div>
-                <div>
-                  <label className="form-label">Estado Eclesiástico</label>
-                  <select
-                    className="app-input"
-                    value={newEstado}
-                    onChange={(e) => setNewEstado(e.target.value as EclesiasticalStatus)}
-                  >
-                    <option value="Activo">🟢 Activo</option>
-                    <option value="Bautizado">🌊 Bautizado</option>
-                    <option value="En Visita">🚶 En Visita</option>
-                    <option value="Líder">⭐ Líder / Servidor</option>
-                    <option value="Inactivo">⚪ Inactivo</option>
-                  </select>
+              </div>
+
+              {/* SECCIÓN 4: FOTOS Y MULTIMEDIA */}
+              <div>
+                <span
+                  style={{
+                    fontSize: '0.8rem',
+                    fontWeight: 800,
+                    color: '#1B5CB6',
+                    textTransform: 'uppercase',
+                  }}
+                >
+                  4. Fotos & Documentos
+                </span>
+                <div
+                  style={{
+                    display: 'grid',
+                    gridTemplateColumns: '1fr 1fr',
+                    gap: '1rem',
+                    marginTop: '0.8rem',
+                  }}
+                >
+                  <div>
+                    <label className="form-label">URL Foto del Miembro (*Foto)</label>
+                    <input
+                      type="text"
+                      className="app-input"
+                      placeholder="https://..."
+                      value={newFotoUrl}
+                      onChange={(e) => setNewFotoUrl(e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <label className="form-label">URL Foto de la Cédula</label>
+                    <input
+                      type="text"
+                      className="app-input"
+                      placeholder="https://..."
+                      value={newFotoCedulaUrl}
+                      onChange={(e) => setNewFotoCedulaUrl(e.target.value)}
+                    />
+                  </div>
                 </div>
               </div>
 
@@ -865,9 +1179,10 @@ export const ChurchMembersManager: React.FC = () => {
                     backgroundColor: '#1B5CB6',
                     color: 'white',
                     border: 'none',
-                    padding: '0.7rem 1.5rem',
-                    borderRadius: '10px',
+                    padding: '0.75rem 1.8rem',
+                    borderRadius: '12px',
                     fontWeight: 800,
+                    fontSize: '0.95rem',
                     cursor: 'pointer',
                   }}
                 >

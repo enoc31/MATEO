@@ -122,6 +122,26 @@ export interface Beneficiary {
   ip_captura?: string;
   ong_id?: string;
   created_at: string;
+  // Campos extendidos de Miembro (Ekklesia)
+  direccion?: string;
+  telefono?: string;
+  email?: string;
+  redes_sociales?: string;
+  foto_url?: string | null;
+  foto_cedula_url?: string | null;
+  bautizado?: boolean;
+  grado_instruccion?: string;
+  enfermedad?: string;
+  fecha_membresia?: string;
+  huella_url?: string | null;
+  cargo_eclesiastico?:
+    | 'PASTOR / OBISPO O SIMILAR'
+    | 'DIÁCONO / ANCIANO O SIMILAR'
+    | 'MINISTRO / COORDINADOR / LÍDER O SIMILAR'
+    | 'MIEMBRO GENERAL';
+  areas_ministeriales?: (
+    'PROCLAMACIÓN' | 'ENSEÑANZA' | 'SERVICIO' | 'COMPAÑERISMO' | 'ADORACIÓN'
+  )[];
 }
 
 export interface ExpenseReceipt {
