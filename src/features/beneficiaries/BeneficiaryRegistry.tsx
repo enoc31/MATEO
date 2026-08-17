@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { CalendarDays, UserCheck, Users } from 'lucide-react';
+import { CalendarDays, UserCheck, History } from 'lucide-react';
 import { RegistrationForm } from './RegistrationForm';
 import { CapturedRecords } from './CapturedRecords';
 import { SuccessScreen } from './SuccessScreen';
+import { ChurchMembersManager } from './ChurchMembersManager';
 import { api } from '../../services/api';
 import type { Jornada } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
@@ -13,10 +14,10 @@ export const BeneficiaryRegistry: React.FC = () => {
   const { activeOng } = useAuth();
   const isEkklesia = activeOng?.tipo_organizacion === 'ekklesia';
 
-  // Default to 'history' so user immediately sees the padrón
-  const [activeTab, setActiveTab] = useState<Tab>('history');
+  const [activeTab, setActiveTab] = useState<Tab>('form');
   const [jornadas, setJornadas] = useState<Jornada[]>([]);
   const [selectedJornadaId, setSelectedJornadaId] = useState<string>('');
+  const [loading, setLoading] = useState(true);
 
   const loadJornadas = async () => {
     try {
@@ -27,17 +28,21 @@ export const BeneficiaryRegistry: React.FC = () => {
       const saved = sessionStorage.getItem('cnbv_active_jornada');
       if (saved && activas.some((j) => j.id === saved)) {
         setSelectedJornadaId(saved);
-      } else if (activas.length > 0) {
-        setSelectedJornadaId(activas[0].id);
       }
     } catch (err) {
       console.error('Error al cargar jornadas:', err);
+    } finally {
+      setLoading(false);
     }
   };
 
   useEffect(() => {
-    loadJornadas();
-  }, []);
+    if (!isEkklesia) {
+      loadJornadas();
+    } else {
+      setLoading(false);
+    }
+  }, [isEkklesia]);
 
   const handleSelectJornada = (id: string) => {
     setSelectedJornadaId(id);
@@ -52,6 +57,88 @@ export const BeneficiaryRegistry: React.FC = () => {
     setActiveTab('form');
   };
 
+  // If this is a Church / Ekklesia organization, render the dedicated Church Member Manager module
+  if (isEkklesia) {
+    return <ChurchMembersManager />;
+  }
+
+  // --- ONG WORKFLOW (Jornadas de Ayuda Social + Firma de Beneficiarios) ---
+  if (loading) {
+    return (
+      <div style={{ textAlign: 'center', padding: '2rem' }}>
+        Cargando jornadas activas de la ONG...
+      </div>
+    );
+  }
+
+  if (!selectedJornadaId) {
+    return (
+      <div style={{ maxWidth: '600px', margin: '2rem auto', padding: '0 1rem' }}>
+        <div className="card" style={{ padding: '2rem', textAlign: 'center' }}>
+          <CalendarDays
+            size={48}
+            color="var(--primary)"
+            style={{ margin: '0 auto', marginBottom: '1rem' }}
+          />
+          <h2 style={{ color: 'var(--neutral-dark)', marginBottom: '1.5rem' }}>
+            Seleccionar Jornada de Ayuda Social
+          </h2>
+
+          {jornadas.length === 0 ? (
+            <p
+              style={{
+                color: 'var(--danger)',
+                padding: '1rem',
+                backgroundColor: '#ffebee',
+                borderRadius: 'var(--radius-sm)',
+              }}
+            >
+              No hay jornadas de ayuda social activas en este momento. Por favor, solicita al
+              administrador que habilite una jornada.
+            </p>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              <p style={{ color: 'var(--neutral-gray)', marginBottom: '1rem' }}>
+                Elige la jornada de campo en la que se registrará la entrega de donaciones.
+              </p>
+              {jornadas.map((j) => (
+                <button
+                  key={j.id}
+                  className="btn"
+                  style={{
+                    padding: '1rem',
+                    border: '2px solid var(--primary)',
+                    backgroundColor: 'white',
+                    color: 'var(--primary)',
+                    borderRadius: 'var(--radius-md)',
+                    fontWeight: 'bold',
+                    fontSize: '1.1rem',
+                    textAlign: 'left',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '0.25rem',
+                  }}
+                  onClick={() => handleSelectJornada(j.id)}
+                >
+                  <span>{j.nombre}</span>
+                  <span
+                    style={{
+                      fontSize: '0.85rem',
+                      fontWeight: 'normal',
+                      color: 'var(--neutral-gray)',
+                    }}
+                  >
+                    Fecha: {new Date(j.fecha).toLocaleDateString('es-VE')}
+                  </span>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+
   const selectedJornada = jornadas.find((j) => j.id === selectedJornadaId);
 
   return (
@@ -59,10 +146,53 @@ export const BeneficiaryRegistry: React.FC = () => {
       className="animate-fade-in-up"
       style={{ maxWidth: '950px', margin: '0 auto', padding: '1rem' }}
     >
-      {/* Encabezado del Módulo */}
+      {selectedJornada && (
+        <div
+          style={{
+            backgroundColor: '#e8f5e9',
+            padding: '0.75rem 1rem',
+            borderRadius: 'var(--radius-md)',
+            marginBottom: '1rem',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+          }}
+        >
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+              color: '#2e7d32',
+              fontWeight: 600,
+            }}
+          >
+            <CalendarDays size={18} />
+            Jornada de Campo Activa: {selectedJornada.nombre}
+          </div>
+          <button
+            onClick={() => {
+              setSelectedJornadaId('');
+              sessionStorage.removeItem('cnbv_active_jornada');
+            }}
+            style={{
+              background: 'none',
+              border: 'none',
+              color: '#1565c0',
+              textDecoration: 'underline',
+              cursor: 'pointer',
+              fontSize: '0.9rem',
+            }}
+          >
+            Cambiar
+          </button>
+        </div>
+      )}
+
+      {/* Encabezado ONG */}
       <div style={{ marginBottom: '1.5rem' }}>
         <h2 style={{ color: 'var(--primary)', fontSize: '1.75rem', fontWeight: 800 }}>
-          {isEkklesia ? '👤 Miembros y Fieles' : '🤝 Beneficiarios y Atención Social'}
+          🤝 Beneficiarios y Atención Social (ONG)
         </h2>
         <p
           style={{
@@ -72,13 +202,12 @@ export const BeneficiaryRegistry: React.FC = () => {
             marginTop: '0.25rem',
           }}
         >
-          {isEkklesia
-            ? 'Padrón consolidado de miembros de la congregación, fichas 360°, asistencias y vinculación de diezmos/ofrendas.'
-            : 'Padrón consolidado de beneficiarios, entregas de ayudas sociales y firma autógrafa en campo.'}
+          Captura de beneficiarios en campo, entrega de donaciones y registro con firma autógrafa
+          digital.
         </p>
       </div>
 
-      {/* Pestañas Principales */}
+      {/* Pestañas ONG */}
       <div
         style={{
           display: 'flex',
@@ -89,28 +218,6 @@ export const BeneficiaryRegistry: React.FC = () => {
           borderRadius: 'var(--radius-lg)',
         }}
       >
-        <button
-          onClick={() => setActiveTab('history')}
-          style={{
-            flex: 1,
-            padding: '0.75rem',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: '0.5rem',
-            border: 'none',
-            borderRadius: 'var(--radius-md)',
-            fontWeight: 700,
-            cursor: 'pointer',
-            transition: 'all 0.2s ease',
-            backgroundColor: activeTab === 'history' ? '#fff' : 'transparent',
-            color: activeTab === 'history' ? 'var(--primary)' : 'var(--neutral-dark)',
-            boxShadow: activeTab === 'history' ? 'var(--shadow-sm)' : 'none',
-          }}
-        >
-          <Users size={18} /> {isEkklesia ? 'Padrón de Miembros 360°' : 'Beneficiarios Registrados'}
-        </button>
-
         <button
           onClick={() => setActiveTab('form')}
           style={{
@@ -135,70 +242,41 @@ export const BeneficiaryRegistry: React.FC = () => {
               activeTab === 'form' || activeTab === 'success' ? 'var(--shadow-sm)' : 'none',
           }}
         >
-          <UserCheck size={18} /> {isEkklesia ? 'Nuevo Miembro' : 'Registro de Campo'}
+          <UserCheck size={18} /> Registro de Beneficiario en Campo
+        </button>
+
+        <button
+          onClick={() => setActiveTab('history')}
+          style={{
+            flex: 1,
+            padding: '0.75rem',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '0.5rem',
+            border: 'none',
+            borderRadius: 'var(--radius-md)',
+            fontWeight: 700,
+            cursor: 'pointer',
+            transition: 'all 0.2s ease',
+            backgroundColor: activeTab === 'history' ? '#fff' : 'transparent',
+            color: activeTab === 'history' ? 'var(--primary)' : 'var(--neutral-dark)',
+            boxShadow: activeTab === 'history' ? 'var(--shadow-sm)' : 'none',
+          }}
+        >
+          <History size={18} /> Monitoreo e Historial de Entregas
         </button>
       </div>
 
-      {/* Selector/Bandeja de Actividad de Campo (Si se está en formulario de registro) */}
-      {activeTab === 'form' && jornadas.length > 0 && (
-        <div
-          style={{
-            backgroundColor: '#e8f5e9',
-            padding: '0.75rem 1rem',
-            borderRadius: 'var(--radius-md)',
-            marginBottom: '1rem',
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            flexWrap: 'wrap',
-            gap: '0.5rem',
-          }}
-        >
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.5rem',
-              color: '#2e7d32',
-              fontWeight: 600,
-            }}
-          >
-            <CalendarDays size={18} />
-            {isEkklesia ? 'Actividad / Culto Activo: ' : 'Jornada Activa: '}
-            <strong>{selectedJornada?.nombre || 'General'}</strong>
-          </div>
-          {jornadas.length > 1 && (
-            <select
-              className="app-input"
-              style={{
-                width: 'auto',
-                marginBottom: 0,
-                padding: '0.25rem 0.5rem',
-                fontSize: '0.85rem',
-              }}
-              value={selectedJornadaId}
-              onChange={(e) => handleSelectJornada(e.target.value)}
-            >
-              {jornadas.map((j) => (
-                <option key={j.id} value={j.id}>
-                  {j.nombre} ({new Date(j.fecha).toLocaleDateString('es-VE')})
-                </option>
-              ))}
-            </select>
-          )}
-        </div>
-      )}
-
-      {/* Contenido Principal */}
       <div className="card" style={{ padding: '1.5rem', borderRadius: 'var(--radius-lg)' }}>
-        {activeTab === 'history' && <CapturedRecords />}
         {activeTab === 'form' && (
           <RegistrationForm
             onSuccess={handleSuccess}
-            jornadaId={selectedJornadaId || (jornadas[0]?.id ?? '')}
+            jornadaId={selectedJornadaId}
             ongId={selectedJornada?.ong_id}
           />
         )}
+        {activeTab === 'history' && <CapturedRecords />}
         {activeTab === 'success' && <SuccessScreen onNewRegistration={handleNewRegistration} />}
       </div>
     </div>
