@@ -4,7 +4,7 @@ import {
   Search,
   Plus,
   LayoutList,
-  Kanban,
+  LayoutGrid,
   Eye,
   ArrowLeft,
   Upload,
@@ -27,11 +27,12 @@ export const ChurchMembersManager: React.FC = () => {
 
   const [members, setMembers] = useState<Beneficiary[]>([]);
   const [loading, setLoading] = useState(true);
-  const [viewMode, setViewMode] = useState<'list' | 'kanban'>('list');
+  const [viewMode, setViewMode] = useState<'cards' | 'list'>('cards');
   const [screenMode, setScreenMode] = useState<'directory' | 'form'>('directory');
 
   const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState<string>('todos');
+  const [cargoFilter, setCargoFilter] = useState<string>('todos');
+  const [bautizadoFilter, setBautizadoFilter] = useState<string>('todos');
 
   // Modal 360 profile
   const [selectedMember, setSelectedMember] = useState<Beneficiary | null>(null);
@@ -239,16 +240,25 @@ export const ChurchMembersManager: React.FC = () => {
   const filteredMembers = members.filter((m) => {
     const term = searchTerm.toLowerCase().trim();
     const matchesSearch =
+      !term ||
       m.nombre.toLowerCase().includes(term) ||
       m.apellido.toLowerCase().includes(term) ||
       m.cedula.toLowerCase().includes(term) ||
       (m.email && m.email.toLowerCase().includes(term)) ||
       (m.telefono && m.telefono.includes(term));
 
-    const status = getMemberStatus(m);
-    const matchesStatus = statusFilter === 'todos' || status === statusFilter;
+    const matchesCargo = cargoFilter === 'todos' || m.cargo_eclesiastico === cargoFilter;
 
-    return matchesSearch && matchesStatus;
+    const isBautizado =
+      Boolean(m.bautizado) ||
+      (Array.isArray(m.tipo_donacion) && m.tipo_donacion.includes('Bautizado'));
+
+    const matchesBautizado =
+      bautizadoFilter === 'todos' ||
+      (bautizadoFilter === 'bautizado' && isBautizado) ||
+      (bautizadoFilter === 'no_bautizado' && !isBautizado);
+
+    return matchesSearch && matchesCargo && matchesBautizado;
   });
 
   const totalCount = members.length;
@@ -261,14 +271,6 @@ export const ChurchMembersManager: React.FC = () => {
   const diaconosCount = members.filter(
     (m) => m.cargo_eclesiastico === 'DIÁCONO / ANCIANO O SIMILAR',
   ).length;
-
-  const KANBAN_COLUMNS: { id: EclesiasticalStatus; label: string; color: string; bg: string }[] = [
-    { id: 'Activo', label: '🟢 Activos', color: '#15803D', bg: '#F0FDF4' },
-    { id: 'Bautizado', label: '🌊 Bautizados', color: '#1D4ED8', bg: '#EFF6FF' },
-    { id: 'En Visita', label: '🚶 En Visita', color: '#D97706', bg: '#FFFBEB' },
-    { id: 'Líder', label: '⭐ Líderes / Ministros', color: '#7E22CE', bg: '#FAF5FF' },
-    { id: 'Inactivo', label: '⚪ Inactivos', color: '#64748B', bg: '#F8FAFC' },
-  ];
 
   // --- PANTALLA 2: FORMULARIO DEDICADO DE REGISTRO DE MIEMBRO (NUEVA PANTALLA COMPLETA) ---
   if (screenMode === 'form') {
@@ -1074,7 +1076,7 @@ export const ChurchMembersManager: React.FC = () => {
           border: '1px solid #E2E8F0',
         }}
       >
-        <div style={{ flex: '1 1 280px', position: 'relative' }}>
+        <div style={{ flex: '1 1 240px', position: 'relative' }}>
           <Search
             size={18}
             style={{
@@ -1087,7 +1089,7 @@ export const ChurchMembersManager: React.FC = () => {
           />
           <input
             type="text"
-            placeholder="Buscar por Nombre, Apellido, Cédula, Teléfono o Correo..."
+            placeholder="Buscar por Nombre, Cédula, Teléfono..."
             className="app-input"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
@@ -1095,19 +1097,31 @@ export const ChurchMembersManager: React.FC = () => {
           />
         </div>
 
-        <div style={{ flex: '0 1 200px' }}>
+        <div style={{ flex: '0 1 190px' }}>
           <select
             className="app-input"
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
+            value={cargoFilter}
+            onChange={(e) => setCargoFilter(e.target.value)}
             style={{ marginBottom: 0 }}
           >
-            <option value="todos">Todos los Estados</option>
-            <option value="Activo">🟢 Activos</option>
-            <option value="Bautizado">🌊 Bautizados</option>
-            <option value="En Visita">🚶 En Visita</option>
-            <option value="Líder">⭐ Líderes / Pastores</option>
-            <option value="Inactivo">⚪ Inactivos</option>
+            <option value="todos">Todos los Cargos</option>
+            <option value="PASTOR / OBISPO O SIMILAR">👑 Pastores / Obispos</option>
+            <option value="DIÁCONO / ANCIANO O SIMILAR">🏛️ Diáconos / Ancianos</option>
+            <option value="MINISTRO / COORDINADOR / LÍDER O SIMILAR">⭐ Ministros / Líderes</option>
+            <option value="MIEMBRO GENERAL">👤 Miembros Generales</option>
+          </select>
+        </div>
+
+        <div style={{ flex: '0 1 180px' }}>
+          <select
+            className="app-input"
+            value={bautizadoFilter}
+            onChange={(e) => setBautizadoFilter(e.target.value)}
+            style={{ marginBottom: 0 }}
+          >
+            <option value="todos">Todos (Bautismo)</option>
+            <option value="bautizado">🌊 Bautizados: SÍ</option>
+            <option value="no_bautizado">🟡 Bautizados: NO</option>
           </select>
         </div>
 
@@ -1119,6 +1133,26 @@ export const ChurchMembersManager: React.FC = () => {
             borderRadius: '10px',
           }}
         >
+          <button
+            onClick={() => setViewMode('cards')}
+            style={{
+              padding: '0.5rem 0.9rem',
+              border: 'none',
+              borderRadius: '8px',
+              fontWeight: 800,
+              fontSize: '0.85rem',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.4rem',
+              backgroundColor: viewMode === 'cards' ? '#FFFFFF' : 'transparent',
+              color: viewMode === 'cards' ? '#1B5CB6' : '#64748B',
+              boxShadow: viewMode === 'cards' ? '0 2px 6px rgba(0,0,0,0.08)' : 'none',
+            }}
+          >
+            <LayoutGrid size={16} /> Vista Tarjetas
+          </button>
+
           <button
             onClick={() => setViewMode('list')}
             style={{
@@ -1137,25 +1171,6 @@ export const ChurchMembersManager: React.FC = () => {
             }}
           >
             <LayoutList size={16} /> Vista Lista
-          </button>
-          <button
-            onClick={() => setViewMode('kanban')}
-            style={{
-              padding: '0.5rem 0.9rem',
-              border: 'none',
-              borderRadius: '8px',
-              fontWeight: 800,
-              fontSize: '0.85rem',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.4rem',
-              backgroundColor: viewMode === 'kanban' ? '#FFFFFF' : 'transparent',
-              color: viewMode === 'kanban' ? '#1B5CB6' : '#64748B',
-              boxShadow: viewMode === 'kanban' ? '0 2px 6px rgba(0,0,0,0.08)' : 'none',
-            }}
-          >
-            <Kanban size={16} /> Vista Kanban
           </button>
         </div>
       </div>
@@ -1325,156 +1340,252 @@ export const ChurchMembersManager: React.FC = () => {
         </div>
       )}
 
-      {/* VISTA 2: KANBAN POR ESTADO ECLESIÁSTICO */}
-      {viewMode === 'kanban' && (
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
-            gap: '1.2rem',
-            alignItems: 'start',
-          }}
-        >
-          {KANBAN_COLUMNS.map((col) => {
-            const columnMembers = filteredMembers.filter((m) => getMemberStatus(m) === col.id);
-            return (
-              <div
-                key={col.id}
+      {/* VISTA 2: VISTA TARJETAS (CARD GRID) */}
+      {viewMode === 'cards' && (
+        <div>
+          {filteredMembers.length === 0 ? (
+            <div
+              style={{
+                backgroundColor: '#FFFFFF',
+                borderRadius: '16px',
+                padding: '3rem 1.5rem',
+                textAlign: 'center',
+                border: '1px solid #E2E8F0',
+                color: '#64748B',
+              }}
+            >
+              <Users size={48} color="#94A3B8" style={{ margin: '0 auto 1rem auto' }} />
+              <h3
                 style={{
-                  backgroundColor: col.bg,
-                  border: `1px solid ${col.color}30`,
-                  borderRadius: '16px',
-                  padding: '1rem',
-                  minHeight: '380px',
+                  fontSize: '1.1rem',
+                  fontWeight: 800,
+                  margin: '0 0 0.4rem 0',
+                  color: '#1E293B',
                 }}
               >
-                <div
-                  style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    marginBottom: '1rem',
-                    paddingBottom: '0.5rem',
-                    borderBottom: `2px solid ${col.color}40`,
-                  }}
-                >
-                  <h4 style={{ margin: 0, fontWeight: 900, color: col.color, fontSize: '0.95rem' }}>
-                    {col.label}
-                  </h4>
-                  <span
+                No se encontraron miembros
+              </h3>
+              <p style={{ fontSize: '0.88rem', margin: 0 }}>
+                Intenta cambiar los términos de búsqueda o los filtros de cargo/bautismo.
+              </p>
+            </div>
+          ) : (
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fill, minmax(290px, 1fr))',
+                gap: '1.2rem',
+              }}
+            >
+              {filteredMembers.map((member) => {
+                const isBautizado =
+                  Boolean(member.bautizado) ||
+                  (Array.isArray(member.tipo_donacion) &&
+                    member.tipo_donacion.includes('Bautizado'));
+
+                return (
+                  <div
+                    key={member.id}
                     style={{
-                      backgroundColor: 'white',
-                      color: col.color,
-                      fontWeight: 900,
-                      fontSize: '0.78rem',
-                      padding: '0.15rem 0.5rem',
-                      borderRadius: '999px',
+                      backgroundColor: '#FFFFFF',
+                      borderRadius: '18px',
+                      border: '1px solid #E2E8F0',
+                      padding: '1.3rem',
+                      boxShadow: '0 4px 12px rgba(0,0,0,0.03)',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      justifyContent: 'space-between',
+                      gap: '1rem',
+                      transition: 'transform 0.2s ease, boxShadow 0.2s ease',
                     }}
                   >
-                    {columnMembers.length}
-                  </span>
-                </div>
-
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
-                  {columnMembers.length === 0 ? (
-                    <div
-                      style={{
-                        textAlign: 'center',
-                        padding: '2rem 0.5rem',
-                        fontSize: '0.8rem',
-                        color: '#94A3B8',
-                        fontStyle: 'italic',
-                      }}
-                    >
-                      Sin miembros
-                    </div>
-                  ) : (
-                    columnMembers.map((m) => (
+                    {/* Encabezado de la Tarjeta (Foto + Nombre + Datos) */}
+                    <div>
                       <div
-                        key={m.id}
                         style={{
-                          backgroundColor: '#FFFFFF',
-                          borderRadius: '12px',
-                          padding: '1rem',
-                          boxShadow: '0 2px 6px rgba(0,0,0,0.04)',
-                          border: '1px solid #E2E8F0',
                           display: 'flex',
-                          flexDirection: 'column',
-                          gap: '0.6rem',
+                          alignItems: 'center',
+                          gap: '1rem',
+                          marginBottom: '1rem',
                         }}
                       >
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.7rem' }}>
-                          {m.foto_url ? (
-                            <img
-                              src={m.foto_url}
-                              alt="Foto"
-                              style={{
-                                width: '36px',
-                                height: '36px',
-                                borderRadius: '50%',
-                                objectFit: 'cover',
-                              }}
-                            />
-                          ) : (
-                            <div
-                              style={{
-                                width: '36px',
-                                height: '36px',
-                                borderRadius: '50%',
-                                backgroundColor: col.color,
-                                color: 'white',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                fontWeight: 800,
-                                fontSize: '0.85rem',
-                              }}
-                            >
-                              {m.nombre?.[0]?.toUpperCase()}
-                              {m.apellido?.[0]?.toUpperCase()}
-                            </div>
-                          )}
-                          <div>
-                            <div style={{ fontWeight: 800, fontSize: '0.92rem', color: '#0F172A' }}>
-                              {m.nombre} {m.apellido}
-                            </div>
-                            <div style={{ fontSize: '0.75rem', color: '#64748B' }}>
-                              C.I.: {m.cedula || 'N/I'}
-                            </div>
+                        {member.foto_url ? (
+                          <img
+                            src={member.foto_url}
+                            alt={`${member.nombre} ${member.apellido}`}
+                            style={{
+                              width: '56px',
+                              height: '56px',
+                              borderRadius: '16px',
+                              objectFit: 'cover',
+                              border: '2px solid #1B5CB6',
+                              flexShrink: 0,
+                            }}
+                          />
+                        ) : (
+                          <div
+                            style={{
+                              width: '56px',
+                              height: '56px',
+                              borderRadius: '16px',
+                              backgroundColor: '#E0F2FE',
+                              color: '#0284C7',
+                              fontWeight: 900,
+                              fontSize: '1.2rem',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              border: '2px solid #38BDF8',
+                              flexShrink: 0,
+                            }}
+                          >
+                            {member.nombre?.[0]?.toUpperCase() || 'M'}
+                            {member.apellido?.[0]?.toUpperCase() || ''}
                           </div>
-                        </div>
+                        )}
 
-                        <button
-                          onClick={() => {
-                            setSelectedMember(m);
-                            setIsProfileModalOpen(true);
-                          }}
+                        <div style={{ overflow: 'hidden' }}>
+                          <h4
+                            style={{
+                              margin: 0,
+                              fontSize: '1.05rem',
+                              fontWeight: 800,
+                              color: '#0F172A',
+                              whiteSpace: 'nowrap',
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
+                            }}
+                          >
+                            {member.nombre} {member.apellido}
+                          </h4>
+                          <p
+                            style={{
+                              margin: '0.2rem 0 0 0',
+                              fontSize: '0.8rem',
+                              color: '#64748B',
+                              fontWeight: 600,
+                            }}
+                          >
+                            C.I.: <strong>{member.cedula || 'N/I'}</strong>
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Badges de Cargo y Bautismo */}
+                      <div
+                        style={{
+                          display: 'flex',
+                          flexWrap: 'wrap',
+                          gap: '0.4rem',
+                          marginBottom: '1rem',
+                        }}
+                      >
+                        <span
                           style={{
-                            width: '100%',
-                            padding: '0.45rem',
-                            backgroundColor: '#F1F5F9',
-                            color: '#1B5CB6',
-                            border: 'none',
-                            borderRadius: '8px',
+                            padding: '0.25rem 0.65rem',
+                            borderRadius: '999px',
+                            fontSize: '0.72rem',
                             fontWeight: 800,
-                            fontSize: '0.78rem',
-                            cursor: 'pointer',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            gap: '0.3rem',
-                            marginTop: '0.2rem',
+                            backgroundColor: '#EFF6FF',
+                            color: '#1E40AF',
+                            border: '1px solid #BFDBFE',
                           }}
                         >
-                          <Eye size={14} /> Ficha 360°
-                        </button>
+                          {member.cargo_eclesiastico || 'MIEMBRO GENERAL'}
+                        </span>
+
+                        <span
+                          style={{
+                            padding: '0.25rem 0.65rem',
+                            borderRadius: '999px',
+                            fontSize: '0.72rem',
+                            fontWeight: 800,
+                            backgroundColor: isBautizado ? '#DCFCE7' : '#FEF3C7',
+                            color: isBautizado ? '#15803D' : '#D97706',
+                            border: isBautizado ? '1px solid #86EFAC' : '1px solid #FDE68A',
+                          }}
+                        >
+                          {isBautizado ? '🌊 Bautizado: SÍ' : '🟡 Bautizado: NO'}
+                        </span>
                       </div>
-                    ))
-                  )}
-                </div>
-              </div>
-            );
-          })}
+
+                      {/* Datos de contacto */}
+                      <div
+                        style={{
+                          fontSize: '0.82rem',
+                          color: '#475569',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          gap: '0.3rem',
+                        }}
+                      >
+                        {member.telefono && (
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                            <span>📞</span> <span>{member.telefono}</span>
+                          </div>
+                        )}
+                        {member.email && (
+                          <div
+                            style={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '0.4rem',
+                              whiteSpace: 'nowrap',
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
+                            }}
+                          >
+                            <span>✉️</span> <span>{member.email}</span>
+                          </div>
+                        )}
+                        {member.direccion && (
+                          <div
+                            style={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '0.4rem',
+                              whiteSpace: 'nowrap',
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
+                            }}
+                          >
+                            <span>📍</span> <span>{member.direccion}</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Acciones */}
+                    <button
+                      onClick={() => {
+                        setSelectedMember(member);
+                        setIsProfileModalOpen(true);
+                      }}
+                      style={{
+                        width: '100%',
+                        padding: '0.65rem',
+                        backgroundColor: '#1B5CB6',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '12px',
+                        fontWeight: 800,
+                        fontSize: '0.85rem',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '0.4rem',
+                        marginTop: '0.5rem',
+                        boxShadow: '0 2px 8px rgba(27, 92, 182, 0.2)',
+                      }}
+                    >
+                      <Eye size={16} /> Ver Ficha 360°
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </div>
       )}
 
