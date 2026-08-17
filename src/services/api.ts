@@ -1907,9 +1907,41 @@ export const api = {
       }
     }
 
+    let finalJornadaId = beneficiary.jornada_id;
+
+    // Asegurar que jornada_id cumpla con la Foreign Key de la base de datos
+    if (!finalJornadaId || finalJornadaId === 'general-ekklesia' || finalJornadaId === 'general') {
+      try {
+        const existingJornadas = await api.getJornadas();
+        const validJornada = existingJornadas.find(
+          (j) => !ongId || j.ong_id === ongId || (j as any).ong_id === ongId,
+        );
+
+        if (validJornada) {
+          finalJornadaId = validJornada.id;
+        } else {
+          // Auto-crear una jornada de sistema para cumplir con la FK de la base de datos
+          const newSystemJornada = await api.createJornada(
+            {
+              nombre: 'Padrón Congregacional General',
+              fecha: new Date().toISOString().split('T')[0],
+              beneficios_entregados: 'Registro Congregacional de Miembros',
+              proyecto_id: '',
+              activa: true,
+            },
+            ongId,
+          );
+          finalJornadaId = newSystemJornada.id;
+        }
+      } catch (err) {
+        console.warn('Error resolviendo jornada_id para el miembro:', err);
+      }
+    }
+
     const newBen: Beneficiary = {
       id: `ben-${Date.now()}`,
       ...beneficiary,
+      jornada_id: finalJornadaId,
       url_firma,
       created_at: new Date().toISOString(),
       ...(ongId ? { ong_id: ongId } : {}),
