@@ -2017,8 +2017,8 @@ export const api = {
 
       const updatedTipoDonacion = [...(beneficiary.tipo_donacion || []), `META:${ekklesiaMeta}`];
 
-      // Insertar ÚNICAMENTE las columnas existentes en el schema de Supabase
-      const dbPayload = {
+      // Intentar inserción con columnas físicas nativas (patch_ekklesia_members.sql)
+      const fullDbPayload = {
         id: newBen.id,
         jornada_id: newBen.jornada_id,
         nombre: newBen.nombre,
@@ -2030,9 +2030,43 @@ export const api = {
         url_firma: newBen.url_firma || beneficiary.foto_url || null,
         ...(ongId ? { ong_id: ongId } : {}),
         created_at: newBen.created_at,
+
+        // Campos físicos de Ekklesia
+        direccion: beneficiary.direccion,
+        telefono: beneficiary.telefono,
+        email: beneficiary.email,
+        redes_sociales: beneficiary.redes_sociales,
+        foto_url: beneficiary.foto_url,
+        foto_cedula_url: beneficiary.foto_cedula_url,
+        bautizado: beneficiary.bautizado,
+        grado_instruccion: beneficiary.grado_instruccion,
+        enfermedad: beneficiary.enfermedad,
+        fecha_membresia: beneficiary.fecha_membresia,
+        cargo_eclesiastico: beneficiary.cargo_eclesiastico,
+        areas_ministeriales: beneficiary.areas_ministeriales,
       };
 
-      const { error } = await supabase.from('beneficiarios').insert([dbPayload]);
+      let { error } = await supabase.from('beneficiarios').insert([fullDbPayload]);
+
+      // Si las columnas físicas aún no existen en el schema cache de Supabase, reintentar con payload estándar
+      if (error && (error.message?.includes('schema cache') || error.code === 'PGRST204')) {
+        const legacyPayload = {
+          id: newBen.id,
+          jornada_id: newBen.jornada_id,
+          nombre: newBen.nombre,
+          apellido: newBen.apellido,
+          cedula: newBen.cedula,
+          sexo: newBen.sexo,
+          fecha_nacimiento: newBen.fecha_nacimiento,
+          tipo_donacion: updatedTipoDonacion,
+          url_firma: newBen.url_firma || beneficiary.foto_url || null,
+          ...(ongId ? { ong_id: ongId } : {}),
+          created_at: newBen.created_at,
+        };
+
+        const fallbackRes = await supabase.from('beneficiarios').insert([legacyPayload]);
+        error = fallbackRes.error;
+      }
 
       if (error) throw error;
       return newBen;
