@@ -1533,6 +1533,10 @@ export const api = {
       return data && data.length > 0 ? (data as TasaBCV[]) : INITIAL_TASAS_BCV;
     } else {
       let stored: TasaBCV[] = JSON.parse(localStorage.getItem('cnbv_tasas_bcv') || '[]');
+      if (stored && stored.some((t) => t.tasa === 773.3125)) {
+        stored = stored.filter((t) => t.tasa !== 773.3125);
+        localStorage.setItem('cnbv_tasas_bcv', JSON.stringify(stored));
+      }
       if (!stored || stored.length === 0) {
         localStorage.setItem('cnbv_tasas_bcv', JSON.stringify(INITIAL_TASAS_BCV));
         stored = INITIAL_TASAS_BCV;
@@ -1550,28 +1554,32 @@ export const api = {
           .select('*')
           .eq('fecha', fecha)
           .maybeSingle();
-        if (!error && data) return data as TasaBCV;
+        if (!error && data && data.tasa !== 773.3125) return data as TasaBCV;
 
         // 2. Si no hay tasa exacta, buscar la más reciente anterior o igual
         const { data: recent, error: recentErr } = await supabase
           .from('tasas_bcv')
           .select('*')
           .lte('fecha', fecha)
+          .neq('tasa', 773.3125)
           .order('fecha', { ascending: false })
           .limit(1)
           .maybeSingle();
         if (!recentErr && recent) return recent as TasaBCV;
 
-        // 3. Fallback: buscar la tasa más reciente registrada en la tabla
+        // 3. Fallback: buscar la tasa más reciente <= fecha actual (sin futuras desalineadas)
+        const todayStr = new Date().toISOString().split('T')[0];
         const { data: anyLatest, error: latestErr } = await supabase
           .from('tasas_bcv')
           .select('*')
+          .lte('fecha', todayStr)
+          .neq('tasa', 773.3125)
           .order('fecha', { ascending: false })
           .limit(1)
           .maybeSingle();
         if (!latestErr && anyLatest) return anyLatest as TasaBCV;
 
-        // 4. Si la tabla está totalmente vacía en Supabase, devolver la primera de respaldo
+        // 4. Si la tabla está totalmente vacía o corrupta, devolver la de respaldo inicial
         return INITIAL_TASAS_BCV[0] || null;
       } catch (err) {
         console.error('Error al consultar getTasaByDate en Supabase:', err);
@@ -1584,6 +1592,13 @@ export const api = {
         tasas = INITIAL_TASAS_BCV;
       }
 
+      // Purgar cualquier entrada corrupta previa con 773.3125
+      if (tasas.some((t) => t.tasa === 773.3125)) {
+        tasas = tasas.filter((t) => t.tasa !== 773.3125);
+        if (tasas.length === 0) tasas = INITIAL_TASAS_BCV;
+        localStorage.setItem('cnbv_tasas_bcv', JSON.stringify(tasas));
+      }
+
       // 1. Buscar exacta
       const exacta = tasas.find((t) => t.fecha === fecha);
       if (exacta) return exacta;
@@ -1594,37 +1609,61 @@ export const api = {
         .sort((a, b) => b.fecha.localeCompare(a.fecha));
       if (anteriores.length > 0) return anteriores[0];
 
-      // 3. Fallback: devolver la más reciente disponible
-      const ordenadas = [...tasas].sort((a, b) => b.fecha.localeCompare(a.fecha));
-      return ordenadas[0] || INITIAL_TASAS_BCV[0] || null;
+      // 3. Fallback: devolver la más reciente disponible que sea <= fecha actual
+      const hoyStr = new Date().toISOString().split('T')[0];
+      const validas = tasas
+        .filter((t) => t.fecha <= hoyStr)
+        .sort((a, b) => b.fecha.localeCompare(a.fecha));
+      return validas[0] || INITIAL_TASAS_BCV[0] || null;
     }
   },
 
   upsertTasaBCV: async (tasa: Omit<TasaBCV, 'id' | 'created_at'>): Promise<TasaBCV> => {
     if (!isSimulationMode) {
-      const { data, error } = await supabase
-        .from('tasas_bcv')
-        .upsert(tasa, { onConflict: 'ong_id,fecha' })
-        .select()
-        .single();
-      if (error) throw error;
-      return data as TasaBCV;
-    } else {
-      const tasas = JSON.parse(localStorage.getItem('cnbv_tasas_bcv') || '[]');
-      const index = tasas.findIndex((t: TasaBCV) => t.fecha === tasa.fecha);
-      const updatedTasa = {
-        ...tasa,
-        id: index !== -1 ? tasas[index].id : `rate-${Date.now()}`,
-        created_at: index !== -1 ? tasas[index].created_at : new Date().toISOString(),
-      };
-      if (index !== -1) {
-        tasas[index] = updatedTasa;
-      } else {
-        tasas.unshift(updatedTasa);
+      try {
+        // 1. Buscar si ya existe registro para esta fecha
+        let query = supabase.from('tasas_bcv').select('id').eq('fecha', tasa.fecha);
+        if ('ong_id' in tasa && tasa.ong_id) {
+          query = query.eq('ong_id', tasa.ong_id);
+        }
+        const { data: existing } = await query.maybeSingle();
+
+        if (existing && existing.id) {
+          const { data, error } = await supabase
+            .from('tasas_bcv')
+            .update({ tasa: tasa.tasa, fuente: tasa.fuente || 'bcv_api' })
+            .eq('id', existing.id)
+            .select()
+            .single();
+          if (!error && data) return data as TasaBCV;
+        }
+
+        const { data, error } = await supabase.from('tasas_bcv').insert(tasa).select().single();
+        if (!error && data) return data as TasaBCV;
+      } catch (err) {
+        console.warn('Aviso al guardar en Supabase tasas_bcv, registrando local:', err);
       }
-      localStorage.setItem('cnbv_tasas_bcv', JSON.stringify(tasas));
-      return updatedTasa;
     }
+
+    // Modo simulación o fallback seguro en localStorage
+    let tasas: TasaBCV[] = JSON.parse(localStorage.getItem('cnbv_tasas_bcv') || '[]');
+    tasas = tasas.filter((t: TasaBCV) => t.tasa !== 773.3125);
+
+    const index = tasas.findIndex((t: TasaBCV) => t.fecha === tasa.fecha);
+    const updatedTasa = {
+      ...tasa,
+      id: index !== -1 ? tasas[index].id : `rate-${Date.now()}`,
+      created_at: index !== -1 ? tasas[index].created_at : new Date().toISOString(),
+    };
+
+    if (index !== -1) {
+      tasas[index] = updatedTasa;
+    } else {
+      tasas.unshift(updatedTasa);
+    }
+
+    localStorage.setItem('cnbv_tasas_bcv', JSON.stringify(tasas));
+    return updatedTasa;
   },
 
   bulkUpsertTasasBCV: async (
@@ -1641,32 +1680,32 @@ export const api = {
     }));
 
     if (!isSimulationMode) {
-      const { data, error } = await supabase
-        .from('tasas_bcv')
-        .upsert(formatted, { onConflict: 'ong_id,fecha' })
-        .select();
-      if (error) throw error;
-      return data as TasaBCV[];
-    } else {
-      const tasas = JSON.parse(localStorage.getItem('cnbv_tasas_bcv') || '[]');
-      const result: TasaBCV[] = [];
-      for (const t of formatted) {
-        const index = tasas.findIndex((x: TasaBCV) => x.fecha === t.fecha);
-        const updatedTasa = {
-          ...t,
-          id: index !== -1 ? tasas[index].id : `rate-${Math.random().toString(36).substr(2, 9)}`,
-          created_at: index !== -1 ? tasas[index].created_at : new Date().toISOString(),
-        };
-        if (index !== -1) {
-          tasas[index] = updatedTasa;
-        } else {
-          tasas.unshift(updatedTasa);
-        }
-        result.push(updatedTasa);
+      try {
+        const { data, error } = await supabase.from('tasas_bcv').insert(formatted).select();
+        if (!error && data) return data as TasaBCV[];
+      } catch (err) {
+        console.warn('Aviso en bulkUpsertTasasBCV Supabase:', err);
       }
-      localStorage.setItem('cnbv_tasas_bcv', JSON.stringify(tasas));
-      return result;
     }
+
+    const tasas = JSON.parse(localStorage.getItem('cnbv_tasas_bcv') || '[]');
+    const result: TasaBCV[] = [];
+    for (const t of formatted) {
+      const index = tasas.findIndex((x: TasaBCV) => x.fecha === t.fecha);
+      const updatedTasa = {
+        ...t,
+        id: index !== -1 ? tasas[index].id : `rate-${Math.random().toString(36).substr(2, 9)}`,
+        created_at: index !== -1 ? tasas[index].created_at : new Date().toISOString(),
+      };
+      if (index !== -1) {
+        tasas[index] = updatedTasa;
+      } else {
+        tasas.unshift(updatedTasa);
+      }
+      result.push(updatedTasa);
+    }
+    localStorage.setItem('cnbv_tasas_bcv', JSON.stringify(tasas));
+    return result;
   },
 
   // --- GESTIÓN DE USUARIOS ---
