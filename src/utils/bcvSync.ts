@@ -1,25 +1,57 @@
 import { api } from '../services/api';
 
-const BCV_API_URL = 'https://rates.dolarvzla.com/bcv/current.json';
+const BCV_PRIMARY_URL = 'https://rates.dolarvzla.com/bcv/current.json';
+const BCV_SECONDARY_URL = 'https://ve.dolarapi.com/v1/dolares/oficial';
 
 export const checkAndSyncBCVRate = async () => {
   try {
-    // Consultamos la API externa en cada carga de la aplicación.
-    // DolarVZLA ya devuelve en `data.current.date` la "Fecha Valor" (el día en que aplica).
-    const res = await fetch(BCV_API_URL);
-    if (!res.ok) throw new Error('No se pudo conectar a la API del BCV de dolarvzla');
+    let rateValue: number | null = null;
+    let fechaAplica: string | null = null;
 
-    const data = await res.json();
-    if (!data.current || !data.current.usd || !data.current.date) return;
+    // Intento 1: API DolarVZLA (Primary)
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 3500);
+      const res = await fetch(BCV_PRIMARY_URL, { signal: controller.signal });
+      clearTimeout(timeoutId);
+      if (res.ok) {
+        const data = await res.json();
+        if (data?.current?.usd && data?.current?.date) {
+          rateValue = Number(data.current.usd);
+          fechaAplica = String(data.current.date);
+        }
+      }
+    } catch (err) {
+      console.warn('API Primaria BCV no disponible, probando API secundaria de respaldo...', err);
+    }
 
-    const rateValue = data.current.usd;
-    const fechaAplica = data.current.date; // Ej: "2026-07-08"
+    // Intento 2: API DolarApi (Secondary Fallback)
+    if (!rateValue || !fechaAplica) {
+      try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 3500);
+        const res = await fetch(BCV_SECONDARY_URL, { signal: controller.signal });
+        clearTimeout(timeoutId);
+        if (res.ok) {
+          const data = await res.json();
+          const val = data.promedio || data.monto || data.usd;
+          if (val) {
+            rateValue = Number(val);
+            const rawDate = data.fechaActualizacion || data.fecha;
+            const dateObj = rawDate ? new Date(rawDate) : new Date();
+            fechaAplica = dateObj.toISOString().split('T')[0];
+          }
+        }
+      } catch (err) {
+        console.warn('API Secundaria BCV no disponible:', err);
+      }
+    }
+
+    if (!rateValue || !fechaAplica) return;
 
     // Verificamos si ya tenemos esa tasa registrada en nuestra base de datos.
     const existingRate = await api.getTasaByDate(fechaAplica);
 
-    // getTasaByDate puede devolver una tasa anterior si no encuentra la exacta.
-    // Actualizamos si no existe la exacta, o si el valor es diferente (para corregir errores manuales).
     if (!existingRate || existingRate.fecha !== fechaAplica || existingRate.tasa !== rateValue) {
       console.log(`Sincronizando tasa BCV automática para ${fechaAplica}... Valor: ${rateValue}`);
       await api.upsertTasaBCV({

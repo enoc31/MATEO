@@ -1533,44 +1533,77 @@ export const api = {
         .select('*')
         .order('fecha', { ascending: false })
         .limit(100);
-      if (error) throw error;
-      return data as TasaBCV[];
+      if (error) {
+        console.warn('Aviso al obtener tasas_bcv de Supabase:', error);
+        return INITIAL_TASAS_BCV;
+      }
+      return data && data.length > 0 ? (data as TasaBCV[]) : INITIAL_TASAS_BCV;
     } else {
-      return JSON.parse(localStorage.getItem('cnbv_tasas_bcv') || '[]');
+      let stored: TasaBCV[] = JSON.parse(localStorage.getItem('cnbv_tasas_bcv') || '[]');
+      if (!stored || stored.length === 0) {
+        localStorage.setItem('cnbv_tasas_bcv', JSON.stringify(INITIAL_TASAS_BCV));
+        stored = INITIAL_TASAS_BCV;
+      }
+      return stored;
     }
   },
 
   getTasaByDate: async (fecha: string): Promise<TasaBCV | null> => {
     if (!isSimulationMode) {
-      // Intentar obtener la tasa exacta para esa fecha
-      const { data, error } = await supabase
-        .from('tasas_bcv')
-        .select('*')
-        .eq('fecha', fecha)
-        .maybeSingle();
-      if (error) throw error;
-      if (data) return data as TasaBCV;
+      try {
+        // 1. Intentar obtener la tasa exacta para esa fecha
+        const { data, error } = await supabase
+          .from('tasas_bcv')
+          .select('*')
+          .eq('fecha', fecha)
+          .maybeSingle();
+        if (!error && data) return data as TasaBCV;
 
-      // Si no hay tasa exacta para esa fecha, retornar la más reciente anterior
-      const { data: recent, error: recentErr } = await supabase
-        .from('tasas_bcv')
-        .select('*')
-        .lt('fecha', fecha)
-        .order('fecha', { ascending: false })
-        .limit(1)
-        .maybeSingle();
-      if (recentErr) throw recentErr;
-      return (recent as TasaBCV) || null;
+        // 2. Si no hay tasa exacta, buscar la más reciente anterior o igual
+        const { data: recent, error: recentErr } = await supabase
+          .from('tasas_bcv')
+          .select('*')
+          .lte('fecha', fecha)
+          .order('fecha', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        if (!recentErr && recent) return recent as TasaBCV;
+
+        // 3. Fallback: buscar la tasa más reciente registrada en la tabla
+        const { data: anyLatest, error: latestErr } = await supabase
+          .from('tasas_bcv')
+          .select('*')
+          .order('fecha', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        if (!latestErr && anyLatest) return anyLatest as TasaBCV;
+
+        // 4. Si la tabla está totalmente vacía en Supabase, devolver la primera de respaldo
+        return INITIAL_TASAS_BCV[0] || null;
+      } catch (err) {
+        console.error('Error al consultar getTasaByDate en Supabase:', err);
+        return INITIAL_TASAS_BCV[0] || null;
+      }
     } else {
-      const tasas: TasaBCV[] = JSON.parse(localStorage.getItem('cnbv_tasas_bcv') || '[]');
-      // Buscar exacta
+      let tasas: TasaBCV[] = JSON.parse(localStorage.getItem('cnbv_tasas_bcv') || '[]');
+      if (!tasas || tasas.length === 0) {
+        localStorage.setItem('cnbv_tasas_bcv', JSON.stringify(INITIAL_TASAS_BCV));
+        tasas = INITIAL_TASAS_BCV;
+      }
+
+      // 1. Buscar exacta
       const exacta = tasas.find((t) => t.fecha === fecha);
       if (exacta) return exacta;
-      // Buscar la más reciente anterior
+
+      // 2. Buscar la más reciente anterior o igual
       const anteriores = tasas
-        .filter((t) => t.fecha < fecha)
+        .filter((t) => t.fecha <= fecha)
         .sort((a, b) => b.fecha.localeCompare(a.fecha));
-      return anteriores[0] || null;
+      if (anteriores.length > 0) return anteriores[0];
+
+      // 3. Fallback: devolver la más reciente disponible
+      const ordenadas = [...tasas].sort((a, b) => b.fecha.localeCompare(a.fecha));
+      return ordenadas[0] || INITIAL_TASAS_BCV[0] || null;
     }
   },
 
