@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { api } from '../../services/api';
 import type { Ong, UpdateOngParams } from '../../services/api';
 import { Plus, Edit2, Check, X, Image as ImageIcon } from 'lucide-react';
+import { SkeletonOngGrid } from '../../components/SkeletonOngGrid';
 
 export const SaasOngs: React.FC = () => {
   const [ongs, setOngs] = useState<Ong[]>([]);
@@ -33,8 +34,9 @@ export const SaasOngs: React.FC = () => {
     try {
       const data = await api.getOngs();
       setOngs(data);
-    } catch (err: any) {
-      setError(err.message || 'Error al obtener organizaciones.');
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Error desconocido.';
+      setError(message || 'Error al obtener organizaciones.');
     } finally {
       setLoading(false);
     }
@@ -72,10 +74,11 @@ export const SaasOngs: React.FC = () => {
           setSuccess(
             `Organización "${newName}" y Administrador "${adminNombre || adminEmail}" creados exitosamente. Credenciales enviadas por correo.`,
           );
-        } catch (userErr: any) {
+        } catch (userErr: unknown) {
+          const userErrMsg = userErr instanceof Error ? userErr.message : 'Error desconocido.';
           console.error('Error creating admin user:', userErr);
           setSuccess(
-            `Organización "${newName}" creada, pero hubo un detalle al crear el administrador: ${userErr.message}`,
+            `Organización "${newName}" creada, pero hubo un detalle al crear el administrador: ${userErrMsg}`,
           );
         }
       } else {
@@ -89,8 +92,9 @@ export const SaasOngs: React.FC = () => {
       setAdminPassword('');
       setShowCreateForm(false);
       await fetchOngs();
-    } catch (err: any) {
-      setError(err.message || 'Error al crear la organización.');
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Error desconocido.';
+      setError(message || 'Error al crear la organización.');
     } finally {
       setSubmitting(false);
     }
@@ -127,8 +131,9 @@ export const SaasOngs: React.FC = () => {
       setSuccess('Organización actualizada exitosamente.');
       setIsEditingId(null);
       await fetchOngs();
-    } catch (err: any) {
-      setError(err.message || 'Error al actualizar la organización.');
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Error desconocido.';
+      setError(message || 'Error al actualizar la organización.');
     } finally {
       setSubmitting(false);
     }
@@ -448,9 +453,7 @@ export const SaasOngs: React.FC = () => {
 
       {/* Grid of registered ONGs */}
       {loading ? (
-        <div style={{ display: 'flex', justifyContent: 'center', padding: '2rem' }}>
-          Cargando organizaciones e iglesias...
-        </div>
+        <SkeletonOngGrid cards={6} />
       ) : (
         <div
           style={{

@@ -10,6 +10,14 @@ global.ResizeObserver = class {
   disconnect() {}
 };
 
+vi.mock('react-router-dom', async () => {
+  const actual = await vi.importActual<typeof import('react-router-dom')>('react-router-dom');
+  return {
+    ...actual,
+    useNavigate: () => vi.fn(),
+  };
+});
+
 // Mockeamos recharts para que no arroje errores de width(0) en jsdom
 vi.mock('recharts', async () => {
   const OriginalRecharts = await vi.importActual('recharts');
@@ -51,8 +59,8 @@ describe('Financial Calculations (Dashboard.tsx)', () => {
 
     render(<Dashboard />);
 
-    // Verificamos que diga "Cargando tableros..." inicialmente
-    expect(screen.getByText(/Cargando tableros/i)).toBeInTheDocument();
+    // Verificamos que se muestre el skeleton de carga inicialmente
+    expect(screen.getByLabelText(/Cargando tablero/i)).toBeInTheDocument();
 
     // Esperamos a que los datos se carguen
     await waitFor(() => {

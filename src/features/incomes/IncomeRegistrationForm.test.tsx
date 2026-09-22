@@ -73,7 +73,7 @@ describe('Income Math & Validation (IncomeRegistrationForm.tsx)', () => {
     });
 
     // Intentar guardar sin haber rellenado nada
-    const saveButton = screen.getByRole('button', { name: /Guardar y Finalizar Ingreso/i });
+    const saveButton = screen.getByRole('button', { name: /Guardar/i });
     fireEvent.click(saveButton);
 
     // Como es tipo 'button' (o 'submit' prevenido por validaciones en el componente),

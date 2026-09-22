@@ -1,7 +1,17 @@
 import React, { useEffect, useState } from 'react';
-import { Download, CheckCircle, Clock, Upload, Scale, Compass } from 'lucide-react';
+import {
+  Download,
+  CheckCircle,
+  Clock,
+  Upload,
+  Scale,
+  Compass,
+  AlertTriangle,
+  RefreshCw,
+} from 'lucide-react';
 import { api } from '../../services/api';
 import type { ExpenseCategory, DashboardMetrics, ProjectExecutionMetric } from '../../services/api';
+import { SkeletonDashboard } from '../../components/SkeletonDashboard';
 import { ChurchImplementationGuideModal } from '../auth/ChurchImplementationGuideModal';
 import {
   ResponsiveContainer,
@@ -18,36 +28,69 @@ import {
 
 export const Dashboard: React.FC = () => {
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [metrics, setMetrics] = useState<DashboardMetrics | null>(null);
   const [categories, setCategories] = useState<ExpenseCategory[]>([]);
   const [showGuideModal, setShowGuideModal] = useState(false);
 
+  const loadData = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const [catList, metricsData] = await Promise.all([
+        api.getCategories(),
+        api.getDashboardMetrics(),
+      ]);
+      setCategories(catList);
+      setMetrics(metricsData);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Error desconocido al cargar métricas.';
+      console.error('Error loading dashboard data:', err);
+      setError(`No se pudieron cargar los datos del tablero. ${message}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const loadData = async () => {
-      try {
-        const [catList, metricsData] = await Promise.all([
-          api.getCategories(),
-          api.getDashboardMetrics(),
-        ]);
-        setCategories(catList);
-        setMetrics(metricsData);
-      } catch (err) {
-        console.error('Error loading dashboard data:', err);
-      } finally {
-        setLoading(false);
-      }
-    };
     loadData();
   }, []);
 
   if (loading) {
+    return <SkeletonDashboard />;
+  }
+
+  if (error) {
     return (
       <div
-        style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '50vh' }}
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: '1rem',
+          padding: '4rem 2rem',
+          textAlign: 'center',
+        }}
       >
-        <div style={{ fontSize: '1.2rem', color: 'var(--primary)', fontWeight: 600 }}>
-          Cargando tableros...
-        </div>
+        <AlertTriangle size={48} color="var(--warning)" strokeWidth={1.5} />
+        <h3 style={{ color: 'var(--neutral-dark)', fontWeight: 700 }}>
+          Error al cargar el tablero
+        </h3>
+        <p
+          style={{ color: 'var(--neutral-dark)', opacity: 0.7, maxWidth: 480, fontSize: '0.9rem' }}
+        >
+          {error}
+        </p>
+        <button
+          onClick={() => {
+            void loadData();
+          }}
+          className="btn btn-primary"
+          style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}
+        >
+          <RefreshCw size={16} /> Reintentar
+        </button>
       </div>
     );
   }

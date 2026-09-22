@@ -1,27 +1,37 @@
 import React, { useEffect, useState } from 'react';
 import { api } from '../../services/api';
 import { Building, Users, Clock, ShieldAlert } from 'lucide-react';
+import { SkeletonSaasCards } from '../../components/SkeletonSaasCards';
+
+interface SaasStats {
+  ongsCount: number;
+  usersCount: number;
+  pendingCount: number;
+}
 
 export const SaasDashboard: React.FC = () => {
-  const [stats, setStats] = useState({
+  const [stats, setStats] = useState<SaasStats>({
     ongsCount: 0,
     usersCount: 0,
     pendingCount: 0,
   });
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchStats = async () => {
       try {
         const [ongs, users] = await Promise.all([api.getOngs(), api.getUsers()]);
-        const pending = users.filter((u: any) => !u.aprobado);
+        const pending = users.filter((u) => !u.aprobado);
         setStats({
           ongsCount: ongs.length,
           usersCount: users.length,
           pendingCount: pending.length,
         });
-      } catch (err) {
+      } catch (err: unknown) {
+        const message = err instanceof Error ? err.message : 'Error desconocido.';
         console.error('Error fetching SaaS dashboard statistics:', err);
+        setError(`No se pudieron cargar las estadísticas. ${message}`);
       } finally {
         setLoading(false);
       }
@@ -30,11 +40,11 @@ export const SaasDashboard: React.FC = () => {
   }, []);
 
   if (loading) {
-    return (
-      <div style={{ display: 'flex', justifyContent: 'center', padding: '3rem' }}>
-        Cargando estadísticas...
-      </div>
-    );
+    return <SkeletonSaasCards />;
+  }
+
+  if (error) {
+    return <div style={{ padding: '2rem', color: 'var(--danger)', fontWeight: 600 }}>{error}</div>;
   }
 
   const statCards = [

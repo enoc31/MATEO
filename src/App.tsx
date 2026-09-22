@@ -13,6 +13,7 @@ import { Suspense, lazy } from 'react';
 import { LandingPage } from './features/landing/LandingPage';
 import { supabase } from './supabaseClient';
 import { isSimulationMode } from './services/api';
+import { SkeletonPageLoader } from './components/SkeletonPageLoader';
 
 // Lazy loaded features
 const Dashboard = lazy(() =>
@@ -198,32 +199,7 @@ const MainAppContent: React.FC = () => {
   };
 
   const renderContentWithSuspense = () => (
-    <Suspense
-      fallback={
-        <div
-          style={{
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-            height: '100%',
-            minHeight: '400px',
-          }}
-        >
-          <div
-            style={{
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              gap: '1rem',
-              color: 'var(--neutral-dark)',
-            }}
-          >
-            <Hourglass size={40} style={{ animation: 'spin 2s linear infinite', opacity: 0.5 }} />
-            <p>Cargando módulo...</p>
-          </div>
-        </div>
-      }
-    >
+    <Suspense fallback={<SkeletonPageLoader />}>
       <Routes>
         {/* Default route based on role */}
         <Route path="/" element={<AppsDashboard />} />
@@ -722,9 +698,7 @@ const SaasPublicRoute: React.FC<{ children: React.ReactNode }> = ({ children }) 
 const SaasMainAppContent: React.FC = () => {
   return (
     <SaasLayout>
-      <Suspense
-        fallback={<div style={{ textAlign: 'center', padding: '3rem' }}>Cargando Panel...</div>}
-      >
+      <Suspense fallback={<SkeletonPageLoader />}>
         <Routes>
           <Route path="/" element={<Navigate to="dashboard" replace />} />
           <Route path="dashboard" element={<SaasDashboard />} />

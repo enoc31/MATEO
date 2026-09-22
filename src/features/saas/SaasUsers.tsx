@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { api } from '../../services/api';
 import type { UserRole } from '../../context/AuthContext';
 import { Search, Filter, UserCheck, ShieldAlert, Check, X, UserPlus } from 'lucide-react';
+import { SkeletonTable } from '../../components/SkeletonTable';
 
 interface UserItem {
   id: string;
@@ -54,8 +55,9 @@ export const SaasUsers: React.FC = () => {
       const [usersData, ongsData] = await Promise.all([api.getUsers(), api.getOngs()]);
       setUsers(usersData);
       setOngs(ongsData);
-    } catch (err: any) {
-      setError(err.message || 'Error al cargar usuarios o ONGs.');
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Error desconocido.';
+      setError(message || 'Error al cargar usuarios o ONGs.');
     } finally {
       setLoading(false);
     }
@@ -74,8 +76,9 @@ export const SaasUsers: React.FC = () => {
       await api.updateUserProfile(user.id, { aprobado: nextApprovalState });
       setSuccess(`Usuario ${nextApprovalState ? 'aprobado' : 'suspendido'} correctamente.`);
       await loadData();
-    } catch (err: any) {
-      setError(err.message || 'Error al cambiar estado de aprobación.');
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Error desconocido.';
+      setError(message || 'Error al cambiar estado de aprobación.');
     } finally {
       setSubmitting(false);
     }
@@ -103,8 +106,9 @@ export const SaasUsers: React.FC = () => {
       setSuccess('Usuario actualizado correctamente.');
       setIsEditingId(null);
       await loadData();
-    } catch (err: any) {
-      setError(err.message || 'Error al actualizar usuario.');
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Error desconocido.';
+      setError(message || 'Error al actualizar usuario.');
     } finally {
       setSubmitting(false);
     }
@@ -128,8 +132,9 @@ export const SaasUsers: React.FC = () => {
       await api.adminDeleteUser(user.id);
       setSuccess(`Usuario ${user.nombre_completo} eliminado correctamente.`);
       await loadData();
-    } catch (err: any) {
-      setError(err.message || 'Error al eliminar usuario.');
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Error desconocido.';
+      setError(message || 'Error al eliminar usuario.');
     } finally {
       setSubmitting(false);
     }
@@ -181,8 +186,9 @@ export const SaasUsers: React.FC = () => {
       setNewEmail('');
       setNewPassword('');
       await loadData();
-    } catch (err: any) {
-      setError(err.message || 'Error al crear usuario.');
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Error desconocido.';
+      setError(message || 'Error al crear usuario.');
     } finally {
       setSubmitting(false);
     }
@@ -375,9 +381,7 @@ export const SaasUsers: React.FC = () => {
 
       {/* Users table */}
       {loading ? (
-        <div style={{ display: 'flex', justifyContent: 'center', padding: '2rem' }}>
-          Cargando usuarios...
-        </div>
+        <SkeletonTable rows={7} cols={5} showAvatar />
       ) : (
         <div
           style={{

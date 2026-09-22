@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   Users,
   Search,
@@ -14,12 +14,15 @@ import {
   Square,
   Trash2,
   Edit3,
+  ChevronLeft,
+  ChevronRight,
 } from 'lucide-react';
 import { api, type Beneficiary } from '../../services/api';
 import { uploadToGCS } from '../../services/storage';
 import { useAuth } from '../../context/AuthContext';
 import { MemberProfileModal } from './MemberProfileModal';
 import { useNotifications } from '../../components/NotificationProvider';
+import { SkeletonMembers } from '../../components/SkeletonMembers';
 
 export type EclesiasticalStatus = 'Activo' | 'Bautizado' | 'En Visita' | 'Líder' | 'Inactivo';
 
@@ -177,7 +180,12 @@ export const ChurchMembersManager: React.FC = () => {
         `Miembro ${updated.nombre} ${updated.apellido} actualizado correctamente`,
         'success',
       );
-      setMembers((prev) => prev.map((m) => (m.id === updated.id ? { ...m, ...updated } : m)));
+      setMembers((prev) => {
+        const newList = prev.map((m) => (m.id === updated.id ? { ...m, ...updated } : m));
+        const cacheKey = `cache_members_${activeOng?.id || 'default'}`;
+        sessionStorage.setItem(cacheKey, JSON.stringify(newList));
+        return newList;
+      });
       setIsEditModalOpen(false);
       setEditingMember(null);
       if (selectedMember?.id === updated.id) {
@@ -221,6 +229,7 @@ export const ChurchMembersManager: React.FC = () => {
   const loadMembers = async (isBackgroundRefresh = false) => {
     const cacheKey = `cache_members_${activeOng?.id || 'default'}`;
 
+    let hasCache = false;
     // 1. Mostrar cache instantáneamente (0ms) si existe
     if (!isBackgroundRefresh) {
       const cached = sessionStorage.getItem(cacheKey);
@@ -230,7 +239,7 @@ export const ChurchMembersManager: React.FC = () => {
           if (Array.isArray(parsed) && parsed.length > 0) {
             setMembers(parsed);
             setLoading(false);
-            isBackgroundRefresh = true; // Continuar recarga en segundo plano sin spinner
+            hasCache = true;
           }
         } catch (e) {
           // Ignorar error de parsing cache
@@ -238,7 +247,7 @@ export const ChurchMembersManager: React.FC = () => {
       }
     }
 
-    if (!isBackgroundRefresh) {
+    if (!hasCache && !isBackgroundRefresh) {
       setLoading(true);
     }
 
@@ -409,29 +418,149 @@ export const ChurchMembersManager: React.FC = () => {
     return 'Activo';
   };
 
-  const filteredMembers = members.filter((m) => {
+  const filteredMembers = useMemo(() => {
     const term = searchTerm.toLowerCase().trim();
-    const matchesSearch =
-      !term ||
-      m.nombre.toLowerCase().includes(term) ||
-      m.apellido.toLowerCase().includes(term) ||
-      m.cedula.toLowerCase().includes(term) ||
-      (m.email && m.email.toLowerCase().includes(term)) ||
-      (m.telefono && m.telefono.includes(term));
+    return members.filter((m) => {
+      const matchesSearch =
+        !term ||
+        m.nombre.toLowerCase().includes(term) ||
+        m.apellido.toLowerCase().includes(term) ||
+        m.cedula.toLowerCase().includes(term) ||
+        (m.email && m.email.toLowerCase().includes(term)) ||
+        (m.telefono && m.telefono.includes(term));
 
-    const matchesCargo = cargoFilter === 'todos' || m.cargo_eclesiastico === cargoFilter;
+      const matchesCargo = cargoFilter === 'todos' || m.cargo_eclesiastico === cargoFilter;
 
-    const isBautizado =
-      Boolean(m.bautizado) ||
-      (Array.isArray(m.tipo_donacion) && m.tipo_donacion.includes('Bautizado'));
+      const isBautizado =
+        Boolean(m.bautizado) ||
+        (Array.isArray(m.tipo_donacion) && m.tipo_donacion.includes('Bautizado'));
 
-    const matchesBautizado =
-      bautizadoFilter === 'todos' ||
-      (bautizadoFilter === 'bautizado' && isBautizado) ||
-      (bautizadoFilter === 'no_bautizado' && !isBautizado);
+      const matchesBautizado =
+        bautizadoFilter === 'todos' ||
+        (bautizadoFilter === 'bautizado' && isBautizado) ||
+        (bautizadoFilter === 'no_bautizado' && !isBautizado);
 
-    return matchesSearch && matchesCargo && matchesBautizado;
-  });
+      return matchesSearch && matchesCargo && matchesBautizado;
+    });
+  }, [members, searchTerm, cargoFilter, bautizadoFilter]);
+
+  // Paginación del lado del cliente
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(12);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, cargoFilter, bautizadoFilter]);
+
+  const totalFiltered = filteredMembers.length;
+  const totalPages = Math.ceil(totalFiltered / pageSize) || 1;
+  const currentMembersPage = useMemo(() => {
+    const start = (currentPage - 1) * pageSize;
+    return filteredMembers.slice(start, start + pageSize);
+  }, [filteredMembers, currentPage, pageSize]);
+
+  const renderPagination = () => {
+    if (totalFiltered === 0) return null;
+    return (
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          flexWrap: 'wrap',
+          gap: '1rem',
+          backgroundColor: '#FFFFFF',
+          padding: '0.8rem 1.2rem',
+          borderRadius: '14px',
+          border: '1px solid #E2E8F0',
+          marginTop: '1.2rem',
+        }}
+      >
+        <div style={{ fontSize: '0.85rem', color: '#64748B', fontWeight: 600 }}>
+          Mostrando {Math.min((currentPage - 1) * pageSize + 1, totalFiltered)} -{' '}
+          {Math.min(currentPage * pageSize, totalFiltered)} de {totalFiltered} miembros
+        </div>
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', flexWrap: 'wrap' }}>
+          <label style={{ fontSize: '0.8rem', color: '#64748B', fontWeight: 700 }}>
+            Por página:
+          </label>
+          <select
+            className="app-input"
+            value={pageSize}
+            onChange={(e) => {
+              setPageSize(Number(e.target.value));
+              setCurrentPage(1);
+            }}
+            style={{
+              width: '80px',
+              padding: '0.35rem 0.5rem',
+              fontSize: '0.85rem',
+              marginBottom: 0,
+            }}
+          >
+            <option value={12}>12</option>
+            <option value={24}>24</option>
+            <option value={48}>48</option>
+            <option value={96}>96</option>
+          </select>
+
+          <div style={{ display: 'flex', gap: '0.3rem', alignItems: 'center' }}>
+            <button
+              onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
+              disabled={currentPage === 1}
+              style={{
+                padding: '0.4rem 0.7rem',
+                border: '1px solid #CBD5E1',
+                borderRadius: '8px',
+                backgroundColor: currentPage === 1 ? '#F1F5F9' : '#FFFFFF',
+                color: currentPage === 1 ? '#94A3B8' : '#334155',
+                cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
+                fontWeight: 700,
+                fontSize: '0.85rem',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.2rem',
+              }}
+            >
+              <ChevronLeft size={16} /> Anterior
+            </button>
+
+            <span
+              style={{
+                fontSize: '0.85rem',
+                fontWeight: 800,
+                color: '#1E293B',
+                padding: '0 0.4rem',
+              }}
+            >
+              Página {currentPage} de {totalPages}
+            </span>
+
+            <button
+              onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
+              disabled={currentPage === totalPages}
+              style={{
+                padding: '0.4rem 0.7rem',
+                border: '1px solid #CBD5E1',
+                borderRadius: '8px',
+                backgroundColor: currentPage === totalPages ? '#F1F5F9' : '#FFFFFF',
+                color: currentPage === totalPages ? '#94A3B8' : '#334155',
+                cursor: currentPage === totalPages ? 'not-allowed' : 'pointer',
+                fontWeight: 700,
+                fontSize: '0.85rem',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.2rem',
+              }}
+            >
+              Siguiente <ChevronRight size={16} />
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  };
 
   const totalCount = members.length;
   const bautizadosCount = members.filter(
@@ -1357,157 +1486,164 @@ export const ChurchMembersManager: React.FC = () => {
             overflow: 'hidden',
           }}
         >
-          {loading ? (
-            <div style={{ textAlign: 'center', padding: '3rem', color: '#64748B' }}>
-              Cargando miembros congregacionales...
-            </div>
+          {loading && members.length === 0 ? (
+            <SkeletonMembers viewMode="list" />
           ) : filteredMembers.length === 0 ? (
             <div style={{ textAlign: 'center', padding: '3rem', color: '#64748B' }}>
               <Users size={48} style={{ margin: '0 auto 1rem auto', opacity: 0.3 }} />
               <p style={{ fontWeight: 700, margin: 0 }}>No se encontraron miembros</p>
             </div>
           ) : (
-            <div style={{ overflowX: 'auto' }}>
-              <table
-                style={{
-                  width: '100%',
-                  borderCollapse: 'collapse',
-                  fontSize: '0.9rem',
-                  textAlign: 'left',
-                }}
-              >
-                <thead>
-                  <tr
-                    style={{
-                      borderBottom: '2px solid #E2E8F0',
-                      backgroundColor: '#F8FAFC',
-                      color: '#475569',
-                      fontSize: '0.8rem',
-                      textTransform: 'uppercase',
-                    }}
-                  >
-                    <th style={{ padding: '1rem 1.2rem' }}>Miembro / Feligrés</th>
-                    <th style={{ padding: '1rem 1.2rem' }}>Cédula</th>
-                    <th style={{ padding: '1rem 1.2rem' }}>Cargo Eclesiástico</th>
-                    <th style={{ padding: '1rem 1.2rem' }}>Bautizado</th>
-                    <th style={{ padding: '1rem 1.2rem' }}>Teléfono / Correo</th>
-                    <th style={{ padding: '1rem 1.2rem', textAlign: 'center' }}>Acciones</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredMembers.map((member) => (
-                    <tr key={member.id} style={{ borderBottom: '1px solid #F1F5F9' }}>
-                      <td style={{ padding: '1rem 1.2rem' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
-                          {member.foto_url ? (
-                            <img
-                              src={member.foto_url}
-                              alt="Foto"
-                              style={{
-                                width: '40px',
-                                height: '40px',
-                                borderRadius: '50%',
-                                objectFit: 'cover',
-                                flexShrink: 0,
-                              }}
-                            />
-                          ) : (
-                            <div
-                              style={{
-                                width: '40px',
-                                height: '40px',
-                                borderRadius: '50%',
-                                backgroundColor: '#1B5CB6',
-                                color: 'white',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                fontWeight: 800,
-                                fontSize: '0.95rem',
-                                flexShrink: 0,
-                              }}
-                            >
-                              {member.nombre?.[0]?.toUpperCase()}
-                              {member.apellido?.[0]?.toUpperCase()}
-                            </div>
-                          )}
-                          <div>
-                            <div style={{ fontWeight: 800, color: '#0F172A' }}>
-                              {member.nombre} {member.apellido}
-                            </div>
-                            <div style={{ fontSize: '0.78rem', color: '#64748B' }}>
-                              F. Nac:{' '}
-                              {member.fecha_nacimiento
-                                ? new Date(member.fecha_nacimiento).toLocaleDateString('es-VE')
-                                : 'N/I'}
+            <>
+              <div style={{ overflowX: 'auto' }}>
+                <table
+                  style={{
+                    width: '100%',
+                    borderCollapse: 'collapse',
+                    fontSize: '0.9rem',
+                    textAlign: 'left',
+                  }}
+                >
+                  <thead>
+                    <tr
+                      style={{
+                        borderBottom: '2px solid #E2E8F0',
+                        backgroundColor: '#F8FAFC',
+                        color: '#475569',
+                        fontSize: '0.8rem',
+                        textTransform: 'uppercase',
+                      }}
+                    >
+                      <th style={{ padding: '1rem 1.2rem' }}>Miembro / Feligrés</th>
+                      <th style={{ padding: '1rem 1.2rem' }}>Cédula</th>
+                      <th style={{ padding: '1rem 1.2rem' }}>Cargo Eclesiástico</th>
+                      <th style={{ padding: '1rem 1.2rem' }}>Bautizado</th>
+                      <th style={{ padding: '1rem 1.2rem' }}>Teléfono / Correo</th>
+                      <th style={{ padding: '1rem 1.2rem', textAlign: 'center' }}>Acciones</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {currentMembersPage.map((member) => (
+                      <tr key={member.id} style={{ borderBottom: '1px solid #F1F5F9' }}>
+                        <td style={{ padding: '1rem 1.2rem' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
+                            {member.foto_url ? (
+                              <img
+                                src={member.foto_url}
+                                alt="Foto"
+                                loading="lazy"
+                                decoding="async"
+                                style={{
+                                  width: '40px',
+                                  height: '40px',
+                                  borderRadius: '50%',
+                                  objectFit: 'cover',
+                                  flexShrink: 0,
+                                }}
+                              />
+                            ) : (
+                              <div
+                                style={{
+                                  width: '40px',
+                                  height: '40px',
+                                  borderRadius: '50%',
+                                  backgroundColor: '#1B5CB6',
+                                  color: 'white',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  fontWeight: 800,
+                                  fontSize: '0.95rem',
+                                  flexShrink: 0,
+                                }}
+                              >
+                                {member.nombre?.[0]?.toUpperCase()}
+                                {member.apellido?.[0]?.toUpperCase()}
+                              </div>
+                            )}
+                            <div>
+                              <div style={{ fontWeight: 800, color: '#0F172A' }}>
+                                {member.nombre} {member.apellido}
+                              </div>
+                              <div style={{ fontSize: '0.78rem', color: '#64748B' }}>
+                                F. Nac:{' '}
+                                {member.fecha_nacimiento
+                                  ? new Date(member.fecha_nacimiento).toLocaleDateString('es-VE')
+                                  : 'N/I'}
+                              </div>
                             </div>
                           </div>
-                        </div>
-                      </td>
-                      <td style={{ padding: '1rem 1.2rem', fontWeight: 700, color: '#334155' }}>
-                        {member.cedula || 'N/I'}
-                      </td>
-                      <td style={{ padding: '1rem 1.2rem' }}>
-                        <span
-                          style={{
-                            padding: '0.25rem 0.6rem',
-                            borderRadius: '999px',
-                            fontSize: '0.75rem',
-                            fontWeight: 800,
-                            backgroundColor: '#EFF6FF',
-                            color: '#1E40AF',
-                            border: '1px solid #BFDBFE',
-                          }}
+                        </td>
+                        <td style={{ padding: '1rem 1.2rem', fontWeight: 700, color: '#334155' }}>
+                          {member.cedula || 'N/I'}
+                        </td>
+                        <td style={{ padding: '1rem 1.2rem' }}>
+                          <span
+                            style={{
+                              padding: '0.25rem 0.6rem',
+                              borderRadius: '999px',
+                              fontSize: '0.75rem',
+                              fontWeight: 800,
+                              backgroundColor: '#EFF6FF',
+                              color: '#1E40AF',
+                              border: '1px solid #BFDBFE',
+                            }}
+                          >
+                            {member.cargo_eclesiastico || 'MIEMBRO GENERAL'}
+                          </span>
+                        </td>
+                        <td style={{ padding: '1rem 1.2rem' }}>
+                          <span
+                            style={{
+                              padding: '0.2rem 0.6rem',
+                              borderRadius: '999px',
+                              fontSize: '0.75rem',
+                              fontWeight: 800,
+                              backgroundColor: member.bautizado ? '#DCFCE7' : '#FEF3C7',
+                              color: member.bautizado ? '#15803D' : '#D97706',
+                            }}
+                          >
+                            {member.bautizado ? 'SÍ' : 'NO'}
+                          </span>
+                        </td>
+                        <td
+                          style={{ padding: '1rem 1.2rem', color: '#475569', fontSize: '0.85rem' }}
                         >
-                          {member.cargo_eclesiastico || 'MIEMBRO GENERAL'}
-                        </span>
-                      </td>
-                      <td style={{ padding: '1rem 1.2rem' }}>
-                        <span
-                          style={{
-                            padding: '0.2rem 0.6rem',
-                            borderRadius: '999px',
-                            fontSize: '0.75rem',
-                            fontWeight: 800,
-                            backgroundColor: member.bautizado ? '#DCFCE7' : '#FEF3C7',
-                            color: member.bautizado ? '#15803D' : '#D97706',
-                          }}
-                        >
-                          {member.bautizado ? 'SÍ' : 'NO'}
-                        </span>
-                      </td>
-                      <td style={{ padding: '1rem 1.2rem', color: '#475569', fontSize: '0.85rem' }}>
-                        <div>{member.telefono || 'Sin Teléfono'}</div>
-                        <div style={{ fontSize: '0.78rem', color: '#64748B' }}>{member.email}</div>
-                      </td>
-                      <td style={{ padding: '1rem 1.2rem', textAlign: 'center' }}>
-                        <button
-                          onClick={() => {
-                            setSelectedMember(member);
-                            setIsProfileModalOpen(true);
-                          }}
-                          style={{
-                            padding: '0.45rem 0.9rem',
-                            backgroundColor: '#1B5CB6',
-                            color: 'white',
-                            border: 'none',
-                            borderRadius: '8px',
-                            fontWeight: 700,
-                            fontSize: '0.8rem',
-                            cursor: 'pointer',
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: '0.4rem',
-                          }}
-                        >
-                          <Eye size={14} /> Ficha 360°
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                          <div>{member.telefono || 'Sin Teléfono'}</div>
+                          <div style={{ fontSize: '0.78rem', color: '#64748B' }}>
+                            {member.email}
+                          </div>
+                        </td>
+                        <td style={{ padding: '1rem 1.2rem', textAlign: 'center' }}>
+                          <button
+                            onClick={() => {
+                              setSelectedMember(member);
+                              setIsProfileModalOpen(true);
+                            }}
+                            style={{
+                              padding: '0.45rem 0.9rem',
+                              backgroundColor: '#1B5CB6',
+                              color: 'white',
+                              border: 'none',
+                              borderRadius: '8px',
+                              fontWeight: 700,
+                              fontSize: '0.8rem',
+                              cursor: 'pointer',
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '0.4rem',
+                            }}
+                          >
+                            <Eye size={14} /> Ficha 360°
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              {renderPagination()}
+            </>
           )}
         </div>
       )}
@@ -1515,7 +1651,9 @@ export const ChurchMembersManager: React.FC = () => {
       {/* VISTA 2: VISTA TARJETAS (CARD GRID) */}
       {viewMode === 'cards' && (
         <div>
-          {filteredMembers.length === 0 ? (
+          {loading && members.length === 0 ? (
+            <SkeletonMembers viewMode="cards" />
+          ) : filteredMembers.length === 0 ? (
             <div
               style={{
                 backgroundColor: '#FFFFFF',
@@ -1542,252 +1680,257 @@ export const ChurchMembersManager: React.FC = () => {
               </p>
             </div>
           ) : (
-            <div
-              style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fill, minmax(290px, 1fr))',
-                gap: '1.2rem',
-              }}
-            >
-              {filteredMembers.map((member) => {
-                const isBautizado =
-                  Boolean(member.bautizado) ||
-                  (Array.isArray(member.tipo_donacion) &&
-                    member.tipo_donacion.includes('Bautizado'));
+            <>
+              <div
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(auto-fill, minmax(290px, 1fr))',
+                  gap: '1.2rem',
+                }}
+              >
+                {currentMembersPage.map((member) => {
+                  const isBautizado =
+                    Boolean(member.bautizado) ||
+                    (Array.isArray(member.tipo_donacion) &&
+                      member.tipo_donacion.includes('Bautizado'));
 
-                return (
-                  <div
-                    key={member.id}
-                    style={{
-                      backgroundColor: '#FFFFFF',
-                      borderRadius: '18px',
-                      border: '1px solid #E2E8F0',
-                      padding: '1.3rem',
-                      boxShadow: '0 4px 12px rgba(0,0,0,0.03)',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      justifyContent: 'space-between',
-                      gap: '1rem',
-                      transition: 'transform 0.2s ease, boxShadow 0.2s ease',
-                    }}
-                  >
-                    {/* Encabezado de la Tarjeta (Foto + Nombre + Datos) */}
-                    <div>
-                      <div
-                        style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '1rem',
-                          marginBottom: '1rem',
-                        }}
-                      >
-                        {member.foto_url ? (
-                          <img
-                            src={member.foto_url}
-                            alt={`${member.nombre} ${member.apellido}`}
-                            style={{
-                              width: '56px',
-                              height: '56px',
-                              borderRadius: '16px',
-                              objectFit: 'cover',
-                              border: '2px solid #1B5CB6',
-                              flexShrink: 0,
-                            }}
-                          />
-                        ) : (
-                          <div
-                            style={{
-                              width: '56px',
-                              height: '56px',
-                              borderRadius: '16px',
-                              backgroundColor: '#E0F2FE',
-                              color: '#0284C7',
-                              fontWeight: 900,
-                              fontSize: '1.2rem',
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              border: '2px solid #38BDF8',
-                              flexShrink: 0,
-                            }}
-                          >
-                            {member.nombre?.[0]?.toUpperCase() || 'M'}
-                            {member.apellido?.[0]?.toUpperCase() || ''}
+                  return (
+                    <div
+                      key={member.id}
+                      style={{
+                        backgroundColor: '#FFFFFF',
+                        borderRadius: '18px',
+                        border: '1px solid #E2E8F0',
+                        padding: '1.3rem',
+                        boxShadow: '0 4px 12px rgba(0,0,0,0.03)',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        justifyContent: 'space-between',
+                        gap: '1rem',
+                        transition: 'transform 0.2s ease, boxShadow 0.2s ease',
+                      }}
+                    >
+                      {/* Encabezado de la Tarjeta (Foto + Nombre + Datos) */}
+                      <div>
+                        <div
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '1rem',
+                            marginBottom: '1rem',
+                          }}
+                        >
+                          {member.foto_url ? (
+                            <img
+                              src={member.foto_url}
+                              alt={`${member.nombre} ${member.apellido}`}
+                              loading="lazy"
+                              decoding="async"
+                              style={{
+                                width: '56px',
+                                height: '56px',
+                                borderRadius: '16px',
+                                objectFit: 'cover',
+                                border: '2px solid #1B5CB6',
+                                flexShrink: 0,
+                              }}
+                            />
+                          ) : (
+                            <div
+                              style={{
+                                width: '56px',
+                                height: '56px',
+                                borderRadius: '16px',
+                                backgroundColor: '#E0F2FE',
+                                color: '#0284C7',
+                                fontWeight: 900,
+                                fontSize: '1.2rem',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                border: '2px solid #38BDF8',
+                                flexShrink: 0,
+                              }}
+                            >
+                              {member.nombre?.[0]?.toUpperCase() || 'M'}
+                              {member.apellido?.[0]?.toUpperCase() || ''}
+                            </div>
+                          )}
+
+                          <div style={{ overflow: 'hidden' }}>
+                            <h4
+                              style={{
+                                margin: 0,
+                                fontSize: '1.05rem',
+                                fontWeight: 800,
+                                color: '#0F172A',
+                                whiteSpace: 'nowrap',
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis',
+                              }}
+                            >
+                              {member.nombre} {member.apellido}
+                            </h4>
+                            <p
+                              style={{
+                                margin: '0.2rem 0 0 0',
+                                fontSize: '0.8rem',
+                                color: '#64748B',
+                                fontWeight: 600,
+                              }}
+                            >
+                              C.I.: <strong>{member.cedula || 'N/I'}</strong>
+                            </p>
                           </div>
-                        )}
+                        </div>
 
-                        <div style={{ overflow: 'hidden' }}>
-                          <h4
+                        {/* Badges de Cargo y Bautismo */}
+                        <div
+                          style={{
+                            display: 'flex',
+                            flexWrap: 'wrap',
+                            gap: '0.4rem',
+                            marginBottom: '1rem',
+                          }}
+                        >
+                          <span
                             style={{
-                              margin: 0,
-                              fontSize: '1.05rem',
+                              padding: '0.25rem 0.65rem',
+                              borderRadius: '999px',
+                              fontSize: '0.72rem',
                               fontWeight: 800,
-                              color: '#0F172A',
-                              whiteSpace: 'nowrap',
-                              overflow: 'hidden',
-                              textOverflow: 'ellipsis',
+                              backgroundColor: '#EFF6FF',
+                              color: '#1E40AF',
+                              border: '1px solid #BFDBFE',
                             }}
                           >
-                            {member.nombre} {member.apellido}
-                          </h4>
-                          <p
+                            {member.cargo_eclesiastico || 'MIEMBRO GENERAL'}
+                          </span>
+
+                          <span
                             style={{
-                              margin: '0.2rem 0 0 0',
-                              fontSize: '0.8rem',
-                              color: '#64748B',
-                              fontWeight: 600,
+                              padding: '0.25rem 0.65rem',
+                              borderRadius: '999px',
+                              fontSize: '0.72rem',
+                              fontWeight: 800,
+                              backgroundColor: isBautizado ? '#DCFCE7' : '#FEF3C7',
+                              color: isBautizado ? '#15803D' : '#D97706',
+                              border: isBautizado ? '1px solid #86EFAC' : '1px solid #FDE68A',
                             }}
                           >
-                            C.I.: <strong>{member.cedula || 'N/I'}</strong>
-                          </p>
+                            {isBautizado ? '🌊 Bautizado: SÍ' : '🟡 Bautizado: NO'}
+                          </span>
+                        </div>
+
+                        {/* Datos de contacto */}
+                        <div
+                          style={{
+                            fontSize: '0.82rem',
+                            color: '#475569',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            gap: '0.3rem',
+                          }}
+                        >
+                          {member.telefono && (
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                              <span>📞</span> <span>{member.telefono}</span>
+                            </div>
+                          )}
+                          {member.email && (
+                            <div
+                              style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '0.4rem',
+                                whiteSpace: 'nowrap',
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis',
+                              }}
+                            >
+                              <span>✉️</span> <span>{member.email}</span>
+                            </div>
+                          )}
+                          {member.direccion && (
+                            <div
+                              style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '0.4rem',
+                                whiteSpace: 'nowrap',
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis',
+                              }}
+                            >
+                              <span>📍</span> <span>{member.direccion}</span>
+                            </div>
+                          )}
                         </div>
                       </div>
 
-                      {/* Badges de Cargo y Bautismo */}
-                      <div
-                        style={{
-                          display: 'flex',
-                          flexWrap: 'wrap',
-                          gap: '0.4rem',
-                          marginBottom: '1rem',
-                        }}
-                      >
-                        <span
+                      {/* Acciones de la Tarjeta */}
+                      <div style={{ display: 'flex', gap: '0.4rem', marginTop: '0.8rem' }}>
+                        <button
+                          onClick={() => {
+                            setSelectedMember(member);
+                            setIsProfileModalOpen(true);
+                          }}
+                          className="btn btn-soft-primary"
                           style={{
-                            padding: '0.25rem 0.65rem',
-                            borderRadius: '999px',
-                            fontSize: '0.72rem',
-                            fontWeight: 800,
-                            backgroundColor: '#EFF6FF',
-                            color: '#1E40AF',
-                            border: '1px solid #BFDBFE',
+                            flex: 1,
+                            padding: '0.55rem',
+                            fontSize: '0.8rem',
+                            fontWeight: 700,
+                            borderRadius: '10px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            gap: '0.3rem',
                           }}
                         >
-                          {member.cargo_eclesiastico || 'MIEMBRO GENERAL'}
-                        </span>
-
-                        <span
+                          <Eye size={15} /> Ficha 360°
+                        </button>
+                        <button
+                          onClick={() => handleOpenEditModal(member)}
+                          className="btn btn-soft-warning"
                           style={{
-                            padding: '0.25rem 0.65rem',
-                            borderRadius: '999px',
-                            fontSize: '0.72rem',
-                            fontWeight: 800,
-                            backgroundColor: isBautizado ? '#DCFCE7' : '#FEF3C7',
-                            color: isBautizado ? '#15803D' : '#D97706',
-                            border: isBautizado ? '1px solid #86EFAC' : '1px solid #FDE68A',
+                            padding: '0.55rem 0.75rem',
+                            fontSize: '0.8rem',
+                            fontWeight: 700,
+                            borderRadius: '10px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            gap: '0.3rem',
                           }}
+                          title="Editar datos del miembro"
                         >
-                          {isBautizado ? '🌊 Bautizado: SÍ' : '🟡 Bautizado: NO'}
-                        </span>
-                      </div>
-
-                      {/* Datos de contacto */}
-                      <div
-                        style={{
-                          fontSize: '0.82rem',
-                          color: '#475569',
-                          display: 'flex',
-                          flexDirection: 'column',
-                          gap: '0.3rem',
-                        }}
-                      >
-                        {member.telefono && (
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                            <span>📞</span> <span>{member.telefono}</span>
-                          </div>
-                        )}
-                        {member.email && (
-                          <div
-                            style={{
-                              display: 'flex',
-                              alignItems: 'center',
-                              gap: '0.4rem',
-                              whiteSpace: 'nowrap',
-                              overflow: 'hidden',
-                              textOverflow: 'ellipsis',
-                            }}
-                          >
-                            <span>✉️</span> <span>{member.email}</span>
-                          </div>
-                        )}
-                        {member.direccion && (
-                          <div
-                            style={{
-                              display: 'flex',
-                              alignItems: 'center',
-                              gap: '0.4rem',
-                              whiteSpace: 'nowrap',
-                              overflow: 'hidden',
-                              textOverflow: 'ellipsis',
-                            }}
-                          >
-                            <span>📍</span> <span>{member.direccion}</span>
-                          </div>
-                        )}
+                          <Edit3 size={15} />
+                        </button>
+                        <button
+                          onClick={() => handleDeleteMember(member)}
+                          className="btn btn-soft-danger"
+                          style={{
+                            padding: '0.55rem 0.75rem',
+                            fontSize: '0.8rem',
+                            fontWeight: 700,
+                            borderRadius: '10px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            gap: '0.3rem',
+                          }}
+                          title="Eliminar miembro de la organización"
+                        >
+                          <Trash2 size={15} />
+                        </button>
                       </div>
                     </div>
-
-                    {/* Acciones de la Tarjeta */}
-                    <div style={{ display: 'flex', gap: '0.4rem', marginTop: '0.8rem' }}>
-                      <button
-                        onClick={() => {
-                          setSelectedMember(member);
-                          setIsProfileModalOpen(true);
-                        }}
-                        className="btn btn-soft-primary"
-                        style={{
-                          flex: 1,
-                          padding: '0.55rem',
-                          fontSize: '0.8rem',
-                          fontWeight: 700,
-                          borderRadius: '10px',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          gap: '0.3rem',
-                        }}
-                      >
-                        <Eye size={15} /> Ficha 360°
-                      </button>
-                      <button
-                        onClick={() => handleOpenEditModal(member)}
-                        className="btn btn-soft-warning"
-                        style={{
-                          padding: '0.55rem 0.75rem',
-                          fontSize: '0.8rem',
-                          fontWeight: 700,
-                          borderRadius: '10px',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          gap: '0.3rem',
-                        }}
-                        title="Editar datos del miembro"
-                      >
-                        <Edit3 size={15} />
-                      </button>
-                      <button
-                        onClick={() => handleDeleteMember(member)}
-                        className="btn btn-soft-danger"
-                        style={{
-                          padding: '0.55rem 0.75rem',
-                          fontSize: '0.8rem',
-                          fontWeight: 700,
-                          borderRadius: '10px',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          gap: '0.3rem',
-                        }}
-                        title="Eliminar miembro de la organización"
-                      >
-                        <Trash2 size={15} />
-                      </button>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
+                  );
+                })}
+              </div>
+              {renderPagination()}
+            </>
           )}
         </div>
       )}
@@ -1805,7 +1948,20 @@ export const ChurchMembersManager: React.FC = () => {
           handleOpenEditModal(m);
         }}
         onDelete={(m) => handleDeleteMember(m)}
-        onUpdate={loadMembers}
+        onUpdate={async () => {
+          await loadMembers(true);
+          if (selectedMember) {
+            try {
+              const freshList = await api.getBeneficiaries(activeOng?.id);
+              const updatedMember = freshList.find((m) => m.id === selectedMember.id);
+              if (updatedMember) {
+                setSelectedMember(updatedMember);
+              }
+            } catch (err) {
+              console.warn('Error refrescando miembro seleccionado:', err);
+            }
+          }
+        }}
       />
 
       {/* MODAL DE EDICIÓN DE MIEMBRO (ADMINISTRADOR) */}

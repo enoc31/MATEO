@@ -1,119 +1,313 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="es">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Bosquejos Visuales MATEO ekklesia - Desktop & Móvil</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet" />
-  <style>
-    body {
-      font-family: 'Inter', sans-serif;
-      background-color: #0f172a;
-      color: #f8fafc;
-      margin: 0;
-      padding: 40px;
-    }
-    h1, h2, h3, h4 {
-      font-family: 'Plus Jakarta Sans', sans-serif;
-    }
-    .shadow-ambient { box-shadow: 0 4px 25px -4px rgba(27, 92, 182, 0.08); }
-    .screen-frame {
-      background-color: #F8FAFC;
-      color: #0F172A;
-      border-radius: 20px;
-      overflow: hidden;
-      border: 1px solid #E2E8F0;
-      box-shadow: 0 20px 40px -15px rgba(0,0,0,0.4);
-      margin-bottom: 60px;
-    }
-  </style>
-</head>
-<body>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Bosquejos Visuales MATEO ekklesia - Desktop & Móvil</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      body {
+        font-family: 'Inter', sans-serif;
+        background-color: #0f172a;
+        color: #f8fafc;
+        margin: 0;
+        padding: 40px;
+      }
+      h1,
+      h2,
+      h3,
+      h4 {
+        font-family: 'Plus Jakarta Sans', sans-serif;
+      }
+      .shadow-ambient {
+        box-shadow: 0 4px 25px -4px rgba(27, 92, 182, 0.08);
+      }
+      .screen-frame {
+        background-color: #f8fafc;
+        color: #0f172a;
+        border-radius: 20px;
+        overflow: hidden;
+        border: 1px solid #e2e8f0;
+        box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.4);
+        margin-bottom: 60px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="max-w-7xl mx-auto">
+      <div class="text-center mb-12">
+        <span
+          class="bg-blue-900/60 text-blue-300 text-xs font-semibold px-4 py-1.5 rounded-full border border-blue-700/50"
+          >MATEO ekklesia v2.0</span
+        >
+        <h1 class="text-4xl font-extrabold mt-4 text-white">
+          Bosquejos Visuales Oficiales: 4 Vistas Desktop & 4 Vistas Móvil
+        </h1>
+        <p class="text-slate-400 mt-2 text-lg max-w-2xl mx-auto">
+          Basados en la Propuesta 2 con la arquitectura TailGrids play-astro, el logo oficial y
+          usabilidad responsiva.
+        </p>
+      </div>
 
-  <div class="max-w-7xl mx-auto">
-    <div class="text-center mb-12">
-      <span class="bg-blue-900/60 text-blue-300 text-xs font-semibold px-4 py-1.5 rounded-full border border-blue-700/50">MATEO ekklesia v2.0</span>
-      <h1 class="text-4xl font-extrabold mt-4 text-white">Bosquejos Visuales Oficiales: 4 Vistas Desktop & 4 Vistas Móvil</h1>
-      <p class="text-slate-400 mt-2 text-lg max-w-2xl mx-auto">Basados en la Propuesta 2 con la arquitectura TailGrids play-astro, el logo oficial y usabilidad responsiva.</p>
-    </div>
+      <!-- VISTAS DESKTOP -->
+      <div class="mb-16">
+        <h2 class="text-2xl font-bold text-blue-400 mb-6 flex items-center gap-3">
+          <span class="bg-blue-600/20 text-blue-400 p-2 rounded-xl">💻</span> Vistas Desktop
+          (Pantalla Completa)
+        </h2>
 
-    <!-- VISTAS DESKTOP -->
-    <div class="mb-16">
-      <h2 class="text-2xl font-bold text-blue-400 mb-6 flex items-center gap-3">
-        <span class="bg-blue-600/20 text-blue-400 p-2 rounded-xl">💻</span> Vistas Desktop (Pantalla Completa)
-      </h2>
-
-      <!-- DESKTOP 1: HERO SECTION -->
-      <div id="desktop-1" class="screen-frame">
-        <div class="bg-slate-900 text-slate-400 px-4 py-2 text-xs flex items-center justify-between border-b border-slate-800">
-          <div class="flex items-center gap-2">
-            <span class="w-3 h-3 rounded-full bg-red-500 inline-block"></span>
-            <span class="w-3 h-3 rounded-full bg-yellow-500 inline-block"></span>
-            <span class="w-3 h-3 rounded-full bg-green-500 inline-block"></span>
-            <span class="ml-4 font-mono">https://www.mateo-ekklesia.com</span>
+        <!-- DESKTOP 1: HERO SECTION -->
+        <div id="desktop-1" class="screen-frame">
+          <div
+            class="bg-slate-900 text-slate-400 px-4 py-2 text-xs flex items-center justify-between border-b border-slate-800"
+          >
+            <div class="flex items-center gap-2">
+              <span class="w-3 h-3 rounded-full bg-red-500 inline-block"></span>
+              <span class="w-3 h-3 rounded-full bg-yellow-500 inline-block"></span>
+              <span class="w-3 h-3 rounded-full bg-green-500 inline-block"></span>
+              <span class="ml-4 font-mono">https://www.mateo-ekklesia.com</span>
+            </div>
+            <span class="font-semibold text-slate-300">DESKTOP VISTA 1: HERO SECTION</span>
           </div>
-          <span class="font-semibold text-slate-300">DESKTOP VISTA 1: HERO SECTION</span>
-        </div>
 
-        <div class="bg-white">
-          <nav class="flex items-center justify-between px-8 py-4 border-b border-slate-100 bg-white/90">
-            <div class="flex items-center gap-3">
-              <img src="/mateo_logo.png" alt="Logo MATEO" class="h-9 object-contain" />
-            </div>
-            <div class="flex items-center gap-8 text-sm font-medium text-slate-600">
-              <a href="#" class="text-blue-700 font-semibold">Inicio</a>
-              <a href="#" class="hover:text-blue-600">Módulos</a>
-              <a href="#" class="hover:text-blue-600">Precios</a>
-              <a href="#" class="hover:text-blue-600">FAQ</a>
-            </div>
-            <div class="flex items-center gap-4">
-              <button class="text-sm font-semibold text-slate-700 hover:text-blue-700">Iniciar Sesión</button>
-              <button class="bg-[#1B5CB6] text-white text-sm font-semibold px-5 py-2.5 rounded-xl shadow-md">Descubre cómo funciona Mateo</button>
-            </div>
-          </nav>
-
-          <div class="max-w-6xl mx-auto px-8 py-16 grid grid-cols-12 gap-12 items-center">
-            <div class="col-span-7">
-              <span class="inline-flex items-center gap-2 bg-blue-50 text-[#1B5CB6] text-xs font-semibold px-3.5 py-1.5 rounded-full border border-blue-100 mb-6">
-                <span>✨</span> MATEO ekklesia • Gestión Financiera Eclesiástica
-              </span>
-              <h1 class="text-4xl lg:text-5xl font-extrabold text-slate-900 leading-tight">
-                Transparencia y Eficiencia Administrativa para tu Iglesia
-              </h1>
-              <p class="text-slate-600 text-lg mt-4 leading-relaxed">
-                Gestión de diezmos, ofrendas en dos monedas (USD/VES), presupuestos ministeriales y auditoría en tiempo real para tu congregación.
-              </p>
-              <div class="flex items-center gap-4 mt-8">
-                <button class="bg-[#1B5CB6] text-white font-bold px-7 py-3.5 rounded-xl text-base shadow-lg">
+          <div class="bg-white">
+            <nav
+              class="flex items-center justify-between px-8 py-4 border-b border-slate-100 bg-white/90"
+            >
+              <div class="flex items-center gap-3">
+                <img src="/mateo_logo.png" alt="Logo MATEO" class="h-9 object-contain" />
+              </div>
+              <div class="flex items-center gap-8 text-sm font-medium text-slate-600">
+                <a href="#" class="text-blue-700 font-semibold">Inicio</a>
+                <a href="#" class="hover:text-blue-600">Módulos</a>
+                <a href="#" class="hover:text-blue-600">Precios</a>
+                <a href="#" class="hover:text-blue-600">FAQ</a>
+              </div>
+              <div class="flex items-center gap-4">
+                <button class="text-sm font-semibold text-slate-700 hover:text-blue-700">
+                  Iniciar Sesión
+                </button>
+                <button
+                  class="bg-[#1B5CB6] text-white text-sm font-semibold px-5 py-2.5 rounded-xl shadow-md"
+                >
                   Descubre cómo funciona Mateo
                 </button>
-                <button class="border border-slate-300 text-slate-700 font-semibold px-6 py-3.5 rounded-xl text-base">
-                  Ver demostración
+              </div>
+            </nav>
+
+            <div class="max-w-6xl mx-auto px-8 py-16 grid grid-cols-12 gap-12 items-center">
+              <div class="col-span-7">
+                <span
+                  class="inline-flex items-center gap-2 bg-blue-50 text-[#1B5CB6] text-xs font-semibold px-3.5 py-1.5 rounded-full border border-blue-100 mb-6"
+                >
+                  <span>✨</span> MATEO ekklesia • Gestión Financiera Eclesiástica
+                </span>
+                <h1 class="text-4xl lg:text-5xl font-extrabold text-slate-900 leading-tight">
+                  Transparencia y Eficiencia Administrativa para tu Iglesia
+                </h1>
+                <p class="text-slate-600 text-lg mt-4 leading-relaxed">
+                  Gestión de diezmos, ofrendas en dos monedas (USD/VES), presupuestos ministeriales
+                  y auditoría en tiempo real para tu congregación.
+                </p>
+                <div class="flex items-center gap-4 mt-8">
+                  <button
+                    class="bg-[#1B5CB6] text-white font-bold px-7 py-3.5 rounded-xl text-base shadow-lg"
+                  >
+                    Descubre cómo funciona Mateo
+                  </button>
+                  <button
+                    class="border border-slate-300 text-slate-700 font-semibold px-6 py-3.5 rounded-xl text-base"
+                  >
+                    Ver demostración
+                  </button>
+                </div>
+              </div>
+
+              <div class="col-span-5">
+                <div
+                  class="bg-white p-6 rounded-2xl border border-slate-200 shadow-ambient space-y-4"
+                >
+                  <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                    <div>
+                      <span class="text-xs text-slate-400 font-semibold uppercase"
+                        >Resumen de Diezmos</span
+                      >
+                      <h4 class="text-xl font-bold text-slate-900">$4,850.00 USD</h4>
+                    </div>
+                    <span
+                      class="bg-emerald-50 text-emerald-700 text-xs font-bold px-2.5 py-1 rounded-lg border border-emerald-200"
+                      >✓ Auditoría Aprobada</span
+                    >
+                  </div>
+                  <div class="grid grid-cols-2 gap-3">
+                    <div class="bg-slate-50 p-3 rounded-xl">
+                      <span class="text-xs text-slate-500">En Bolívares (VES)</span>
+                      <p class="text-sm font-bold text-slate-800 mt-1">178,250.00 Bs</p>
+                    </div>
+                    <div class="bg-blue-50 p-3 rounded-xl">
+                      <span class="text-xs text-blue-700 font-medium">Tasa BCV Oficial</span>
+                      <p class="text-sm font-bold text-[#1B5CB6] mt-1">36.75 Bs/USD</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- DESKTOP 2: MODULES -->
+        <div id="desktop-2" class="screen-frame">
+          <div
+            class="bg-slate-900 text-slate-400 px-4 py-2 text-xs flex items-center justify-between border-b border-slate-800"
+          >
+            <span class="font-mono">https://www.mateo-ekklesia.com/#modulos</span>
+            <span class="font-semibold text-slate-300">DESKTOP VISTA 2: MÓDULOS ECLESIÁSTICOS</span>
+          </div>
+          <div class="bg-[#F8FAFC] py-12 px-8">
+            <div class="max-w-5xl mx-auto text-center mb-8">
+              <h2 class="text-3xl font-extrabold text-slate-900">
+                Herramientas diseñadas para la paz administrativa
+              </h2>
+            </div>
+            <div class="max-w-6xl mx-auto grid grid-cols-4 gap-6">
+              <div class="bg-white p-6 rounded-2xl border border-slate-200">
+                <div class="text-2xl mb-3">💰</div>
+                <h3 class="font-bold text-slate-900">Diezmos y Ofrendas</h3>
+                <p class="text-slate-600 text-xs mt-2">
+                  Conversión automática USD/VES según la tasa oficial BCV del día.
+                </p>
+              </div>
+              <div class="bg-white p-6 rounded-2xl border border-slate-200">
+                <div class="text-2xl mb-3">📋</div>
+                <h3 class="font-bold text-slate-900">Solicitudes Ministeriales</h3>
+                <p class="text-slate-600 text-xs mt-2">
+                  Aprobación previa de presupuestos por departamento e iglesia.
+                </p>
+              </div>
+              <div class="bg-white p-6 rounded-2xl border border-slate-200">
+                <div class="text-2xl mb-3">📸</div>
+                <h3 class="font-bold text-slate-900">Fotos de Recibos</h3>
+                <p class="text-slate-600 text-xs mt-2">
+                  Rendición de cuentas escaneando facturas desde el celular.
+                </p>
+              </div>
+              <div class="bg-white p-6 rounded-2xl border border-slate-200">
+                <div class="text-2xl mb-3">🔍</div>
+                <h3 class="font-bold text-slate-900">Auditoría Inmutable</h3>
+                <p class="text-slate-600 text-xs mt-2">
+                  Firma digital e historial limpio listo para la asamblea.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- DESKTOP 3: PRICING -->
+        <div id="desktop-3" class="screen-frame">
+          <div
+            class="bg-slate-900 text-slate-400 px-4 py-2 text-xs flex items-center justify-between border-b border-slate-800"
+          >
+            <span class="font-mono">https://www.mateo-ekklesia.com/#precios</span>
+            <span class="font-semibold text-slate-300"
+              >DESKTOP VISTA 3: PLANES DE PRECIOS LIMPIOS (MODO ANUAL)</span
+            >
+          </div>
+          <div class="bg-white py-12 px-8 text-center">
+            <h2 class="text-3xl font-extrabold text-slate-900">Planes Claros para tu Iglesia</h2>
+            <div
+              class="inline-flex bg-slate-100 p-1.5 rounded-xl border border-slate-200 mt-4 mb-8"
+            >
+              <button class="bg-[#1B5CB6] text-white font-bold text-xs px-4 py-2 rounded-lg">
+                Anual (Ahorra 20%)
+              </button>
+              <button class="text-slate-600 font-semibold text-xs px-4 py-2 rounded-lg">
+                Mensual
+              </button>
+            </div>
+            <div class="max-w-5xl mx-auto grid grid-cols-3 gap-6 text-left">
+              <div class="bg-slate-50 p-6 rounded-2xl border border-slate-200">
+                <h3 class="font-bold text-slate-900">Plan Free</h3>
+                <div class="text-3xl font-extrabold mt-2">
+                  $0 <span class="text-xs font-normal text-slate-500">/ 14 días</span>
+                </div>
+                <button
+                  class="w-full mt-6 border border-slate-300 font-bold text-slate-700 py-2.5 rounded-xl text-xs"
+                >
+                  Probar 14 Días Gratis
+                </button>
+              </div>
+              <div class="bg-white p-6 rounded-2xl border-2 border-[#1B5CB6] relative">
+                <span
+                  class="absolute -top-3 left-1/2 -translate-x-1/2 bg-[#1B5CB6] text-white text-[10px] font-bold px-2.5 py-0.5 rounded-full"
+                  >RECOMENDADO</span
+                >
+                <h3 class="font-bold text-slate-900">Plan Estándar</h3>
+                <div class="text-3xl font-extrabold mt-2">
+                  $25 <span class="text-xs font-normal text-slate-500">/ mes (anual)</span>
+                </div>
+                <p class="text-xs text-slate-500 mt-1">Hasta 50 miembros</p>
+                <button
+                  class="w-full mt-6 bg-[#1B5CB6] font-bold text-white py-2.5 rounded-xl text-xs"
+                >
+                  Comenzar Ahora
+                </button>
+              </div>
+              <div class="bg-slate-50 p-6 rounded-2xl border border-slate-200">
+                <h3 class="font-bold text-slate-900">Plan Avanzado</h3>
+                <div class="text-3xl font-extrabold mt-2">
+                  $35 <span class="text-xs font-normal text-slate-500">/ mes (anual)</span>
+                </div>
+                <p class="text-xs text-slate-500 mt-1">Miembros ilimitados</p>
+                <button
+                  class="w-full mt-6 bg-slate-900 font-bold text-white py-2.5 rounded-xl text-xs"
+                >
+                  Obtener Plan Avanzado
                 </button>
               </div>
             </div>
+          </div>
+        </div>
 
-            <div class="col-span-5">
-              <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-ambient space-y-4">
-                <div class="flex items-center justify-between border-b border-slate-100 pb-3">
-                  <div>
-                    <span class="text-xs text-slate-400 font-semibold uppercase">Resumen de Diezmos</span>
-                    <h4 class="text-xl font-bold text-slate-900">$4,850.00 USD</h4>
-                  </div>
-                  <span class="bg-emerald-50 text-emerald-700 text-xs font-bold px-2.5 py-1 rounded-lg border border-emerald-200">✓ Auditoría Aprobada</span>
+        <!-- DESKTOP 4: DASHBOARD -->
+        <div id="desktop-4" class="screen-frame">
+          <div
+            class="bg-slate-900 text-slate-400 px-4 py-2 text-xs flex items-center justify-between border-b border-slate-800"
+          >
+            <span class="font-mono">https://app.mateo-ekklesia.com/dashboard</span>
+            <span class="font-semibold text-slate-300"
+              >DESKTOP VISTA 4: PANEL INTERNO DE TESORERÍA</span
+            >
+          </div>
+          <div class="bg-[#F8FAFC] flex min-h-[300px]">
+            <div class="w-48 bg-white border-r border-slate-200 p-4 space-y-4 text-xs font-medium">
+              <img src="/mateo_logo.png" alt="Logo MATEO" class="h-6 object-contain" />
+              <div class="space-y-1">
+                <div class="bg-blue-50 text-[#1B5CB6] p-2 rounded-lg font-bold">📊 Dashboard</div>
+                <div class="text-slate-600 p-2">💰 Diezmos USD/VES</div>
+                <div class="text-slate-600 p-2">📋 Presupuestos</div>
+                <div class="text-slate-600 p-2">🔍 Auditoría PDF</div>
+              </div>
+            </div>
+            <div class="flex-1 p-6">
+              <h3 class="font-bold text-lg text-slate-900 mb-4">Panel de Auditoría Financiera</h3>
+              <div class="grid grid-cols-3 gap-4">
+                <div class="bg-white p-4 rounded-xl border border-slate-200">
+                  <span class="text-xs text-slate-500">Fondo General (USD)</span>
+                  <p class="text-lg font-bold text-slate-900">$12,450.00</p>
                 </div>
-                <div class="grid grid-cols-2 gap-3">
-                  <div class="bg-slate-50 p-3 rounded-xl">
-                    <span class="text-xs text-slate-500">En Bolívares (VES)</span>
-                    <p class="text-sm font-bold text-slate-800 mt-1">178,250.00 Bs</p>
-                  </div>
-                  <div class="bg-blue-50 p-3 rounded-xl">
-                    <span class="text-xs text-blue-700 font-medium">Tasa BCV Oficial</span>
-                    <p class="text-sm font-bold text-[#1B5CB6] mt-1">36.75 Bs/USD</p>
-                  </div>
+                <div class="bg-white p-4 rounded-xl border border-slate-200">
+                  <span class="text-xs text-slate-500">Fondo Misiones (Bs)</span>
+                  <p class="text-lg font-bold text-emerald-600">45,200.00 Bs</p>
+                </div>
+                <div class="bg-white p-4 rounded-xl border border-slate-200">
+                  <span class="text-xs text-slate-500">Auditoría</span>
+                  <p class="text-xs font-bold text-emerald-600 mt-2">✓ Al Día y Firmado</p>
                 </div>
               </div>
             </div>
@@ -121,187 +315,115 @@
         </div>
       </div>
 
-      <!-- DESKTOP 2: MODULES -->
-      <div id="desktop-2" class="screen-frame">
-        <div class="bg-slate-900 text-slate-400 px-4 py-2 text-xs flex items-center justify-between border-b border-slate-800">
-          <span class="font-mono">https://www.mateo-ekklesia.com/#modulos</span>
-          <span class="font-semibold text-slate-300">DESKTOP VISTA 2: MÓDULOS ECLESIÁSTICOS</span>
-        </div>
-        <div class="bg-[#F8FAFC] py-12 px-8">
-          <div class="max-w-5xl mx-auto text-center mb-8">
-            <h2 class="text-3xl font-extrabold text-slate-900">Herramientas diseñadas para la paz administrativa</h2>
-          </div>
-          <div class="max-w-6xl mx-auto grid grid-cols-4 gap-6">
-            <div class="bg-white p-6 rounded-2xl border border-slate-200">
-              <div class="text-2xl mb-3">💰</div>
-              <h3 class="font-bold text-slate-900">Diezmos y Ofrendas</h3>
-              <p class="text-slate-600 text-xs mt-2">Conversión automática USD/VES según la tasa oficial BCV del día.</p>
-            </div>
-            <div class="bg-white p-6 rounded-2xl border border-slate-200">
-              <div class="text-2xl mb-3">📋</div>
-              <h3 class="font-bold text-slate-900">Solicitudes Ministeriales</h3>
-              <p class="text-slate-600 text-xs mt-2">Aprobación previa de presupuestos por departamento e iglesia.</p>
-            </div>
-            <div class="bg-white p-6 rounded-2xl border border-slate-200">
-              <div class="text-2xl mb-3">📸</div>
-              <h3 class="font-bold text-slate-900">Fotos de Recibos</h3>
-              <p class="text-slate-600 text-xs mt-2">Rendición de cuentas escaneando facturas desde el celular.</p>
-            </div>
-            <div class="bg-white p-6 rounded-2xl border border-slate-200">
-              <div class="text-2xl mb-3">🔍</div>
-              <h3 class="font-bold text-slate-900">Auditoría Inmutable</h3>
-              <p class="text-slate-600 text-xs mt-2">Firma digital e historial limpio listo para la asamblea.</p>
-            </div>
-          </div>
-        </div>
-      </div>
+      <!-- VISTAS MÓVIL -->
+      <div>
+        <h2 class="text-2xl font-bold text-emerald-400 mb-6 flex items-center gap-3">
+          <span class="bg-emerald-600/20 text-emerald-400 p-2 rounded-xl">📱</span> Vistas Móvil
+          (Smartphone Responsivo)
+        </h2>
 
-      <!-- DESKTOP 3: PRICING -->
-      <div id="desktop-3" class="screen-frame">
-        <div class="bg-slate-900 text-slate-400 px-4 py-2 text-xs flex items-center justify-between border-b border-slate-800">
-          <span class="font-mono">https://www.mateo-ekklesia.com/#precios</span>
-          <span class="font-semibold text-slate-300">DESKTOP VISTA 3: PLANES DE PRECIOS LIMPIOS (MODO ANUAL)</span>
-        </div>
-        <div class="bg-white py-12 px-8 text-center">
-          <h2 class="text-3xl font-extrabold text-slate-900">Planes Claros para tu Iglesia</h2>
-          <div class="inline-flex bg-slate-100 p-1.5 rounded-xl border border-slate-200 mt-4 mb-8">
-            <button class="bg-[#1B5CB6] text-white font-bold text-xs px-4 py-2 rounded-lg">Anual (Ahorra 20%)</button>
-            <button class="text-slate-600 font-semibold text-xs px-4 py-2 rounded-lg">Mensual</button>
-          </div>
-          <div class="max-w-5xl mx-auto grid grid-cols-3 gap-6 text-left">
-            <div class="bg-slate-50 p-6 rounded-2xl border border-slate-200">
-              <h3 class="font-bold text-slate-900">Plan Free</h3>
-              <div class="text-3xl font-extrabold mt-2">$0 <span class="text-xs font-normal text-slate-500">/ 14 días</span></div>
-              <button class="w-full mt-6 border border-slate-300 font-bold text-slate-700 py-2.5 rounded-xl text-xs">Probar 14 Días Gratis</button>
+        <div class="grid grid-cols-4 gap-6">
+          <!-- MÓVIL 1 -->
+          <div
+            id="mobile-1"
+            class="bg-white rounded-3xl border-4 border-slate-800 shadow-xl p-4 text-slate-900 flex flex-col justify-between min-h-[500px]"
+          >
+            <div class="flex justify-between items-center border-b pb-2">
+              <img src="/mateo_logo.png" alt="Logo MATEO" class="h-6 object-contain" />
+              <button class="bg-slate-100 p-1.5 rounded">☰</button>
             </div>
-            <div class="bg-white p-6 rounded-2xl border-2 border-[#1B5CB6] relative">
-              <span class="absolute -top-3 left-1/2 -translate-x-1/2 bg-[#1B5CB6] text-white text-[10px] font-bold px-2.5 py-0.5 rounded-full">RECOMENDADO</span>
-              <h3 class="font-bold text-slate-900">Plan Estándar</h3>
-              <div class="text-3xl font-extrabold mt-2">$25 <span class="text-xs font-normal text-slate-500">/ mes (anual)</span></div>
-              <p class="text-xs text-slate-500 mt-1">Hasta 50 miembros</p>
-              <button class="w-full mt-6 bg-[#1B5CB6] font-bold text-white py-2.5 rounded-xl text-xs">Comenzar Ahora</button>
+            <div class="text-center space-y-3 py-6">
+              <span class="bg-blue-50 text-[#1B5CB6] text-[10px] font-bold px-2 py-0.5 rounded-full"
+                >v2.0</span
+              >
+              <h3 class="font-bold text-base leading-tight">
+                Transparencia y Eficiencia Administrativa para tu Iglesia
+              </h3>
+              <button
+                class="w-full bg-[#1B5CB6] text-white text-xs font-bold py-3 rounded-xl shadow"
+              >
+                Descubre cómo funciona Mateo
+              </button>
             </div>
-            <div class="bg-slate-50 p-6 rounded-2xl border border-slate-200">
-              <h3 class="font-bold text-slate-900">Plan Avanzado</h3>
-              <div class="text-3xl font-extrabold mt-2">$35 <span class="text-xs font-normal text-slate-500">/ mes (anual)</span></div>
-              <p class="text-xs text-slate-500 mt-1">Miembros ilimitados</p>
-              <button class="w-full mt-6 bg-slate-900 font-bold text-white py-2.5 rounded-xl text-xs">Obtener Plan Avanzado</button>
+            <div class="text-[10px] text-center text-slate-400 border-t pt-2">
+              MÓVIL VISTA 1: HERO
             </div>
           </div>
-        </div>
-      </div>
 
-      <!-- DESKTOP 4: DASHBOARD -->
-      <div id="desktop-4" class="screen-frame">
-        <div class="bg-slate-900 text-slate-400 px-4 py-2 text-xs flex items-center justify-between border-b border-slate-800">
-          <span class="font-mono">https://app.mateo-ekklesia.com/dashboard</span>
-          <span class="font-semibold text-slate-300">DESKTOP VISTA 4: PANEL INTERNO DE TESORERÍA</span>
-        </div>
-        <div class="bg-[#F8FAFC] flex min-h-[300px]">
-          <div class="w-48 bg-white border-r border-slate-200 p-4 space-y-4 text-xs font-medium">
-            <img src="/mateo_logo.png" alt="Logo MATEO" class="h-6 object-contain" />
-            <div class="space-y-1">
-              <div class="bg-blue-50 text-[#1B5CB6] p-2 rounded-lg font-bold">📊 Dashboard</div>
-              <div class="text-slate-600 p-2">💰 Diezmos USD/VES</div>
-              <div class="text-slate-600 p-2">📋 Presupuestos</div>
-              <div class="text-slate-600 p-2">🔍 Auditoría PDF</div>
+          <!-- MÓVIL 2 -->
+          <div
+            id="mobile-2"
+            class="bg-white rounded-3xl border-4 border-slate-800 shadow-xl p-4 text-slate-900 flex flex-col justify-between min-h-[500px]"
+          >
+            <div class="border-b pb-2 font-bold text-xs">Módulos (1 Columna)</div>
+            <div class="space-y-2 py-4">
+              <div class="bg-slate-50 p-2.5 rounded-xl border text-xs">
+                <span class="font-bold text-[#1B5CB6]">💰 Diezmos USD/VES</span>
+                <p class="text-[10px] text-slate-500 mt-0.5">Tasa BCV del día.</p>
+              </div>
+              <div class="bg-slate-50 p-2.5 rounded-xl border text-xs">
+                <span class="font-bold text-emerald-600">📋 Solicitudes</span>
+                <p class="text-[10px] text-slate-500 mt-0.5">Aprobaciones ministeriales.</p>
+              </div>
+              <div class="bg-slate-50 p-2.5 rounded-xl border text-xs">
+                <span class="font-bold text-purple-600">📸 Fotos Recibos</span>
+                <p class="text-[10px] text-slate-500 mt-0.5">Escáner móvil.</p>
+              </div>
+            </div>
+            <div class="text-[10px] text-center text-slate-400 border-t pt-2">
+              MÓVIL VISTA 2: MÓDULOS
             </div>
           </div>
-          <div class="flex-1 p-6">
-            <h3 class="font-bold text-lg text-slate-900 mb-4">Panel de Auditoría Financiera</h3>
-            <div class="grid grid-cols-3 gap-4">
-              <div class="bg-white p-4 rounded-xl border border-slate-200">
-                <span class="text-xs text-slate-500">Fondo General (USD)</span>
-                <p class="text-lg font-bold text-slate-900">$12,450.00</p>
+
+          <!-- MÓVIL 3 -->
+          <div
+            id="mobile-3"
+            class="bg-white rounded-3xl border-4 border-slate-800 shadow-xl p-4 text-slate-900 flex flex-col justify-between min-h-[500px]"
+          >
+            <div class="border-b pb-2 font-bold text-xs text-center">Precios (Modo Anual)</div>
+            <div class="space-y-3 py-4 text-center">
+              <div class="bg-slate-100 p-1 rounded-lg text-[10px] flex font-bold">
+                <span class="bg-[#1B5CB6] text-white flex-1 py-1 rounded">Anual</span>
+                <span class="flex-1 py-1 text-slate-500">Mensual</span>
               </div>
-              <div class="bg-white p-4 rounded-xl border border-slate-200">
-                <span class="text-xs text-slate-500">Fondo Misiones (Bs)</span>
-                <p class="text-lg font-bold text-emerald-600">45,200.00 Bs</p>
+              <div class="bg-white p-3 rounded-xl border-2 border-[#1B5CB6] text-left">
+                <span class="text-[9px] font-bold text-[#1B5CB6]">ESTÁNDAR ($25/MES)</span>
+                <p class="text-[10px] text-slate-500 mt-1">Hasta 50 miembros</p>
+                <button
+                  class="w-full bg-[#1B5CB6] text-white font-bold text-[10px] py-2 rounded-lg mt-2"
+                >
+                  Comenzar Ahora
+                </button>
               </div>
-              <div class="bg-white p-4 rounded-xl border border-slate-200">
-                <span class="text-xs text-slate-500">Auditoría</span>
-                <p class="text-xs font-bold text-emerald-600 mt-2">✓ Al Día y Firmado</p>
+            </div>
+            <div class="text-[10px] text-center text-slate-400 border-t pt-2">
+              MÓVIL VISTA 3: PRECIOS
+            </div>
+          </div>
+
+          <!-- MÓVIL 4 -->
+          <div
+            id="mobile-4"
+            class="bg-white rounded-3xl border-4 border-slate-800 shadow-xl p-4 text-slate-900 flex flex-col justify-between min-h-[500px]"
+          >
+            <div class="border-b pb-2 font-bold text-xs">Rendición de Gastos</div>
+            <div class="space-y-3 py-4 text-center">
+              <div class="bg-blue-50 border border-blue-200 p-3 rounded-xl space-y-1.5">
+                <span class="text-lg">📷</span>
+                <p class="text-[10px] font-bold text-[#1B5CB6]">Tomar Foto de Factura</p>
+                <button
+                  class="bg-[#1B5CB6] text-white text-[9px] font-bold px-2 py-1 rounded w-full"
+                >
+                  Abrir Cámara
+                </button>
               </div>
+            </div>
+            <div class="text-[10px] text-center text-slate-400 border-t pt-2">
+              MÓVIL VISTA 4: APP RENDICIÓN
             </div>
           </div>
         </div>
       </div>
     </div>
-
-    <!-- VISTAS MÓVIL -->
-    <div>
-      <h2 class="text-2xl font-bold text-emerald-400 mb-6 flex items-center gap-3">
-        <span class="bg-emerald-600/20 text-emerald-400 p-2 rounded-xl">📱</span> Vistas Móvil (Smartphone Responsivo)
-      </h2>
-
-      <div class="grid grid-cols-4 gap-6">
-        <!-- MÓVIL 1 -->
-        <div id="mobile-1" class="bg-white rounded-3xl border-4 border-slate-800 shadow-xl p-4 text-slate-900 flex flex-col justify-between min-h-[500px]">
-          <div class="flex justify-between items-center border-b pb-2">
-            <img src="/mateo_logo.png" alt="Logo MATEO" class="h-6 object-contain" />
-            <button class="bg-slate-100 p-1.5 rounded">☰</button>
-          </div>
-          <div class="text-center space-y-3 py-6">
-            <span class="bg-blue-50 text-[#1B5CB6] text-[10px] font-bold px-2 py-0.5 rounded-full">v2.0</span>
-            <h3 class="font-bold text-base leading-tight">Transparencia y Eficiencia Administrativa para tu Iglesia</h3>
-            <button class="w-full bg-[#1B5CB6] text-white text-xs font-bold py-3 rounded-xl shadow">Descubre cómo funciona Mateo</button>
-          </div>
-          <div class="text-[10px] text-center text-slate-400 border-t pt-2">MÓVIL VISTA 1: HERO</div>
-        </div>
-
-        <!-- MÓVIL 2 -->
-        <div id="mobile-2" class="bg-white rounded-3xl border-4 border-slate-800 shadow-xl p-4 text-slate-900 flex flex-col justify-between min-h-[500px]">
-          <div class="border-b pb-2 font-bold text-xs">Módulos (1 Columna)</div>
-          <div class="space-y-2 py-4">
-            <div class="bg-slate-50 p-2.5 rounded-xl border text-xs">
-              <span class="font-bold text-[#1B5CB6]">💰 Diezmos USD/VES</span>
-              <p class="text-[10px] text-slate-500 mt-0.5">Tasa BCV del día.</p>
-            </div>
-            <div class="bg-slate-50 p-2.5 rounded-xl border text-xs">
-              <span class="font-bold text-emerald-600">📋 Solicitudes</span>
-              <p class="text-[10px] text-slate-500 mt-0.5">Aprobaciones ministeriales.</p>
-            </div>
-            <div class="bg-slate-50 p-2.5 rounded-xl border text-xs">
-              <span class="font-bold text-purple-600">📸 Fotos Recibos</span>
-              <p class="text-[10px] text-slate-500 mt-0.5">Escáner móvil.</p>
-            </div>
-          </div>
-          <div class="text-[10px] text-center text-slate-400 border-t pt-2">MÓVIL VISTA 2: MÓDULOS</div>
-        </div>
-
-        <!-- MÓVIL 3 -->
-        <div id="mobile-3" class="bg-white rounded-3xl border-4 border-slate-800 shadow-xl p-4 text-slate-900 flex flex-col justify-between min-h-[500px]">
-          <div class="border-b pb-2 font-bold text-xs text-center">Precios (Modo Anual)</div>
-          <div class="space-y-3 py-4 text-center">
-            <div class="bg-slate-100 p-1 rounded-lg text-[10px] flex font-bold">
-              <span class="bg-[#1B5CB6] text-white flex-1 py-1 rounded">Anual</span>
-              <span class="flex-1 py-1 text-slate-500">Mensual</span>
-            </div>
-            <div class="bg-white p-3 rounded-xl border-2 border-[#1B5CB6] text-left">
-              <span class="text-[9px] font-bold text-[#1B5CB6]">ESTÁNDAR ($25/MES)</span>
-              <p class="text-[10px] text-slate-500 mt-1">Hasta 50 miembros</p>
-              <button class="w-full bg-[#1B5CB6] text-white font-bold text-[10px] py-2 rounded-lg mt-2">Comenzar Ahora</button>
-            </div>
-          </div>
-          <div class="text-[10px] text-center text-slate-400 border-t pt-2">MÓVIL VISTA 3: PRECIOS</div>
-        </div>
-
-        <!-- MÓVIL 4 -->
-        <div id="mobile-4" class="bg-white rounded-3xl border-4 border-slate-800 shadow-xl p-4 text-slate-900 flex flex-col justify-between min-h-[500px]">
-          <div class="border-b pb-2 font-bold text-xs">Rendición de Gastos</div>
-          <div class="space-y-3 py-4 text-center">
-            <div class="bg-blue-50 border border-blue-200 p-3 rounded-xl space-y-1.5">
-              <span class="text-lg">📷</span>
-              <p class="text-[10px] font-bold text-[#1B5CB6]">Tomar Foto de Factura</p>
-              <button class="bg-[#1B5CB6] text-white text-[9px] font-bold px-2 py-1 rounded w-full">Abrir Cámara</button>
-            </div>
-          </div>
-          <div class="text-[10px] text-center text-slate-400 border-t pt-2">MÓVIL VISTA 4: APP RENDICIÓN</div>
-        </div>
-      </div>
-    </div>
-
-  </div>
-
-</body>
+  </body>
 </html>

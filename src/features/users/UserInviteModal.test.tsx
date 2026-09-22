@@ -2,18 +2,26 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { UserInviteModal } from './UserInviteModal';
 import * as AuthContextModule from '../../context/AuthContext';
-import { api } from '../../services/api';
+import { requisitionsApi } from '../../services/api';
 
 vi.mock('../../context/AuthContext', () => ({
   useAuth: vi.fn(),
+}));
+
+vi.mock('../../supabaseClient', () => ({
+  supabase: {
+    functions: {
+      invoke: vi.fn().mockResolvedValue({ data: { success: true }, error: null }),
+    },
+  },
 }));
 
 vi.mock('../../services/api', async () => {
   const actual: any = await vi.importActual('../../services/api');
   return {
     ...actual,
-    api: {
-      ...actual.api,
+    requisitionsApi: {
+      ...actual.requisitionsApi,
       createInvitation: vi.fn(),
     },
   };
@@ -33,12 +41,12 @@ describe('UserInviteModal Component', () => {
   it('renders modal when isOpen is true', () => {
     render(<UserInviteModal isOpen={true} onClose={mockOnClose} />);
 
-    expect(screen.getByText(/Invitar Nuevo Usuario a la ONG/i)).toBeInTheDocument();
-    expect(screen.getByPlaceholderText(/usuario@tu-ong.org/i)).toBeInTheDocument();
+    expect(screen.getByText(/Invitar Nuevo Usuario/i)).toBeInTheDocument();
+    expect(screen.getByPlaceholderText(/usuario@/i)).toBeInTheDocument();
   });
 
   it('generates invitation link when submitted', async () => {
-    ((api as any).createInvitation as any).mockResolvedValue({
+    ((requisitionsApi as any).createInvitation as any).mockResolvedValue({
       token: 'inv-test-12345',
       email: 'nuevo@ong.org',
       rol: 'coordinador',
@@ -47,14 +55,14 @@ describe('UserInviteModal Component', () => {
 
     render(<UserInviteModal isOpen={true} onClose={mockOnClose} onSuccess={mockOnSuccess} />);
 
-    fireEvent.change(screen.getByPlaceholderText(/usuario@tu-ong.org/i), {
+    fireEvent.change(screen.getByPlaceholderText(/usuario@/i), {
       target: { value: 'nuevo@ong.org' },
     });
 
     fireEvent.click(screen.getByText(/Generar Invitación/i));
 
     await waitFor(() => {
-      expect((api as any).createInvitation).toHaveBeenCalledWith({
+      expect((requisitionsApi as any).createInvitation).toHaveBeenCalledWith({
         email: 'nuevo@ong.org',
         rol: 'coordinador',
         ong_id: 'ong-456',

@@ -28,7 +28,7 @@ describe('UserManagement', () => {
       rol: 'director',
       aprobado: true,
       created_at: '2026-07-27T03:16:00.215Z',
-      ong_id: 'd392547f-cc5e-48e9-95d0-032556e09fa5',
+      ong_id: 'ong-1',
     },
     {
       id: 'eaef70d8-149c-4e47-b451-22d1f1ccad9b',
@@ -37,7 +37,7 @@ describe('UserManagement', () => {
       rol: 'administrador',
       aprobado: false,
       created_at: '2026-07-04T20:47:26.031Z',
-      ong_id: '11111111-1111-1111-1111-111111111111',
+      ong_id: 'ong-1',
     },
   ];
 

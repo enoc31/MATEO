@@ -1994,9 +1994,12 @@ export const api = {
   getBeneficiaries: async (ongId?: string): Promise<Beneficiary[]> => {
     let rawList: Beneficiary[];
     if (!isSimulationMode) {
+      const SELECT_COLUMNS =
+        'id, jornada_id, nombre, apellido, cedula, sexo, fecha_nacimiento, tipo_donacion, url_firma, ip_captura, ong_id, created_at, direccion, telefono, email, redes_sociales, foto_url, foto_cedula_url, bautizado, grado_instruccion, enfermedad, fecha_membresia, huella_url, cargo_eclesiastico, areas_ministeriales';
+
       let query = supabase
         .from('beneficiarios')
-        .select('*')
+        .select(SELECT_COLUMNS)
         .order('created_at', { ascending: false });
 
       if (ongId) {
@@ -2004,32 +2007,47 @@ export const api = {
       }
 
       const { data, error } = await query;
+      let resultData = data;
       if (error && error.code !== '42P01') {
-        console.warn('Error getBeneficiaries', error);
+        console.warn('Error getBeneficiaries con select optimizado, intentando fallback:', error);
+        let fallbackQuery = supabase
+          .from('beneficiarios')
+          .select('*')
+          .order('created_at', { ascending: false });
+        if (ongId) {
+          fallbackQuery = fallbackQuery.or(`ong_id.eq.${ongId},ong_id.is.null`);
+        }
+        const fallbackRes = await fallbackQuery;
+        if (!fallbackRes.error) {
+          resultData = fallbackRes.data;
+        } else {
+          console.warn('Error getBeneficiaries fallback:', fallbackRes.error);
+        }
       }
-      rawList = (data as Beneficiary[]) || [];
+      rawList = (resultData as Beneficiary[]) || [];
     } else {
       const all = JSON.parse(localStorage.getItem('cnbv_beneficiaries') || '[]');
       rawList = ongId ? all.filter((b: any) => b.ong_id === ongId) : all;
     }
 
-    // Desempaquetar metadata de Ekklesia
+    // Desempaquetar metadata de Ekklesia (con precedencia para columnas físicas reales de la BD)
     return rawList.map((b) => {
+      let metaJson: Record<string, any> = {};
       if (b.tipo_donacion && Array.isArray(b.tipo_donacion)) {
         const metaTag = b.tipo_donacion.find((t) => typeof t === 'string' && t.startsWith('META:'));
         if (metaTag) {
           try {
-            const metaJson = JSON.parse(metaTag.replace('META:', ''));
-            return {
-              ...b,
-              ...metaJson,
-            };
+            metaJson = JSON.parse(metaTag.replace('META:', ''));
           } catch (e) {
             console.warn('Error desempaquetando meta de beneficiario:', e);
           }
         }
       }
-      return b;
+      // Las columnas físicas de la BD (b) tienen precedencia absoluta sobre metaJson desactualizado
+      const merged = { ...metaJson, ...b };
+      if (b.foto_url !== undefined) merged.foto_url = b.foto_url;
+      if (b.foto_cedula_url !== undefined) merged.foto_cedula_url = b.foto_cedula_url;
+      return merged as Beneficiary;
     });
   },
 
@@ -2185,13 +2203,52 @@ export const api = {
     ongId?: string,
   ): Promise<Beneficiary> => {
     if (!isSimulationMode) {
-      let query = supabase.from('beneficiarios').update(updates).eq('id', id);
+      // 1. Obtener registro previo para actualizar la etiqueta META en tipo_donacion si existe
+      const { data: currentRecord } = await supabase
+        .from('beneficiarios')
+        .select('*')
+        .eq('id', id)
+        .maybeSingle();
+
+      const finalUpdates: Record<string, any> = { ...updates };
+
+      if (currentRecord && currentRecord.tipo_donacion && Array.isArray(currentRecord.tipo_donacion)) {
+        const metaIndex = currentRecord.tipo_donacion.findIndex(
+          (t: any) => typeof t === 'string' && t.startsWith('META:'),
+        );
+        if (metaIndex !== -1) {
+          try {
+            const oldMeta = JSON.parse(currentRecord.tipo_donacion[metaIndex].replace('META:', ''));
+            const newMeta = { ...oldMeta, ...updates };
+            const updatedTipoDonacion = [...currentRecord.tipo_donacion];
+            updatedTipoDonacion[metaIndex] = `META:${JSON.stringify(newMeta)}`;
+            finalUpdates.tipo_donacion = updatedTipoDonacion;
+          } catch (e) {
+            console.warn('Error al sincronizar etiqueta META al actualizar:', e);
+          }
+        }
+      }
+
+      let query = supabase.from('beneficiarios').update(finalUpdates).eq('id', id);
       if (ongId) {
         query = query.eq('ong_id', ongId);
       }
       const { data, error } = await query.select('*').single();
       if (error) throw error;
-      return data as Beneficiary;
+
+      let result = data as Beneficiary;
+      if (result.tipo_donacion && Array.isArray(result.tipo_donacion)) {
+        const metaTag = result.tipo_donacion.find((t: any) => typeof t === 'string' && t.startsWith('META:'));
+        if (metaTag) {
+          try {
+            const metaJson = JSON.parse(metaTag.replace('META:', ''));
+            result = { ...metaJson, ...result };
+          } catch (e) {}
+        }
+      }
+      if (updates.foto_url !== undefined) result.foto_url = updates.foto_url;
+      if (updates.foto_cedula_url !== undefined) result.foto_cedula_url = updates.foto_cedula_url;
+      return result;
     } else {
       const all = JSON.parse(localStorage.getItem('cnbv_beneficiaries') || '[]');
       const index = all.findIndex((b: any) => b.id === id);
