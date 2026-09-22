@@ -15,6 +15,7 @@ import {
   Trash2,
 } from 'lucide-react';
 import { api, type Beneficiary } from '../../services/api';
+import { uploadToGCS } from '../../services/storage';
 import { useAuth } from '../../context/AuthContext';
 import { MemberProfileModal } from './MemberProfileModal';
 import { useNotifications } from '../../components/NotificationProvider';
@@ -115,8 +116,8 @@ export const ChurchMembersManager: React.FC = () => {
     setNewAreas((prev) => (prev.includes(area) ? prev.filter((a) => a !== area) : [...prev, area]));
   };
 
-  // Carga e previsualización directa de la Foto del Miembro
-  const handleMemberPhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Carga e previsualización directa de la Foto del Miembro con subida automática a GCS
+  const handleMemberPhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -125,16 +126,28 @@ export const ChurchMembersManager: React.FC = () => {
       return;
     }
 
+    // Previsualización instantánea local
     const reader = new FileReader();
     reader.onloadend = () => {
       setNewFotoUrl(reader.result as string);
-      addNotification('Foto del miembro cargada correctamente', 'info');
     };
     reader.readAsDataURL(file);
+
+    // Subida directa al Bucket de Google Cloud Storage
+    try {
+      const res = await uploadToGCS(file);
+      if (res && res.url) {
+        setNewFotoUrl(res.url);
+        addNotification('Foto subida exitosamente a Google Cloud Storage', 'success');
+      }
+    } catch (err) {
+      console.warn('Subida a GCS no disponible, conservando respaldo en memoria:', err);
+      addNotification('Foto cargada correctamente en modo local', 'info');
+    }
   };
 
-  // Carga e previsualización directa de la Foto de Cédula
-  const handleCedulaPhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Carga e previsualización directa de la Foto de Cédula con subida automática a GCS
+  const handleCedulaPhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -143,12 +156,24 @@ export const ChurchMembersManager: React.FC = () => {
       return;
     }
 
+    // Previsualización instantánea local
     const reader = new FileReader();
     reader.onloadend = () => {
       setNewFotoCedulaUrl(reader.result as string);
-      addNotification('Foto de la cédula cargada correctamente', 'info');
     };
     reader.readAsDataURL(file);
+
+    // Subida directa al Bucket de Google Cloud Storage
+    try {
+      const res = await uploadToGCS(file);
+      if (res && res.url) {
+        setNewFotoCedulaUrl(res.url);
+        addNotification('Foto de cédula subida exitosamente a Google Cloud Storage', 'success');
+      }
+    } catch (err) {
+      console.warn('Subida a GCS no disponible, conservando respaldo en memoria:', err);
+      addNotification('Foto de cédula cargada correctamente en modo local', 'info');
+    }
   };
 
   const handleCreateMember = async (e: React.FormEvent) => {
