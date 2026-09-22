@@ -2212,7 +2212,11 @@ export const api = {
 
       const finalUpdates: Record<string, any> = { ...updates };
 
-      if (currentRecord && currentRecord.tipo_donacion && Array.isArray(currentRecord.tipo_donacion)) {
+      if (
+        currentRecord &&
+        currentRecord.tipo_donacion &&
+        Array.isArray(currentRecord.tipo_donacion)
+      ) {
         const metaIndex = currentRecord.tipo_donacion.findIndex(
           (t: any) => typeof t === 'string' && t.startsWith('META:'),
         );
@@ -2238,12 +2242,16 @@ export const api = {
 
       let result = data as Beneficiary;
       if (result.tipo_donacion && Array.isArray(result.tipo_donacion)) {
-        const metaTag = result.tipo_donacion.find((t: any) => typeof t === 'string' && t.startsWith('META:'));
+        const metaTag = result.tipo_donacion.find(
+          (t: any) => typeof t === 'string' && t.startsWith('META:'),
+        );
         if (metaTag) {
           try {
             const metaJson = JSON.parse(metaTag.replace('META:', ''));
             result = { ...metaJson, ...result };
-          } catch (e) {}
+          } catch (e) {
+            console.warn('Error desempaquetando META tag:', e);
+          }
         }
       }
       if (updates.foto_url !== undefined) result.foto_url = updates.foto_url;

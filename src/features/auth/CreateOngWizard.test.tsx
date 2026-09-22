@@ -29,7 +29,9 @@ describe('CreateOngWizard Component', () => {
     );
 
     expect(screen.getByText(/1\. Datos Fundamentales del Templo/i)).toBeInTheDocument();
-    expect(screen.getByPlaceholderText(/Ej\. Iglesia Evangélica Bautista Central/i)).toBeInTheDocument();
+    expect(
+      screen.getByPlaceholderText(/Ej\. Iglesia Evangélica Bautista Central/i),
+    ).toBeInTheDocument();
   });
 
   it('validates Step 1 required fields before moving to Step 2', async () => {
@@ -43,7 +45,9 @@ describe('CreateOngWizard Component', () => {
     fireEvent.click(nextBtn);
 
     // Should show error for empty NGO name
-    expect(await screen.findByText(/Por favor ingresa el nombre de la Iglesia/i)).toBeInTheDocument();
+    expect(
+      await screen.findByText(/Por favor ingresa el nombre de la Iglesia/i),
+    ).toBeInTheDocument();
   });
 
   it('advances through steps and submits 14-day trial ONG creation', async () => {
