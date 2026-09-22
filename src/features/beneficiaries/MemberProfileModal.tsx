@@ -1,6 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import { X, User, HeartHandshake, Printer, ShieldCheck, Image as ImageIcon } from 'lucide-react';
+import {
+  X,
+  User,
+  HeartHandshake,
+  Printer,
+  ShieldCheck,
+  Image as ImageIcon,
+  Edit3,
+  Trash2,
+  Upload,
+} from 'lucide-react';
 import { api, type Beneficiary, type Donation } from '../../services/api';
+import { uploadToGCS } from '../../services/storage';
 import { useAuth } from '../../context/AuthContext';
 
 interface MemberProfileModalProps {
@@ -8,19 +19,30 @@ interface MemberProfileModalProps {
   isOpen: boolean;
   onClose: () => void;
   onUpdate?: () => void;
+  onEdit?: (member: Beneficiary) => void;
+  onDelete?: (member: Beneficiary) => void;
 }
 
 export const MemberProfileModal: React.FC<MemberProfileModalProps> = ({
   member,
   isOpen,
   onClose,
+  onUpdate,
+  onEdit,
+  onDelete,
 }) => {
   const { activeOng } = useAuth();
+  const [currentMember, setCurrentMember] = useState<Beneficiary | null>(member);
+
+  useEffect(() => {
+    setCurrentMember(member);
+  }, [member]);
   const [activeTab, setActiveTab] = useState<
     'info' | 'ecclesiastical' | 'docs' | 'donations' | 'carnet'
   >('info');
   const [memberDonations, setMemberDonations] = useState<Donation[]>([]);
   const [loadingDonations, setLoadingDonations] = useState(false);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
 
   const isEkklesia = activeOng?.tipo_organizacion === 'ekklesia';
 
@@ -70,8 +92,54 @@ export const MemberProfileModal: React.FC<MemberProfileModalProps> = ({
     window.print();
   };
 
-  const cargoDisplay = member.cargo_eclesiastico || 'MIEMBRO GENERAL';
-  const bautizadoText = member.bautizado ? 'SÍ' : 'NO';
+  const handleDirectPhotoUpload = async (
+    e: React.ChangeEvent<HTMLInputElement>,
+    field: 'foto_url' | 'foto_cedula_url',
+  ) => {
+    const file = e.target.files?.[0];
+    if (!file || !currentMember) return;
+    setUploadingPhoto(true);
+    try {
+      const res = await uploadToGCS(file);
+      const photoUrl = res?.url;
+      if (photoUrl) {
+        const updated = await api.updateBeneficiary(
+          currentMember.id,
+          { [field]: photoUrl },
+          activeOng?.id,
+        );
+        setCurrentMember(updated);
+        if (onUpdate) onUpdate();
+      }
+    } catch (err: any) {
+      console.error('Error al subir fotografía:', err);
+    } finally {
+      setUploadingPhoto(false);
+    }
+  };
+
+  const handleDirectPhotoRemove = async (field: 'foto_url' | 'foto_cedula_url') => {
+    if (!currentMember) return;
+    if (!window.confirm('¿Está seguro de eliminar esta fotografía del registro?')) return;
+    try {
+      const updated = await api.updateBeneficiary(
+        currentMember.id,
+        { [field]: null },
+        activeOng?.id,
+      );
+      setCurrentMember(updated);
+      if (onUpdate) onUpdate();
+    } catch (err: any) {
+      console.error('Error al eliminar fotografía:', err);
+    }
+  };
+
+  if (!isOpen || !member) return null;
+
+  const activeMember = currentMember || member;
+
+  const cargoDisplay = activeMember.cargo_eclesiastico || 'MIEMBRO GENERAL';
+  const bautizadoText = activeMember.bautizado ? 'SÍ' : 'NO';
 
   return (
     <div
@@ -87,16 +155,15 @@ export const MemberProfileModal: React.FC<MemberProfileModalProps> = ({
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        padding: '1rem',
+        padding: '1.5rem',
       }}
       onClick={onClose}
     >
       <div
-        className="animate-fade-in-up"
         style={{
-          backgroundColor: '#FFFFFF',
+          backgroundColor: 'white',
           borderRadius: '20px',
-          maxWidth: '820px',
+          maxWidth: '900px',
           width: '100%',
           maxHeight: '90vh',
           overflowY: 'auto',
@@ -117,33 +184,84 @@ export const MemberProfileModal: React.FC<MemberProfileModalProps> = ({
             position: 'relative',
           }}
         >
-          <button
-            onClick={onClose}
+          {/* Barra de Acciones de Administrador */}
+          <div
             style={{
               position: 'absolute',
               top: '1.2rem',
               right: '1.2rem',
-              background: 'rgba(255, 255, 255, 0.2)',
-              border: 'none',
-              color: 'white',
-              borderRadius: '50%',
-              width: '36px',
-              height: '36px',
-              cursor: 'pointer',
               display: 'flex',
+              gap: '0.5rem',
               alignItems: 'center',
-              justifyContent: 'center',
             }}
           >
-            <X size={20} />
-          </button>
+            {onEdit && activeMember && (
+              <button
+                onClick={() => onEdit(activeMember)}
+                title="Editar datos del miembro"
+                style={{
+                  background: 'rgba(255, 255, 255, 0.25)',
+                  border: 'none',
+                  color: 'white',
+                  borderRadius: '20px',
+                  padding: '0.4rem 0.8rem',
+                  fontSize: '0.8rem',
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.3rem',
+                }}
+              >
+                <Edit3 size={14} /> Editar
+              </button>
+            )}
+            {onDelete && activeMember && (
+              <button
+                onClick={() => onDelete(activeMember)}
+                title="Eliminar miembro de la organización"
+                style={{
+                  background: '#EF4444',
+                  border: 'none',
+                  color: 'white',
+                  borderRadius: '20px',
+                  padding: '0.4rem 0.8rem',
+                  fontSize: '0.8rem',
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.3rem',
+                }}
+              >
+                <Trash2 size={14} /> Eliminar
+              </button>
+            )}
+            <button
+              onClick={onClose}
+              style={{
+                background: 'rgba(255, 255, 255, 0.2)',
+                border: 'none',
+                color: 'white',
+                borderRadius: '50%',
+                width: '36px',
+                height: '36px',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <X size={20} />
+            </button>
+          </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '1.4rem' }}>
             {/* Foto del Miembro o Avatar */}
-            {member.foto_url ? (
+            {activeMember.foto_url ? (
               <img
-                src={member.foto_url}
-                alt={`${member.nombre} ${member.apellido}`}
+                src={activeMember.foto_url || undefined}
+                alt={`${activeMember.nombre} ${activeMember.apellido}`}
                 style={{
                   width: '80px',
                   height: '80px',
@@ -676,6 +794,10 @@ export const MemberProfileModal: React.FC<MemberProfileModalProps> = ({
                     borderRadius: '16px',
                     padding: '1.2rem',
                     textAlign: 'center',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
                   }}
                 >
                   <span
@@ -689,11 +811,16 @@ export const MemberProfileModal: React.FC<MemberProfileModalProps> = ({
                   >
                     FOTO DEL MIEMBRO
                   </span>
-                  {member.foto_url ? (
+                  {activeMember.foto_url ? (
                     <img
-                      src={member.foto_url}
+                      src={activeMember.foto_url}
                       alt="Foto Miembro"
-                      style={{ maxHeight: '160px', borderRadius: '12px', objectFit: 'cover' }}
+                      style={{
+                        maxHeight: '160px',
+                        borderRadius: '12px',
+                        objectFit: 'cover',
+                        marginBottom: '0.8rem',
+                      }}
                     />
                   ) : (
                     <div
@@ -704,11 +831,66 @@ export const MemberProfileModal: React.FC<MemberProfileModalProps> = ({
                         color: '#64748B',
                         fontWeight: 700,
                         fontSize: '0.85rem',
+                        marginBottom: '0.8rem',
+                        width: '100%',
                       }}
                     >
                       Sin Foto Subida
                     </div>
                   )}
+
+                  <div
+                    style={{
+                      display: 'flex',
+                      gap: '0.5rem',
+                      width: '100%',
+                      justifyContent: 'center',
+                    }}
+                  >
+                    <label
+                      style={{
+                        backgroundColor: '#1B5CB6',
+                        color: 'white',
+                        padding: '0.4rem 0.8rem',
+                        borderRadius: '8px',
+                        fontSize: '0.78rem',
+                        fontWeight: 700,
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.3rem',
+                      }}
+                    >
+                      <Upload size={14} /> {uploadingPhoto ? 'Subiendo...' : 'Subir / Cambiar'}
+                      <input
+                        type="file"
+                        accept="image/*"
+                        style={{ display: 'none' }}
+                        onChange={(e) => handleDirectPhotoUpload(e, 'foto_url')}
+                        disabled={uploadingPhoto}
+                      />
+                    </label>
+                    {activeMember.foto_url && (
+                      <button
+                        onClick={() => handleDirectPhotoRemove('foto_url')}
+                        style={{
+                          backgroundColor: '#FEF2F2',
+                          color: '#EF4444',
+                          border: '1px solid #FCA5A5',
+                          padding: '0.4rem 0.8rem',
+                          borderRadius: '8px',
+                          fontSize: '0.78rem',
+                          fontWeight: 700,
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '0.3rem',
+                        }}
+                      >
+                        <Trash2 size={14} /> Eliminar
+                      </button>
+                    )}
+                  </div>
                 </div>
 
                 {/* Foto de la Cédula */}
@@ -719,6 +901,10 @@ export const MemberProfileModal: React.FC<MemberProfileModalProps> = ({
                     borderRadius: '16px',
                     padding: '1.2rem',
                     textAlign: 'center',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
                   }}
                 >
                   <span
@@ -732,11 +918,16 @@ export const MemberProfileModal: React.FC<MemberProfileModalProps> = ({
                   >
                     FOTO DE CÉDULA DE IDENTIDAD
                   </span>
-                  {member.foto_cedula_url ? (
+                  {activeMember.foto_cedula_url ? (
                     <img
-                      src={member.foto_cedula_url}
+                      src={activeMember.foto_cedula_url}
                       alt="Foto Cédula"
-                      style={{ maxHeight: '160px', borderRadius: '12px', objectFit: 'contain' }}
+                      style={{
+                        maxHeight: '160px',
+                        borderRadius: '12px',
+                        objectFit: 'contain',
+                        marginBottom: '0.8rem',
+                      }}
                     />
                   ) : (
                     <div
@@ -747,11 +938,66 @@ export const MemberProfileModal: React.FC<MemberProfileModalProps> = ({
                         color: '#64748B',
                         fontWeight: 700,
                         fontSize: '0.85rem',
+                        marginBottom: '0.8rem',
+                        width: '100%',
                       }}
                     >
                       Sin Foto de Cédula
                     </div>
                   )}
+
+                  <div
+                    style={{
+                      display: 'flex',
+                      gap: '0.5rem',
+                      width: '100%',
+                      justifyContent: 'center',
+                    }}
+                  >
+                    <label
+                      style={{
+                        backgroundColor: '#1B5CB6',
+                        color: 'white',
+                        padding: '0.4rem 0.8rem',
+                        borderRadius: '8px',
+                        fontSize: '0.78rem',
+                        fontWeight: 700,
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.3rem',
+                      }}
+                    >
+                      <Upload size={14} /> {uploadingPhoto ? 'Subiendo...' : 'Subir / Cambiar'}
+                      <input
+                        type="file"
+                        accept="image/*"
+                        style={{ display: 'none' }}
+                        onChange={(e) => handleDirectPhotoUpload(e, 'foto_cedula_url')}
+                        disabled={uploadingPhoto}
+                      />
+                    </label>
+                    {activeMember.foto_cedula_url && (
+                      <button
+                        onClick={() => handleDirectPhotoRemove('foto_cedula_url')}
+                        style={{
+                          backgroundColor: '#FEF2F2',
+                          color: '#EF4444',
+                          border: '1px solid #FCA5A5',
+                          padding: '0.4rem 0.8rem',
+                          borderRadius: '8px',
+                          fontSize: '0.78rem',
+                          fontWeight: 700,
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '0.3rem',
+                        }}
+                      >
+                        <Trash2 size={14} /> Eliminar
+                      </button>
+                    )}
+                  </div>
                 </div>
 
                 {/* Firma Autógrafa */}

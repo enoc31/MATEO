@@ -13,6 +13,7 @@ import {
   CheckSquare,
   Square,
   Trash2,
+  Edit3,
 } from 'lucide-react';
 import { api, type Beneficiary } from '../../services/api';
 import { uploadToGCS } from '../../services/storage';
@@ -70,6 +71,152 @@ export const ChurchMembersManager: React.FC = () => {
 
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
+
+  // Estado para Modal de Edición de Miembro
+  const [editingMember, setEditingMember] = useState<Beneficiary | null>(null);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [savingEdit, setSavingEdit] = useState(false);
+
+  // Campos para Edición
+  const [editNombre, setEditNombre] = useState('');
+  const [editApellido, setEditApellido] = useState('');
+  const [editCedula, setEditCedula] = useState('');
+  const [editSexo, setEditSexo] = useState<'Masculino' | 'Femenino'>('Masculino');
+  const [editFechaNacimiento, setEditFechaNacimiento] = useState('');
+  const [editDireccion, setEditDireccion] = useState('');
+  const [editTelefono, setEditTelefono] = useState('');
+  const [editEmail, setEditEmail] = useState('');
+  const [editRedesSociales, setEditRedesSociales] = useState('');
+  const [editFotoUrl, setEditFotoUrl] = useState('');
+  const [editFotoCedulaUrl, setEditFotoCedulaUrl] = useState('');
+  const [editBautizado, setEditBautizado] = useState(false);
+  const [editGradoInstruccion, setEditGradoInstruccion] = useState('Universitario');
+  const [editEnfermedad, setEditEnfermedad] = useState('');
+  const [editFechaMembresia, setEditFechaMembresia] = useState('');
+  const [editCargo, setEditCargo] = useState('MIEMBRO GENERAL');
+  const [editAreas, setEditAreas] = useState<string[]>([]);
+
+  const handleOpenEditModal = (member: Beneficiary) => {
+    setEditingMember(member);
+    setEditNombre(member.nombre || '');
+    setEditApellido(member.apellido || '');
+    setEditCedula(member.cedula || '');
+    setEditSexo(member.sexo === 'Femenino' ? 'Femenino' : 'Masculino');
+    setEditFechaNacimiento(member.fecha_nacimiento || '');
+    setEditDireccion(member.direccion || '');
+    setEditTelefono(member.telefono || '');
+    setEditEmail(member.email || '');
+    setEditRedesSociales(member.redes_sociales || '');
+    setEditFotoUrl(member.foto_url || '');
+    setEditFotoCedulaUrl(member.foto_cedula_url || '');
+    setEditBautizado(Boolean(member.bautizado));
+    setEditGradoInstruccion(member.grado_instruccion || 'Universitario');
+    setEditEnfermedad(member.enfermedad || '');
+    setEditFechaMembresia(member.fecha_membresia || '');
+    setEditCargo(member.cargo_eclesiastico || 'MIEMBRO GENERAL');
+    setEditAreas(member.areas_ministeriales || []);
+    setIsEditModalOpen(true);
+  };
+
+  const handleEditMemberPhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      const res = await uploadToGCS(file);
+      if (res && res.url) {
+        setEditFotoUrl(res.url);
+        addNotification('Nueva foto subida a Google Cloud Storage', 'success');
+      }
+    } catch (err) {
+      console.warn('Fallback local foto:', err);
+    }
+  };
+
+  const handleEditCedulaPhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      const res = await uploadToGCS(file);
+      if (res && res.url) {
+        setEditFotoCedulaUrl(res.url);
+        addNotification('Nueva cédula subida a Google Cloud Storage', 'success');
+      }
+    } catch (err) {
+      console.warn('Fallback local cédula:', err);
+    }
+  };
+
+  const handleSaveEdit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingMember) return;
+    setSavingEdit(true);
+    try {
+      const updatedData: Partial<Beneficiary> = {
+        nombre: editNombre.trim(),
+        apellido: editApellido.trim(),
+        cedula: editCedula.trim(),
+        sexo: editSexo,
+        fecha_nacimiento: editFechaNacimiento,
+        direccion: editDireccion.trim(),
+        telefono: editTelefono.trim(),
+        email: editEmail.trim(),
+        redes_sociales: editRedesSociales.trim(),
+        foto_url: editFotoUrl.trim() || null,
+        foto_cedula_url: editFotoCedulaUrl.trim() || null,
+        bautizado: editBautizado,
+        grado_instruccion: editGradoInstruccion,
+        enfermedad: editEnfermedad.trim(),
+        fecha_membresia: editFechaMembresia,
+        cargo_eclesiastico: editCargo as any,
+        areas_ministeriales: editAreas as any,
+      };
+
+      const updated = await api.updateBeneficiary(editingMember.id, updatedData, activeOng?.id);
+
+      addNotification(
+        `Miembro ${updated.nombre} ${updated.apellido} actualizado correctamente`,
+        'success',
+      );
+      setMembers((prev) => prev.map((m) => (m.id === updated.id ? { ...m, ...updated } : m)));
+      setIsEditModalOpen(false);
+      setEditingMember(null);
+      if (selectedMember?.id === updated.id) {
+        setSelectedMember({ ...selectedMember, ...updated });
+      }
+    } catch (err: any) {
+      addNotification(err.message || 'Error al actualizar miembro', 'warning');
+    } finally {
+      setSavingEdit(false);
+    }
+  };
+
+  const handleDeleteMember = async (member: Beneficiary) => {
+    if (
+      !window.confirm(
+        `¿Está seguro de eliminar a ${member.nombre} ${member.apellido} (C.I.: ${member.cedula})? Esta acción borrará el registro de forma permanente para su organización.`,
+      )
+    ) {
+      return;
+    }
+
+    try {
+      await api.deleteBeneficiary(member.id, activeOng?.id);
+      addNotification(
+        `Miembro ${member.nombre} ${member.apellido} eliminado correctamente`,
+        'info',
+      );
+      setMembers((prev) => prev.filter((m) => m.id !== member.id));
+      if (isProfileModalOpen) {
+        setIsProfileModalOpen(false);
+        setSelectedMember(null);
+      }
+      const cacheKey = `cache_members_${activeOng?.id || 'default'}`;
+      const updatedList = members.filter((m) => m.id !== member.id);
+      sessionStorage.setItem(cacheKey, JSON.stringify(updatedList));
+    } catch (err: any) {
+      addNotification(err.message || 'Error al eliminar el miembro', 'warning');
+    }
+  };
 
   const loadMembers = async (isBackgroundRefresh = false) => {
     const cacheKey = `cache_members_${activeOng?.id || 'default'}`;
@@ -1580,32 +1727,63 @@ export const ChurchMembersManager: React.FC = () => {
                       </div>
                     </div>
 
-                    {/* Acciones */}
-                    <button
-                      onClick={() => {
-                        setSelectedMember(member);
-                        setIsProfileModalOpen(true);
-                      }}
-                      style={{
-                        width: '100%',
-                        padding: '0.65rem',
-                        backgroundColor: '#1B5CB6',
-                        color: 'white',
-                        border: 'none',
-                        borderRadius: '12px',
-                        fontWeight: 800,
-                        fontSize: '0.85rem',
-                        cursor: 'pointer',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        gap: '0.4rem',
-                        marginTop: '0.5rem',
-                        boxShadow: '0 2px 8px rgba(27, 92, 182, 0.2)',
-                      }}
-                    >
-                      <Eye size={16} /> Ver Ficha 360°
-                    </button>
+                    {/* Acciones de la Tarjeta */}
+                    <div style={{ display: 'flex', gap: '0.4rem', marginTop: '0.8rem' }}>
+                      <button
+                        onClick={() => {
+                          setSelectedMember(member);
+                          setIsProfileModalOpen(true);
+                        }}
+                        className="btn btn-soft-primary"
+                        style={{
+                          flex: 1,
+                          padding: '0.55rem',
+                          fontSize: '0.8rem',
+                          fontWeight: 700,
+                          borderRadius: '10px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: '0.3rem',
+                        }}
+                      >
+                        <Eye size={15} /> Ficha 360°
+                      </button>
+                      <button
+                        onClick={() => handleOpenEditModal(member)}
+                        className="btn btn-soft-warning"
+                        style={{
+                          padding: '0.55rem 0.75rem',
+                          fontSize: '0.8rem',
+                          fontWeight: 700,
+                          borderRadius: '10px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: '0.3rem',
+                        }}
+                        title="Editar datos del miembro"
+                      >
+                        <Edit3 size={15} />
+                      </button>
+                      <button
+                        onClick={() => handleDeleteMember(member)}
+                        className="btn btn-soft-danger"
+                        style={{
+                          padding: '0.55rem 0.75rem',
+                          fontSize: '0.8rem',
+                          fontWeight: 700,
+                          borderRadius: '10px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: '0.3rem',
+                        }}
+                        title="Eliminar miembro de la organización"
+                      >
+                        <Trash2 size={15} />
+                      </button>
+                    </div>
                   </div>
                 );
               })}
@@ -1622,7 +1800,416 @@ export const ChurchMembersManager: React.FC = () => {
           setIsProfileModalOpen(false);
           setSelectedMember(null);
         }}
+        onEdit={(m) => {
+          setIsProfileModalOpen(false);
+          handleOpenEditModal(m);
+        }}
+        onDelete={(m) => handleDeleteMember(m)}
+        onUpdate={loadMembers}
       />
+
+      {/* MODAL DE EDICIÓN DE MIEMBRO (ADMINISTRADOR) */}
+      {isEditModalOpen && editingMember && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(15, 23, 42, 0.65)',
+            backdropFilter: 'blur(4px)',
+            zIndex: 1200,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '1.5rem',
+          }}
+          onClick={() => setIsEditModalOpen(false)}
+        >
+          <div
+            style={{
+              backgroundColor: 'white',
+              borderRadius: '20px',
+              maxWidth: '800px',
+              width: '100%',
+              maxHeight: '90vh',
+              overflowY: 'auto',
+              padding: '2rem',
+              boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                marginBottom: '1.5rem',
+                borderBottom: '1px solid #E2E8F0',
+                paddingBottom: '1rem',
+              }}
+            >
+              <div>
+                <h3 style={{ margin: 0, color: '#0F172A', fontWeight: 800, fontSize: '1.3rem' }}>
+                  ✏️ Editar Datos del Miembro
+                </h3>
+                <p style={{ margin: '0.2rem 0 0 0', fontSize: '0.85rem', color: '#64748B' }}>
+                  ID: {editingMember.id} · C.I.: {editingMember.cedula}
+                </p>
+              </div>
+              <button
+                onClick={() => setIsEditModalOpen(false)}
+                style={{
+                  background: '#F1F5F9',
+                  border: 'none',
+                  borderRadius: '50%',
+                  width: '32px',
+                  height: '32px',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                ✕
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveEdit}>
+              <div
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+                  gap: '1rem',
+                  marginBottom: '1.2rem',
+                }}
+              >
+                <div>
+                  <label
+                    style={{
+                      fontSize: '0.85rem',
+                      fontWeight: 700,
+                      color: '#334155',
+                      display: 'block',
+                      marginBottom: '0.3rem',
+                    }}
+                  >
+                    Nombre (*)
+                  </label>
+                  <input
+                    type="text"
+                    className="app-input"
+                    value={editNombre}
+                    onChange={(e) => setEditNombre(e.target.value)}
+                    required
+                  />
+                </div>
+                <div>
+                  <label
+                    style={{
+                      fontSize: '0.85rem',
+                      fontWeight: 700,
+                      color: '#334155',
+                      display: 'block',
+                      marginBottom: '0.3rem',
+                    }}
+                  >
+                    Apellido (*)
+                  </label>
+                  <input
+                    type="text"
+                    className="app-input"
+                    value={editApellido}
+                    onChange={(e) => setEditApellido(e.target.value)}
+                    required
+                  />
+                </div>
+                <div>
+                  <label
+                    style={{
+                      fontSize: '0.85rem',
+                      fontWeight: 700,
+                      color: '#334155',
+                      display: 'block',
+                      marginBottom: '0.3rem',
+                    }}
+                  >
+                    Cédula de Identidad
+                  </label>
+                  <input
+                    type="text"
+                    className="app-input"
+                    value={editCedula}
+                    onChange={(e) => setEditCedula(e.target.value)}
+                  />
+                </div>
+                <div>
+                  <label
+                    style={{
+                      fontSize: '0.85rem',
+                      fontWeight: 700,
+                      color: '#334155',
+                      display: 'block',
+                      marginBottom: '0.3rem',
+                    }}
+                  >
+                    Sexo
+                  </label>
+                  <select
+                    className="app-input"
+                    value={editSexo}
+                    onChange={(e) => setEditSexo(e.target.value as any)}
+                  >
+                    <option value="Masculino">Masculino</option>
+                    <option value="Femenino">Femenino</option>
+                  </select>
+                </div>
+                <div>
+                  <label
+                    style={{
+                      fontSize: '0.85rem',
+                      fontWeight: 700,
+                      color: '#334155',
+                      display: 'block',
+                      marginBottom: '0.3rem',
+                    }}
+                  >
+                    Fecha de Nacimiento
+                  </label>
+                  <input
+                    type="date"
+                    className="app-input"
+                    value={editFechaNacimiento}
+                    onChange={(e) => setEditFechaNacimiento(e.target.value)}
+                  />
+                </div>
+                <div>
+                  <label
+                    style={{
+                      fontSize: '0.85rem',
+                      fontWeight: 700,
+                      color: '#334155',
+                      display: 'block',
+                      marginBottom: '0.3rem',
+                    }}
+                  >
+                    Teléfono
+                  </label>
+                  <input
+                    type="text"
+                    className="app-input"
+                    value={editTelefono}
+                    onChange={(e) => setEditTelefono(e.target.value)}
+                  />
+                </div>
+                <div>
+                  <label
+                    style={{
+                      fontSize: '0.85rem',
+                      fontWeight: 700,
+                      color: '#334155',
+                      display: 'block',
+                      marginBottom: '0.3rem',
+                    }}
+                  >
+                    Correo Electrónico
+                  </label>
+                  <input
+                    type="email"
+                    className="app-input"
+                    value={editEmail}
+                    onChange={(e) => setEditEmail(e.target.value)}
+                  />
+                </div>
+                <div>
+                  <label
+                    style={{
+                      fontSize: '0.85rem',
+                      fontWeight: 700,
+                      color: '#334155',
+                      display: 'block',
+                      marginBottom: '0.3rem',
+                    }}
+                  >
+                    Cargo Eclesiástico
+                  </label>
+                  <select
+                    className="app-input"
+                    value={editCargo}
+                    onChange={(e) => setEditCargo(e.target.value as any)}
+                  >
+                    <option value="PASTOR / OBISPO O SIMILAR">PASTOR / OBISPO O SIMILAR</option>
+                    <option value="DIÁCONO / ANCIANO O SIMILAR">DIÁCONO / ANCIANO O SIMILAR</option>
+                    <option value="MINISTRO / COORDINADOR / LÍDER O SIMILAR">
+                      MINISTRO / COORDINADOR / LÍDER O SIMILAR
+                    </option>
+                    <option value="MIEMBRO GENERAL">MIEMBRO GENERAL</option>
+                  </select>
+                </div>
+              </div>
+
+              <div style={{ marginBottom: '1.2rem' }}>
+                <label
+                  style={{
+                    fontSize: '0.85rem',
+                    fontWeight: 700,
+                    color: '#334155',
+                    display: 'block',
+                    marginBottom: '0.3rem',
+                  }}
+                >
+                  Dirección de Habitación
+                </label>
+                <input
+                  type="text"
+                  className="app-input"
+                  value={editDireccion}
+                  onChange={(e) => setEditDireccion(e.target.value)}
+                />
+              </div>
+
+              <div
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+                  gap: '1rem',
+                  marginBottom: '1.2rem',
+                }}
+              >
+                <div>
+                  <label
+                    style={{
+                      fontSize: '0.85rem',
+                      fontWeight: 700,
+                      color: '#334155',
+                      display: 'block',
+                      marginBottom: '0.3rem',
+                    }}
+                  >
+                    Foto del Miembro (GCS URL)
+                  </label>
+                  <div style={{ display: 'flex', gap: '0.5rem' }}>
+                    <input
+                      type="text"
+                      className="app-input"
+                      value={editFotoUrl}
+                      onChange={(e) => setEditFotoUrl(e.target.value)}
+                      placeholder="https://storage.googleapis.com/..."
+                    />
+                    <label
+                      className="btn btn-soft-primary"
+                      style={{
+                        padding: '0.4rem 0.8rem',
+                        fontSize: '0.8rem',
+                        cursor: 'pointer',
+                        whiteSpace: 'nowrap',
+                      }}
+                    >
+                      <Upload size={14} /> Subir
+                      <input
+                        type="file"
+                        accept="image/*"
+                        style={{ display: 'none' }}
+                        onChange={handleEditMemberPhotoUpload}
+                      />
+                    </label>
+                  </div>
+                </div>
+                <div>
+                  <label
+                    style={{
+                      fontSize: '0.85rem',
+                      fontWeight: 700,
+                      color: '#334155',
+                      display: 'block',
+                      marginBottom: '0.3rem',
+                    }}
+                  >
+                    Foto de Cédula (GCS URL)
+                  </label>
+                  <div style={{ display: 'flex', gap: '0.5rem' }}>
+                    <input
+                      type="text"
+                      className="app-input"
+                      value={editFotoCedulaUrl}
+                      onChange={(e) => setEditFotoCedulaUrl(e.target.value)}
+                      placeholder="https://storage.googleapis.com/..."
+                    />
+                    <label
+                      className="btn btn-soft-primary"
+                      style={{
+                        padding: '0.4rem 0.8rem',
+                        fontSize: '0.8rem',
+                        cursor: 'pointer',
+                        whiteSpace: 'nowrap',
+                      }}
+                    >
+                      <Upload size={14} /> Subir
+                      <input
+                        type="file"
+                        accept="image/*"
+                        style={{ display: 'none' }}
+                        onChange={handleEditCedulaPhotoUpload}
+                      />
+                    </label>
+                  </div>
+                </div>
+              </div>
+
+              <div
+                style={{
+                  display: 'flex',
+                  gap: '1.5rem',
+                  marginBottom: '1.5rem',
+                  alignItems: 'center',
+                }}
+              >
+                <label
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.5rem',
+                    cursor: 'pointer',
+                    fontSize: '0.9rem',
+                    fontWeight: 700,
+                    color: '#15803D',
+                  }}
+                >
+                  <input
+                    type="checkbox"
+                    checked={editBautizado}
+                    onChange={(e) => setEditBautizado(e.target.checked)}
+                    style={{ width: '18px', height: '18px' }}
+                  />
+                  🌊 ¿Bautizado en Agua?
+                </label>
+              </div>
+
+              <div
+                style={{
+                  display: 'flex',
+                  justifyContent: 'flex-end',
+                  gap: '0.8rem',
+                  borderTop: '1px solid #E2E8F0',
+                  paddingTop: '1.2rem',
+                }}
+              >
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  onClick={() => setIsEditModalOpen(false)}
+                >
+                  Cancelar
+                </button>
+                <button type="submit" className="btn btn-primary" disabled={savingEdit}>
+                  {savingEdit ? 'Guardando...' : '💾 Guardar Cambios'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

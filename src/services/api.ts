@@ -2085,6 +2085,46 @@ export const api = {
     }
   },
 
+  updateBeneficiary: async (
+    id: string,
+    updates: Partial<Beneficiary>,
+    ongId?: string,
+  ): Promise<Beneficiary> => {
+    if (!isSimulationMode) {
+      let query = supabase.from('beneficiarios').update(updates).eq('id', id);
+      if (ongId) {
+        query = query.eq('ong_id', ongId);
+      }
+      const { data, error } = await query.select('*').single();
+      if (error) throw error;
+      return data as Beneficiary;
+    } else {
+      const all = JSON.parse(localStorage.getItem('cnbv_beneficiaries') || '[]');
+      const index = all.findIndex((b: any) => b.id === id);
+      if (index !== -1) {
+        all[index] = { ...all[index], ...updates };
+        localStorage.setItem('cnbv_beneficiaries', JSON.stringify(all));
+        return all[index];
+      }
+      throw new Error('Miembro no encontrado');
+    }
+  },
+
+  deleteBeneficiary: async (id: string, ongId?: string): Promise<void> => {
+    if (!isSimulationMode) {
+      let query = supabase.from('beneficiarios').delete().eq('id', id);
+      if (ongId) {
+        query = query.eq('ong_id', ongId);
+      }
+      const { error } = await query;
+      if (error) throw error;
+    } else {
+      const all = JSON.parse(localStorage.getItem('cnbv_beneficiaries') || '[]');
+      const filtered = all.filter((b: any) => b.id !== id);
+      localStorage.setItem('cnbv_beneficiaries', JSON.stringify(filtered));
+    }
+  },
+
   // --- GESTIÓN DE ONGs (SaaS) ---
   getOngs: async (): Promise<Ong[]> => {
     if (!isSimulationMode) {
