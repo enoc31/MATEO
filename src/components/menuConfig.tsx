@@ -28,7 +28,7 @@ export const getMenuItems = (tipoOrganizacion?: 'ong' | 'ekklesia'): MenuItemCon
   return [
     {
       id: 'dashboard',
-      label: 'Tableros',
+      label: 'Tablero General',
       iconName: 'LayoutDashboard',
       color: '#714B67', // Odoo purple
       roles: ['administrador', 'auditor', 'director', 'donante'],
@@ -49,21 +49,21 @@ export const getMenuItems = (tipoOrganizacion?: 'ong' | 'ekklesia'): MenuItemCon
     },
     {
       id: 'field-entry',
-      label: isEkklesia ? 'Comprobantes y Fondos' : 'Comprobantes y Gastos',
+      label: isEkklesia ? 'Comprobantes y Gastos' : 'Comprobantes y Gastos',
       iconName: 'Camera',
       color: '#8B5CF6', // Purple/Violet
       roles: ['administrador', 'coordinador', 'director'],
     },
     {
       id: 'beneficiaries',
-      label: isEkklesia ? 'Miembros y Fieles' : 'Beneficiarios',
+      label: isEkklesia ? 'Relación de Miembros' : 'Beneficiarios',
       iconName: 'UserCheck',
       color: '#EC4899', // Pink/Rose
       roles: ['administrador', 'coordinador', 'director', 'auxiliar_campo'],
     },
     {
       id: 'jornadas',
-      label: isEkklesia ? 'Actividades Eclesiásticas' : 'Jornadas de Campo',
+      label: isEkklesia ? 'Estructura y Ministerios' : 'Jornadas de Campo',
       iconName: 'CalendarDays',
       color: '#F59E0B', // Orange/Amber
       roles: ['administrador', 'director', 'coordinador'],
@@ -77,14 +77,14 @@ export const getMenuItems = (tipoOrganizacion?: 'ong' | 'ekklesia'): MenuItemCon
     },
     {
       id: 'audit',
-      label: 'Auditoría de Fondos',
+      label: isEkklesia ? 'Estados Financieros (EEFF)' : 'Auditoría de Fondos',
       iconName: 'Search',
       color: '#06B6D4', // Cyan
       roles: ['administrador', 'auditor'],
     },
     {
       id: 'budgets',
-      label: isEkklesia ? 'Presupuesto Parroquial' : 'Presupuestos y Proyectos',
+      label: isEkklesia ? 'Presupuesto de Obra' : 'Presupuestos y Proyectos',
       iconName: 'PieChart',
       color: '#EF4444', // Red/Rose
       roles: ['administrador', 'auditor', 'director'],

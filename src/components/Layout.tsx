@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { LogOut, Pin, PinOff, Menu, Lightbulb, LayoutGrid, Building } from 'lucide-react';
+import { LogOut, Pin, PinOff, Menu, Lightbulb, LayoutGrid, Building, Compass } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { api, isSimulationMode } from '../services/api';
 import { InternalControlModal } from './InternalControlModal';
+import { ChurchImplementationGuideModal } from '../features/auth/ChurchImplementationGuideModal';
 import { getCaracasDateParts } from '../utils/formatters';
 import { useLocation, NavLink, useNavigate } from 'react-router-dom';
 import { getMenuItems, getMenuIcon } from './menuConfig';
@@ -16,6 +17,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isPinned, setIsPinned] = useState(window.innerWidth >= 1024);
   const [isCosoModalOpen, setIsCosoModalOpen] = useState(false);
+  const [isGuideModalOpen, setIsGuideModalOpen] = useState(false);
   const [currentRate, setCurrentRate] = useState<number | null>(null);
   const location = useLocation();
   const navigate = useNavigate();
@@ -219,18 +221,41 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
             style={{
               display: 'flex',
               alignItems: 'center',
-              gap: '1rem',
+              gap: '0.75rem',
               borderLeft: '1px solid var(--border-color)',
-              paddingLeft: '1.5rem',
+              paddingLeft: '1.25rem',
             }}
           >
+            {/* Launcher de Ruta Guiada */}
+            <button
+              onClick={() => setIsGuideModalOpen(true)}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.4rem',
+                backgroundColor: 'rgba(47, 90, 174, 0.08)',
+                color: 'var(--primary)',
+                border: '1px solid rgba(47, 90, 174, 0.2)',
+                padding: '0.35rem 0.75rem',
+                borderRadius: '8px',
+                fontSize: '0.78rem',
+                fontWeight: 700,
+                cursor: 'pointer',
+                transition: 'all 0.2s ease',
+              }}
+              title="Abrir la Ruta Guiada de Implementación Paso a Paso"
+            >
+              <Compass size={15} />
+              <span>🚀 Ruta Guiada</span>
+            </button>
+
             {currentRate && (
               <div
                 style={{
                   display: 'flex',
                   alignItems: 'center',
-                  marginRight: '1rem',
-                  paddingRight: '1rem',
+                  marginRight: '0.5rem',
+                  paddingRight: '0.75rem',
                   borderRight: '1px solid var(--border-color)',
                 }}
               >
@@ -547,6 +572,11 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
       </aside>
       {/* Modal de Control Interno (COSO) */}
       <InternalControlModal isOpen={isCosoModalOpen} onClose={handleCloseCosoModal} />
+      {/* Modal de Ruta Guiada de Implementación */}
+      <ChurchImplementationGuideModal
+        isOpen={isGuideModalOpen}
+        onClose={() => setIsGuideModalOpen(false)}
+      />
     </div>
   );
 };

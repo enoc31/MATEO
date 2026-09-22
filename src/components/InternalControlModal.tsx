@@ -80,7 +80,7 @@ export const InternalControlModal: React.FC<InternalControlModalProps> = ({ isOp
           <BookOpen size={48} style={{ margin: '0 auto 1rem auto', opacity: 0.9 }} />
           <h2 style={{ margin: 0, fontSize: '1.8rem', fontWeight: 800 }}>¡Bienvenido a MATEO!</h2>
           <p style={{ margin: '0.5rem 0 0 0', fontSize: '1.1rem', opacity: 0.9 }}>
-            Tu rol en la Transparencia y el Impacto de la CNBV
+            Tu rol en la Transparencia y Mayordomía de la Iglesia
           </p>
         </div>
 
@@ -334,10 +334,10 @@ export const InternalControlModal: React.FC<InternalControlModalProps> = ({ isOp
               }}
             >
               El Control Interno no es solo trabajo de los auditores o directivos.{' '}
-              <strong>Tú eres nuestra primera línea de defensa</strong> para la integridad de la
-              CNBV. Cada registro exacto que haces y cada procedimiento que sigues en MATEO es un
-              acto de <strong>buena mayordomía</strong> que honra a Dios y el propósito de quienes
-              nos apoyan.
+              <strong>Tú eres nuestra primera línea de defensa</strong> para la integridad de
+              nuestra congregación. Cada registro exacto que haces y cada procedimiento que sigues
+              en MATEO es un acto de <strong>buena mayordomía</strong> que honra a Dios y el
+              propósito de quienes nos apoyan.
             </p>
             <p
               style={{

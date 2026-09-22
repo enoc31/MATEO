@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { Download, CheckCircle, Clock, Upload, Scale } from 'lucide-react';
+import { Download, CheckCircle, Clock, Upload, Scale, Compass } from 'lucide-react';
 import { api } from '../../services/api';
 import type { ExpenseCategory, DashboardMetrics, ProjectExecutionMetric } from '../../services/api';
+import { ChurchImplementationGuideModal } from '../auth/ChurchImplementationGuideModal';
 import {
   ResponsiveContainer,
   BarChart,
@@ -19,6 +20,7 @@ export const Dashboard: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [metrics, setMetrics] = useState<DashboardMetrics | null>(null);
   const [categories, setCategories] = useState<ExpenseCategory[]>([]);
+  const [showGuideModal, setShowGuideModal] = useState(false);
 
   useEffect(() => {
     const loadData = async () => {
@@ -118,9 +120,87 @@ export const Dashboard: React.FC = () => {
             marginTop: '0.25rem',
           }}
         >
-          Monitoreo global de fondos recibidos, ejecución de ayuda humanitaria y control de
-          auditoría.
+          Monitoreo congregacional de diezmos, ofrendas, presupuesto de obra y estados financieros
+          eclesiásticos.
         </p>
+      </div>
+
+      {/* Banner de Ruta Guiada de Implementación */}
+      <div
+        style={{
+          background:
+            'linear-gradient(135deg, rgba(47, 90, 174, 0.08) 0%, rgba(0, 143, 166, 0.12) 100%)',
+          border: '1px solid rgba(47, 90, 174, 0.2)',
+          borderRadius: '14px',
+          padding: '1.25rem 1.5rem',
+          marginBottom: '2rem',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          flexWrap: 'wrap',
+          gap: '1rem',
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+          <div
+            style={{
+              width: '44px',
+              height: '44px',
+              borderRadius: '12px',
+              backgroundColor: 'var(--primary)',
+              color: 'white',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              boxShadow: '0 4px 10px rgba(47, 90, 174, 0.3)',
+              flexShrink: 0,
+            }}
+          >
+            <Compass size={24} />
+          </div>
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <h4
+                style={{ margin: 0, fontSize: '1.05rem', fontWeight: 800, color: 'var(--primary)' }}
+              >
+                Ruta Guiada de Implementación
+              </h4>
+              <span
+                style={{
+                  fontSize: '0.7rem',
+                  backgroundColor: '#10b981',
+                  color: 'white',
+                  padding: '0.15rem 0.5rem',
+                  borderRadius: '12px',
+                  fontWeight: 700,
+                }}
+              >
+                Paso a Paso
+              </span>
+            </div>
+            <p style={{ margin: '0.2rem 0 0 0', fontSize: '0.82rem', color: '#475569' }}>
+              Configura tu congregación en 4 sencillos pasos: datos del templo, estructura, diezmos
+              y presupuesto.
+            </p>
+          </div>
+        </div>
+
+        <button
+          onClick={() => setShowGuideModal(true)}
+          className="btn btn-primary"
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.5rem',
+            padding: '0.65rem 1.25rem',
+            fontWeight: 700,
+            fontSize: '0.85rem',
+            borderRadius: '10px',
+            whiteSpace: 'nowrap',
+          }}
+        >
+          <Compass size={18} /> Ver Ruta Guiada
+        </button>
       </div>
 
       {/* Tarjetas de Métricas (KPIs) */}
@@ -546,6 +626,11 @@ export const Dashboard: React.FC = () => {
           </div>
         </div>
       </div>
+
+      <ChurchImplementationGuideModal
+        isOpen={showGuideModal}
+        onClose={() => setShowGuideModal(false)}
+      />
     </div>
   );
 };

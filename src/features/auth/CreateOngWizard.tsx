@@ -8,17 +8,19 @@ import {
   ArrowLeft,
   Lock,
   Sparkles,
-  Globe,
   Phone,
   MapPin,
   FileText,
   Briefcase,
   Mail,
   Check,
+  Upload,
 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { api, isSimulationMode } from '../../services/api';
+import { uploadToGCS } from '../../services/storage';
 import { supabase } from '../../supabaseClient';
+import { VENEZUELA_LOCATIONS } from '../../data/venezuelaLocations';
 
 interface CustomWindow extends Window {
   onWizardRecaptchaSuccess?: (token: string) => void;
@@ -37,22 +39,32 @@ export const CreateOngWizard: React.FC = () => {
   // Paso actual (1: ONG, 2: Admin, 3: Verificación, 4: Éxito)
   const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
 
-  // Paso 1: Datos Legales de la ONG
+  // Paso 1: Datos Fundamentales de la Iglesia / Organización
   const [nombreOng, setNombreOng] = useState('');
-  const [rif, setRif] = useState('');
-  const [pais, setPais] = useState('Venezuela');
   const [telefono, setTelefono] = useState('');
-  const [direccion, setDireccion] = useState('');
-  const [sitioWeb, setSitioWeb] = useState('');
 
-  // Paso 2: Datos del Administrador
+  // Ubicación Estandarizada (Venezuela)
+  const [estadoSel, setEstadoSel] = useState('Distrito Capital');
+  const [municipioSel, setMunicipioSel] = useState('Libertador');
+  const [parroquiaSel, setParroquiaSel] = useState('Candelaria');
+  const [direccionDetalle, setDireccionDetalle] = useState('');
+
+  // Paso 2: Identificación Legal Flexible & Administrador
+  const [tipoIdentificacion, setTipoIdentificacion] = useState<'RIF' | 'CI'>('RIF');
+  const [numIdentificacion, setNumIdentificacion] = useState('');
+  const [nombreResponsableLegal, setNombreResponsableLegal] = useState('');
+
   const [nombreAdmin, setNombreAdmin] = useState('');
   const [cargo, setCargo] = useState('Pastor Principal');
   const [emailAdmin, setEmailAdmin] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
 
-  // Paso 3: Verificación Anti-Bot & Legal
+  // Paso 3: Identidad Eclesiástica, Marca & Verificación
+  const [denominacion, setDenominacion] = useState('Bautista');
+  const [afiliacion, setAfiliacion] = useState('Consejo Evangélico de Venezuela');
+  const [logoUrl, setLogoUrl] = useState('');
+  const [uploadingLogo, setUploadingLogo] = useState(false);
   const [declaracionLegal, setDeclaracionLegal] = useState(false);
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
 
@@ -113,29 +125,25 @@ export const CreateOngWizard: React.FC = () => {
     };
   }, [step]);
 
-  // Validaciones del Paso 1
+  // Validaciones del Paso 1 (Datos Fundamentales de la Iglesia)
   const validateStep1 = () => {
     setError(null);
     if (!nombreOng.trim()) {
-      setError('Por favor ingresa el nombre legal de la organización.');
+      setError('Por favor ingresa el nombre de la Iglesia o Congregación.');
       return false;
     }
-    if (!rif.trim()) {
-      setError('Por favor ingresa el RIF o Identificación Fiscal de la ONG.');
-      return false;
-    }
-    if (!telefono.trim()) {
-      setError('Por favor ingresa un teléfono oficial de contacto.');
+    if (!direccionDetalle.trim()) {
+      setError('Por favor ingresa la dirección del Templo (calle, sector, número).');
       return false;
     }
     return true;
   };
 
-  // Validaciones del Paso 2
+  // Validaciones del Paso 2 (Identificación Legal Flexible & Administrador)
   const validateStep2 = () => {
     setError(null);
     if (!nombreAdmin.trim()) {
-      setError('Por favor ingresa el nombre completo del administrador.');
+      setError('Por favor ingresa el nombre completo del pastor o administrador.');
       return false;
     }
     if (!emailAdmin.trim() || !emailAdmin.includes('@')) {
@@ -151,6 +159,22 @@ export const CreateOngWizard: React.FC = () => {
       return false;
     }
     return true;
+  };
+
+  const handleLogoFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadingLogo(true);
+    try {
+      const res = await uploadToGCS(file);
+      if (res && res.url) {
+        setLogoUrl(res.url);
+      }
+    } catch (err) {
+      console.warn('Error al subir logo:', err);
+    } finally {
+      setUploadingLogo(false);
+    }
   };
 
   const handleNextFromStep1 = (e: React.FormEvent) => {
@@ -169,7 +193,7 @@ export const CreateOngWizard: React.FC = () => {
     setError(null);
 
     if (!declaracionLegal) {
-      setError('Debes aceptar la declaración de responsabilidad legal para continuar.');
+      setError('Debes aceptar la declaración de responsabilidad para continuar.');
       return;
     }
 
@@ -180,18 +204,24 @@ export const CreateOngWizard: React.FC = () => {
 
     setLoading(true);
     try {
-      // 1. Crear la ONG con datos legales y trial de 14 días
-      const isEkklesiaDomain = window.location.hostname.includes('ekklesia');
+      const fullAddress = `${direccionDetalle.trim()}, Parroquia ${parroquiaSel}, Municipio ${municipioSel}, Estado ${estadoSel}, Venezuela`;
+      const formattedRifOrCi = numIdentificacion.trim()
+        ? `${tipoIdentificacion}: ${numIdentificacion.trim()}${
+            nombreResponsableLegal.trim() ? ` (${nombreResponsableLegal.trim()})` : ''
+          }`
+        : 'En Proceso de Registro';
+
+      // 1. Crear la Iglesia en MATEO
       const newOng = await api.createOng({
         nombre: nombreOng.trim(),
-        rif_identificacion: rif.trim(),
-        pais: pais.trim(),
-        telefono: telefono.trim(),
-        direccion: direccion.trim() || null,
-        sitio_web: sitioWeb.trim() || null,
+        rif_identificacion: formattedRifOrCi,
+        pais: 'Venezuela',
+        telefono: telefono.trim() || null,
+        direccion: fullAddress,
+        logoUrl: logoUrl.trim() || null,
         plan: 'trial',
         estado: 'trial',
-        tipo_organizacion: isEkklesiaDomain ? 'ekklesia' : 'ong',
+        tipo_organizacion: 'ekklesia',
       });
 
       // 2. Registrar la cuenta del Administrador en Supabase Auth
@@ -234,8 +264,8 @@ export const CreateOngWizard: React.FC = () => {
               nombre: nombreAdmin.trim(),
               cargo: cargo.trim(),
               ongNombre: nombreOng.trim(),
-              rif: rif.trim(),
-              pais,
+              rif: formattedRifOrCi,
+              pais: 'Venezuela',
               telefono,
               plan: 'trial',
               trialEndsAt: newOng.trial_ends_at,
@@ -510,7 +540,7 @@ export const CreateOngWizard: React.FC = () => {
         )}
 
         {/* ========================================================================= */}
-        {/* PASO 1: DATOS LEGALES DE LA ONG                                           */}
+        {/* PASO 1: DATOS FUNDAMENTALES & UBICACIÓN EN VENEZUELA                      */}
         {/* ========================================================================= */}
         {step === 1 && (
           <form
@@ -536,26 +566,25 @@ export const CreateOngWizard: React.FC = () => {
                   gap: '0.5rem',
                 }}
               >
-                <Building2 size={22} /> Información Legal de la Iglesia
+                <Building2 size={22} /> 1. Datos Fundamentales del Templo
               </h3>
               <p style={{ fontSize: '0.82rem', color: '#64748b', margin: '0.25rem 0 0 0' }}>
-                Ingresa los datos institucionales de tu iglesia o ministerio para configurar su
-                espacio.
+                Ingresa el nombre oficial de la congregación y selecciona su ubicación estandarizada
+                en Venezuela.
               </p>
             </div>
 
-            {/* Nombre Legal */}
+            {/* Nombre de la Iglesia */}
             <div className="form-field">
               <label className="form-field-label">
-                Nombre Legal de la Iglesia / Ministerio{' '}
-                <span className="form-field-required">*</span>
+                Nombre de la Iglesia / Congregación <span className="form-field-required">*</span>
               </label>
               <div className="input-with-icon">
                 <Building2 size={18} className="input-icon" />
                 <input
                   type="text"
                   className="form-input-premium"
-                  placeholder="Ej. Iglesia Evangelica Gracia y Verdad"
+                  placeholder="Ej. Iglesia Evangélica Bautista Central"
                   value={nombreOng}
                   onChange={(e) => setNombreOng(e.target.value)}
                   required
@@ -563,88 +592,121 @@ export const CreateOngWizard: React.FC = () => {
               </div>
             </div>
 
-            {/* RIF y País */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+            {/* Ubicación Estandarizada: Estado, Municipio y Parroquia */}
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
+                gap: '1rem',
+              }}
+            >
               <div className="form-field">
                 <label className="form-field-label">
-                  RIF / Registro Legal <span className="form-field-required">*</span>
+                  Estado <span className="form-field-required">*</span>
                 </label>
-                <div className="input-with-icon">
-                  <FileText size={18} className="input-icon" />
-                  <input
-                    type="text"
-                    className="form-input-premium"
-                    placeholder="J-12345678-9"
-                    value={rif}
-                    onChange={(e) => setRif(e.target.value)}
-                    required
-                  />
-                </div>
+                <select
+                  className="form-input-premium"
+                  value={estadoSel}
+                  onChange={(e) => {
+                    const newEst = e.target.value;
+                    setEstadoSel(newEst);
+                    const estItem = VENEZUELA_LOCATIONS.find((v) => v.estado === newEst);
+                    if (estItem && estItem.municipios.length > 0) {
+                      setMunicipioSel(estItem.municipios[0].nombre);
+                      setParroquiaSel(estItem.municipios[0].parroquias[0] || '');
+                    }
+                  }}
+                  style={{ paddingLeft: '1rem' }}
+                >
+                  {VENEZUELA_LOCATIONS.map((loc) => (
+                    <option key={loc.estado} value={loc.estado}>
+                      {loc.estado}
+                    </option>
+                  ))}
+                </select>
               </div>
 
               <div className="form-field">
                 <label className="form-field-label">
-                  País de Operación <span className="form-field-required">*</span>
+                  Municipio <span className="form-field-required">*</span>
                 </label>
-                <div className="input-with-icon">
-                  <Globe size={18} className="input-icon" />
-                  <input
-                    type="text"
-                    className="form-input-premium"
-                    placeholder="Venezuela"
-                    value={pais}
-                    onChange={(e) => setPais(e.target.value)}
-                    required
-                  />
-                </div>
+                <select
+                  className="form-input-premium"
+                  value={municipioSel}
+                  onChange={(e) => {
+                    const newMun = e.target.value;
+                    setMunicipioSel(newMun);
+                    const estItem = VENEZUELA_LOCATIONS.find((v) => v.estado === estadoSel);
+                    const munItem = estItem?.municipios.find((m) => m.nombre === newMun);
+                    if (munItem && munItem.parroquias.length > 0) {
+                      setParroquiaSel(munItem.parroquias[0]);
+                    }
+                  }}
+                  style={{ paddingLeft: '1rem' }}
+                >
+                  {(VENEZUELA_LOCATIONS.find((v) => v.estado === estadoSel)?.municipios || []).map(
+                    (mun) => (
+                      <option key={mun.nombre} value={mun.nombre}>
+                        {mun.nombre}
+                      </option>
+                    ),
+                  )}
+                </select>
+              </div>
+
+              <div className="form-field">
+                <label className="form-field-label">
+                  Parroquia <span className="form-field-required">*</span>
+                </label>
+                <select
+                  className="form-input-premium"
+                  value={parroquiaSel}
+                  onChange={(e) => setParroquiaSel(e.target.value)}
+                  style={{ paddingLeft: '1rem' }}
+                >
+                  {(
+                    VENEZUELA_LOCATIONS.find((v) => v.estado === estadoSel)?.municipios.find(
+                      (m) => m.nombre === municipioSel,
+                    )?.parroquias || []
+                  ).map((parr) => (
+                    <option key={parr} value={parr}>
+                      {parr}
+                    </option>
+                  ))}
+                </select>
               </div>
             </div>
 
-            {/* Teléfono y Sitio Web */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-              <div className="form-field">
-                <label className="form-field-label">
-                  Teléfono Oficial de Contacto <span className="form-field-required">*</span>
-                </label>
-                <div className="input-with-icon">
-                  <Phone size={18} className="input-icon" />
-                  <input
-                    type="tel"
-                    className="form-input-premium"
-                    placeholder="+58 412 1234567"
-                    value={telefono}
-                    onChange={(e) => setTelefono(e.target.value)}
-                    required
-                  />
-                </div>
-              </div>
-
-              <div className="form-field">
-                <label className="form-field-label">Sitio Web / Red Social (Opcional)</label>
-                <div className="input-with-icon">
-                  <Globe size={18} className="input-icon" />
-                  <input
-                    type="text"
-                    className="form-input-premium"
-                    placeholder="https://iglesia.org o @iglesia"
-                    value={sitioWeb}
-                    onChange={(e) => setSitioWeb(e.target.value)}
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* Dirección */}
+            {/* Dirección Detallada del Templo */}
             <div className="form-field">
-              <label className="form-field-label">Dirección Física Oficial (Opcional)</label>
+              <label className="form-field-label">
+                Dirección Física del Templo (Calle, Sector, Edificio){' '}
+                <span className="form-field-required">*</span>
+              </label>
               <div className="input-with-icon">
                 <MapPin size={18} className="input-icon" />
                 <input
                   type="text"
                   className="form-input-premium"
-                  placeholder="Av. Principal, Edificio Sede, Piso 2"
-                  value={direccion}
-                  onChange={(e) => setDireccion(e.target.value)}
+                  placeholder="Ej. Av. Andrés Bello, Calle Los Mangos, Templo Central #45"
+                  value={direccionDetalle}
+                  onChange={(e) => setDireccionDetalle(e.target.value)}
+                  required
+                />
+              </div>
+            </div>
+
+            {/* Teléfono de Contacto */}
+            <div className="form-field">
+              <label className="form-field-label">Teléfono Oficial de Contacto</label>
+              <div className="input-with-icon">
+                <Phone size={18} className="input-icon" />
+                <input
+                  type="tel"
+                  className="form-input-premium"
+                  placeholder="+58 412 1234567"
+                  value={telefono}
+                  onChange={(e) => setTelefono(e.target.value)}
                 />
               </div>
             </div>
@@ -681,14 +743,14 @@ export const CreateOngWizard: React.FC = () => {
                   borderRadius: '10px',
                 }}
               >
-                Siguiente: Administrador <ArrowRight size={18} />
+                Siguiente: Identificación Legal <ArrowRight size={18} />
               </button>
             </div>
           </form>
         )}
 
         {/* ========================================================================= */}
-        {/* PASO 2: DATOS DEL ADMINISTRADOR PRINCIPAL                                  */}
+        {/* PASO 2: IDENTIFICACIÓN LEGAL FLEXIBLE & ADMINISTRADOR                      */}
         {/* ========================================================================= */}
         {step === 2 && (
           <form
@@ -714,18 +776,76 @@ export const CreateOngWizard: React.FC = () => {
                   gap: '0.5rem',
                 }}
               >
-                <User size={22} /> Perfil del Administrador Principal
+                <FileText size={22} /> 2. Identificación Legal & Administrador
               </h3>
               <p style={{ fontSize: '0.82rem', color: '#64748b', margin: '0.25rem 0 0 0' }}>
-                Establece las credenciales maestras para acceder y administrar tu iglesia en MATEO
-                ekklesia.
+                En MATEO entendemos que muchas congregaciones están en proceso de constitución
+                jurídica. Puedes registrar el RIF de la iglesia o la Cédula del Pastor /
+                Administrador.
               </p>
             </div>
 
-            {/* Nombre Completo */}
+            {/* Tipo y Número de Identificación Legal */}
+            <div
+              style={{
+                backgroundColor: '#f8fafc',
+                padding: '1rem',
+                borderRadius: '12px',
+                border: '1px solid #e2e8f0',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '1rem',
+              }}
+            >
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '1rem' }}>
+                <div className="form-field">
+                  <label className="form-field-label">Documento de Identificación</label>
+                  <select
+                    className="form-input-premium"
+                    value={tipoIdentificacion}
+                    onChange={(e) => setTipoIdentificacion(e.target.value as 'RIF' | 'CI')}
+                    style={{ paddingLeft: '1rem' }}
+                  >
+                    <option value="RIF">RIF Jurídico (J-)</option>
+                    <option value="CI">Cédula Identidad (V- / E-)</option>
+                  </select>
+                </div>
+
+                <div className="form-field">
+                  <label className="form-field-label">Número de Documento</label>
+                  <div className="input-with-icon">
+                    <FileText size={18} className="input-icon" />
+                    <input
+                      type="text"
+                      className="form-input-premium"
+                      placeholder={tipoIdentificacion === 'RIF' ? 'J-12345678-0' : 'V-12345678'}
+                      value={numIdentificacion}
+                      onChange={(e) => setNumIdentificacion(e.target.value)}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="form-field">
+                <label className="form-field-label">Nombre del Titular o Razón Social</label>
+                <div className="input-with-icon">
+                  <User size={18} className="input-icon" />
+                  <input
+                    type="text"
+                    className="form-input-premium"
+                    placeholder="Ej. Iglesia Evangélica Bautista Central ó Pbro. Juan Pérez"
+                    value={nombreResponsableLegal}
+                    onChange={(e) => setNombreResponsableLegal(e.target.value)}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Nombre Completo del Administrador */}
             <div className="form-field">
               <label className="form-field-label">
-                Nombre Completo del Administrador <span className="form-field-required">*</span>
+                Nombre Completo del Administrador Principal{' '}
+                <span className="form-field-required">*</span>
               </label>
               <div className="input-with-icon">
                 <User size={18} className="input-icon" />
@@ -751,7 +871,7 @@ export const CreateOngWizard: React.FC = () => {
                   <input
                     type="text"
                     className="form-input-premium"
-                    placeholder="Pastor Principal / Tesorero / Diácono"
+                    placeholder="Pastor Principal / Tesorero"
                     value={cargo}
                     onChange={(e) => setCargo(e.target.value)}
                     required
@@ -841,14 +961,14 @@ export const CreateOngWizard: React.FC = () => {
                   borderRadius: '10px',
                 }}
               >
-                Siguiente: Verificación <ArrowRight size={18} />
+                Siguiente: Identidad & Verificación <ArrowRight size={18} />
               </button>
             </div>
           </form>
         )}
 
         {/* ========================================================================= */}
-        {/* PASO 3: VERIFICACIÓN ANTI-BOT Y LEGAL                                     */}
+        {/* PASO 3: IDENTIDAD ECLESIÁSTICA, MARCA & VERIFICACIÓN                      */}
         {/* ========================================================================= */}
         {step === 3 && (
           <form
@@ -873,11 +993,105 @@ export const CreateOngWizard: React.FC = () => {
                   gap: '0.5rem',
                 }}
               >
-                <ShieldCheck size={22} /> Verificación de Seguridad
+                <ShieldCheck size={22} /> 3. Identidad Eclesiástica & Verificación
               </h3>
               <p style={{ fontSize: '0.82rem', color: '#64748b', margin: '0.25rem 0 0 0' }}>
-                Revisión anti-spam y declaración jurada para activar tu Trial de 14 días.
+                Personaliza la identidad visual de tu templo y realiza la verificación de seguridad.
               </p>
+            </div>
+
+            {/* Denominación y Afiliación */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+              <div className="form-field">
+                <label className="form-field-label">Denominación / Tradición Eclesiástica</label>
+                <select
+                  className="form-input-premium"
+                  value={denominacion}
+                  onChange={(e) => setDenominacion(e.target.value)}
+                  style={{ paddingLeft: '1rem' }}
+                >
+                  <option value="Bautista">Bautista</option>
+                  <option value="Pentecostal">Pentecostal</option>
+                  <option value="Presbiteriana">Presbiteriana</option>
+                  <option value="Metodista">Metodista</option>
+                  <option value="Asambleas de Dios">Asambleas de Dios</option>
+                  <option value="Libre / Independiente">Libre / Independiente</option>
+                  <option value="Otra">Otra Tradición</option>
+                </select>
+              </div>
+
+              <div className="form-field">
+                <label className="form-field-label">Afiliación o Confraternidad</label>
+                <input
+                  type="text"
+                  className="form-input-premium"
+                  placeholder="Ej. Consejo Evangélico de Venezuela"
+                  value={afiliacion}
+                  onChange={(e) => setAfiliacion(e.target.value)}
+                  style={{ paddingLeft: '1rem' }}
+                />
+              </div>
+            </div>
+
+            {/* Carga de Logo del Templo */}
+            <div className="form-field">
+              <label className="form-field-label">Logo de la Iglesia (Opcional)</label>
+              <div
+                style={{
+                  border: '2px dashed #cbd5e1',
+                  borderRadius: '12px',
+                  padding: '1rem',
+                  textAlign: 'center',
+                  backgroundColor: '#f8fafc',
+                  cursor: 'pointer',
+                }}
+              >
+                {logoUrl ? (
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '1rem',
+                    }}
+                  >
+                    <img
+                      src={logoUrl}
+                      alt="Logo Previsto"
+                      style={{
+                        height: '50px',
+                        width: '50px',
+                        objectFit: 'contain',
+                        borderRadius: '8px',
+                      }}
+                    />
+                    <span style={{ fontSize: '0.85rem', color: '#10b981', fontWeight: 600 }}>
+                      ✓ Logo Cargado Exitosamente
+                    </span>
+                  </div>
+                ) : (
+                  <label
+                    style={{
+                      cursor: 'pointer',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      gap: '0.5rem',
+                    }}
+                  >
+                    <Upload size={24} style={{ color: 'var(--primary)' }} />
+                    <span style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--primary)' }}>
+                      {uploadingLogo ? 'Subiendo Logo...' : 'Subir imagen de Logo del Templo'}
+                    </span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleLogoFileUpload}
+                      style={{ display: 'none' }}
+                    />
+                  </label>
+                )}
+              </div>
             </div>
 
             {/* Resumen del Registro */}
@@ -898,7 +1112,7 @@ export const CreateOngWizard: React.FC = () => {
                   fontSize: '0.9rem',
                 }}
               >
-                Resumen de tu Registro:
+                Resumen del Registro:
               </strong>
               <div
                 style={{
@@ -910,22 +1124,26 @@ export const CreateOngWizard: React.FC = () => {
               >
                 <div>
                   <span style={{ color: '#94a3b8', display: 'block', fontSize: '0.75rem' }}>
-                    IGLESIA / MINISTERIO
+                    CONGREGACIÓN / TEMPLO
                   </span>
                   <strong>{nombreOng}</strong>
                 </div>
                 <div>
                   <span style={{ color: '#94a3b8', display: 'block', fontSize: '0.75rem' }}>
-                    RIF / FISCAL
+                    DOCUMENTO LEGAL / FISCAL
                   </span>
-                  <strong>{rif}</strong>
+                  <strong>
+                    {numIdentificacion
+                      ? `${tipoIdentificacion}: ${numIdentificacion}`
+                      : 'En Proceso'}
+                  </strong>
                 </div>
                 <div>
                   <span style={{ color: '#94a3b8', display: 'block', fontSize: '0.75rem' }}>
-                    PAÍS & TELÉFONO
+                    UBICACIÓN
                   </span>
                   <strong>
-                    {pais} ({telefono})
+                    {estadoSel}, {municipioSel}
                   </strong>
                 </div>
                 <div>
@@ -1010,7 +1228,7 @@ export const CreateOngWizard: React.FC = () => {
                 }}
               >
                 {loading ? (
-                  <span>Creando Organización...</span>
+                  <span>Creando Iglesia...</span>
                 ) : (
                   <>
                     Registrar Iglesia e Iniciar Trial <Sparkles size={18} />
