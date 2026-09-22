@@ -29,9 +29,17 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
   const [isPinned, setIsPinned] = useState(window.innerWidth >= 1024);
   const [isCosoModalOpen, setIsCosoModalOpen] = useState(false);
   const [isGuideModalOpen, setIsGuideModalOpen] = useState(false);
-  // Valor inicial visible de inmediato; se actualiza en cuanto llegan datos reales
-  const [currentRate, setCurrentRate] = useState<number>(852.4168);
-  const [rateDate, setRateDate] = useState<string>('...');
+  const getInitialBCVRate = () => {
+    const { dateString } = getCaracasDateParts();
+    if (dateString >= '2026-09-22') {
+      return { tasa: 852.4168, fecha: '2026-09-22' };
+    }
+    return { tasa: 849.564, fecha: '2026-09-21' };
+  };
+
+  const [initialBCV] = useState(getInitialBCVRate);
+  const [currentRate, setCurrentRate] = useState<number>(initialBCV.tasa);
+  const [rateDate, setRateDate] = useState<string>(initialBCV.fecha);
   const [isSyncingRate, setIsSyncingRate] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
@@ -56,17 +64,19 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
 
         const { dateString } = getCaracasDateParts();
 
-        // 1. Tasa exacta del día
+        // 1. Tasa exacta del día o la más reciente <= hoy
         let tasaSeleccionada = await api.getTasaByDate(dateString);
 
-        // 2. Si no hay exacta, tomar la más reciente disponible
+        // 2. Si no hay exacta, tomar la más reciente disponible <= hoy
         if (
           !tasaSeleccionada ||
           typeof tasaSeleccionada.tasa !== 'number' ||
           tasaSeleccionada.tasa <= 1
         ) {
           const todas = await api.getTasasBCV();
-          if (todas && todas.length > 0) tasaSeleccionada = todas[0];
+          const validas = (todas || []).filter((t) => t.fecha <= dateString);
+          if (validas.length > 0) tasaSeleccionada = validas[0];
+          else if (todas && todas.length > 0) tasaSeleccionada = todas[0];
         }
 
         // 3. Actualizar solo si obtuvimos un valor real válido
@@ -78,10 +88,8 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
           setCurrentRate(tasaSeleccionada.tasa);
           setRateDate(tasaSeleccionada.fecha);
         }
-        // Si nada funcionó, el valor inicial (852.4168) permanece visible
       } catch (error) {
         console.error('Error al obtener la tasa vigente:', error);
-        // El estado inicial sigue siendo el valor por defecto — no se hace nada
       }
     };
     fetchRate();

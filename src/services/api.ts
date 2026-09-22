@@ -1564,6 +1564,16 @@ export const api = {
   },
 
   getTasaByDate: async (fecha: string): Promise<TasaBCV | null> => {
+    const getInitialFallbackTasa = (targetFecha: string): TasaBCV => {
+      const match = INITIAL_TASAS_BCV.find((t) => t.fecha === targetFecha);
+      if (match) return match;
+      const anteriores = INITIAL_TASAS_BCV.filter((t) => t.fecha <= targetFecha).sort((a, b) =>
+        b.fecha.localeCompare(a.fecha),
+      );
+      if (anteriores.length > 0) return anteriores[0];
+      return INITIAL_TASAS_BCV[INITIAL_TASAS_BCV.length - 1] || INITIAL_TASAS_BCV[0];
+    };
+
     if (!isSimulationMode) {
       try {
         // 1. Intentar obtener la tasa exacta para esa fecha
@@ -1585,23 +1595,23 @@ export const api = {
           .maybeSingle();
         if (!recentErr && recent) return recent as TasaBCV;
 
-        // 3. Fallback: buscar la tasa más reciente <= fecha actual (sin futuras desalineadas)
+        // 3. Fallback: buscar la tasa más reciente <= fecha solicitada o actual
         const todayStr = new Date().toISOString().split('T')[0];
         const { data: anyLatest, error: latestErr } = await supabase
           .from('tasas_bcv')
           .select('*')
-          .lte('fecha', todayStr)
+          .lte('fecha', fecha <= todayStr ? fecha : todayStr)
           .neq('tasa', 773.3125)
           .order('fecha', { ascending: false })
           .limit(1)
           .maybeSingle();
         if (!latestErr && anyLatest) return anyLatest as TasaBCV;
 
-        // 4. Si la tabla está totalmente vacía o corrupta, devolver la de respaldo inicial
-        return INITIAL_TASAS_BCV[0] || null;
+        // 4. Si la tabla está totalmente vacía o corrupta, devolver la de respaldo para esa fecha
+        return getInitialFallbackTasa(fecha);
       } catch (err) {
         console.error('Error al consultar getTasaByDate en Supabase:', err);
-        return INITIAL_TASAS_BCV[0] || null;
+        return getInitialFallbackTasa(fecha);
       }
     } else {
       let tasas: TasaBCV[] = JSON.parse(localStorage.getItem('cnbv_tasas_bcv') || '[]');
@@ -1627,12 +1637,13 @@ export const api = {
         .sort((a, b) => b.fecha.localeCompare(a.fecha));
       if (anteriores.length > 0) return anteriores[0];
 
-      // 3. Fallback: devolver la más reciente disponible que sea <= fecha actual
+      // 3. Fallback: devolver la más reciente disponible que sea <= fecha solicitada o hoy
       const hoyStr = new Date().toISOString().split('T')[0];
+      const limitFecha = fecha <= hoyStr ? fecha : hoyStr;
       const validas = tasas
-        .filter((t) => t.fecha <= hoyStr)
+        .filter((t) => t.fecha <= limitFecha)
         .sort((a, b) => b.fecha.localeCompare(a.fecha));
-      return validas[0] || INITIAL_TASAS_BCV[0] || null;
+      return validas[0] || getInitialFallbackTasa(fecha);
     }
   },
 
