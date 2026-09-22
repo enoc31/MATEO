@@ -29,8 +29,9 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
   const [isPinned, setIsPinned] = useState(window.innerWidth >= 1024);
   const [isCosoModalOpen, setIsCosoModalOpen] = useState(false);
   const [isGuideModalOpen, setIsGuideModalOpen] = useState(false);
-  const [currentRate, setCurrentRate] = useState<number | null>(null);
-  const [rateDate, setRateDate] = useState<string | null>(null);
+  // Valor inicial visible de inmediato; se actualiza en cuanto llegan datos reales
+  const [currentRate, setCurrentRate] = useState<number>(852.4168);
+  const [rateDate, setRateDate] = useState<string>('...');
   const [isSyncingRate, setIsSyncingRate] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
@@ -47,33 +48,28 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
       }
     }
 
-    // Obtener la tasa vigente para el día de HOY con sincronización activa
+    // Obtener la tasa vigente. El widget ya es visible con el valor inicial.
     const fetchRate = async () => {
-      // Tasa de respaldo integrada: se muestra mientras cargan los datos reales
-      const FALLBACK_RATE = { tasa: 852.4168, fecha: '2026-09-22' };
-
       try {
-        // Sincronizar en background sin bloquear la UI
+        // Sincronizar en segundo plano sin bloquear la UI
         checkAndSyncBCVRate().catch(() => {});
 
         const { dateString } = getCaracasDateParts();
 
-        // 1. Intentar obtener la tasa del día desde Supabase / localStorage
+        // 1. Tasa exacta del día
         let tasaSeleccionada = await api.getTasaByDate(dateString);
 
-        // 2. Si no hay tasa para hoy, tomar la más reciente disponible
+        // 2. Si no hay exacta, tomar la más reciente disponible
         if (
           !tasaSeleccionada ||
           typeof tasaSeleccionada.tasa !== 'number' ||
           tasaSeleccionada.tasa <= 1
         ) {
           const todas = await api.getTasasBCV();
-          if (todas && todas.length > 0) {
-            tasaSeleccionada = todas[0];
-          }
+          if (todas && todas.length > 0) tasaSeleccionada = todas[0];
         }
 
-        // 3. Aplicar resultado o fallback
+        // 3. Actualizar solo si obtuvimos un valor real válido
         if (
           tasaSeleccionada &&
           typeof tasaSeleccionada.tasa === 'number' &&
@@ -81,16 +77,11 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
         ) {
           setCurrentRate(tasaSeleccionada.tasa);
           setRateDate(tasaSeleccionada.fecha);
-        } else {
-          // Fallback garantizado: siempre mostramos algo
-          setCurrentRate(FALLBACK_RATE.tasa);
-          setRateDate(FALLBACK_RATE.fecha);
         }
+        // Si nada funcionó, el valor inicial (852.4168) permanece visible
       } catch (error) {
         console.error('Error al obtener la tasa vigente:', error);
-        // Fallback garantizado incluso ante errores inesperados
-        setCurrentRate(FALLBACK_RATE.tasa);
-        setRateDate(FALLBACK_RATE.fecha);
+        // El estado inicial sigue siendo el valor por defecto — no se hace nada
       }
     };
     fetchRate();
@@ -321,54 +312,53 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
               <span>🚀 Ruta Guiada</span>
             </button>
 
-            {currentRate && (
-              <div
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.4rem',
-                  marginRight: '0.5rem',
-                  paddingRight: '0.75rem',
-                  borderRight: '1px solid var(--border-color)',
-                }}
-              >
-                <div style={{ textAlign: 'right' }}>
-                  <div
-                    style={{
-                      fontSize: '0.6rem',
-                      color: 'var(--neutral-dark)',
-                      fontWeight: 600,
-                      letterSpacing: '0.5px',
-                    }}
-                  >
-                    TASA BCV{rateDate ? ` · ${rateDate}` : ''}
-                  </div>
-                  <div style={{ fontSize: '0.9rem', fontWeight: 700, color: '#16a34a' }}>
-                    {currentRate.toFixed(4)} Bs/$
-                  </div>
-                </div>
-                <button
-                  onClick={handleRefreshRate}
-                  disabled={isSyncingRate}
-                  title="Actualizar tasa BCV"
+            {/* Widget Tasa BCV — siempre visible, se actualiza en background */}
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.4rem',
+                marginRight: '0.5rem',
+                paddingRight: '0.75rem',
+                borderRight: '1px solid var(--border-color)',
+              }}
+            >
+              <div style={{ textAlign: 'right' }}>
+                <div
                   style={{
-                    background: 'none',
-                    border: 'none',
-                    cursor: isSyncingRate ? 'not-allowed' : 'pointer',
-                    color: '#16a34a',
-                    padding: '2px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    opacity: isSyncingRate ? 0.5 : 1,
+                    fontSize: '0.6rem',
+                    color: 'var(--neutral-dark)',
+                    fontWeight: 600,
+                    letterSpacing: '0.5px',
                   }}
                 >
-                  <RefreshCw
-                    size={12}
-                    style={{ animation: isSyncingRate ? 'spin 1s linear infinite' : 'none' }}
-                  />
-                </button>
+                  TASA BCV{rateDate && rateDate !== '...' ? ` · ${rateDate}` : ''}
+                </div>
+                <div style={{ fontSize: '0.9rem', fontWeight: 700, color: '#16a34a' }}>
+                  {currentRate.toFixed(4)} Bs/$
+                </div>
               </div>
-            )}
+              <button
+                onClick={handleRefreshRate}
+                disabled={isSyncingRate}
+                title="Actualizar tasa BCV"
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  cursor: isSyncingRate ? 'not-allowed' : 'pointer',
+                  color: '#16a34a',
+                  padding: '2px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  opacity: isSyncingRate ? 0.5 : 1,
+                }}
+              >
+                <RefreshCw
+                  size={12}
+                  style={{ animation: isSyncingRate ? 'spin 1s linear infinite' : 'none' }}
+                />
+              </button>
+            </div>
             <div style={{ textAlign: 'right' }}>
               <div style={{ fontWeight: 600, fontSize: '0.85rem' }}>{profile.nombre_completo}</div>
               <div
@@ -452,7 +442,53 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
             borderBottom: '1px solid var(--border-color)',
           }}
         >
-          {/* La tasa BCV ya se muestra en el header de escritorio; no duplicar aquí */}
+          {/* Tasa BCV — visible en el bar de contenido principal (complementa al header) */}
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.35rem',
+              marginRight: '0.5rem',
+              paddingRight: '1rem',
+              borderRight: '1px solid var(--border-color)',
+            }}
+          >
+            <div style={{ textAlign: 'right' }}>
+              <div
+                style={{
+                  fontSize: '0.6rem',
+                  color: 'var(--neutral-dark)',
+                  fontWeight: 600,
+                  letterSpacing: '0.5px',
+                }}
+              >
+                TASA BCV{rateDate && rateDate !== '...' ? ` · ${rateDate}` : ''}
+              </div>
+              <div style={{ fontSize: '0.9rem', fontWeight: 700, color: '#16a34a' }}>
+                {currentRate.toFixed(4)} Bs/$
+              </div>
+            </div>
+            <button
+              onClick={handleRefreshRate}
+              disabled={isSyncingRate}
+              title="Actualizar tasa BCV"
+              style={{
+                background: 'none',
+                border: 'none',
+                cursor: isSyncingRate ? 'not-allowed' : 'pointer',
+                color: '#16a34a',
+                padding: '2px',
+                display: 'flex',
+                alignItems: 'center',
+                opacity: isSyncingRate ? 0.5 : 1,
+              }}
+            >
+              <RefreshCw
+                size={12}
+                style={{ animation: isSyncingRate ? 'spin 1s linear infinite' : 'none' }}
+              />
+            </button>
+          </div>
           <div style={{ textAlign: 'right' }}>
             <div style={{ fontWeight: 600, fontSize: '0.9rem', color: 'var(--neutral-dark)' }}>
               {profile.nombre_completo}
