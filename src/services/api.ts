@@ -956,7 +956,10 @@ export const api = {
   getCategories: async (): Promise<ExpenseCategory[]> => {
     if (!isSimulationMode) {
       await ensureCategoriesAndPartidas();
-      const { data, error } = await supabase.from('categorias_gasto').select('*').order('nombre');
+      const { data, error } = await supabase
+        .from('categorias_gasto')
+        .select('id, nombre, descripcion, icono, color, orden')
+        .order('nombre');
       if (error) throw error;
       return data as ExpenseCategory[];
     } else {
@@ -2208,7 +2211,10 @@ export const api = {
   // --- GESTIÓN DE ONGs (SaaS) ---
   getOngs: async (): Promise<Ong[]> => {
     if (!isSimulationMode) {
-      const { data, error } = await supabase.from('ongs').select('*').order('nombre');
+      const { data, error } = await supabase
+        .from('ongs')
+        .select('id, nombre, logo_url, tipo_organizacion, plan, estado, created_at, trial_ends_at')
+        .order('nombre');
       if (error) throw error;
       return data as Ong[];
     } else {
