@@ -1,9 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { Download, CheckCircle, Clock, Upload, Scale, Compass, Landmark } from 'lucide-react';
+import { Download, CheckCircle, Clock, Upload, Scale, Compass } from 'lucide-react';
 import { api } from '../../services/api';
 import type { ExpenseCategory, DashboardMetrics, ProjectExecutionMetric } from '../../services/api';
 import { ChurchImplementationGuideModal } from '../auth/ChurchImplementationGuideModal';
-import { getCaracasDateParts } from '../../utils/formatters';
 import {
   ResponsiveContainer,
   BarChart,
@@ -22,27 +21,18 @@ export const Dashboard: React.FC = () => {
   const [metrics, setMetrics] = useState<DashboardMetrics | null>(null);
   const [categories, setCategories] = useState<ExpenseCategory[]>([]);
   const [showGuideModal, setShowGuideModal] = useState(false);
-  const [bcvRate, setBcvRate] = useState<number | null>(null);
 
   useEffect(() => {
     const loadData = async () => {
       try {
-        const { dateString } = getCaracasDateParts();
-        const [catList, metricsData, rateObj] = await Promise.all([
+        const [catList, metricsData] = await Promise.all([
           api.getCategories(),
           api.getDashboardMetrics(),
-          api.getTasaByDate(dateString),
         ]);
         setCategories(catList);
         setMetrics(metricsData);
-        if (rateObj && typeof rateObj.tasa === 'number') {
-          setBcvRate(rateObj.tasa);
-        } else {
-          setBcvRate(652.9726);
-        }
       } catch (err) {
         console.error('Error loading dashboard data:', err);
-        setBcvRate(652.9726);
       } finally {
         setLoading(false);
       }
@@ -118,84 +108,21 @@ export const Dashboard: React.FC = () => {
   return (
     <div className="animate-fade-in-up">
       {/* Encabezado del Dashboard */}
-      <div
-        style={{
-          marginBottom: '2rem',
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          flexWrap: 'wrap',
-          gap: '1rem',
-        }}
-      >
-        <div>
-          <h2 style={{ color: 'var(--primary)', fontSize: '1.75rem', fontWeight: 700, margin: 0 }}>
-            Tablero Informativo en Tiempo Real
-          </h2>
-          <p
-            style={{
-              color: 'var(--neutral-dark)',
-              opacity: 0.8,
-              fontSize: '0.9rem',
-              marginTop: '0.25rem',
-              marginBottom: 0,
-            }}
-          >
-            Monitoreo congregacional de diezmos, ofrendas, presupuesto de obra y estados financieros
-            eclesiásticos.
-          </p>
-        </div>
-
-        {/* Badge Prominente TASA BCV */}
-        {bcvRate && (
-          <div
-            style={{
-              backgroundColor: 'rgba(22, 163, 74, 0.08)',
-              border: '1px solid rgba(22, 163, 74, 0.25)',
-              borderRadius: '12px',
-              padding: '0.6rem 1.1rem',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.75rem',
-              boxShadow: '0 2px 6px rgba(22, 163, 74, 0.08)',
-            }}
-            title="Tasa oficial de cambio del Banco Central de Venezuela"
-          >
-            <div
-              style={{
-                width: '36px',
-                height: '36px',
-                borderRadius: '8px',
-                backgroundColor: 'rgba(22, 163, 74, 0.15)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: '#16a34a',
-              }}
-            >
-              <Landmark size={20} />
-            </div>
-            <div style={{ textAlign: 'left' }}>
-              <span
-                style={{
-                  fontSize: '0.65rem',
-                  fontWeight: 700,
-                  color: '#15803d',
-                  letterSpacing: '0.5px',
-                  display: 'block',
-                  textTransform: 'uppercase',
-                }}
-              >
-                TASA BCV VIGENTE
-              </span>
-              <strong
-                style={{ fontSize: '1.15rem', color: '#16a34a', fontWeight: 800, lineHeight: 1 }}
-              >
-                {bcvRate.toFixed(4)} Bs/$
-              </strong>
-            </div>
-          </div>
-        )}
+      <div style={{ marginBottom: '2rem' }}>
+        <h2 style={{ color: 'var(--primary)', fontSize: '1.75rem', fontWeight: 700 }}>
+          Tablero Informativo en Tiempo Real
+        </h2>
+        <p
+          style={{
+            color: 'var(--neutral-dark)',
+            opacity: 0.8,
+            fontSize: '0.9rem',
+            marginTop: '0.25rem',
+          }}
+        >
+          Monitoreo congregacional de diezmos, ofrendas, presupuesto de obra y estados financieros
+          eclesiásticos.
+        </p>
       </div>
 
       {/* Banner de Ruta Guiada de Implementación */}

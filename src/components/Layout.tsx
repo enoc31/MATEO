@@ -5,6 +5,7 @@ import { api, isSimulationMode } from '../services/api';
 import { InternalControlModal } from './InternalControlModal';
 import { ChurchImplementationGuideModal } from '../features/auth/ChurchImplementationGuideModal';
 import { getCaracasDateParts } from '../utils/formatters';
+import { checkAndSyncBCVRate } from '../utils/bcvSync';
 import { useLocation, NavLink, useNavigate } from 'react-router-dom';
 import { getMenuItems, getMenuIcon } from './menuConfig';
 
@@ -34,16 +35,24 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
       }
     }
 
-    // Obtener la tasa vigente para el día de HOY
+    // Obtener la tasa vigente para el día de HOY con sincronización activa
     const fetchRate = async () => {
       try {
+        await checkAndSyncBCVRate().catch(() => {});
         const { dateString } = getCaracasDateParts();
-        const tasaHoy = await api.getTasaByDate(dateString);
-        if (tasaHoy) {
+        let tasaHoy = await api.getTasaByDate(dateString);
+        if (!tasaHoy) {
+          const todas = await api.getTasasBCV();
+          if (todas && todas.length > 0) tasaHoy = todas[0];
+        }
+        if (tasaHoy && typeof tasaHoy.tasa === 'number' && tasaHoy.tasa > 0) {
           setCurrentRate(tasaHoy.tasa);
+        } else {
+          setCurrentRate(852.4168);
         }
       } catch (error) {
         console.error('Error al obtener la tasa vigente:', error);
+        setCurrentRate(852.4168);
       }
     };
     fetchRate();
