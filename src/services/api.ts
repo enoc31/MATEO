@@ -1906,7 +1906,7 @@ export const api = {
         .order('created_at', { ascending: false });
 
       if (ongId) {
-        query = query.eq('ong_id', ongId);
+        query = query.or(`ong_id.eq.${ongId},ong_id.is.null`);
       }
 
       const { data, error } = await query;
