@@ -1,11 +1,21 @@
-import React, { useState } from 'react';
-import { LogOut, Pin, PinOff, Menu, Lightbulb, LayoutGrid, Building, Compass } from 'lucide-react';
+import React, { useState, useCallback } from 'react';
+import {
+  LogOut,
+  Pin,
+  PinOff,
+  Menu,
+  Lightbulb,
+  LayoutGrid,
+  Building,
+  Compass,
+  RefreshCw,
+} from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { api, isSimulationMode } from '../services/api';
 import { InternalControlModal } from './InternalControlModal';
 import { ChurchImplementationGuideModal } from '../features/auth/ChurchImplementationGuideModal';
 import { getCaracasDateParts } from '../utils/formatters';
-import { checkAndSyncBCVRate } from '../utils/bcvSync';
+import { checkAndSyncBCVRate, forceSyncBCVRate } from '../utils/bcvSync';
 import { useLocation, NavLink, useNavigate } from 'react-router-dom';
 import { getMenuItems, getMenuIcon } from './menuConfig';
 
@@ -20,6 +30,8 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
   const [isCosoModalOpen, setIsCosoModalOpen] = useState(false);
   const [isGuideModalOpen, setIsGuideModalOpen] = useState(false);
   const [currentRate, setCurrentRate] = useState<number | null>(null);
+  const [rateDate, setRateDate] = useState<string | null>(null);
+  const [isSyncingRate, setIsSyncingRate] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
   const currentPath = location.pathname.split('/')[2] || 'dashboard';
@@ -38,26 +50,66 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
     // Obtener la tasa vigente para el día de HOY con sincronización activa
     const fetchRate = async () => {
       try {
-        await checkAndSyncBCVRate().catch(() => {});
+        // Sincronizar en background sin bloquear la UI
+        checkAndSyncBCVRate().catch(() => {});
+
         const { dateString } = getCaracasDateParts();
-        let tasaHoy = await api.getTasaByDate(dateString);
-        if (!tasaHoy) {
+
+        // Intentar obtener la tasa del día
+        let tasaSeleccionada = await api.getTasaByDate(dateString);
+
+        // Si no hay tasa para hoy, tomar la más reciente disponible
+        if (
+          !tasaSeleccionada ||
+          typeof tasaSeleccionada.tasa !== 'number' ||
+          tasaSeleccionada.tasa <= 0
+        ) {
           const todas = await api.getTasasBCV();
-          if (todas && todas.length > 0) tasaHoy = todas[0];
+          if (todas && todas.length > 0) {
+            tasaSeleccionada = todas[0];
+          }
         }
-        if (tasaHoy && typeof tasaHoy.tasa === 'number' && tasaHoy.tasa > 0) {
-          setCurrentRate(tasaHoy.tasa);
-        } else {
-          setCurrentRate(852.4168);
+
+        if (
+          tasaSeleccionada &&
+          typeof tasaSeleccionada.tasa === 'number' &&
+          tasaSeleccionada.tasa > 1
+        ) {
+          setCurrentRate(tasaSeleccionada.tasa);
+          setRateDate(tasaSeleccionada.fecha);
         }
       } catch (error) {
         console.error('Error al obtener la tasa vigente:', error);
-        setCurrentRate(852.4168);
       }
     };
     fetchRate();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [profile?.id]);
+
+  // Permite refrescar la tasa manualmente desde el header
+  const handleRefreshRate = useCallback(async () => {
+    setIsSyncingRate(true);
+    try {
+      const newRate = await forceSyncBCVRate();
+      if (newRate && newRate > 1) {
+        setCurrentRate(newRate);
+        const allRates = await api.getTasasBCV();
+        if (allRates && allRates.length > 0) setRateDate(allRates[0].fecha);
+      } else {
+        // Volver a leer lo que hay en la BD/localStorage
+        const { dateString } = getCaracasDateParts();
+        const tasaHoy = await api.getTasaByDate(dateString);
+        if (tasaHoy && tasaHoy.tasa > 1) {
+          setCurrentRate(tasaHoy.tasa);
+          setRateDate(tasaHoy.fecha);
+        }
+      }
+    } catch {
+      // silencioso: la tasa actual sigue siendo válida
+    } finally {
+      setIsSyncingRate(false);
+    }
+  }, []);
 
   if (!profile) return null;
 
@@ -263,6 +315,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
                 style={{
                   display: 'flex',
                   alignItems: 'center',
+                  gap: '0.4rem',
                   marginRight: '0.5rem',
                   paddingRight: '0.75rem',
                   borderRight: '1px solid var(--border-color)',
@@ -271,18 +324,38 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
                 <div style={{ textAlign: 'right' }}>
                   <div
                     style={{
-                      fontSize: '0.65rem',
+                      fontSize: '0.6rem',
                       color: 'var(--neutral-dark)',
                       fontWeight: 600,
                       letterSpacing: '0.5px',
                     }}
                   >
-                    TASA BCV VIGENTE
+                    TASA BCV{rateDate ? ` · ${rateDate}` : ''}
                   </div>
-                  <div style={{ fontSize: '0.95rem', fontWeight: 700, color: '#16a34a' }}>
+                  <div style={{ fontSize: '0.9rem', fontWeight: 700, color: '#16a34a' }}>
                     {currentRate.toFixed(4)} Bs/$
                   </div>
                 </div>
+                <button
+                  onClick={handleRefreshRate}
+                  disabled={isSyncingRate}
+                  title="Actualizar tasa BCV"
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    cursor: isSyncingRate ? 'not-allowed' : 'pointer',
+                    color: '#16a34a',
+                    padding: '2px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    opacity: isSyncingRate ? 0.5 : 1,
+                  }}
+                >
+                  <RefreshCw
+                    size={12}
+                    style={{ animation: isSyncingRate ? 'spin 1s linear infinite' : 'none' }}
+                  />
+                </button>
               </div>
             )}
             <div style={{ textAlign: 'right' }}>
@@ -368,33 +441,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
             borderBottom: '1px solid var(--border-color)',
           }}
         >
-          {currentRate && (
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                marginRight: '0.5rem',
-                paddingRight: '1.5rem',
-                borderRight: '1px solid var(--border-color)',
-              }}
-            >
-              <div style={{ textAlign: 'right' }}>
-                <div
-                  style={{
-                    fontSize: '0.65rem',
-                    color: 'var(--neutral-dark)',
-                    fontWeight: 600,
-                    letterSpacing: '0.5px',
-                  }}
-                >
-                  TASA BCV VIGENTE
-                </div>
-                <div style={{ fontSize: '0.95rem', fontWeight: 700, color: '#16a34a' }}>
-                  {currentRate.toFixed(4)} Bs/$
-                </div>
-              </div>
-            </div>
-          )}
+          {/* La tasa BCV ya se muestra en el header de escritorio; no duplicar aquí */}
           <div style={{ textAlign: 'right' }}>
             <div style={{ fontWeight: 600, fontSize: '0.9rem', color: 'var(--neutral-dark)' }}>
               {profile.nombre_completo}

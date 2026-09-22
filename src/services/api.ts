@@ -793,9 +793,24 @@ const initLocalStorage = () => {
   if (!localStorage.getItem('cnbv_partidas')) {
     localStorage.setItem('cnbv_partidas', JSON.stringify(INITIAL_PARTIDAS));
   }
-  if (!localStorage.getItem('cnbv_tasas_bcv')) {
-    localStorage.setItem('cnbv_tasas_bcv', JSON.stringify(INITIAL_TASAS_BCV));
+
+  const storedTasas = localStorage.getItem('cnbv_tasas_bcv');
+  let tasas: TasaBCV[] = storedTasas ? JSON.parse(storedTasas) : [];
+  const now = Date.now();
+  const ninetyDaysMs = 90 * 24 * 60 * 60 * 1000;
+
+  tasas = tasas.filter((t) => {
+    if (t.tasa === 773.3125) return false;
+    const fechaT = new Date(t.fecha).getTime();
+    if (isNaN(fechaT)) return false;
+    return now - fechaT <= ninetyDaysMs;
+  });
+
+  if (tasas.length === 0) {
+    tasas = INITIAL_TASAS_BCV;
   }
+  localStorage.setItem('cnbv_tasas_bcv', JSON.stringify(tasas));
+
   if (!localStorage.getItem('cnbv_beneficiaries')) {
     localStorage.setItem('cnbv_beneficiaries', JSON.stringify(INITIAL_BENEFICIARIES));
   }
