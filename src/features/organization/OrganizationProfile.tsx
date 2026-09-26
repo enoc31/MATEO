@@ -507,7 +507,7 @@ export const OrganizationProfile: React.FC = () => {
               </div>
             </div>
 
-            {/* Carga Interactiva del Logo (Privacidad de Almacenamiento Protegida) */}
+            {/* Carga Interactiva del Logo */}
             <div
               style={{ marginTop: '1.5rem', paddingTop: '1.2rem', borderTop: '1px dashed #E2E8F0' }}
             >
@@ -516,7 +516,6 @@ export const OrganizationProfile: React.FC = () => {
                 style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}
               >
                 <Building2 size={16} color="#1B5CB6" /> Logo / Insignia de la Organización
-                (Almacenamiento Protegido)
               </label>
 
               <div
@@ -558,16 +557,6 @@ export const OrganizationProfile: React.FC = () => {
                       >
                         <CheckCircle2 size={16} color="#166534" /> Logotipo Creado y Almacenado
                       </span>
-                      <span
-                        style={{
-                          fontSize: '0.75rem',
-                          color: '#64748B',
-                          display: 'block',
-                          marginTop: '0.2rem',
-                        }}
-                      >
-                        🔒 La ruta interna de almacenamiento está resguardada por privacidad.
-                      </span>
                     </div>
                     <button
                       type="button"
@@ -607,7 +596,7 @@ export const OrganizationProfile: React.FC = () => {
                       }}
                     >
                       <Upload size={16} />{' '}
-                      {uploadingLogo ? 'Subiendo e encriptando...' : 'Subir Imagen de Logo'}
+                      {uploadingLogo ? 'Subiendo imagen...' : 'Subir Imagen de Logo'}
                       <input
                         type="file"
                         accept="image/*"
@@ -624,8 +613,7 @@ export const OrganizationProfile: React.FC = () => {
                         marginTop: '0.4rem',
                       }}
                     >
-                      Formatos soportados: PNG, JPG, WEBP (Guardado privado en almacenamiento
-                      seguro).
+                      Formatos soportados: PNG, JPG, WEBP.
                     </span>
                   </div>
                 )}
