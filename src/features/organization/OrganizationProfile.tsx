@@ -10,6 +10,8 @@ import {
   Save,
   X,
   AlertCircle,
+  Lock,
+  Key,
 } from 'lucide-react';
 import { api, type Ong, type UpdateOngParams } from '../../services/api';
 import { uploadToGCS } from '../../services/storage';
@@ -341,10 +343,26 @@ export const OrganizationProfile: React.FC = () => {
             {ongData.nombre}
           </h3>
 
-          <p style={{ margin: 0, fontSize: '0.88rem', color: '#64748B', fontWeight: 600 }}>
-            Id Registrado:{' '}
+          <p
+            style={{
+              margin: 0,
+              fontSize: '0.88rem',
+              color: '#64748B',
+              fontWeight: 600,
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.4rem',
+            }}
+          >
+            <Key size={14} color="#1B5CB6" /> <strong>ID de Organización (Clave Primaria):</strong>{' '}
             <code
-              style={{ backgroundColor: '#F1F5F9', padding: '0.1rem 0.4rem', borderRadius: '4px' }}
+              style={{
+                backgroundColor: '#F1F5F9',
+                padding: '0.15rem 0.5rem',
+                borderRadius: '6px',
+                fontWeight: 800,
+                color: '#1E293B',
+              }}
             >
               {ongData.id}
             </code>
@@ -431,14 +449,37 @@ export const OrganizationProfile: React.FC = () => {
               </div>
 
               <div>
-                <label className="form-label">RIF / Identificación Legal</label>
+                <label
+                  className="form-label"
+                  style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}
+                >
+                  <Lock size={14} color="#64748B" /> RIF / Identificación Legal (Inmutable)
+                </label>
                 <input
                   type="text"
                   className="app-input"
-                  value={rifIdentificacion}
-                  onChange={(e) => setRifIdentificacion(e.target.value)}
-                  placeholder="Ej. RIF: J-12345678-0"
+                  value={rifIdentificacion || 'No registrado'}
+                  disabled={true}
+                  readOnly
+                  style={{
+                    backgroundColor: '#F1F5F9',
+                    color: '#475569',
+                    cursor: 'not-allowed',
+                    fontWeight: 700,
+                  }}
                 />
+                <span
+                  style={{
+                    fontSize: '0.72rem',
+                    color: '#B45309',
+                    fontWeight: 600,
+                    marginTop: '0.3rem',
+                    display: 'block',
+                  }}
+                >
+                  🔒 El RIF/Cédula es la identidad primaria. Si fue cargado con error, la
+                  organización debe eliminarse y registrarse de nuevo.
+                </span>
               </div>
 
               <div>

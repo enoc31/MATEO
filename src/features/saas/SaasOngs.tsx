@@ -792,19 +792,23 @@ export const SaasOngs: React.FC = () => {
                             marginBottom: '0.2rem',
                           }}
                         >
-                          RIF / Identificación
+                          🔒 RIF / Identificación (Inmutable)
                         </label>
                         <input
                           type="text"
-                          value={editRif}
-                          onChange={(e) => setEditRif(e.target.value)}
-                          placeholder="J-12345678-0"
+                          value={editRif || 'No registrado'}
+                          disabled={true}
+                          readOnly
                           style={{
                             width: '100%',
                             padding: '0.4rem',
                             border: '1px solid #cbd5e1',
                             borderRadius: '4px',
                             fontSize: '0.8rem',
+                            backgroundColor: '#f1f5f9',
+                            color: '#64748b',
+                            cursor: 'not-allowed',
+                            fontWeight: 700,
                           }}
                         />
                       </div>
