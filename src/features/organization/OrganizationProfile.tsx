@@ -12,6 +12,8 @@ import {
   AlertCircle,
   Lock,
   Key,
+  Trash2,
+  CheckCircle2,
 } from 'lucide-react';
 import { api, type Ong, type UpdateOngParams } from '../../services/api';
 import { uploadToGCS } from '../../services/storage';
@@ -505,44 +507,128 @@ export const OrganizationProfile: React.FC = () => {
               </div>
             </div>
 
-            {/* Carga Interactiva del Logo */}
+            {/* Carga Interactiva del Logo (Privacidad de Almacenamiento Protegida) */}
             <div
               style={{ marginTop: '1.5rem', paddingTop: '1.2rem', borderTop: '1px dashed #E2E8F0' }}
             >
-              <label className="form-label">Logo / Insignia de la Organización</label>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
-                <input
-                  type="text"
-                  className="app-input"
-                  style={{ flex: 1, minWidth: '220px' }}
-                  value={logoUrl}
-                  onChange={(e) => setLogoUrl(e.target.value)}
-                  placeholder="URL del logo (o sube una imagen)"
-                />
+              <label
+                className="form-label"
+                style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}
+              >
+                <Building2 size={16} color="#1B5CB6" /> Logo / Insignia de la Organización
+                (Almacenamiento Protegido)
+              </label>
 
-                <label
-                  style={{
-                    backgroundColor: '#334155',
-                    color: 'white',
-                    padding: '0.65rem 1.2rem',
-                    borderRadius: '10px',
-                    fontWeight: 800,
-                    fontSize: '0.85rem',
-                    cursor: uploadingLogo ? 'wait' : 'pointer',
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: '0.4rem',
-                  }}
-                >
-                  <Upload size={16} /> {uploadingLogo ? 'Subiendo...' : 'Subir Archivo de Logo'}
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={handleLogoUpload}
-                    disabled={uploadingLogo}
-                    style={{ display: 'none' }}
-                  />
-                </label>
+              <div
+                style={{ display: 'flex', alignItems: 'center', gap: '1.2rem', flexWrap: 'wrap' }}
+              >
+                {logoUrl ? (
+                  <div
+                    style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}
+                  >
+                    <div
+                      style={{
+                        width: '70px',
+                        height: '70px',
+                        borderRadius: '12px',
+                        border: '2px solid #CBD5E1',
+                        backgroundColor: '#F8FAFC',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        overflow: 'hidden',
+                      }}
+                    >
+                      <img
+                        src={logoUrl}
+                        alt="Logo de Organización"
+                        style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+                      />
+                    </div>
+                    <div>
+                      <span
+                        style={{
+                          fontSize: '0.85rem',
+                          fontWeight: 800,
+                          color: '#166534',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '0.3rem',
+                        }}
+                      >
+                        <CheckCircle2 size={16} color="#166534" /> Logotipo Creado y Almacenado
+                      </span>
+                      <span
+                        style={{
+                          fontSize: '0.75rem',
+                          color: '#64748B',
+                          display: 'block',
+                          marginTop: '0.2rem',
+                        }}
+                      >
+                        🔒 La ruta interna de almacenamiento está resguardada por privacidad.
+                      </span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setLogoUrl('')}
+                      style={{
+                        backgroundColor: '#FEE2E2',
+                        color: '#991B1B',
+                        border: 'none',
+                        padding: '0.4rem 0.8rem',
+                        borderRadius: '8px',
+                        fontWeight: 700,
+                        fontSize: '0.8rem',
+                        cursor: 'pointer',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '0.3rem',
+                      }}
+                    >
+                      <Trash2 size={14} /> Eliminar / Cambiar Logo
+                    </button>
+                  </div>
+                ) : (
+                  <div>
+                    <label
+                      style={{
+                        backgroundColor: '#1B5CB6',
+                        color: 'white',
+                        padding: '0.65rem 1.2rem',
+                        borderRadius: '10px',
+                        fontWeight: 800,
+                        fontSize: '0.85rem',
+                        cursor: uploadingLogo ? 'wait' : 'pointer',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '0.4rem',
+                        boxShadow: '0 4px 10px rgba(27, 92, 182, 0.2)',
+                      }}
+                    >
+                      <Upload size={16} />{' '}
+                      {uploadingLogo ? 'Subiendo e encriptando...' : 'Subir Imagen de Logo'}
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleLogoUpload}
+                        disabled={uploadingLogo}
+                        style={{ display: 'none' }}
+                      />
+                    </label>
+                    <span
+                      style={{
+                        fontSize: '0.75rem',
+                        color: '#64748B',
+                        display: 'block',
+                        marginTop: '0.4rem',
+                      }}
+                    >
+                      Formatos soportados: PNG, JPG, WEBP (Guardado privado en almacenamiento
+                      seguro).
+                    </span>
+                  </div>
+                )}
               </div>
             </div>
           </div>
