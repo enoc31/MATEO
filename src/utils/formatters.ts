@@ -48,3 +48,23 @@ export const getCaracasDateParts = () => {
     dateString: `${partMap.year}-${partMap.month}-${partMap.day}`,
   };
 };
+
+export const getErrorMessage = (err: unknown, defaultMsg = 'Error desconocido'): string => {
+  if (!err) return defaultMsg;
+  if (typeof err === 'string') return err;
+  if (err instanceof Error && err.message) return err.message;
+  if (
+    typeof err === 'object' &&
+    err !== null &&
+    'message' in err &&
+    typeof (err as { message?: unknown }).message === 'string' &&
+    (err as { message: string }).message
+  ) {
+    return (err as { message: string }).message;
+  }
+  try {
+    return JSON.stringify(err);
+  } catch {
+    return defaultMsg;
+  }
+};

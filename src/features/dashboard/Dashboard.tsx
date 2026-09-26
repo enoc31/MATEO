@@ -13,6 +13,7 @@ import { api } from '../../services/api';
 import type { ExpenseCategory, DashboardMetrics, ProjectExecutionMetric } from '../../services/api';
 import { SkeletonDashboard } from '../../components/SkeletonDashboard';
 import { ChurchImplementationGuideModal } from '../auth/ChurchImplementationGuideModal';
+import { getErrorMessage } from '../../utils/formatters';
 import {
   ResponsiveContainer,
   BarChart,
@@ -44,7 +45,7 @@ export const Dashboard: React.FC = () => {
       setCategories(catList);
       setMetrics(metricsData);
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'Error desconocido al cargar métricas.';
+      const message = getErrorMessage(err, 'Error desconocido al cargar métricas.');
       console.error('Error loading dashboard data:', err);
       setError(`No se pudieron cargar los datos del tablero. ${message}`);
     } finally {
@@ -106,21 +107,45 @@ export const Dashboard: React.FC = () => {
   };
 
   const {
-    totalInflows,
-    reconciledInflows,
-    unreconciledInflows,
-    totalOutflows,
-    expensesByCategory,
-    projectExecution,
+    totalInflows = 0,
+    reconciledInflows = 0,
+    unreconciledInflows = 0,
+    totalOutflows = 0,
+    expensesByCategory = {},
+    projectExecution = [],
   } = data;
-  const availableBalance = reconciledInflows - totalOutflows;
+  const availableBalance = (reconciledInflows || 0) - (totalOutflows || 0);
+
+  const safeExpensesByCategory: Record<string, number> =
+    typeof expensesByCategory === 'string'
+      ? (() => {
+          try {
+            return JSON.parse(expensesByCategory);
+          } catch {
+            return {};
+          }
+        })()
+      : expensesByCategory || {};
+
+  const safeProjectExecution: ProjectExecutionMetric[] =
+    typeof projectExecution === 'string'
+      ? (() => {
+          try {
+            return JSON.parse(projectExecution);
+          } catch {
+            return [];
+          }
+        })()
+      : Array.isArray(projectExecution)
+        ? projectExecution
+        : [];
 
   // Ejecución Presupuestaria Total
-  const totalBudgeted = projectExecution.reduce(
+  const totalBudgeted = safeProjectExecution.reduce(
     (sum: number, p: ProjectExecutionMetric) => sum + Number(p.Presupuesto || 0),
     0,
   );
-  const totalExecuted = projectExecution.reduce(
+  const totalExecuted = safeProjectExecution.reduce(
     (sum: number, p: ProjectExecutionMetric) => sum + Number(p.Ejecutado || 0),
     0,
   );
@@ -129,19 +154,19 @@ export const Dashboard: React.FC = () => {
   // --- 2. PREPARACIÓN DE DATOS PARA GRÁFICOS ---
   const CATEGORY_COLORS = ['#2f5aae', '#073a11', '#008fa6', '#be574b', '#e2af13', '#64748b'];
 
-  const categoryData = Object.keys(expensesByCategory).map((catKey, index) => {
-    const catObj = categories.find((c) => c.id === catKey || c.nombre === catKey);
+  const categoryData = Object.keys(safeExpensesByCategory).map((catKey, index) => {
+    const catObj = (categories || []).find((c) => c.id === catKey || c.nombre === catKey);
     const rawName = catObj ? catObj.nombre : catKey;
     const catName = rawName.split(' (')[0].replace(/^\d+\.\s+/, '');
     return {
       name: catName,
-      value: Number(expensesByCategory[catKey] || 0),
+      value: Number(safeExpensesByCategory[catKey] || 0),
       color: CATEGORY_COLORS[index % CATEGORY_COLORS.length],
     };
   });
 
   // Mostrar todos los proyectos que vienen de la base de datos (activos o con presupuesto)
-  const projectExecutionData = projectExecution;
+  const projectExecutionData = safeProjectExecution;
 
   // Formateador de moneda
   const formatCurrency = (amount: number) => {

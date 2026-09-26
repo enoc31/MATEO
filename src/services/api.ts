@@ -869,7 +869,7 @@ const ensureCategoriesAndPartidas = async () => {
     await seedingPromise;
   } catch (e) {
     seedingPromise = null;
-    throw e;
+    console.warn('ensureCategoriesAndPartidas warning (seeding skipped or restricted by RLS):', e);
   }
 };
 
@@ -956,11 +956,11 @@ export const api = {
   getCategories: async (): Promise<ExpenseCategory[]> => {
     if (!isSimulationMode) {
       await ensureCategoriesAndPartidas();
-      const { data, error } = await supabase
-        .from('categorias_gasto')
-        .select('id, nombre, descripcion, icono, color, orden')
-        .order('nombre');
+      const { data, error } = await supabase.from('categorias_gasto').select('*').order('nombre');
       if (error) throw error;
+      if (!data || data.length === 0) {
+        return INITIAL_CATEGORIES;
+      }
       return data as ExpenseCategory[];
     } else {
       return JSON.parse(localStorage.getItem('cnbv_categories') || '[]');
@@ -973,6 +973,9 @@ export const api = {
       await ensureCategoriesAndPartidas();
       const { data, error } = await supabase.from('partidas_gasto').select('*').order('codigo');
       if (error) throw error;
+      if (!data || data.length === 0) {
+        return INITIAL_PARTIDAS;
+      }
       return data as PartidaGasto[];
     } else {
       return JSON.parse(localStorage.getItem('cnbv_partidas') || '[]');
@@ -984,7 +987,44 @@ export const api = {
     if (!isSimulationMode) {
       const { data, error } = await supabase.rpc('get_dashboard_metrics');
       if (error) throw error;
-      return data as DashboardMetrics;
+
+      if (!data) {
+        return {
+          totalInflows: 0,
+          reconciledInflows: 0,
+          unreconciledInflows: 0,
+          totalOutflows: 0,
+          expensesByCategory: {},
+          projectExecution: [],
+        };
+      }
+
+      let expensesByCategory = data.expensesByCategory;
+      if (typeof expensesByCategory === 'string') {
+        try {
+          expensesByCategory = JSON.parse(expensesByCategory);
+        } catch {
+          expensesByCategory = {};
+        }
+      }
+
+      let projectExecution = data.projectExecution;
+      if (typeof projectExecution === 'string') {
+        try {
+          projectExecution = JSON.parse(projectExecution);
+        } catch {
+          projectExecution = [];
+        }
+      }
+
+      return {
+        totalInflows: Number(data.totalInflows || 0),
+        reconciledInflows: Number(data.reconciledInflows || 0),
+        unreconciledInflows: Number(data.unreconciledInflows || 0),
+        totalOutflows: Number(data.totalOutflows || 0),
+        expensesByCategory: expensesByCategory || {},
+        projectExecution: Array.isArray(projectExecution) ? projectExecution : [],
+      };
     } else {
       // Retorno simulado si no hay BD
       return {
