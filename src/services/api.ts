@@ -2329,7 +2329,9 @@ export const api = {
     if (!isSimulationMode) {
       const { data, error } = await supabase
         .from('ongs')
-        .select('id, nombre, logo_url, tipo_organizacion, plan, estado, created_at, trial_ends_at')
+        .select(
+          'id, nombre, logo_url, tipo_organizacion, plan, estado, created_at, trial_ends_at, rif_identificacion, pais, telefono, direccion, sitio_web',
+        )
         .order('nombre');
       if (error) throw error;
       return data as Ong[];

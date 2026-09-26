@@ -3,6 +3,8 @@ import { api } from '../../services/api';
 import type { Ong, UpdateOngParams } from '../../services/api';
 import { Plus, Edit2, Check, X, Image as ImageIcon } from 'lucide-react';
 import { SkeletonOngGrid } from '../../components/SkeletonOngGrid';
+import { LocationSelector } from '../../components/LocationSelector';
+import { formatFullAddress, parseFullAddress } from '../../data/venezuelaLocations';
 
 export const SaasOngs: React.FC = () => {
   const [ongs, setOngs] = useState<Ong[]>([]);
@@ -15,11 +17,25 @@ export const SaasOngs: React.FC = () => {
   const [editName, setEditName] = useState('');
   const [editLogoUrl, setEditLogoUrl] = useState('');
   const [editTipoOrganizacion, setEditTipoOrganizacion] = useState<'ong' | 'ekklesia'>('ong');
+  const [editEstado, setEditEstado] = useState('Distrito Capital');
+  const [editMunicipio, setEditMunicipio] = useState('Libertador');
+  const [editParroquia, setEditParroquia] = useState('Candelaria');
+  const [editDireccionDetalle, setEditDireccionDetalle] = useState('');
+  const [editTelefono, setEditTelefono] = useState('');
+  const [editRif, setEditRif] = useState('');
+  const [editSitioWeb, setEditSitioWeb] = useState('');
 
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [newName, setNewName] = useState('');
   const [newLogoUrl, setNewLogoUrl] = useState('');
   const [tipoOrganizacion, setTipoOrganizacion] = useState<'ong' | 'ekklesia'>('ong');
+  const [newEstado, setNewEstado] = useState('Distrito Capital');
+  const [newMunicipio, setNewMunicipio] = useState('Libertador');
+  const [newParroquia, setNewParroquia] = useState('Candelaria');
+  const [newDireccionDetalle, setNewDireccionDetalle] = useState('');
+  const [newTelefono, setNewTelefono] = useState('');
+  const [newRif, setNewRif] = useState('');
+  const [newSitioWeb, setNewSitioWeb] = useState('');
 
   // Admin user fields
   const [adminNombre, setAdminNombre] = useState('');
@@ -55,10 +71,21 @@ export const SaasOngs: React.FC = () => {
     setSuccess(null);
 
     try {
+      const fullDireccion = formatFullAddress(
+        newEstado,
+        newMunicipio,
+        newParroquia,
+        newDireccionDetalle,
+      );
+
       const createdOng = await api.createOng({
         nombre: newName.trim(),
         logoUrl: newLogoUrl.trim() || null,
         tipo_organizacion: tipoOrganizacion,
+        telefono: newTelefono.trim() || null,
+        rif_identificacion: newRif.trim() || null,
+        direccion: fullDireccion,
+        sitio_web: newSitioWeb.trim() || null,
       });
 
       // Si se ingresaron datos para el Administrador inicial, crearlo de inmediato
@@ -87,6 +114,13 @@ export const SaasOngs: React.FC = () => {
 
       setNewName('');
       setNewLogoUrl('');
+      setNewEstado('Distrito Capital');
+      setNewMunicipio('Libertador');
+      setNewParroquia('Candelaria');
+      setNewDireccionDetalle('');
+      setNewTelefono('');
+      setNewRif('');
+      setNewSitioWeb('');
       setAdminNombre('');
       setAdminEmail('');
       setAdminPassword('');
@@ -105,6 +139,15 @@ export const SaasOngs: React.FC = () => {
     setEditName(ong.nombre);
     setEditLogoUrl(ong.logo_url || '');
     setEditTipoOrganizacion(ong.tipo_organizacion || 'ong');
+    setEditTelefono(ong.telefono || '');
+    setEditRif(ong.rif_identificacion || '');
+    setEditSitioWeb(ong.sitio_web || '');
+
+    const parsedLoc = parseFullAddress(ong.direccion);
+    setEditEstado(parsedLoc.estado);
+    setEditMunicipio(parsedLoc.municipio);
+    setEditParroquia(parsedLoc.parroquia);
+    setEditDireccionDetalle(parsedLoc.direccionDetalle);
   };
 
   const handleCancelEdit = () => {
@@ -112,6 +155,10 @@ export const SaasOngs: React.FC = () => {
     setEditName('');
     setEditLogoUrl('');
     setEditTipoOrganizacion('ong');
+    setEditTelefono('');
+    setEditRif('');
+    setEditSitioWeb('');
+    setEditDireccionDetalle('');
   };
 
   const handleUpdateOng = async (id: string) => {
@@ -122,10 +169,21 @@ export const SaasOngs: React.FC = () => {
     setSuccess(null);
 
     try {
+      const fullDireccion = formatFullAddress(
+        editEstado,
+        editMunicipio,
+        editParroquia,
+        editDireccionDetalle,
+      );
+
       const updatePayload: UpdateOngParams = {
         nombre: editName.trim(),
         logo_url: editLogoUrl.trim() || null,
         tipo_organizacion: editTipoOrganizacion,
+        telefono: editTelefono.trim() || null,
+        rif_identificacion: editRif.trim() || null,
+        direccion: fullDireccion,
+        sitio_web: editSitioWeb.trim() || null,
       };
       await api.updateOng(id, updatePayload);
       setSuccess('Organización actualizada exitosamente.');
@@ -318,6 +376,121 @@ export const SaasOngs: React.FC = () => {
                   borderRadius: '6px',
                   fontSize: '0.85rem',
                 }}
+              />
+            </div>
+
+            <div>
+              <label
+                style={{
+                  display: 'block',
+                  fontSize: '0.75rem',
+                  fontWeight: 700,
+                  color: '#64748b',
+                  marginBottom: '0.4rem',
+                }}
+              >
+                RIF / Identificación Legal
+              </label>
+              <input
+                type="text"
+                value={newRif}
+                onChange={(e) => setNewRif(e.target.value)}
+                placeholder="Ej. J-12345678-0"
+                style={{
+                  width: '100%',
+                  padding: '0.6rem',
+                  border: '1px solid #cbd5e1',
+                  borderRadius: '6px',
+                  fontSize: '0.85rem',
+                }}
+              />
+            </div>
+
+            <div>
+              <label
+                style={{
+                  display: 'block',
+                  fontSize: '0.75rem',
+                  fontWeight: 700,
+                  color: '#64748b',
+                  marginBottom: '0.4rem',
+                }}
+              >
+                Teléfono de Contacto
+              </label>
+              <input
+                type="text"
+                value={newTelefono}
+                onChange={(e) => setNewTelefono(e.target.value)}
+                placeholder="Ej. 0212-5551234"
+                style={{
+                  width: '100%',
+                  padding: '0.6rem',
+                  border: '1px solid #cbd5e1',
+                  borderRadius: '6px',
+                  fontSize: '0.85rem',
+                }}
+              />
+            </div>
+
+            <div>
+              <label
+                style={{
+                  display: 'block',
+                  fontSize: '0.75rem',
+                  fontWeight: 700,
+                  color: '#64748b',
+                  marginBottom: '0.4rem',
+                }}
+              >
+                Sitio Web / Red Social
+              </label>
+              <input
+                type="text"
+                value={newSitioWeb}
+                onChange={(e) => setNewSitioWeb(e.target.value)}
+                placeholder="https://iglesia.org"
+                style={{
+                  width: '100%',
+                  padding: '0.6rem',
+                  border: '1px solid #cbd5e1',
+                  borderRadius: '6px',
+                  fontSize: '0.85rem',
+                }}
+              />
+            </div>
+
+            {/* Ubicación Estructurada de la Sede / Templo */}
+            <div
+              style={{
+                gridColumn: 'span 2',
+                marginTop: '0.5rem',
+                paddingTop: '1rem',
+                borderTop: '1px dashed #cbd5e1',
+              }}
+            >
+              <h4
+                style={{
+                  fontSize: '0.85rem',
+                  fontWeight: 800,
+                  color: '#0d9488',
+                  marginBottom: '0.8rem',
+                }}
+              >
+                📍 Ubicación de la Sede / Templo en Venezuela
+              </h4>
+              <LocationSelector
+                estado={newEstado}
+                municipio={newMunicipio}
+                parroquia={newParroquia}
+                direccionDetalle={newDireccionDetalle}
+                onChangeEstado={setNewEstado}
+                onChangeMunicipio={setNewMunicipio}
+                onChangeParroquia={setNewParroquia}
+                onChangeDireccionDetalle={setNewDireccionDetalle}
+                required={false}
+                labelDireccion="Dirección de la Sede / Templo"
+                placeholderDireccion="Ej. Av. Universidad, Esquina El Conde, Edif. Sede Central"
               />
             </div>
 
@@ -568,7 +741,14 @@ export const SaasOngs: React.FC = () => {
 
                 {/* Edit Fields (expanded when editing) */}
                 {isEditing && (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
+                  <div
+                    style={{
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '0.6rem',
+                      margin: '0.8rem 0',
+                    }}
+                  >
                     <div>
                       <label
                         style={{
@@ -601,29 +781,139 @@ export const SaasOngs: React.FC = () => {
                       </select>
                     </div>
 
-                    <div>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
+                      <div>
+                        <label
+                          style={{
+                            display: 'block',
+                            fontSize: '0.7rem',
+                            fontWeight: 700,
+                            color: '#64748b',
+                            marginBottom: '0.2rem',
+                          }}
+                        >
+                          RIF / Identificación
+                        </label>
+                        <input
+                          type="text"
+                          value={editRif}
+                          onChange={(e) => setEditRif(e.target.value)}
+                          placeholder="J-12345678-0"
+                          style={{
+                            width: '100%',
+                            padding: '0.4rem',
+                            border: '1px solid #cbd5e1',
+                            borderRadius: '4px',
+                            fontSize: '0.8rem',
+                          }}
+                        />
+                      </div>
+                      <div>
+                        <label
+                          style={{
+                            display: 'block',
+                            fontSize: '0.7rem',
+                            fontWeight: 700,
+                            color: '#64748b',
+                            marginBottom: '0.2rem',
+                          }}
+                        >
+                          Teléfono
+                        </label>
+                        <input
+                          type="text"
+                          value={editTelefono}
+                          onChange={(e) => setEditTelefono(e.target.value)}
+                          placeholder="0212-5551234"
+                          style={{
+                            width: '100%',
+                            padding: '0.4rem',
+                            border: '1px solid #cbd5e1',
+                            borderRadius: '4px',
+                            fontSize: '0.8rem',
+                          }}
+                        />
+                      </div>
+                    </div>
+
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
+                      <div>
+                        <label
+                          style={{
+                            display: 'block',
+                            fontSize: '0.7rem',
+                            fontWeight: 700,
+                            color: '#64748b',
+                            marginBottom: '0.2rem',
+                          }}
+                        >
+                          Sitio Web
+                        </label>
+                        <input
+                          type="text"
+                          value={editSitioWeb}
+                          onChange={(e) => setEditSitioWeb(e.target.value)}
+                          placeholder="https://iglesia.org"
+                          style={{
+                            width: '100%',
+                            padding: '0.4rem',
+                            border: '1px solid #cbd5e1',
+                            borderRadius: '4px',
+                            fontSize: '0.8rem',
+                          }}
+                        />
+                      </div>
+                      <div>
+                        <label
+                          style={{
+                            display: 'block',
+                            fontSize: '0.7rem',
+                            fontWeight: 700,
+                            color: '#64748b',
+                            marginBottom: '0.2rem',
+                          }}
+                        >
+                          URL del Logo
+                        </label>
+                        <input
+                          type="url"
+                          value={editLogoUrl}
+                          onChange={(e) => setEditLogoUrl(e.target.value)}
+                          style={{
+                            width: '100%',
+                            padding: '0.4rem',
+                            border: '1px solid #cbd5e1',
+                            borderRadius: '4px',
+                            fontSize: '0.8rem',
+                          }}
+                        />
+                      </div>
+                    </div>
+
+                    <div style={{ paddingTop: '0.4rem', borderTop: '1px dashed #cbd5e1' }}>
                       <label
                         style={{
                           display: 'block',
-                          fontSize: '0.7rem',
-                          fontWeight: 700,
-                          color: '#64748b',
-                          marginBottom: '0.2rem',
+                          fontSize: '0.75rem',
+                          fontWeight: 800,
+                          color: '#0d9488',
+                          marginBottom: '0.4rem',
                         }}
                       >
-                        URL del Logo
+                        📍 Ubicación de la Sede / Templo (Venezuela)
                       </label>
-                      <input
-                        type="url"
-                        value={editLogoUrl}
-                        onChange={(e) => setEditLogoUrl(e.target.value)}
-                        style={{
-                          width: '100%',
-                          padding: '0.4rem',
-                          border: '1px solid #cbd5e1',
-                          borderRadius: '4px',
-                          fontSize: '0.8rem',
-                        }}
+                      <LocationSelector
+                        estado={editEstado}
+                        municipio={editMunicipio}
+                        parroquia={editParroquia}
+                        direccionDetalle={editDireccionDetalle}
+                        onChangeEstado={setEditEstado}
+                        onChangeMunicipio={setEditMunicipio}
+                        onChangeParroquia={setEditParroquia}
+                        onChangeDireccionDetalle={setEditDireccionDetalle}
+                        required={false}
+                        labelDireccion="Dirección Detallada"
+                        placeholderDireccion="Av. Universidad, Esquina El Conde"
                       />
                     </div>
                   </div>

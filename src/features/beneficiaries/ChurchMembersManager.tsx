@@ -23,6 +23,8 @@ import { useAuth } from '../../context/AuthContext';
 import { MemberProfileModal } from './MemberProfileModal';
 import { useNotifications } from '../../components/NotificationProvider';
 import { SkeletonMembers } from '../../components/SkeletonMembers';
+import { LocationSelector } from '../../components/LocationSelector';
+import { formatFullAddress, parseFullAddress } from '../../data/venezuelaLocations';
 
 export type EclesiasticalStatus = 'Activo' | 'Bautizado' | 'En Visita' | 'Líder' | 'Inactivo';
 
@@ -49,7 +51,10 @@ export const ChurchMembersManager: React.FC = () => {
   const [newCedula, setNewCedula] = useState('');
   const [newSexo, setNewSexo] = useState<'Masculino' | 'Femenino'>('Masculino');
   const [newFechaNacimiento, setNewFechaNacimiento] = useState('');
-  const [newDireccion, setNewDireccion] = useState('');
+  const [newEstado, setNewEstado] = useState('Distrito Capital');
+  const [newMunicipio, setNewMunicipio] = useState('Libertador');
+  const [newParroquia, setNewParroquia] = useState('Candelaria');
+  const [newDireccionDetalle, setNewDireccionDetalle] = useState('');
   const [newTelefono, setNewTelefono] = useState('');
   const [newEmail, setNewEmail] = useState('');
   const [newRedesSociales, setNewRedesSociales] = useState('');
@@ -86,7 +91,10 @@ export const ChurchMembersManager: React.FC = () => {
   const [editCedula, setEditCedula] = useState('');
   const [editSexo, setEditSexo] = useState<'Masculino' | 'Femenino'>('Masculino');
   const [editFechaNacimiento, setEditFechaNacimiento] = useState('');
-  const [editDireccion, setEditDireccion] = useState('');
+  const [editEstado, setEditEstado] = useState('Distrito Capital');
+  const [editMunicipio, setEditMunicipio] = useState('Libertador');
+  const [editParroquia, setEditParroquia] = useState('Candelaria');
+  const [editDireccionDetalle, setEditDireccionDetalle] = useState('');
   const [editTelefono, setEditTelefono] = useState('');
   const [editEmail, setEditEmail] = useState('');
   const [editRedesSociales, setEditRedesSociales] = useState('');
@@ -106,7 +114,14 @@ export const ChurchMembersManager: React.FC = () => {
     setEditCedula(member.cedula || '');
     setEditSexo(member.sexo === 'Femenino' ? 'Femenino' : 'Masculino');
     setEditFechaNacimiento(member.fecha_nacimiento || '');
-    setEditDireccion(member.direccion || '');
+
+    // Desglosar dirección estructurada
+    const parsedLoc = parseFullAddress(member.direccion);
+    setEditEstado(parsedLoc.estado);
+    setEditMunicipio(parsedLoc.municipio);
+    setEditParroquia(parsedLoc.parroquia);
+    setEditDireccionDetalle(parsedLoc.direccionDetalle);
+
     setEditTelefono(member.telefono || '');
     setEditEmail(member.email || '');
     setEditRedesSociales(member.redes_sociales || '');
@@ -154,13 +169,20 @@ export const ChurchMembersManager: React.FC = () => {
     if (!editingMember) return;
     setSavingEdit(true);
     try {
+      const fullDireccion = formatFullAddress(
+        editEstado,
+        editMunicipio,
+        editParroquia,
+        editDireccionDetalle,
+      );
+
       const updatedData: Partial<Beneficiary> = {
         nombre: editNombre.trim(),
         apellido: editApellido.trim(),
         cedula: editCedula.trim(),
         sexo: editSexo,
         fecha_nacimiento: editFechaNacimiento,
-        direccion: editDireccion.trim(),
+        direccion: fullDireccion,
         telefono: editTelefono.trim(),
         email: editEmail.trim(),
         redes_sociales: editRedesSociales.trim(),
@@ -347,6 +369,13 @@ export const ChurchMembersManager: React.FC = () => {
     try {
       const statusFromBautismo: EclesiasticalStatus = newBautizado ? 'Bautizado' : 'Activo';
 
+      const fullDireccion = formatFullAddress(
+        newEstado,
+        newMunicipio,
+        newParroquia,
+        newDireccionDetalle,
+      );
+
       const saved = await api.saveBeneficiary(
         {
           nombre: newNombre.trim(),
@@ -354,7 +383,7 @@ export const ChurchMembersManager: React.FC = () => {
           cedula: newCedula.trim(),
           sexo: newSexo,
           fecha_nacimiento: newFechaNacimiento,
-          direccion: newDireccion.trim(),
+          direccion: fullDireccion,
           telefono: newTelefono.trim(),
           email: newEmail.trim(),
           redes_sociales: newRedesSociales.trim(),
@@ -385,7 +414,10 @@ export const ChurchMembersManager: React.FC = () => {
       setNewApellido('');
       setNewCedula('');
       setNewFechaNacimiento('');
-      setNewDireccion('');
+      setNewEstado('Distrito Capital');
+      setNewMunicipio('Libertador');
+      setNewParroquia('Candelaria');
+      setNewDireccionDetalle('');
       setNewTelefono('');
       setNewEmail('');
       setNewRedesSociales('');
@@ -991,14 +1023,31 @@ export const ChurchMembersManager: React.FC = () => {
               </div>
             </div>
 
-            <div style={{ marginTop: '1.2rem' }}>
-              <label className="form-label">Dirección de Habitación</label>
-              <input
-                type="text"
-                className="app-input"
-                placeholder="Ej: Av. Bolivar, Res. Las Palmeras, Apto 4-B, Caracas"
-                value={newDireccion}
-                onChange={(e) => setNewDireccion(e.target.value)}
+            <div
+              style={{ marginTop: '1.2rem', paddingTop: '1rem', borderTop: '1px dashed #E2E8F0' }}
+            >
+              <h4
+                style={{
+                  fontSize: '0.9rem',
+                  fontWeight: 800,
+                  color: '#1B5CB6',
+                  marginBottom: '0.8rem',
+                }}
+              >
+                📍 Ubicación y Dirección de Habitación (Venezuela)
+              </h4>
+              <LocationSelector
+                estado={newEstado}
+                municipio={newMunicipio}
+                parroquia={newParroquia}
+                direccionDetalle={newDireccionDetalle}
+                onChangeEstado={setNewEstado}
+                onChangeMunicipio={setNewMunicipio}
+                onChangeParroquia={setNewParroquia}
+                onChangeDireccionDetalle={setNewDireccionDetalle}
+                required={false}
+                labelDireccion="Dirección Detallada (Calle, Res., Casa/Apto, Punto de Referencia)"
+                placeholderDireccion="Ej. Calle 5, Res. Las Palmeras, Apto 4-B, frente a la plaza"
               />
             </div>
           </div>
@@ -2205,23 +2254,36 @@ export const ChurchMembersManager: React.FC = () => {
                 </div>
               </div>
 
-              <div style={{ marginBottom: '1.2rem' }}>
+              <div
+                style={{
+                  marginBottom: '1.2rem',
+                  paddingTop: '0.8rem',
+                  borderTop: '1px dashed #E2E8F0',
+                }}
+              >
                 <label
                   style={{
                     fontSize: '0.85rem',
-                    fontWeight: 700,
-                    color: '#334155',
+                    fontWeight: 800,
+                    color: '#1B5CB6',
                     display: 'block',
-                    marginBottom: '0.3rem',
+                    marginBottom: '0.6rem',
                   }}
                 >
-                  Dirección de Habitación
+                  📍 Ubicación y Dirección de Habitación (Venezuela)
                 </label>
-                <input
-                  type="text"
-                  className="app-input"
-                  value={editDireccion}
-                  onChange={(e) => setEditDireccion(e.target.value)}
+                <LocationSelector
+                  estado={editEstado}
+                  municipio={editMunicipio}
+                  parroquia={editParroquia}
+                  direccionDetalle={editDireccionDetalle}
+                  onChangeEstado={setEditEstado}
+                  onChangeMunicipio={setEditMunicipio}
+                  onChangeParroquia={setEditParroquia}
+                  onChangeDireccionDetalle={setEditDireccionDetalle}
+                  required={false}
+                  labelDireccion="Dirección Detallada (Calle, Res., Casa/Apto, Punto de Referencia)"
+                  placeholderDireccion="Ej. Calle 5, Res. Las Palmeras, Apto 4-B, frente a la plaza"
                 />
               </div>
 

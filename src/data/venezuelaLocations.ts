@@ -467,3 +467,75 @@ export const VENEZUELA_LOCATIONS: EstadoVenezuela[] = [
     ],
   },
 ];
+
+export interface LocationAddressParsed {
+  estado: string;
+  municipio: string;
+  parroquia: string;
+  direccionDetalle: string;
+}
+
+export function formatFullAddress(
+  estado: string,
+  municipio: string,
+  parroquia: string,
+  direccionDetalle: string,
+): string {
+  const cleanDetalle = direccionDetalle.trim();
+  if (!cleanDetalle) {
+    return `Parroquia ${parroquia}, Municipio ${municipio}, Estado ${estado}, Venezuela`;
+  }
+  return `${cleanDetalle}, Parroquia ${parroquia}, Municipio ${municipio}, Estado ${estado}, Venezuela`;
+}
+
+export function parseFullAddress(fullAddress?: string | null): LocationAddressParsed {
+  const defaultRes: LocationAddressParsed = {
+    estado: 'Distrito Capital',
+    municipio: 'Libertador',
+    parroquia: 'Candelaria',
+    direccionDetalle: fullAddress || '',
+  };
+
+  if (!fullAddress || typeof fullAddress !== 'string' || !fullAddress.trim()) {
+    return defaultRes;
+  }
+
+  const text = fullAddress.trim();
+
+  // Buscar estado en el texto
+  const estObj = VENEZUELA_LOCATIONS.find((e) =>
+    text.toLowerCase().includes(e.estado.toLowerCase()),
+  );
+
+  if (estObj) {
+    const foundEst = estObj.estado;
+    const munObj = estObj.municipios.find((m) =>
+      text.toLowerCase().includes(m.nombre.toLowerCase()),
+    );
+
+    if (munObj) {
+      const foundMun = munObj.nombre;
+      const parrMatch = munObj.parroquias.find((p) => text.toLowerCase().includes(p.toLowerCase()));
+      const foundParr = parrMatch || munObj.parroquias[0] || 'Candelaria';
+
+      // Remover las partes formateadas para dejar solo la dirección detallada
+      let cleanDetalle = text
+        .replace(new RegExp(`Parroquia\\s+${foundParr}`, 'gi'), '')
+        .replace(new RegExp(`Municipio\\s+${foundMun}`, 'gi'), '')
+        .replace(new RegExp(`Estado\\s+${foundEst}`, 'gi'), '')
+        .replace(/,\s*Venezuela/gi, '')
+        .trim();
+
+      cleanDetalle = cleanDetalle.replace(/^,\s*|\s*,$/g, '').trim();
+
+      return {
+        estado: foundEst,
+        municipio: foundMun,
+        parroquia: foundParr,
+        direccionDetalle: cleanDetalle || text,
+      };
+    }
+  }
+
+  return defaultRes;
+}
