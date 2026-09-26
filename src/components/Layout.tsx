@@ -256,7 +256,12 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
 
         {/* Badge móvil para identificar ONG activa de manera prominente */}
         {activeOng && (
-          <div className="header-ong-badge-mobile" title={`Organización: ${activeOng.nombre}`}>
+          <div
+            className="header-ong-badge-mobile"
+            onClick={() => navigate('/app/organization')}
+            style={{ cursor: 'pointer' }}
+            title={`Ver perfil de la organización: ${activeOng.nombre}`}
+          >
             <Building size={13} style={{ flexShrink: 0 }} />
             <span>{activeOng.nombre}</span>
           </div>
@@ -380,6 +385,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
               >
                 {activeOng && (
                   <span
+                    onClick={() => navigate('/app/organization')}
                     style={{
                       fontSize: '0.68rem',
                       fontWeight: 700,
@@ -394,8 +400,9 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
                       whiteSpace: 'nowrap',
                       overflow: 'hidden',
                       textOverflow: 'ellipsis',
+                      cursor: 'pointer',
                     }}
-                    title={`Organización: ${activeOng.nombre}`}
+                    title={`Ver perfil de la organización: ${activeOng.nombre}`}
                   >
                     <Building size={11} style={{ flexShrink: 0 }} />
                     {activeOng.nombre}

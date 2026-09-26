@@ -107,6 +107,11 @@ const AcceptInvitation = lazy(() =>
     default: module.AcceptInvitation,
   })),
 );
+const OrganizationProfile = lazy(() =>
+  import('./features/organization/OrganizationProfile').then((module) => ({
+    default: module.OrganizationProfile,
+  })),
+);
 
 // SaaS lazy loaded features
 const SaasLogin = lazy(() =>
@@ -315,6 +320,22 @@ const MainAppContent: React.FC = () => {
             <ProtectedRoute
               allowedRoles={['administrador', 'director']}
               element={<CreateProjectPage />}
+            />
+          }
+        />
+        <Route
+          path="organization"
+          element={
+            <ProtectedRoute
+              allowedRoles={[
+                'administrador',
+                'director',
+                'coordinador',
+                'auditor',
+                'donante',
+                'auxiliar_campo',
+              ]}
+              element={<OrganizationProfile />}
             />
           }
         />

@@ -2352,6 +2352,23 @@ export const api = {
     }
   },
 
+  getOngById: async (id: string): Promise<Ong | null> => {
+    if (!isSimulationMode) {
+      const { data, error } = await supabase
+        .from('ongs')
+        .select(
+          'id, nombre, logo_url, tipo_organizacion, plan, estado, created_at, trial_ends_at, rif_identificacion, pais, telefono, direccion, sitio_web',
+        )
+        .eq('id', id)
+        .maybeSingle();
+      if (error) throw error;
+      return data as Ong | null;
+    } else {
+      const ongs = JSON.parse(localStorage.getItem('cnbv_ongs') || '[]') as Ong[];
+      return ongs.find((o: any) => o.id === id) || null;
+    }
+  },
+
   createOng: async (
     dataOrName: string | CreateOngParams,
     logoUrl?: string | null,

@@ -110,6 +110,13 @@ export const getMenuItems = (tipoOrganizacion?: 'ong' | 'ekklesia'): MenuItemCon
       color: '#1E3A8A', // Navy/Blue
       roles: ['administrador'],
     },
+    {
+      id: 'organization',
+      label: isEkklesia ? 'Perfil de la Iglesia' : 'Perfil de la Organización',
+      iconName: 'Building',
+      color: '#2563EB', // Royal Blue
+      roles: ['administrador', 'director', 'coordinador', 'auditor', 'donante', 'auxiliar_campo'],
+    },
   ];
 };
 
