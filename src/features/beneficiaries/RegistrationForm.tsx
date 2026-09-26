@@ -1,6 +1,8 @@
 import React, { useRef, useState } from 'react';
 import SignatureCanvas from 'react-signature-canvas';
 import { api } from '../../services/api';
+import { LocationSelector } from '../../components/LocationSelector';
+import { formatFullAddress } from '../../data/venezuelaLocations';
 import {
   Send,
   Eraser,
@@ -30,6 +32,10 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
   const [cedula, setCedula] = useState('');
   const [sexo, setSexo] = useState<'Masculino' | 'Femenino'>('Masculino');
   const [fechaNacimiento, setFechaNacimiento] = useState('');
+  const [estado, setEstado] = useState('Distrito Capital');
+  const [municipio, setMunicipio] = useState('Libertador');
+  const [parroquia, setParroquia] = useState('Candelaria');
+  const [direccionDetalle, setDireccionDetalle] = useState('');
   const [donaciones, setDonaciones] = useState<string[]>([]);
 
   const TIPOS_DONACION = [
@@ -114,6 +120,8 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
         console.warn('No se pudo obtener la IP pública');
       }
 
+      const fullDireccion = formatFullAddress(estado, municipio, parroquia, direccionDetalle);
+
       const saved = await api.saveBeneficiary(
         {
           nombre,
@@ -121,6 +129,7 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
           cedula,
           sexo,
           fecha_nacimiento: fechaNacimiento,
+          direccion: fullDireccion,
           tipo_donacion: donaciones,
           jornada_id: jornadaId,
           ip_captura,
@@ -263,6 +272,31 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
             </div>
           </div>
         </div>
+      </div>
+
+      <div>
+        <h3
+          style={{
+            fontSize: '1.1rem',
+            color: 'var(--primary)',
+            marginBottom: '1rem',
+            borderBottom: '2px solid var(--neutral-light)',
+            paddingBottom: '0.5rem',
+          }}
+        >
+          DIRECCIÓN DE HABITACIÓN (VENEZUELA)
+        </h3>
+        <LocationSelector
+          estado={estado}
+          municipio={municipio}
+          parroquia={parroquia}
+          direccionDetalle={direccionDetalle}
+          onChangeEstado={setEstado}
+          onChangeMunicipio={setMunicipio}
+          onChangeParroquia={setParroquia}
+          onChangeDireccionDetalle={setDireccionDetalle}
+          disabled={submitting}
+        />
       </div>
 
       <div>

@@ -9,7 +9,6 @@ import {
   Lock,
   Sparkles,
   Phone,
-  MapPin,
   FileText,
   Briefcase,
   Mail,
@@ -20,7 +19,8 @@ import { Link, useNavigate } from 'react-router-dom';
 import { api, isSimulationMode } from '../../services/api';
 import { uploadToGCS } from '../../services/storage';
 import { supabase } from '../../supabaseClient';
-import { VENEZUELA_LOCATIONS } from '../../data/venezuelaLocations';
+import { LocationSelector } from '../../components/LocationSelector';
+import { formatFullAddress } from '../../data/venezuelaLocations';
 
 interface CustomWindow extends Window {
   onWizardRecaptchaSuccess?: (token: string) => void;
@@ -204,7 +204,12 @@ export const CreateOngWizard: React.FC = () => {
 
     setLoading(true);
     try {
-      const fullAddress = `${direccionDetalle.trim()}, Parroquia ${parroquiaSel}, Municipio ${municipioSel}, Estado ${estadoSel}, Venezuela`;
+      const fullAddress = formatFullAddress(
+        estadoSel,
+        municipioSel,
+        parroquiaSel,
+        direccionDetalle,
+      );
       const formattedRifOrCi = numIdentificacion.trim()
         ? `${tipoIdentificacion}: ${numIdentificacion.trim()}${
             nombreResponsableLegal.trim() ? ` (${nombreResponsableLegal.trim()})` : ''
@@ -592,109 +597,20 @@ export const CreateOngWizard: React.FC = () => {
               </div>
             </div>
 
-            {/* Ubicación Estandarizada: Estado, Municipio y Parroquia */}
-            <div
-              style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
-                gap: '1rem',
-              }}
-            >
-              <div className="form-field">
-                <label className="form-field-label">
-                  Estado <span className="form-field-required">*</span>
-                </label>
-                <select
-                  className="form-input-premium"
-                  value={estadoSel}
-                  onChange={(e) => {
-                    const newEst = e.target.value;
-                    setEstadoSel(newEst);
-                    const estItem = VENEZUELA_LOCATIONS.find((v) => v.estado === newEst);
-                    if (estItem && estItem.municipios.length > 0) {
-                      setMunicipioSel(estItem.municipios[0].nombre);
-                      setParroquiaSel(estItem.municipios[0].parroquias[0] || '');
-                    }
-                  }}
-                  style={{ paddingLeft: '1rem' }}
-                >
-                  {VENEZUELA_LOCATIONS.map((loc) => (
-                    <option key={loc.estado} value={loc.estado}>
-                      {loc.estado}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="form-field">
-                <label className="form-field-label">
-                  Municipio <span className="form-field-required">*</span>
-                </label>
-                <select
-                  className="form-input-premium"
-                  value={municipioSel}
-                  onChange={(e) => {
-                    const newMun = e.target.value;
-                    setMunicipioSel(newMun);
-                    const estItem = VENEZUELA_LOCATIONS.find((v) => v.estado === estadoSel);
-                    const munItem = estItem?.municipios.find((m) => m.nombre === newMun);
-                    if (munItem && munItem.parroquias.length > 0) {
-                      setParroquiaSel(munItem.parroquias[0]);
-                    }
-                  }}
-                  style={{ paddingLeft: '1rem' }}
-                >
-                  {(VENEZUELA_LOCATIONS.find((v) => v.estado === estadoSel)?.municipios || []).map(
-                    (mun) => (
-                      <option key={mun.nombre} value={mun.nombre}>
-                        {mun.nombre}
-                      </option>
-                    ),
-                  )}
-                </select>
-              </div>
-
-              <div className="form-field">
-                <label className="form-field-label">
-                  Parroquia <span className="form-field-required">*</span>
-                </label>
-                <select
-                  className="form-input-premium"
-                  value={parroquiaSel}
-                  onChange={(e) => setParroquiaSel(e.target.value)}
-                  style={{ paddingLeft: '1rem' }}
-                >
-                  {(
-                    VENEZUELA_LOCATIONS.find((v) => v.estado === estadoSel)?.municipios.find(
-                      (m) => m.nombre === municipioSel,
-                    )?.parroquias || []
-                  ).map((parr) => (
-                    <option key={parr} value={parr}>
-                      {parr}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-
-            {/* Dirección Detallada del Templo */}
-            <div className="form-field">
-              <label className="form-field-label">
-                Dirección Física del Templo (Calle, Sector, Edificio){' '}
-                <span className="form-field-required">*</span>
-              </label>
-              <div className="input-with-icon">
-                <MapPin size={18} className="input-icon" />
-                <input
-                  type="text"
-                  className="form-input-premium"
-                  placeholder="Ej. Av. Andrés Bello, Calle Los Mangos, Templo Central #45"
-                  value={direccionDetalle}
-                  onChange={(e) => setDireccionDetalle(e.target.value)}
-                  required
-                />
-              </div>
-            </div>
+            {/* Ubicación Estandarizada: Estado, Municipio, Parroquia y Dirección */}
+            <LocationSelector
+              estado={estadoSel}
+              municipio={municipioSel}
+              parroquia={parroquiaSel}
+              direccionDetalle={direccionDetalle}
+              onChangeEstado={setEstadoSel}
+              onChangeMunicipio={setMunicipioSel}
+              onChangeParroquia={setParroquiaSel}
+              onChangeDireccionDetalle={setDireccionDetalle}
+              required={true}
+              labelDireccion="Dirección Física del Templo (Calle, Sector, Edificio)"
+              placeholderDireccion="Ej. Av. Andrés Bello, Calle Los Mangos, Templo Central #45"
+            />
 
             {/* Teléfono de Contacto */}
             <div className="form-field">
