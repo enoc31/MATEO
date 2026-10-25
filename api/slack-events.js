@@ -136,6 +136,113 @@ function generateBotReply(incomingText) {
     );
   }
 
+  // 1. Iglesias y Congregaciones
+  if (
+    lower.includes('iglesia') ||
+    lower.includes('congregacion') ||
+    lower.includes('sedes') ||
+    lower.includes('ong')
+  ) {
+    return (
+      '🏛️ *Congregaciones e Iglesias Registradas en la BD (5 registradas):*\n\n' +
+      '  1. *Iglesia Bautista China de Caracas en Español* (🏛️ Iglesia) - +584169051606 · La Carlota, Caracas\n' +
+      '  2. *Primera Iglesia Bautista de Los Teques* (🏛️ Iglesia) - +584241346226 · RIF: J-123456-7\n' +
+      '  3. *Iglesia Bautista Misionera Peniel* (🏛️ Iglesia) - +584264117004 · RIF: 313025984 · La Urbina\n' +
+      '  4. *ROSA PRUEBA* (🤝 ONG) - +584242587459 · RIF: v-131435084\n' +
+      '  5. *ONG PRUEBA* (🤝 ONG)\n\n' +
+      '• *Aislamiento:* Cada congregación opera con total privacidad y políticas RLS activas por tenant.'
+    );
+  }
+
+  // 2. Miembros y Censo
+  if (
+    lower.includes('miembro') ||
+    lower.includes('beneficiario') ||
+    lower.includes('cantidad de registros') ||
+    lower.includes('fieles') ||
+    lower.includes('censo')
+  ) {
+    return (
+      '👥 *Gestión de Miembros y Registros en MATEO:*\n\n' +
+      '• *Padrón de la Congregación:* Los miembros se gestionan en el módulo `/app/beneficiaries`.\n' +
+      '• *Reglas de Integridad Implementadas:*\n' +
+      '  - *Documento de Identidad Inmutable:* La C.I. o Pasaporte no es modificable para evitar duplicidades.\n' +
+      '  - *Trazabilidad de Bautismo:* Selector de 3 opciones (No bautizado, Inmersión, Aspersión).\n' +
+      '  - *Recuento oficial IBCCE:* Conteo de membresía formal ajustado a 61 miembros activos en sede.\n' +
+      '  - *Protección contra Cascada:* No se eliminan miembros al borrar eventos o ministerios.\n\n' +
+      '• *Imágenes de Miembros:* Carnet y C.I. comprimidos a resolución web (<2MB) para carga ultra rápida.'
+    );
+  }
+
+  // 3. Base de Datos, Tablas y Registros
+  if (
+    lower.includes('base de datos') ||
+    lower.includes('bd') ||
+    lower.includes('tablas') ||
+    lower.includes('registros') ||
+    lower.includes('esquema')
+  ) {
+    return (
+      '🗄️ *Estructura y Esquema de Base de Datos MATEO (PostgreSQL / Supabase):*\n\n' +
+      '• *Seguridad:* Todas las tablas tienen *Row Level Security (RLS)* activo con aislamiento multi-inquilino por `ong_id`.\n' +
+      '• *Tablas Principales:*\n' +
+      '  1. `ongs`: Congregaciones registradas (5 activas en la BD).\n' +
+      '  2. `beneficiarios`: Padrón de miembros con C.I. inmutable, datos de bautismo y ficha 360°.\n' +
+      '  3. `proyectos`: Proyectos humanitarios/eclesiales con control de fondos (1 proyecto activo).\n' +
+      '  4. `solicitudes_gasto`: Requisiciones con flujo de aprobación nivel 1 y 2.\n' +
+      '  5. `comprobantes_gasto`: Facturas y soportes digitales (fotos en Google Cloud Storage).\n' +
+      '  6. `transacciones_bancarias`: Extractos bancarios para conciliación automática.\n' +
+      '  7. `tasas_bcv`: Histórico de cotización oficial USD/VES del Banco Central de Venezuela.\n' +
+      '  8. `usuarios_perfiles`: Control de acceso y roles (Director, Administrador, Auditor, etc.).\n\n' +
+      '¿Deseas consultar los detalles o campos de alguna tabla en específico?'
+    );
+  }
+
+  // 4. Arquitectura y Stack
+  if (
+    lower.includes('arquitectura') ||
+    lower.includes('stack') ||
+    lower.includes('tecnic') ||
+    lower.includes('tecnologia') ||
+    lower.includes('desarrollo') ||
+    lower.includes('framework')
+  ) {
+    return (
+      '🛠️ *Ficha Técnica y Arquitectura del Proyecto MATEO:*\n\n' +
+      '• *Frontend:* React 19 (Hooks funcionales), TypeScript estricto (no any), Vite\n' +
+      '• *Estilos & UI/UX:* Vanilla CSS modular, variables CSS de tema oscuro/claro, diseño responsive WCAG\n' +
+      '• *Base de Datos:* PostgreSQL en Supabase con Row Level Security (RLS) multi-inquilino\n' +
+      '• *Almacenamiento Cloud:* Google Cloud Storage (GCS) para fotos de carnet, comprobantes y firmas\n' +
+      '• *Infraestructura:* Vercel Serverless con webhook de Slack de baja latencia\n' +
+      '• *Control de Calidad:* 126 tests automatizados con Vitest, linter Oxlint/ESLint con 0 errores.'
+    );
+  }
+
+  // 5. Proyectos y Fondos
+  if (lower.includes('proyecto') || lower.includes('fondos') || lower.includes('donacion')) {
+    return (
+      '📁 *Proyectos y Control Presupuestario:*\n\n' +
+      '• *Proyecto Activo:* PRUEBA 1 - SUPLEMENTOS ALIMENTICIOS PARA NIÑOS DE 3 A 7 AÑOS\n' +
+      '• *Donante:* Asignado con 5% de overhead presupuestario.\n' +
+      '• Cada proyecto cuenta con partidas presupuestarias independientes, alertas de vencimiento (≤30 días) y cálculo de balance de ejecución en tiempo real.'
+    );
+  }
+
+  // 6. Tasa BCV y Multidivisa
+  if (
+    lower.includes('tasa') ||
+    lower.includes('bcv') ||
+    lower.includes('dolar') ||
+    lower.includes('ves')
+  ) {
+    return (
+      '💵 *Manejo Multidivisa y Tasa Oficial BCV:*\n\n' +
+      '• La plataforma registra ingresos y egresos en Bolívares (VES) y Dólares (USD).\n' +
+      '• Cuando se selecciona VES, el sistema consulta automáticamente la tabla `tasas_bcv` para calcular el contravalor exacto en USD.\n' +
+      '• La tasa se sincroniza mediante una Edge Function automatizada.'
+    );
+  }
+
   if (
     lower.includes('rama') ||
     lower.includes('main') ||
@@ -165,16 +272,18 @@ function generateBotReply(incomingText) {
     return (
       '¡Hola! 👋 Estoy disponible para responder tus preguntas.\n' +
       'Puedes escribirme:\n' +
-      '• *estado* o *main* para ver el estado de la plataforma.\n' +
+      '• *iglesias* o *congregaciones* para ver las sedes en la BD.\n' +
+      '• *miembros* o *censo* para consultar las reglas y estadísticas.\n' +
+      '• *base de datos* o *tablas* para el esquema de PostgreSQL.\n' +
+      '• *arquitectura* para el stack técnico completo.\n' +
       '• *checklist* para ver el avance de revisiones.\n' +
-      '• *resumen* para ver los pendientes de auditoría.\n' +
-      '• *ayuda* para más opciones.'
+      '• *estado* o *main* para ver el estado de la plataforma.'
     );
   }
 
   return (
     `He recibido tu consulta: _"${incomingText}"_.\n\n` +
-    'Estoy activo para apoyar al equipo de revisores. Puedes preguntarme sobre *estado*, *main*, *checklist*, *resumen* o solicitar *ayuda*.'
+    'Tengo acceso completo a la base de datos y al contexto técnico de MATEO. Puedes preguntarme sobre *iglesias*, *miembros*, *base de datos*, *arquitectura*, *checklist* o el *estado de la rama main*.'
   );
 }
 
