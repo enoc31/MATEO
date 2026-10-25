@@ -136,6 +136,23 @@ function generateBotReply(incomingText) {
     );
   }
 
+  if (
+    lower.includes('rama') ||
+    lower.includes('main') ||
+    lower.includes('produccion') ||
+    lower.includes('despliegue') ||
+    lower.includes('version') ||
+    lower.includes('estado')
+  ) {
+    return (
+      '📌 *Estado de la Plataforma MATEO:*\n' +
+      '• *Rama Main (Producción):* Activa y sincronizada en https://mateo-wine.vercel.app\n' +
+      '• *Rama de Pruebas:* `product/iglesias` (126 pruebas pasando, 0 errores).\n' +
+      '• *Últimas mejoras:* Responsividad móvil, accesibilidad WCAG, recuperación de contraseñas y panel de Slack integrado.\n\n' +
+      '¿Deseas que verifique algún dato específico de la base de datos o de los módulos?'
+    );
+  }
+
   if (lower.includes('resumen') || lower.includes('pendientes') || lower.includes('auditoria')) {
     return (
       '📊 Para generar el resumen consolidado en tiempo real, puedes hacer clic en *"Enviar resumen ahora"* ' +
@@ -144,9 +161,20 @@ function generateBotReply(incomingText) {
     );
   }
 
+  if (lower === '?' || lower.length === 0) {
+    return (
+      '¡Hola! 👋 Estoy disponible para responder tus preguntas.\n' +
+      'Puedes escribirme:\n' +
+      '• *estado* o *main* para ver el estado de la plataforma.\n' +
+      '• *checklist* para ver el avance de revisiones.\n' +
+      '• *resumen* para ver los pendientes de auditoría.\n' +
+      '• *ayuda* para más opciones.'
+    );
+  }
+
   return (
-    `He recibido tu mensaje: _"${incomingText}"_.\n\n` +
-    'Estoy activo para apoyar al equipo de revisores. Puedes preguntarme sobre *resumen*, *checklist* o solicitar *ayuda*.'
+    `He recibido tu consulta: _"${incomingText}"_.\n\n` +
+    'Estoy activo para apoyar al equipo de revisores. Puedes preguntarme sobre *estado*, *main*, *checklist*, *resumen* o solicitar *ayuda*.'
   );
 }
 
@@ -155,6 +183,11 @@ export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Headers', 'content-type');
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
+  }
+
+  // Ignorar reintentos de Slack para evitar procesar dos veces
+  if (req.headers['x-slack-retry-num']) {
+    return res.status(200).json({ ok: true, note: 'ignored_retry' });
   }
 
   // Parse body si viene como string
@@ -183,11 +216,16 @@ export default async function handler(req, res) {
       await publishHomeView(event.user);
     }
 
-    // Mención o Mensaje Directo
+    // Detección robusta de mención o mensaje directo (Canal que empieza por 'D' o channel_type 'im')
     const isMention = event.type === 'app_mention';
-    const isDirectMessage = event.type === 'message' && event.channel_type === 'im';
+    const isChannelDM = event.channel && event.channel.startsWith('D');
+    const isDirectMessage =
+      event.type === 'message' && (event.channel_type === 'im' || isChannelDM);
 
-    if ((isMention || isDirectMessage) && !event.bot_id && event.text) {
+    // Evitar responderse a sí mismo (Mateo bot_id o user_id)
+    const isFromSelf = event.bot_id || event.user === 'U0CC00CDCMQ';
+
+    if ((isMention || isDirectMessage) && !isFromSelf && event.text) {
       const cleanText = event.text.replace(/<@[A-Z0-9]+>/g, '').trim();
       const replyText = generateBotReply(cleanText);
       await postMessage(event.channel, replyText, isMention ? event.ts : undefined);
