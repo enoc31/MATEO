@@ -9,6 +9,7 @@ Welcome! You are an AI assistant helping developers build, optimize, and maintai
 - **Build Tool**: Vite.
 - **Styling**: Vanilla CSS (modular and scoped where possible) and UI styling rules in `src/index.css`.
 - **Database / Auth**: Supabase JS SDK.
+- **UI/UX Intelligence**: `ui-ux-pro-max` skill (located in `.agents/skills/ui-ux-pro-max/`). Use it for interface decisions, accessible financial data presentation, and interaction design.
 
 ## Module Boundaries & Import Rules
 
