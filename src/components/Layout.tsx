@@ -45,7 +45,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
   const navigate = useNavigate();
   const currentPath = location.pathname.split('/')[2] || 'dashboard';
 
-  const [isHome] = useState(location.pathname === '/app' || location.pathname === '/app/');
+  const isHome = location.pathname === '/app' || location.pathname === '/app/';
 
   // Accesibilidad: Bloqueo de scroll de fondo y soporte para tecla Escape en el drawer móvil
   React.useEffect(() => {
