@@ -45,7 +45,27 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
   const navigate = useNavigate();
   const currentPath = location.pathname.split('/')[2] || 'dashboard';
 
-  const isHome = location.pathname === '/app' || location.pathname === '/app/';
+  const [isHome] = useState(location.pathname === '/app' || location.pathname === '/app/');
+
+  // Accesibilidad: Bloqueo de scroll de fondo y soporte para tecla Escape en el drawer móvil
+  React.useEffect(() => {
+    if (!isMobileMenuOpen) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setIsMobileMenuOpen(false);
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    const originalOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+      document.body.style.overflow = originalOverflow;
+    };
+  }, [isMobileMenuOpen]);
 
   // Revisar si el usuario ya vio el modal COSO
   React.useEffect(() => {
@@ -206,7 +226,9 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
           <button
             className="hamburger-btn"
             onClick={() => setIsMobileMenuOpen(true)}
-            aria-label="Abrir menú"
+            aria-label="Abrir menú de navegación"
+            aria-expanded={isMobileMenuOpen}
+            aria-controls="mobile-sidebar-drawer"
           >
             <Menu size={24} />
           </button>
@@ -529,8 +551,12 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
       <div
         className={`sidebar-overlay ${isMobileMenuOpen ? 'open' : ''}`}
         onClick={() => setIsMobileMenuOpen(false)}
+        aria-hidden="true"
       ></div>
       <aside
+        id="mobile-sidebar-drawer"
+        aria-label="Menú principal de navegación"
+        aria-hidden={!isMobileMenuOpen && window.innerWidth < 769}
         className={`sidebar-container ${isMobileMenuOpen ? 'open' : ''} ${isPinned ? 'pinned' : ''}`}
       >
         <div
@@ -562,7 +588,10 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
+                minWidth: '44px',
+                minHeight: '44px',
               }}
+              aria-label="Ir al Panel de Aplicaciones"
               title="Panel de Aplicaciones"
             >
               <LayoutGrid size={20} strokeWidth={1.5} />
@@ -581,6 +610,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
               className="sidebar-close"
               onClick={() => setIsMobileMenuOpen(false)}
               style={{ position: 'absolute', right: 0 }}
+              aria-label="Cerrar menú de navegación"
             >
               ×
             </button>

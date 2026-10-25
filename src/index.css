@@ -94,6 +94,19 @@ select,
 textarea {
   font-family: inherit;
   font-size: inherit;
+}
+
+/* Accesibilidad: Anillo de Foco Visible WCAG 2.1 / 2.2 */
+:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+button:focus:not(:focus-visible),
+a:focus:not(:focus-visible),
+input:focus:not(:focus-visible),
+select:focus:not(:focus-visible),
+textarea:focus:not(:focus-visible) {
   outline: none;
 }
 
@@ -937,7 +950,7 @@ textarea {
    5. NUEVOS ESTILOS ESTILO "APP" (MOBILE FIRST)
    ========================================================================= */
 
-/* Hamburger Button */
+/* Hamburger Button (Touch Target WCAG compliant 44x44px min) */
 .hamburger-btn {
   display: none;
   background: none;
@@ -945,15 +958,23 @@ textarea {
   font-size: 1.5rem;
   color: var(--primary);
   cursor: pointer;
-  padding: 0.25rem;
+  padding: 0.5rem;
+  min-width: 44px;
+  min-height: 44px;
+  border-radius: var(--radius-sm);
   margin-right: 0.5rem;
+  align-items: center;
+  justify-content: center;
+  transition: background-color var(--transition-fast);
+}
+
+.hamburger-btn:hover {
+  background-color: rgba(27, 92, 182, 0.08);
 }
 
 @media (max-width: 768px) {
   .hamburger-btn {
     display: flex;
-    align-items: center;
-    justify-content: center;
   }
 }
 
@@ -1090,6 +1111,17 @@ textarea {
   font-size: 1.5rem;
   cursor: pointer;
   color: var(--neutral-dark);
+  min-width: 44px;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-sm);
+  transition: background-color var(--transition-fast);
+}
+
+.sidebar-close:hover {
+  background-color: rgba(15, 23, 42, 0.05);
 }
 
 .sidebar-nav {
@@ -1105,7 +1137,8 @@ textarea {
   display: flex;
   align-items: center;
   gap: 1.25rem;
-  padding: 1rem;
+  padding: 0.875rem 1rem;
+  min-height: 48px;
   border-radius: var(--radius-md);
   color: var(--neutral-dark);
   font-weight: 600;
@@ -1199,4 +1232,36 @@ textarea {
     overflow-y: auto !important;
     background-color: #ffffff !important;
   }
+}
+
+/* =========================================================================
+   6. ACCESIBILIDAD Y MOVIMIENTO REDUCIDO (WCAG 2.1 AAA / UI-UX-PRO-MAX)
+   ========================================================================= */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .skeleton {
+    animation: none !important;
+    background: #e2e8f0 !important;
+  }
+}
+
+/* Accesibilidad táctil y visual para tablas móviles */
+.table-responsive-scroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  position: relative;
+  border-radius: var(--radius-md);
+}
+
+.table-responsive-scroll:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 1px;
 }
