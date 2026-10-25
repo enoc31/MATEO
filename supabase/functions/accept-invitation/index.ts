@@ -106,15 +106,12 @@ serve(async (req) => {
         );
 
         // Mark invitation as accepted
-        await supabase
-          .from('invitaciones')
-          .update({ estado: 'aceptada' })
-          .eq('token', token);
+        await supabase.from('invitaciones').update({ estado: 'aceptada' }).eq('token', token);
 
-        return new Response(
-          JSON.stringify({ success: true, email: inv.email }),
-          { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
-        );
+        return new Response(JSON.stringify({ success: true, email: inv.email }), {
+          status: 200,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
       }
       throw createError;
     }
@@ -137,21 +134,18 @@ serve(async (req) => {
     );
 
     // 4. Mark invitation as accepted
-    await supabase
-      .from('invitaciones')
-      .update({ estado: 'aceptada' })
-      .eq('token', token);
+    await supabase.from('invitaciones').update({ estado: 'aceptada' }).eq('token', token);
 
-    return new Response(
-      JSON.stringify({ success: true, email: inv.email }),
-      { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
-    );
+    return new Response(JSON.stringify({ success: true, email: inv.email }), {
+      status: 200,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : 'Error interno del servidor';
     console.error('[accept-invitation] Error:', message);
-    return new Response(
-      JSON.stringify({ error: message }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
-    );
+    return new Response(JSON.stringify({ error: message }), {
+      status: 500,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
   }
 });

@@ -17,8 +17,11 @@ import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 // ── Constantes de entorno ─────────────────────────────────────
-const SLACK_BOT_TOKEN = Deno.env.get('SLACK_BOT_TOKEN');
-const SLACK_CHANNEL_ID = Deno.env.get('SLACK_CHANNEL_ID');
+const DEFAULT_SLACK_BOT_TOKEN = 'xoxb-11707506536257-12408012454738-5ORkQ1Krf3dzTWB9ATmI756Z';
+const DEFAULT_SLACK_CHANNEL_ID = 'C0CBJMA2NK1';
+
+const ENV_SLACK_BOT_TOKEN = Deno.env.get('SLACK_BOT_TOKEN');
+const ENV_SLACK_CHANNEL_ID = Deno.env.get('SLACK_CHANNEL_ID');
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL') ?? '';
 const SUPABASE_SERVICE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
 
@@ -274,14 +277,28 @@ serve(async (req) => {
     return new Response('ok', { headers: corsHeaders });
   }
 
-  // Validar variables de entorno
-  if (!SLACK_BOT_TOKEN) {
+  // Leer body si se enviaron parámetros opcionales
+  let requestPayload: { channelId?: string; botToken?: string; customMessage?: string } = {};
+  if (req.method === 'POST') {
+    try {
+      requestPayload = await req.json();
+    } catch {
+      requestPayload = {};
+    }
+  }
+
+  const resolvedBotToken =
+    requestPayload.botToken || ENV_SLACK_BOT_TOKEN || DEFAULT_SLACK_BOT_TOKEN;
+  const resolvedChannelId =
+    requestPayload.channelId || ENV_SLACK_CHANNEL_ID || DEFAULT_SLACK_CHANNEL_ID;
+
+  if (!resolvedBotToken) {
     return new Response(
       JSON.stringify({ error: 'SLACK_BOT_TOKEN no configurado en Supabase Secrets' }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
     );
   }
-  if (!SLACK_CHANNEL_ID) {
+  if (!resolvedChannelId) {
     return new Response(
       JSON.stringify({ error: 'SLACK_CHANNEL_ID no configurado en Supabase Secrets' }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
@@ -299,7 +316,7 @@ serve(async (req) => {
     const blocks = buildSlackMessage(summary);
 
     // 3. Publicar en Slack
-    await postToSlack(blocks, SLACK_CHANNEL_ID, SLACK_BOT_TOKEN);
+    await postToSlack(blocks, resolvedChannelId, resolvedBotToken);
 
     return new Response(
       JSON.stringify({

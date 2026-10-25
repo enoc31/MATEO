@@ -40,7 +40,9 @@ export const SlackIntegrationPanel: React.FC = () => {
     setLastResult(null);
 
     try {
-      const { data, error } = await supabase.functions.invoke('slack-daily-digest');
+      const { data, error } = await supabase.functions.invoke('slack-daily-digest', {
+        body: { channelId: 'C0CBJMA2NK1' },
+      });
 
       if (error) {
         throw new Error(error.message ?? 'Error al invocar la función');
@@ -69,44 +71,74 @@ export const SlackIntegrationPanel: React.FC = () => {
         style={{
           display: 'flex',
           alignItems: 'center',
-          gap: '0.75rem',
+          justifyContent: 'space-between',
           borderBottom: '1px solid var(--border-color)',
           paddingBottom: '1rem',
+          flexWrap: 'wrap',
+          gap: '1rem',
         }}
       >
-        <div
-          style={{
-            width: '40px',
-            height: '40px',
-            borderRadius: '10px',
-            backgroundColor: '#4A154B', // Slack purple
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            flexShrink: 0,
-          }}
-        >
-          <MessageSquare size={22} color="#fff" />
-        </div>
-        <div>
-          <h3
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+          <div
             style={{
-              margin: 0,
-              fontSize: '1rem',
-              fontWeight: 700,
-              color: 'var(--neutral-dark)',
-              fontFamily: 'var(--font-headings)',
+              width: '40px',
+              height: '40px',
+              borderRadius: '10px',
+              backgroundColor: '#4A154B', // Slack purple
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              flexShrink: 0,
             }}
           >
-            Integración con Slack
-          </h3>
-          <p style={{ margin: 0, fontSize: '0.8rem', color: '#64748b' }}>
-            Publica el resumen de pendientes en tu canal de Slack
-          </p>
+            <MessageSquare size={22} color="#fff" />
+          </div>
+          <div>
+            <h3
+              style={{
+                margin: 0,
+                fontSize: '1rem',
+                fontWeight: 700,
+                color: 'var(--neutral-dark)',
+                fontFamily: 'var(--font-headings)',
+              }}
+            >
+              Integración con Slack (Revisores)
+            </h3>
+            <p style={{ margin: 0, fontSize: '0.8rem', color: '#64748b' }}>
+              Canal activo: <strong>#C0CBJMA2NK1</strong> · Bot: <strong>@mateo</strong>
+            </p>
+          </div>
+        </div>
+
+        <div
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '0.4rem',
+            backgroundColor: '#ecfdf5',
+            color: '#065f46',
+            border: '1px solid #a7f3d0',
+            padding: '0.35rem 0.75rem',
+            borderRadius: '9999px',
+            fontSize: '0.75rem',
+            fontWeight: 600,
+          }}
+        >
+          <span
+            style={{
+              width: '8px',
+              height: '8px',
+              borderRadius: '50%',
+              backgroundColor: '#10b981',
+              display: 'inline-block',
+            }}
+          />
+          Canal Conectado
         </div>
       </div>
 
-      {/* ── Información de configuración ──────────────────── */}
+      {/* ── Información de conexión ─────────────────────────── */}
       <div
         style={{
           backgroundColor: 'rgba(59, 130, 246, 0.06)',
@@ -120,37 +152,17 @@ export const SlackIntegrationPanel: React.FC = () => {
       >
         <Info size={16} color="#3b82f6" style={{ flexShrink: 0, marginTop: '2px' }} />
         <div style={{ fontSize: '0.8rem', color: '#334155', lineHeight: 1.6 }}>
-          <strong>Configuración requerida:</strong> Para que funcione, el administrador debe
-          configurar los siguientes secretos en{' '}
-          <strong>Supabase → Settings → Edge Functions → Secrets</strong>:
-          <ul style={{ margin: '0.5rem 0 0 1rem', padding: 0 }}>
-            <li>
-              <code
-                style={{
-                  fontSize: '0.75rem',
-                  backgroundColor: '#f1f5f9',
-                  padding: '0 4px',
-                  borderRadius: 3,
-                }}
-              >
-                SLACK_BOT_TOKEN
-              </code>{' '}
-              → Tu Bot Token de Slack (<code>xoxb-...</code>)
-            </li>
-            <li>
-              <code
-                style={{
-                  fontSize: '0.75rem',
-                  backgroundColor: '#f1f5f9',
-                  padding: '0 4px',
-                  borderRadius: 3,
-                }}
-              >
-                SLACK_CHANNEL_ID
-              </code>{' '}
-              → ID del canal destino (ej: <code>C0XXXXXXX</code>)
-            </li>
-          </ul>
+          <strong>Canal de Slack de Revisores:</strong> Conectado a{' '}
+          <a
+            href="https://mateo-gk06971.slack.com/archives/C0CBJMA2NK1"
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{ color: '#2563eb', fontWeight: 600, textDecoration: 'underline' }}
+          >
+            mateo-gk06971.slack.com/archives/C0CBJMA2NK1
+          </a>
+          . El bot <code>@mateo</code> tiene permisos de escritura y publica automáticamente las
+          alertas de auditoría y digest diarios para los revisores.
         </div>
       </div>
 
@@ -314,21 +326,25 @@ export const SlackIntegrationPanel: React.FC = () => {
         </button>
 
         <a
-          href="https://api.slack.com/apps"
+          href="https://mateo-gk06971.slack.com/archives/C0CBJMA2NK1"
           target="_blank"
           rel="noopener noreferrer"
           style={{
             display: 'flex',
             alignItems: 'center',
             gap: '0.35rem',
-            fontSize: '0.8rem',
+            fontSize: '0.85rem',
             color: '#4A154B',
             fontWeight: 600,
             textDecoration: 'none',
+            padding: '0.5rem 0.75rem',
+            borderRadius: 'var(--radius-sm)',
+            border: '1px solid #e2e8f0',
+            backgroundColor: '#f8fafc',
           }}
         >
-          <ExternalLink size={13} />
-          Configurar Slack App
+          <ExternalLink size={14} />
+          Abrir Canal en Slack (#C0CBJMA2NK1)
         </a>
       </div>
 
