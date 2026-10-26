@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Shield, ArrowLeft } from 'lucide-react';
+import { Mail, ArrowLeft, CheckCircle2, AlertCircle, ArrowRight } from 'lucide-react';
 import { supabase } from '../../supabaseClient';
 import { isSimulationMode } from '../../services/api';
 
@@ -24,7 +24,7 @@ export const ForgotPassword: React.FC = () => {
             text: 'Simulación: Si el correo existe, recibirás instrucciones para restablecer tu contraseña.',
           });
           setLoading(false);
-        }, 1000);
+        }, 800);
         return;
       }
 
@@ -37,12 +37,14 @@ export const ForgotPassword: React.FC = () => {
 
       setMessage({
         type: 'success',
-        text: 'Si el correo existe, recibirás instrucciones para restablecer tu contraseña.',
+        text: 'Si el correo electrónico está registrado, recibirás un enlace seguro para crear tu nueva contraseña en los próximos minutos.',
       });
-    } catch (error: any) {
+    } catch (err: unknown) {
+      const errorMessage =
+        err instanceof Error ? err.message : 'Ocurrió un error al intentar enviar el correo.';
       setMessage({
         type: 'error',
-        text: error.message || 'Ocurrió un error al intentar enviar el correo.',
+        text: errorMessage,
       });
     } finally {
       if (!isSimulationMode) setLoading(false);
@@ -56,112 +58,199 @@ export const ForgotPassword: React.FC = () => {
         alignItems: 'center',
         justifyContent: 'center',
         minHeight: '100vh',
-        backgroundColor: '#f4f5f7',
+        backgroundColor: '#f1f5f9',
+        backgroundImage: 'radial-gradient(at 50% 0%, rgba(47, 90, 174, 0.06) 0px, transparent 75%)',
+        padding: '2rem 1rem',
         fontFamily: 'Inter, sans-serif',
       }}
     >
       <div
+        className="card animate-fade-in-up"
         style={{
-          background: 'white',
-          padding: '3rem 2.5rem',
-          borderRadius: '12px',
-          boxShadow: '0 10px 25px rgba(0,0,0,0.05)',
+          maxWidth: '460px',
           width: '100%',
-          maxWidth: '450px',
-          textAlign: 'center',
+          padding: '2.5rem',
+          backgroundColor: '#ffffff',
+          borderRadius: '16px',
+          boxShadow: '0 20px 25px -5px rgba(0,0,0,0.08), 0 10px 10px -5px rgba(0,0,0,0.02)',
         }}
       >
-        <Shield size={48} color="#1e3a8a" style={{ margin: '0 auto 1.5rem auto' }} />
-        <h2
-          style={{ color: '#1e293b', marginBottom: '0.5rem', fontSize: '1.5rem', fontWeight: 700 }}
-        >
-          Recuperar Contraseña
-        </h2>
-        <p style={{ color: '#64748b', marginBottom: '2rem', fontSize: '0.95rem' }}>
-          Ingresa tu correo electrónico y te enviaremos un enlace para que puedas crear una
-          contraseña nueva.
-        </p>
+        {/* Header con imagen corporativa MATEO */}
+        <div style={{ textAlign: 'center', marginBottom: '1.8rem' }}>
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '0.75rem',
+              marginBottom: '0.75rem',
+            }}
+          >
+            <img
+              src="/mateo_logo.png"
+              alt="Logo MATEO"
+              style={{
+                height: '56px',
+                width: '56px',
+                objectFit: 'contain',
+                borderRadius: '14px',
+                boxShadow: '0 8px 16px -4px rgba(47, 90, 174, 0.2)',
+              }}
+            />
+            <div style={{ textAlign: 'left' }}>
+              <div
+                style={{
+                  fontSize: '1.8rem',
+                  fontWeight: 900,
+                  color: 'var(--primary)',
+                  letterSpacing: '-0.5px',
+                  lineHeight: 1,
+                }}
+              >
+                MATEO
+              </div>
+              <div
+                style={{
+                  fontSize: '0.65rem',
+                  color: '#64748b',
+                  fontWeight: 700,
+                  letterSpacing: '1.5px',
+                  textTransform: 'uppercase',
+                }}
+              >
+                Plataforma de Auditoría & Donaciones
+              </div>
+            </div>
+          </div>
+          <h2
+            style={{
+              color: 'var(--primary)',
+              fontSize: '1.25rem',
+              fontWeight: 700,
+              margin: '0.75rem 0 0.35rem 0',
+            }}
+          >
+            Recuperar Contraseña
+          </h2>
+          <p style={{ color: '#64748b', fontSize: '0.88rem', margin: 0, lineHeight: 1.5 }}>
+            Ingresa tu correo electrónico registrado y te enviaremos un enlace seguro para crear una
+            nueva contraseña.
+          </p>
+        </div>
 
         {message && (
           <div
             style={{
-              padding: '1rem',
-              borderRadius: '8px',
-              marginBottom: '1.5rem',
-              backgroundColor: message.type === 'success' ? '#ecfdf5' : '#fef2f2',
-              color: message.type === 'success' ? '#065f46' : '#991b1b',
-              fontSize: '0.9rem',
-              textAlign: 'left',
+              padding: '0.85rem 1rem',
+              borderRadius: '10px',
+              marginBottom: '1.25rem',
+              backgroundColor:
+                message.type === 'success' ? 'rgba(16, 185, 129, 0.08)' : 'rgba(239, 68, 68, 0.08)',
+              border: `1px solid ${
+                message.type === 'success' ? 'rgba(16, 185, 129, 0.3)' : 'rgba(239, 68, 68, 0.3)'
+              }`,
+              color: message.type === 'success' ? '#047857' : '#dc2626',
+              fontSize: '0.85rem',
+              fontWeight: 600,
+              display: 'flex',
+              alignItems: 'flex-start',
+              gap: '0.6rem',
+              lineHeight: 1.4,
             }}
           >
-            {message.text}
+            {message.type === 'success' ? (
+              <CheckCircle2 size={18} style={{ flexShrink: 0, marginTop: '2px' }} />
+            ) : (
+              <AlertCircle size={18} style={{ flexShrink: 0, marginTop: '2px' }} />
+            )}
+            <div>
+              <span>{message.text}</span>
+              {isSimulationMode && message.type === 'success' && (
+                <div style={{ marginTop: '0.75rem' }}>
+                  <Link
+                    to="/update-password"
+                    className="btn btn-primary"
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '0.4rem',
+                      fontSize: '0.78rem',
+                      padding: '0.4rem 0.75rem',
+                      borderRadius: '6px',
+                      textDecoration: 'none',
+                    }}
+                  >
+                    Probar Cambio de Contraseña (Demo) <ArrowRight size={14} />
+                  </Link>
+                </div>
+              )}
+            </div>
           </div>
         )}
 
-        <form onSubmit={handleSubmit} style={{ textAlign: 'left' }}>
-          <div style={{ marginBottom: '1.5rem' }}>
-            <label
-              style={{
-                display: 'block',
-                marginBottom: '0.5rem',
-                color: '#334155',
-                fontWeight: 600,
-                fontSize: '0.9rem',
-              }}
-            >
+        <form
+          onSubmit={handleSubmit}
+          style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}
+        >
+          <div className="form-field">
+            <label className="form-field-label" htmlFor="email">
               Correo Electrónico
             </label>
-            <input
-              type="email"
-              required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="tu@correo.com"
-              style={{
-                width: '100%',
-                padding: '0.75rem 1rem',
-                border: '1px solid #cbd5e1',
-                borderRadius: '6px',
-                fontSize: '1rem',
-                outline: 'none',
-              }}
-            />
+            <div className="input-with-icon">
+              <Mail size={18} className="input-icon" />
+              <input
+                id="email"
+                type="email"
+                className="form-input-premium"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                disabled={loading}
+                placeholder="usuario@tu-ong.org"
+              />
+            </div>
           </div>
 
           <button
             type="submit"
+            className="btn btn-primary"
             disabled={loading}
             style={{
               width: '100%',
               padding: '0.85rem',
-              backgroundColor: '#1e3a8a',
-              color: 'white',
-              border: 'none',
-              borderRadius: '6px',
-              fontSize: '1rem',
-              fontWeight: 600,
-              cursor: loading ? 'not-allowed' : 'pointer',
-              opacity: loading ? 0.7 : 1,
-              marginBottom: '1.5rem',
+              fontWeight: 700,
+              borderRadius: '10px',
+              marginTop: '0.25rem',
+              boxShadow: '0 4px 12px rgba(47, 90, 174, 0.25)',
             }}
           >
-            {loading ? 'Enviando...' : 'Enviar enlace de recuperación'}
+            {loading ? 'Enviando enlace...' : 'Enviar Enlace de Recuperación'}
           </button>
         </form>
 
-        <div style={{ marginTop: '1rem' }}>
+        <div
+          style={{
+            marginTop: '1.8rem',
+            borderTop: '1px solid #f1f5f9',
+            paddingTop: '1.25rem',
+            textAlign: 'center',
+          }}
+        >
           <Link
             to="/login"
             style={{
-              color: '#3b82f6',
+              color: 'var(--primary)',
               textDecoration: 'none',
               fontWeight: 600,
-              fontSize: '0.9rem',
-              display: 'flex',
+              fontSize: '0.85rem',
+              display: 'inline-flex',
               alignItems: 'center',
               justifyContent: 'center',
-              gap: '0.5rem',
+              gap: '0.4rem',
+              transition: 'opacity 0.2s',
             }}
+            onMouseEnter={(e) => (e.currentTarget.style.textDecoration = 'underline')}
+            onMouseLeave={(e) => (e.currentTarget.style.textDecoration = 'none')}
           >
             <ArrowLeft size={16} /> Volver al Inicio de Sesión
           </Link>

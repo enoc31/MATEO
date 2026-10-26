@@ -14,9 +14,9 @@ describe('Login Component', () => {
 
   beforeEach(() => {
     vi.resetAllMocks();
-    (AuthContextModule.useAuth as any).mockReturnValue({
+    vi.mocked(AuthContextModule.useAuth).mockReturnValue({
       refreshProfile: mockRefreshProfile,
-    });
+    } as unknown as ReturnType<typeof AuthContextModule.useAuth>);
   });
 
   it('renders login form correctly', () => {
@@ -68,5 +68,17 @@ describe('Login Component', () => {
     );
 
     expect(screen.getByText(/Aceptar Invitación/i)).toBeInTheDocument();
+  });
+
+  it('renders forgot password link pointing to /forgot-password', () => {
+    render(
+      <MemoryRouter>
+        <Login />
+      </MemoryRouter>,
+    );
+
+    const forgotPasswordLink = screen.getByRole('link', { name: /¿Olvidaste tu contraseña\?/i });
+    expect(forgotPasswordLink).toBeInTheDocument();
+    expect(forgotPasswordLink).toHaveAttribute('href', '/forgot-password');
   });
 });

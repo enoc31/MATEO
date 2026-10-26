@@ -38,8 +38,9 @@ export const Login: React.FC = () => {
         throw error;
       }
       await refreshProfile();
-    } catch (err: any) {
-      setError(err.message || 'Error al iniciar sesión');
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Error al iniciar sesión';
+      setError(message);
     } finally {
       setLoading(false);
     }
@@ -97,10 +98,13 @@ export const Login: React.FC = () => {
     setError(null);
     setSuccess(null);
     try {
-      const profiles = JSON.parse(localStorage.getItem('cnbv_profiles') || '{}');
+      const profiles = JSON.parse(localStorage.getItem('cnbv_profiles') || '{}') as Record<
+        string,
+        { id: string; email: string; nombre_completo: string; rol: UserRole }
+      >;
       const foundProfile = Object.values(profiles).find(
-        (p: any) => p.email.toLowerCase() === email.toLowerCase(),
-      ) as any;
+        (p) => p.email.toLowerCase() === email.toLowerCase(),
+      );
 
       if (!foundProfile) {
         setError('Usuario no encontrado en la base de datos simulada local.');
@@ -269,9 +273,32 @@ export const Login: React.FC = () => {
           </div>
 
           <div className="form-field">
-            <label className="form-field-label" htmlFor="password">
-              Contraseña
-            </label>
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                marginBottom: '0.4rem',
+              }}
+            >
+              <label className="form-field-label" htmlFor="password" style={{ marginBottom: 0 }}>
+                Contraseña
+              </label>
+              <Link
+                to="/forgot-password"
+                style={{
+                  fontSize: '0.8rem',
+                  color: 'var(--primary)',
+                  fontWeight: 600,
+                  textDecoration: 'none',
+                  transition: 'color 0.2s ease',
+                }}
+                onMouseEnter={(e) => (e.currentTarget.style.textDecoration = 'underline')}
+                onMouseLeave={(e) => (e.currentTarget.style.textDecoration = 'none')}
+              >
+                ¿Olvidaste tu contraseña?
+              </Link>
+            </div>
             <div className="input-with-icon">
               <Lock size={18} className="input-icon" />
               <input

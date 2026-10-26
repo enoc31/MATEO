@@ -18,9 +18,11 @@ const TECH_CONTEXT = {
     frontend: 'React 19 (Hooks funcionales), TypeScript estricto (no any), Vite',
     estilos: 'Vanilla CSS modular, variables CSS de tema oscuro/claro, diseño responsive WCAG',
     backend_bd: 'PostgreSQL en Supabase con Row Level Security (RLS) multi-inquilino',
-    almacenamiento: 'Google Cloud Storage (GCS) para fotos de carnet, comprobantes y firmas digitales',
+    almacenamiento:
+      'Google Cloud Storage (GCS) para fotos de carnet, comprobantes y firmas digitales',
     despliegue: 'Vercel (Producción: https://mateo-wine.vercel.app) con Serverless Functions',
-    integraciones: 'Slack Bot (@mateo) para alertas y canal de revisores #C0CBJMA2NK1, API BCV para tasas oficiales',
+    integraciones:
+      'Slack Bot (@mateo) para alertas y canal de revisores #C0CBJMA2NK1, API BCV para tasas oficiales',
   },
   modulos: [
     {
@@ -63,8 +65,10 @@ const TECH_CONTEXT = {
   tablas_bd: [
     {
       tabla: 'ongs',
-      descripcion: 'Congregaciones e iglesias registradas en el sistema SaaS (tipo: ekklesia u ong).',
-      campos_clave: 'id, nombre, rif_identificacion, pais, telefono, direccion, logo_url, plan, estado',
+      descripcion:
+        'Congregaciones e iglesias registradas en el sistema SaaS (tipo: ekklesia u ong).',
+      campos_clave:
+        'id, nombre, rif_identificacion, pais, telefono, direccion, logo_url, plan, estado',
     },
     {
       tabla: 'beneficiarios',
@@ -75,22 +79,26 @@ const TECH_CONTEXT = {
     {
       tabla: 'proyectos',
       descripcion: 'Proyectos sociales, humanitarios o eclesiales asociados a fondos.',
-      campos_clave: 'id, ong_id, nombre, descripcion, activo, fecha_inicio, fecha_fin, overhead_porcentaje, donante_id',
+      campos_clave:
+        'id, ong_id, nombre, descripcion, activo, fecha_inicio, fecha_fin, overhead_porcentaje, donante_id',
     },
     {
       tabla: 'solicitudes_gasto',
       descripcion: 'Requisiciones de compra y desembolso de fondos.',
-      campos_clave: 'id, ong_id, proyecto_id, solicitante_id, monto, moneda, estado (pendiente_aprobacion, aprobada, rechazada)',
+      campos_clave:
+        'id, ong_id, proyecto_id, solicitante_id, monto, moneda, estado (pendiente_aprobacion, aprobada, rechazada)',
     },
     {
       tabla: 'comprobantes_gasto',
       descripcion: 'Facturas, recibos y soportes digitales de gastos ejecutados.',
-      campos_clave: 'id, ong_id, proyecto_id, monto, url_comprobante, estado (pendiente_soporte, verificado, rechazado)',
+      campos_clave:
+        'id, ong_id, proyecto_id, monto, url_comprobante, estado (pendiente_soporte, verificado, rechazado)',
     },
     {
       tabla: 'transacciones_bancarias',
       descripcion: 'Movimientos de cuentas bancarias importados para conciliación.',
-      campos_clave: 'id, ong_id, cuenta_id, fecha, monto, descripcion, estado (pendiente, conciliada)',
+      campos_clave:
+        'id, ong_id, cuenta_id, fecha, monto, descripcion, estado (pendiente, conciliada)',
     },
     {
       tabla: 'donaciones',
@@ -105,7 +113,8 @@ const TECH_CONTEXT = {
     {
       tabla: 'usuarios_perfiles',
       descripcion: 'Usuarios del sistema y roles asignados por congregación.',
-      campos_clave: 'id, email, nombre_completo, rol (superadmin, director, administrador, auditor, etc.), aprobado, ong_id',
+      campos_clave:
+        'id, email, nombre_completo, rol (superadmin, director, administrador, auditor, etc.), aprobado, ong_id',
     },
     {
       tabla: 'partidas_gasto y categorias_gasto',
@@ -326,7 +335,12 @@ async function generateSmartReply(query) {
   }
 
   // 8. Tasa BCV y Multidivisa
-  if (lower.includes('tasa') || lower.includes('bcv') || lower.includes('dolar') || lower.includes('ves')) {
+  if (
+    lower.includes('tasa') ||
+    lower.includes('bcv') ||
+    lower.includes('dolar') ||
+    lower.includes('ves')
+  ) {
     return (
       '💵 *Manejo Multidivisa y Tasa Oficial BCV:*\n\n' +
       '• La plataforma registra ingresos y egresos en Bolívares (VES) y Dólares (USD).\n' +

@@ -22,23 +22,25 @@ const lastSeenTimestamps = {};
 
 function slackGet(endpoint) {
   return new Promise((resolve, reject) => {
-    https.get(
-      'https://slack.com/api/' + endpoint,
-      {
-        headers: { Authorization: `Bearer ${SLACK_BOT_TOKEN}` },
-      },
-      (res) => {
-        let body = '';
-        res.on('data', (d) => (body += d));
-        res.on('end', () => {
-          try {
-            resolve(JSON.parse(body));
-          } catch (e) {
-            reject(e);
-          }
-        });
-      },
-    ).on('error', reject);
+    https
+      .get(
+        'https://slack.com/api/' + endpoint,
+        {
+          headers: { Authorization: `Bearer ${SLACK_BOT_TOKEN}` },
+        },
+        (res) => {
+          let body = '';
+          res.on('data', (d) => (body += d));
+          res.on('end', () => {
+            try {
+              resolve(JSON.parse(body));
+            } catch (e) {
+              reject(e);
+            }
+          });
+        },
+      )
+      .on('error', reject);
   });
 }
 
