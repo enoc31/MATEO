@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { supabase } from '../../supabaseClient';
 import { isSimulationMode } from '../../services/api';
 import { ShieldAlert, KeyRound, Mail, ArrowRight } from 'lucide-react';
@@ -211,19 +212,40 @@ export const SaasLogin: React.FC = () => {
           </div>
 
           <div style={{ marginBottom: '2rem' }}>
-            <label
-              htmlFor="password"
+            <div
               style={{
-                display: 'block',
-                fontSize: '0.75rem',
-                fontWeight: 700,
-                color: '#94a3b8',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
                 marginBottom: '0.5rem',
-                textTransform: 'uppercase',
               }}
             >
-              Contraseña
-            </label>
+              <label
+                htmlFor="password"
+                style={{
+                  fontSize: '0.75rem',
+                  fontWeight: 700,
+                  color: '#94a3b8',
+                  textTransform: 'uppercase',
+                  margin: 0,
+                }}
+              >
+                Contraseña
+              </label>
+              <Link
+                to="/forgot-password"
+                style={{
+                  fontSize: '0.75rem',
+                  color: '#2dd4bf',
+                  fontWeight: 600,
+                  textDecoration: 'none',
+                }}
+                onMouseEnter={(e) => (e.currentTarget.style.textDecoration = 'underline')}
+                onMouseLeave={(e) => (e.currentTarget.style.textDecoration = 'none')}
+              >
+                ¿Olvidaste tu contraseña?
+              </Link>
+            </div>
             <div style={{ position: 'relative' }}>
               <KeyRound
                 size={16}

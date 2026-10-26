@@ -3,6 +3,7 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { ForgotPassword } from './ForgotPassword';
 import { supabase } from '../../supabaseClient';
+import { AuthError } from '@supabase/supabase-js';
 
 vi.mock('../../supabaseClient', () => ({
   supabase: {
@@ -41,7 +42,7 @@ describe('ForgotPassword Component', () => {
 
   it('submits email and displays success notification', async () => {
     vi.mocked(supabase.auth.resetPasswordForEmail).mockResolvedValue({
-      data: null,
+      data: {},
       error: null,
     });
 
@@ -70,7 +71,7 @@ describe('ForgotPassword Component', () => {
   it('displays error message if resetPasswordForEmail fails', async () => {
     vi.mocked(supabase.auth.resetPasswordForEmail).mockResolvedValue({
       data: null,
-      error: new Error('Usuario no registrado') as unknown as null,
+      error: new AuthError('Usuario no registrado'),
     });
 
     render(
