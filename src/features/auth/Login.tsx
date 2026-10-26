@@ -18,6 +18,17 @@ export const Login: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
+  React.useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const searchParams = new URLSearchParams(window.location.search);
+      if (searchParams.get('reset') === 'success') {
+        setSuccess(
+          '¡Tu contraseña ha sido actualizada exitosamente! Por favor ingresa con tu nueva clave.',
+        );
+      }
+    }
+  }, []);
+
   // Manejador para login en Supabase real
   const handleRealLogin = async (e: React.FormEvent) => {
     e.preventDefault();

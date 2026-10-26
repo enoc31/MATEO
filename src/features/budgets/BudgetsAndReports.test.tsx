@@ -80,6 +80,8 @@ const setupMocks = (
     authError: null,
     logout: vi.fn(),
     refreshProfile: vi.fn(),
+    isPasswordRecovery: false,
+    setIsPasswordRecovery: vi.fn(),
   } as ReturnType<typeof useAuth>);
 };
 

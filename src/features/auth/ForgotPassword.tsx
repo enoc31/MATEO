@@ -28,9 +28,18 @@ export const ForgotPassword: React.FC = () => {
         return;
       }
 
-      // El correo se enviará con un enlace que redirigirá a /update-password
+      // El correo se enviará con un enlace que redirigirá a la URL oficial de producción de Mateo Ekklesia
+      const isLocalhost =
+        typeof window !== 'undefined' &&
+        (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+
+      const productionDomain = 'https://www.mateo-ekklesia.com';
+      const redirectUrl = isLocalhost
+        ? `${window.location.origin}/update-password`
+        : `${productionDomain}/update-password`;
+
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/update-password`,
+        redirectTo: redirectUrl,
       });
 
       if (error) throw error;

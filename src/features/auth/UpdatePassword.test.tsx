@@ -25,6 +25,12 @@ vi.mock('../../supabaseClient', () => ({
   },
 }));
 
+vi.mock('../../context/AuthContext', () => ({
+  useAuth: vi.fn(() => ({
+    setIsPasswordRecovery: vi.fn(),
+  })),
+}));
+
 vi.mock('../../services/api', () => ({
   isSimulationMode: false,
 }));

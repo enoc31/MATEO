@@ -34,6 +34,8 @@ interface AuthContextType {
   } | null;
   loading: boolean;
   authError: string | null;
+  isPasswordRecovery: boolean;
+  setIsPasswordRecovery: (value: boolean) => void;
   logout: () => Promise<void>;
   refreshProfile: () => Promise<void>;
 }
@@ -51,6 +53,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   } | null>(null);
   const [loading, setLoading] = useState(true);
   const [authError, setAuthError] = useState<string | null>(null);
+  const [isPasswordRecovery, setIsPasswordRecovery] = useState<boolean>(() => {
+    if (typeof window !== 'undefined') {
+      const hash = window.location.hash || '';
+      const search = window.location.search || '';
+      return hash.includes('type=recovery') || search.includes('type=recovery');
+    }
+    return false;
+  });
 
   const fetchProfile = async (currentUser: User) => {
     if (!isSimulationMode) {
@@ -231,6 +241,27 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           } = (await Promise.race([getSessionPromise, timeoutPromise])) as any;
 
           if (session && mounted) {
+            const hasRecovery =
+              window.location.hash.includes('type=recovery') ||
+              window.location.search.includes('type=recovery');
+
+            if (hasRecovery) {
+              console.warn(
+                '[Security] Recovery token in URL. Locking session to /update-password.',
+              );
+              setIsPasswordRecovery(true);
+              setUser(session.user);
+              setProfile(null);
+              setActiveOng(null);
+              setLoading(false);
+              if (!window.location.pathname.startsWith('/update-password')) {
+                window.location.replace(
+                  '/update-password' + window.location.hash + window.location.search,
+                );
+              }
+              return;
+            }
+
             setUser(session.user);
             await fetchProfile(session.user);
           }
@@ -264,8 +295,45 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (!isSimulationMode) {
       const { data } = supabase.auth.onAuthStateChange(async (event, session) => {
         if (!mounted) return;
+
+        if (event === 'PASSWORD_RECOVERY') {
+          console.warn('[Security] PASSWORD_RECOVERY event received. Locking to /update-password.');
+          setIsPasswordRecovery(true);
+          if (session) {
+            setUser(session.user);
+          }
+          setProfile(null);
+          setActiveOng(null);
+          setLoading(false);
+          if (!window.location.pathname.startsWith('/update-password')) {
+            window.location.replace(
+              '/update-password' + window.location.hash + window.location.search,
+            );
+          }
+          return;
+        }
+
         if (event === 'SIGNED_IN' || event === 'USER_UPDATED') {
           if (session) {
+            const hasRecovery =
+              window.location.hash.includes('type=recovery') ||
+              window.location.search.includes('type=recovery');
+
+            if (hasRecovery) {
+              console.warn('[Security] Suppressing standard profile load for recovery session.');
+              setIsPasswordRecovery(true);
+              setUser(session.user);
+              setProfile(null);
+              setActiveOng(null);
+              setLoading(false);
+              if (!window.location.pathname.startsWith('/update-password')) {
+                window.location.replace(
+                  '/update-password' + window.location.hash + window.location.search,
+                );
+              }
+              return;
+            }
+
             setUser(session.user);
             setLoading(true); // Mostrar loading mientras busca perfil
             await fetchProfile(session.user);
@@ -274,6 +342,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         } else if (event === 'SIGNED_OUT') {
           setUser(null);
           setProfile(null);
+          setIsPasswordRecovery(false);
         }
       });
       authSubscription = data.subscription;
@@ -305,7 +374,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   return (
     <AuthContext.Provider
-      value={{ user, profile, activeOng, loading, authError, logout, refreshProfile }}
+      value={{
+        user,
+        profile,
+        activeOng,
+        loading,
+        authError,
+        isPasswordRecovery,
+        setIsPasswordRecovery,
+        logout,
+        refreshProfile,
+      }}
     >
       {children}
     </AuthContext.Provider>

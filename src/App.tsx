@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { Hourglass, Megaphone, Radio, RefreshCw, ShieldAlert } from 'lucide-react';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { NotificationProvider } from './components/NotificationProvider';
@@ -627,11 +627,37 @@ const AccessDenied: React.FC = () => {
   );
 };
 
+// Interceptor Global de Seguridad para Recuperación de Contraseña
+const GlobalRecoveryInterceptor: React.FC = () => {
+  const location = useLocation();
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const hash = window.location.hash || '';
+    const search = window.location.search || '';
+    const hasRecoveryToken = hash.includes('type=recovery') || search.includes('type=recovery');
+
+    if (hasRecoveryToken && location.pathname !== '/update-password') {
+      console.warn(
+        '[Security Guard] Intercepted recovery token on path:',
+        location.pathname,
+        '-> Forcing immediate redirect to /update-password',
+      );
+      window.location.replace('/update-password' + hash + search);
+    }
+  }, [location]);
+
+  return null;
+};
+
 // Wrappers para control de acceso
 const PrivateRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { profile, loading, user, authError, logout } = useAuth();
+  const { profile, loading, user, authError, logout, isPasswordRecovery } = useAuth();
 
   if (loading) return <div>Verificando...</div>;
+  if (isPasswordRecovery) {
+    return <Navigate to="/update-password" replace />;
+  }
   if (!profile) {
     if (user) {
       return (
@@ -683,8 +709,11 @@ const PrivateRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => 
 };
 
 const PublicRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { profile, loading } = useAuth();
+  const { profile, loading, isPasswordRecovery } = useAuth();
   if (loading) return <div>Cargando...</div>;
+  if (isPasswordRecovery) {
+    return <Navigate to="/update-password" replace />;
+  }
   if (profile) {
     if (profile.rol === 'super_admin') {
       return <Navigate to="/saas-admin/dashboard" replace />;
@@ -695,9 +724,12 @@ const PublicRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 };
 
 const SaasPrivateRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { profile, loading } = useAuth();
+  const { profile, loading, isPasswordRecovery } = useAuth();
 
   if (loading) return <div>Verificando...</div>;
+  if (isPasswordRecovery) {
+    return <Navigate to="/update-password" replace />;
+  }
   if (!profile || profile.rol !== 'super_admin') {
     return <Navigate to="/saas-admin" replace />;
   }
@@ -705,8 +737,11 @@ const SaasPrivateRoute: React.FC<{ children: React.ReactNode }> = ({ children })
 };
 
 const SaasPublicRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { profile, loading } = useAuth();
+  const { profile, loading, isPasswordRecovery } = useAuth();
   if (loading) return <div>Cargando...</div>;
+  if (isPasswordRecovery) {
+    return <Navigate to="/update-password" replace />;
+  }
   if (profile) {
     if (profile.rol === 'super_admin') {
       return <Navigate to="/saas-admin/dashboard" replace />;
@@ -737,6 +772,7 @@ function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
+        <GlobalRecoveryInterceptor />
         <NotificationProvider>
           <Routes>
             <Route

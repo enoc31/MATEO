@@ -3,9 +3,11 @@ import { useNavigate, Link } from 'react-router-dom';
 import { Lock, CheckCircle2, AlertCircle, ArrowLeft } from 'lucide-react';
 import { supabase } from '../../supabaseClient';
 import { isSimulationMode } from '../../services/api';
+import { useAuth } from '../../context/AuthContext';
 
 export const UpdatePassword: React.FC = () => {
   const navigate = useNavigate();
+  const { setIsPasswordRecovery } = useAuth();
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -63,10 +65,11 @@ export const UpdatePassword: React.FC = () => {
 
       // Cerrar la sesión de recuperación para forzar el inicio de sesión con la nueva contraseña
       await supabase.auth.signOut();
+      setIsPasswordRecovery(false);
 
       setTimeout(() => {
-        navigate('/login');
-      }, 2500);
+        navigate('/login?reset=success');
+      }, 2000);
     } catch (err: unknown) {
       const errorMessage =
         err instanceof Error
