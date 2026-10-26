@@ -34,3 +34,10 @@ Welcome! You are an AI assistant helping developers build, optimize, and maintai
 - **Unit & Integration Tests**: Every new feature or API method must be accompanied by tests in Vitest and React Testing Library.
 - **Test Locations**: Group test files adjacent to the files they test (e.g., `Login.test.tsx` next to `Login.tsx`).
 - **Linter & Formatter**: Run `npm run lint` and `npm run format` before finalizing code edits. Ensure there are no warnings or errors.
+
+## AI Agents Registry & Slack Synchronization Protocol
+
+- **Mandatory Canvas Update**: Whenever a new AI agent, subagent, or automated service is created or added to this project:
+  1. Register the new agent with its name, emoji, Role, and Key Functions in `scripts/sync-agents-canvas.cjs` (in `AGENTS_REGISTRY`).
+  2. Execute `node scripts/sync-agents-canvas.cjs` to automatically synchronize and update the Slack Canvas tab **"Agentes y Funciones"** (Canvas ID: `F0CBW49L21K` in channel `#agents` / `C0CBV626CLB`).
+  3. Inform the team in Slack or conversation summary about the updated documentation in the Canvas tab.
