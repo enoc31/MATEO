@@ -60,6 +60,7 @@ const AGENTS_REGISTRY = [
       'Operación continua en segundo plano (`scripts/mateo-service.cjs`) y endpoint serverless en Vercel (`/api/slack-events`).',
       'Consultas analíticas en vivo a Supabase: métricas de congregaciones (5 activas), proyectos, miembros, inventarios y donaciones.',
       'Generación y envío diario del Reporte Matutino a las 8:00 AM (hora de Caracas).',
+      'Reporte diario de commits a las 08:00 PM al canal #commits (`scripts/mateo-commits-reporter.cjs`) con desglose de bugs, nuevas funciones y validación contra requerimientos de #qa-reviews.',
       'Publicación y actualización del panel visual interactivo *App Home Tab* en Slack.',
       'Asistencia técnica, pastoral y de auditoría en canales y mensajes directos.',
     ],

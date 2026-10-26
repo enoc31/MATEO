@@ -6,6 +6,7 @@
 
 const https = require('https');
 const { generateSmartReply } = require('./mateo-knowledge.cjs');
+const { sendDailyCommitReport, buildCommitReportMessage } = require('./mateo-commits-reporter.cjs');
 
 const SLACK_BOT_TOKEN =
   process.env.SLACK_BOT_TOKEN || 'xoxb-11707506536257-12408012454738-5ORkQ1Krf3dzTWB9ATmI756Z';
@@ -138,6 +139,15 @@ function generateBotReply(incomingText) {
   }
 
   if (
+    lower.includes('commit') ||
+    lower.includes('ultimo commit') ||
+    lower.includes('reporte commits') ||
+    lower.includes('reporte diario')
+  ) {
+    return null; // Manejado asíncronamente con buildCommitReportMessage
+  }
+
+  if (
     lower.includes('hola') ||
     lower.includes('buenos') ||
     lower.includes('buenas') ||
@@ -148,6 +158,7 @@ function generateBotReply(incomingText) {
       '¿En qué puedo ayudarte hoy?\n' +
       '• Escribe *estado* o *main* para ver el estado de la plataforma.\n' +
       '• Escribe *checklist* para consultar los puntos de revisión técnica.\n' +
+      '• Escribe *commits* para consultar el reporte del último commit y validación de QA.\n' +
       '• Escribe *resumen* para ver los pendientes de auditoría.\n' +
       '• O visita la plataforma en: https://mateo-wine.vercel.app'
     );
@@ -158,8 +169,9 @@ function generateBotReply(incomingText) {
       '🤖 *Funcionalidades de Mateo:*\n' +
       '1. 📊 *Auditoría Contable:* Detección de gastos sin comprobante, requisiciones por autorizar e ingresos bancarios sin conciliar.\n' +
       '2. 📑 *Control de Cambios:* Seguimiento del checklist de revisiones técnicas del equipo.\n' +
-      '3. 🔔 *Notificaciones Automáticas:* Envío de reportes diarios al canal #C0CBJMA2NK1 cada día hábil a las 8:00 AM.\n' +
-      '4. 🌐 *Acceso Directo:* Enlace a la app web de producción y pruebas.'
+      '3. 📦 *Reporte de Commits:* Envío diario de commits a las 08:00 PM al canal #commits con análisis de bugs y validación contra #qa-reviews.\n' +
+      '4. 🔔 *Notificaciones Automáticas:* Envío de reportes diarios al canal #C0CBJMA2NK1 cada día hábil a las 8:00 AM.\n' +
+      '5. 🌐 *Acceso Directo:* Enlace a la app web de producción y pruebas.'
     );
   }
 
@@ -169,6 +181,7 @@ function generateBotReply(incomingText) {
       'Puedes escribirme:\n' +
       '• *estado* o *main* para ver el estado de la plataforma.\n' +
       '• *checklist* para ver el avance de revisiones.\n' +
+      '• *commits* para ver el reporte del último commit y requerimientos de QA.\n' +
       '• *resumen* para ver los pendientes de auditoría.\n' +
       '• *ayuda* para más opciones.'
     );
@@ -176,12 +189,57 @@ function generateBotReply(incomingText) {
 
   return (
     `He recibido tu consulta: _"${incomingText}"_.\n\n` +
-    'Estoy activo para apoyar al equipo de revisores en tiempo real. Puedes preguntarme sobre *estado*, *main*, *checklist*, *resumen* o solicitar *ayuda*.'
+    'Estoy activo para apoyar al equipo de revisores en tiempo real. Puedes preguntarme sobre *estado*, *main*, *checklist*, *commits*, *resumen* o solicitar *ayuda*.'
   );
 }
 
+/**
+ * Planificador del reporte diario de commits a las 08:00 PM (20:00)
+ */
+function scheduleDailyCommitReport() {
+  const now = new Date();
+  const target = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 20, 0, 0, 0);
+
+  if (now.getTime() >= target.getTime()) {
+    // Si ya pasaron las 20:00 hoy, programar para mañana a las 20:00
+    target.setDate(target.getDate() + 1);
+  }
+
+  const msUntilTarget = target.getTime() - now.getTime();
+  const minutesUntil = (msUntilTarget / (1000 * 60)).toFixed(1);
+
+  console.log(
+    `[Servicio Mateo] ⏰ Próximo reporte diario de commits programado para: ${target.toLocaleString()} (en ${minutesUntil} minutos).`,
+  );
+
+  setTimeout(async () => {
+    console.log(
+      '[Servicio Mateo] 🚀 Son las 08:00 PM. Despachando reporte diario de commits al canal #commits...',
+    );
+    try {
+      await sendDailyCommitReport();
+    } catch (err) {
+      console.error('[Servicio Mateo] Error al despachar reporte diario de commits:', err);
+    }
+    // Programar la siguiente iteración diaria
+    scheduleDailyCommitReport();
+  }, msUntilTarget);
+}
+
 async function init() {
-  console.log('[Servicio Mateo] Inicializando monitor en tiempo real...');
+  const args = process.argv.slice(2);
+  if (args.includes('--report-commits-now')) {
+    console.log('[Servicio Mateo] Ejecutando reporte inmediato de commits...');
+    await sendDailyCommitReport();
+    process.exit(0);
+  }
+
+  console.log(
+    '[Servicio Mateo] Inicializando monitor en tiempo real y scheduler de las 08:00 PM...',
+  );
+
+  // Iniciar planificador diario de las 08:00 PM
+  scheduleDailyCommitReport();
 
   // Registrar el último timestamp existente de cada canal para no responder mensajes viejos
   for (const ch of CHANNELS_TO_WATCH) {
@@ -197,9 +255,9 @@ async function init() {
     }
   }
 
-  console.log('[Servicio Mateo] Canales inicializados. Escuchando activamente cada 2 segundos...');
+  console.log('[Servicio Mateo] Canales inicializados. Escuchando activamente cada 5 segundos...');
 
-  // Bucle de monitoreo continuo
+  // Bucle de monitoreo continuo (intervalo de 5s para respetar cuota de Slack)
   setInterval(async () => {
     for (const ch of CHANNELS_TO_WATCH) {
       try {
@@ -228,7 +286,19 @@ async function init() {
               if (isDM || isMention) {
                 console.log(`[Servicio Mateo] Nuevo mensaje en ${ch}: "${msg.text}"`);
                 const cleanText = msg.text.replace(new RegExp(`<@${BOT_USER_ID}>`, 'g'), '').trim();
-                const reply = await generateSmartReply(cleanText);
+                const lower = cleanText.toLowerCase();
+
+                let reply;
+                if (
+                  lower.includes('commit') ||
+                  lower.includes('reporte commits') ||
+                  lower.includes('ultimo commit')
+                ) {
+                  const report = await buildCommitReportMessage();
+                  reply = report.text;
+                } else {
+                  reply = await generateSmartReply(cleanText);
+                }
 
                 await slackPost(ch, reply, isMention ? msg.ts : undefined);
                 console.log(`[Servicio Mateo] Respuesta inteligente enviada a ${ch}`);
@@ -240,7 +310,7 @@ async function init() {
         console.error(`[Servicio Mateo] Error en canal ${ch}:`, err.message);
       }
     }
-  }, 2000);
+  }, 5000);
 }
 
 init();
