@@ -1,6 +1,6 @@
 // ============================================================
-// scripts/slack-bot-daemon.js
-// Demonio de escucha y respuesta en tiempo real para Mateo en Slack
+// scripts/mateo-service.cjs
+// Servicio de escucha y respuesta en tiempo real para Mateo en Slack
 // Monitorea canales directos y menciones para responder en 1-2 segundos.
 // ============================================================
 
@@ -179,7 +179,7 @@ function generateBotReply(incomingText) {
 }
 
 async function init() {
-  console.log('[Slack Daemon] Inicializando monitor en tiempo real...');
+  console.log('[Servicio Mateo] Inicializando monitor en tiempo real...');
 
   // Registrar el último timestamp existente de cada canal para no responder mensajes viejos
   for (const ch of CHANNELS_TO_WATCH) {
@@ -195,7 +195,7 @@ async function init() {
     }
   }
 
-  console.log('[Slack Daemon] Canales inicializados. Escuchando activamente cada 2 segundos...');
+  console.log('[Servicio Mateo] Canales inicializados. Escuchando activamente cada 2 segundos...');
 
   // Bucle de monitoreo continuo
   setInterval(async () => {
@@ -224,18 +224,18 @@ async function init() {
 
               // En DMs responder siempre; en canales públicos sólo si lo mencionan
               if (isDM || isMention) {
-                console.log(`[Slack Daemon] Nuevo mensaje en ${ch}: "${msg.text}"`);
+                console.log(`[Servicio Mateo] Nuevo mensaje en ${ch}: "${msg.text}"`);
                 const cleanText = msg.text.replace(new RegExp(`<@${BOT_USER_ID}>`, 'g'), '').trim();
                 const reply = await generateSmartReply(cleanText);
 
                 await slackPost(ch, reply, isMention ? msg.ts : undefined);
-                console.log(`[Slack Daemon] Respuesta inteligente enviada a ${ch}`);
+                console.log(`[Servicio Mateo] Respuesta inteligente enviada a ${ch}`);
               }
             }
           }
         }
       } catch (err) {
-        console.error(`[Slack Daemon] Error en canal ${ch}:`, err.message);
+        console.error(`[Servicio Mateo] Error en canal ${ch}:`, err.message);
       }
     }
   }, 2000);
