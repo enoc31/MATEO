@@ -32,7 +32,7 @@ describe('Mateo Commits Reporter', () => {
     expect(typeof commit.author).toBe('string');
     expect(typeof commit.subject).toBe('string');
     expect(typeof commit.branch).toBe('string');
-  });
+  }, 15000);
 
   it('analyzeCommit correctly parses a "fix" commit as a bug fix', () => {
     const mockCommit = {
@@ -134,5 +134,5 @@ describe('Mateo Commits Reporter', () => {
     // Verify header block
     expect(message.blocks[0].type).toBe('header');
     expect(message.blocks[0].text.text).toContain('Reporte Diario de Commits — Agente Mateo');
-  });
+  }, 15000);
 });

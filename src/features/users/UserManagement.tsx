@@ -3,7 +3,6 @@ import { Plus } from 'lucide-react';
 import { api } from '../../services/api';
 import { useAuth, type UserRole } from '../../context/AuthContext';
 import { UserInviteModal } from './UserInviteModal';
-import { SlackIntegrationPanel } from './SlackIntegrationPanel';
 
 interface UserItem {
   id: string;
@@ -487,11 +486,6 @@ export const UserManagement: React.FC = () => {
             </tbody>
           </table>
         )}
-      </div>
-
-      {/* Panel de Integración con Slack para el equipo de revisión */}
-      <div style={{ marginTop: '2.5rem' }}>
-        <SlackIntegrationPanel />
       </div>
 
       {/* Modal de Invitación — el nuevo usuario crea su propia contraseña */}

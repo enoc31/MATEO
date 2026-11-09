@@ -65,8 +65,21 @@ const AGENTS_REGISTRY = [
       'Asistencia técnica, pastoral y de auditoría en canales y mensajes directos.',
     ],
   },
+  {
+    name: 'SaaS Architecture Documenter (`saas-architecture-documenter`)',
+    emoji: '📐',
+    role: 'Especialista en Documentación Técnica y Arquitectura de Sistemas SaaS',
+    description:
+      'Documentador técnico de precisión: todo lo que escribe está respaldado por evidencia del repositorio y rotulado como verificado, declarado o por verificar.',
+    keyFunctions: [
+      'Definido en `.agents/agents/saas-architecture-documenter/` (`agent.json` y `SYSTEM_PROMPT.md`).',
+      'Documentación de arquitectura AS-IS/TO-BE, diagramas C4 y Mermaid, ADRs y RFCs en `docs/`.',
+      'Modelo de datos, aislamiento multi-tenant (RLS por `ong_id`), roles y catálogo de Edge Functions.',
+      'Análisis de seguridad, continuidad (RPO/RTO), observabilidad, rendimiento y riesgos (probabilidad × impacto).',
+      'Detección de divergencias entre la documentación y el código; opera en modo solo documentación, sin modificar código de la aplicación.',
+    ],
+  },
 ];
-
 function buildMarkdown() {
   let md = `# 🤖 Ecosistema de Agentes de IA en el Proyecto MATEO\n`;
   md += `*Documentación oficial de roles, arquitectura y responsabilidades técnicas.*  \n`;

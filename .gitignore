@@ -27,3 +27,6 @@ dist-ssr
 *.sw?
 
 .vercel
+
+# Informe interno AS-IS / TO-BE (no versionar)
+docs/INFORME_AS-IS_TO-BE.md

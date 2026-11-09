@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { api } from '../../services/api';
 import { Building, Users, Clock, ShieldAlert } from 'lucide-react';
 import { SkeletonSaasCards } from '../../components/SkeletonSaasCards';
+import { SlackIntegrationPanel } from './SlackIntegrationPanel';
 
 interface SaasStats {
   ongsCount: number;
@@ -203,6 +204,11 @@ export const SaasDashboard: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* Panel de Integración con Slack para el equipo interno de auditoría y revisores */}
+      <div style={{ marginTop: '2.5rem' }}>
+        <SlackIntegrationPanel />
+      </div>
     </div>
   );
 };
