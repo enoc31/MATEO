@@ -1,0 +1,68 @@
+# OpenTelemetry Collector Configuration for Grafana Cloud
+# Supports receiving Traces, Metrics, and Logs over OTLP (gRPC & HTTP)
+# and exporting securely to Grafana Cloud (Tempo, Mimir, Loki).
+
+receivers:
+  otlp:
+    protocols:
+      grpc:
+        endpoint: 0.0.0.0:4317
+      http:
+        endpoint: 0.0.0.0:4318
+        cors:
+          allowed_origins:
+            - 'http://*'
+            - 'https://*'
+          allowed_headers:
+            - '*'
+
+processors:
+  memory_limiter:
+    check_interval: 1s
+    limit_percentage: 75
+    spike_limit_percentage: 20
+
+  batch:
+    send_batch_size: 512
+    timeout: 2s
+    send_batch_max_size: 1024
+
+  resourcedetection:
+    detectors: [env, system]
+    override: false
+
+exporters:
+  otlphttp/grafana_cloud:
+    endpoint: '${env:GRAFANA_CLOUD_OTLP_ENDPOINT}'
+    auth:
+      authenticator: basicauth/grafana_cloud
+
+  # Optional debug exporter for local inspection
+  debug:
+    verbosity: basic
+
+extensions:
+  basicauth/grafana_cloud:
+    client_auth:
+      username: '${env:GRAFANA_CLOUD_INSTANCE_ID}'
+      password: '${env:GRAFANA_CLOUD_API_KEY}'
+
+service:
+  extensions: [basicauth/grafana_cloud]
+  pipelines:
+    traces:
+      receivers: [otlp]
+      processors: [memory_limiter, resourcedetection, batch]
+      exporters: [otlphttp/grafana_cloud, debug]
+    metrics:
+      receivers: [otlp]
+      processors: [memory_limiter, resourcedetection, batch]
+      exporters: [otlphttp/grafana_cloud, debug]
+    logs:
+      receivers: [otlp]
+      processors: [memory_limiter, resourcedetection, batch]
+      exporters: [otlphttp/grafana_cloud, debug]
+  telemetry:
+    metrics:
+      level: detailed
+      address: 0.0.0.0:8888
