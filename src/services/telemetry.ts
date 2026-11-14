@@ -276,6 +276,7 @@ export function initTelemetry(customConfig?: Partial<TelemetryConfig>): boolean 
       globalLogger = loggerProviderInstance.getLogger(config.serviceName, config.serviceVersion);
     }
 
+    registerGlobalErrorHandlers();
     isInitialized = true;
     return true;
   } catch (error) {
@@ -393,10 +394,104 @@ export async function traceOperation<T>(
   });
 }
 
+let errorListener: ((event: ErrorEvent) => void) | null = null;
+let rejectionListener: ((event: PromiseRejectionEvent) => void) | null = null;
+
+/**
+ * Registers global browser unhandled error and rejection listeners
+ */
+export function registerGlobalErrorHandlers(): void {
+  if (typeof window === 'undefined' || errorListener !== null) {
+    return;
+  }
+
+  errorListener = (event: ErrorEvent) => {
+    recordMetric('mateo_frontend_errors_total', 1, { type: 'uncaught_exception' });
+    emitLog('ERROR', `Uncaught exception: ${event.message}`, {
+      filename: event.filename || 'unknown',
+      lineno: event.lineno || 0,
+      colno: event.colno || 0,
+      stack: event.error?.stack || '',
+    });
+  };
+
+  rejectionListener = (event: PromiseRejectionEvent) => {
+    recordMetric('mateo_frontend_errors_total', 1, { type: 'unhandled_rejection' });
+    const reasonMsg =
+      event.reason instanceof Error
+        ? event.reason.message
+        : typeof event.reason === 'string'
+          ? event.reason
+          : 'Unknown rejection reason';
+    const stack = event.reason instanceof Error ? event.reason.stack : '';
+    emitLog('ERROR', `Unhandled promise rejection: ${reasonMsg}`, {
+      stack: stack || '',
+    });
+  };
+
+  window.addEventListener('error', errorListener);
+  window.addEventListener('unhandledrejection', rejectionListener);
+}
+
+/**
+ * Removes global browser unhandled error and rejection listeners
+ */
+export function unregisterGlobalErrorHandlers(): void {
+  if (typeof window === 'undefined') return;
+  if (errorListener) {
+    window.removeEventListener('error', errorListener);
+    errorListener = null;
+  }
+  if (rejectionListener) {
+    window.removeEventListener('unhandledrejection', rejectionListener);
+    rejectionListener = null;
+  }
+}
+
+/**
+ * Returns active OpenTelemetry trace ID if present
+ */
+export function getCurrentTraceId(): string | undefined {
+  const activeSpan = trace.getActiveSpan();
+  if (activeSpan) {
+    return activeSpan.spanContext().traceId;
+  }
+  return undefined;
+}
+
+/**
+ * SRE Helper: Records an exception on the active span, logs to Grafana Loki,
+ * and increments error metrics.
+ */
+export function recordException(
+  error: Error,
+  attributes?: Record<string, string | number | boolean>,
+): void {
+  try {
+    const activeSpan = trace.getActiveSpan();
+    if (activeSpan) {
+      activeSpan.recordException(error);
+      activeSpan.setStatus({ code: SpanStatusCode.ERROR, message: error.message });
+    }
+    emitLog('ERROR', error.message, {
+      name: error.name,
+      stack: error.stack || '',
+      ...(attributes || {}),
+    });
+    recordMetric('mateo_exceptions_total', 1, {
+      exception_type: error.name || 'Error',
+      ...(attributes || {}),
+    });
+  } catch {
+    // Non-blocking
+  }
+}
+
 /**
  * Teardown helper for tests or clean unmounting
  */
 export async function shutdownTelemetry(): Promise<void> {
+  unregisterGlobalErrorHandlers();
   if (tracerProviderInstance) {
     await tracerProviderInstance.shutdown().catch(() => {});
     tracerProviderInstance = null;

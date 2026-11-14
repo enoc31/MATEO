@@ -8,6 +8,10 @@ import {
   recordMetric,
   emitLog,
   traceOperation,
+  recordException,
+  getCurrentTraceId,
+  registerGlobalErrorHandlers,
+  unregisterGlobalErrorHandlers,
   shutdownTelemetry,
 } from './telemetry';
 
@@ -175,6 +179,40 @@ describe('telemetry service', () => {
           throw new Error('Simulation failed');
         }),
       ).rejects.toThrow('Simulation failed');
+    });
+
+    it('records exceptions safely via recordException helper', () => {
+      initTelemetry({
+        enabled: true,
+        otlpEndpoint: 'http://localhost:4318',
+      });
+
+      expect(() => {
+        recordException(new TypeError('Cannot read properties of null'), {
+          module: 'reconciliation',
+          operation: 'parse_csv',
+        });
+      }).not.toThrow();
+    });
+
+    it('retrieves current trace id or undefined when no active span', () => {
+      const traceId = getCurrentTraceId();
+      expect(traceId === undefined || typeof traceId === 'string').toBe(true);
+    });
+
+    it('registers and unregisters browser global error handlers without error', () => {
+      expect(() => {
+        registerGlobalErrorHandlers();
+        // Dispatches synthetic error event
+        window.dispatchEvent(
+          new ErrorEvent('error', {
+            message: 'Synthetic test error',
+            filename: 'test.ts',
+            lineno: 10,
+          }),
+        );
+        unregisterGlobalErrorHandlers();
+      }).not.toThrow();
     });
   });
 });
