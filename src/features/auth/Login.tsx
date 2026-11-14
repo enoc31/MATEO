@@ -5,6 +5,7 @@ import { supabase } from '../../supabaseClient';
 import { isSimulationMode } from '../../services/api';
 import { Link } from 'react-router-dom';
 import { Lock, Mail, Building2, KeyRound, ArrowRight } from 'lucide-react';
+import { traceOperation, recordMetric, emitLog, recordException } from '../../services/telemetry';
 
 export const Login: React.FC = () => {
   const { refreshProfile } = useAuth();
@@ -37,20 +38,31 @@ export const Login: React.FC = () => {
     setError(null);
     setSuccess(null);
     try {
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
-      if (error) {
-        if (error.message.includes('Invalid login credentials')) {
-          throw new Error('Credenciales inválidas. Verifica tu correo y contraseña.');
-        } else if (error.message.includes('Email not confirmed')) {
-          throw new Error(
-            'Tu correo electrónico no ha sido verificado. Por favor revisa tu bandeja de entrada.',
-          );
-        }
-        throw error;
-      }
-      await refreshProfile();
+      await traceOperation(
+        'auth.login',
+        async () => {
+          const { error } = await supabase.auth.signInWithPassword({ email, password });
+          if (error) {
+            if (error.message.includes('Invalid login credentials')) {
+              throw new Error('Credenciales inválidas. Verifica tu correo y contraseña.');
+            } else if (error.message.includes('Email not confirmed')) {
+              throw new Error(
+                'Tu correo electrónico no ha sido verificado. Por favor revisa tu bandeja de entrada.',
+              );
+            }
+            throw error;
+          }
+          await refreshProfile();
+        },
+        { 'auth.method': 'password' },
+      );
+
+      recordMetric('mateo_auth_logins_total', 1, { status: 'success', method: 'password' });
+      emitLog('INFO', 'Usuario inició sesión exitosamente');
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Error al iniciar sesión';
+      recordMetric('mateo_auth_logins_total', 1, { status: 'failure', method: 'password' });
+      recordException(err instanceof Error ? err : new Error(message), { operation: 'auth.login' });
       setError(message);
     } finally {
       setLoading(false);
