@@ -104,8 +104,12 @@ export function getTelemetryConfigFromEnv(): TelemetryConfig {
       ? (import.meta.env as unknown as Record<string, string | undefined>)
       : {};
 
-  const grafanaToken = env.VITE_GRAFANA_TOKEN || '';
-  const instanceId = env.VITE_GRAFANA_INSTANCE_ID || '';
+  const grafanaToken =
+    env.VITE_GRAFANA_CLOUD_API_TOKEN ||
+    env.VITE_GRAFANA_CLOUD_API_KEY ||
+    env.VITE_GRAFANA_TOKEN ||
+    '';
+  const instanceId = env.VITE_GRAFANA_CLOUD_INSTANCE_ID || env.VITE_GRAFANA_INSTANCE_ID || '';
   let autoEndpoint = '';
   if (grafanaToken.startsWith('glc_')) {
     try {
@@ -123,7 +127,10 @@ export function getTelemetryConfigFromEnv(): TelemetryConfig {
     }
   }
 
-  const baseEndpoint = env.VITE_OTEL_EXPORTER_OTLP_ENDPOINT || autoEndpoint || '';
+  const baseEndpoint =
+    env.VITE_OTEL_EXPORTER_OTLP_ENDPOINT ||
+    autoEndpoint ||
+    (env.PROD && typeof window !== 'undefined' ? '/api/otlp' : '');
   let rawHeaders = env.VITE_OTEL_EXPORTER_OTLP_HEADERS || '';
   if (!rawHeaders && instanceId && grafanaToken) {
     const credentials = `${instanceId}:${grafanaToken}`;

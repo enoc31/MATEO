@@ -54,10 +54,7 @@ if (grafanaToken.startsWith('glc_')) {
   }
 }
 
-const instanceId =
-  process.env.GRAFANA_CLOUD_INSTANCE_ID ||
-  process.env.GRAFANA_INSTANCE_ID ||
-  '';
+const instanceId = process.env.GRAFANA_CLOUD_INSTANCE_ID || process.env.GRAFANA_INSTANCE_ID || '';
 
 const endpoint =
   process.env.GRAFANA_CLOUD_OTLP_ENDPOINT ||
@@ -104,22 +101,12 @@ console.log(`Target Endpoint: ${baseUrl}`);
 if (detectedZone) {
   console.log(`Detected Zone:   ${detectedZone}`);
 }
-console.log(
-  `Authorization:   ${headers['Authorization'] ? 'Configured (Basic ***)' : 'None'}`,
-);
+console.log(`Authorization:   ${headers['Authorization'] ? 'Configured (Basic ***)' : 'None'}`);
 if (grafanaToken && !instanceId) {
-  console.log(
-    `\n⚠️  GRAFANA_TOKEN detected, but GRAFANA_CLOUD_INSTANCE_ID is missing.`,
-  );
-  console.log(
-    `   Grafana Cloud OTLP Gateway requires Basic Auth: <instance_id>:<token>.`,
-  );
-  console.log(
-    `   Please add to .env.local: GRAFANA_CLOUD_INSTANCE_ID=<tu_instance_id>`,
-  );
-  console.log(
-    `   (Found in Grafana Cloud -> My Account -> Stacks -> OpenTelemetry card)\n`,
-  );
+  console.log(`\n⚠️  GRAFANA_TOKEN detected, but GRAFANA_CLOUD_INSTANCE_ID is missing.`);
+  console.log(`   Grafana Cloud OTLP Gateway requires Basic Auth: <instance_id>:<token>.`);
+  console.log(`   Please add to .env.local: GRAFANA_CLOUD_INSTANCE_ID=<tu_instance_id>`);
+  console.log(`   (Found in Grafana Cloud -> My Account -> Stacks -> OpenTelemetry card)\n`);
 }
 console.log('='.repeat(65));
 

@@ -3,7 +3,11 @@
  * Exports traces, metrics, and logs via OTLP HTTP to Grafana Cloud or an OpenTelemetry Collector.
  */
 
-const grafanaToken = process.env.GRAFANA_TOKEN || process.env.GRAFANA_CLOUD_API_KEY || '';
+const grafanaToken =
+  process.env.GRAFANA_CLOUD_API_TOKEN ||
+  process.env.GRAFANA_CLOUD_API_KEY ||
+  process.env.GRAFANA_TOKEN ||
+  '';
 const instanceId = process.env.GRAFANA_CLOUD_INSTANCE_ID || process.env.GRAFANA_INSTANCE_ID || '';
 
 let detectedZone = '';
