@@ -167,24 +167,32 @@ export const AppsDashboard: React.FC = () => {
           {visibleApps.map((app) => (
             <button
               key={app.id}
-              onClick={() => navigate(`/app/${app.id}`)}
+              type="button"
+              disabled={app.disabled}
+              aria-disabled={app.disabled}
+              onClick={() => {
+                if (!app.disabled) navigate(`/app/${app.id}`);
+              }}
               style={{
                 background: 'none',
                 border: 'none',
                 padding: 0,
-                cursor: 'pointer',
+                cursor: app.disabled ? 'default' : 'pointer',
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'center',
                 width: '110px',
                 outline: 'none',
                 transition: 'transform 0.2s',
+                opacity: app.disabled ? 0.35 : 1,
+                filter: app.disabled ? 'grayscale(0.6)' : 'none',
+                pointerEvents: app.disabled ? 'none' : 'auto',
               }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.transform = 'scale(1.08)';
+                if (!app.disabled) e.currentTarget.style.transform = 'scale(1.08)';
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.transform = 'scale(1)';
+                if (!app.disabled) e.currentTarget.style.transform = 'scale(1)';
               }}
             >
               {/* App Icon Container */}
