@@ -221,6 +221,22 @@ export const AppsDashboard: React.FC = () => {
               >
                 {app.label}
               </span>
+              {app.badge && (
+                <span
+                  style={{
+                    marginTop: '0.25rem',
+                    fontSize: '0.6rem',
+                    fontWeight: 800,
+                    color: '#92400e',
+                    background: '#fef3c7',
+                    padding: '0.05rem 0.45rem',
+                    borderRadius: '999px',
+                    textTransform: 'uppercase',
+                  }}
+                >
+                  {app.badge}
+                </span>
+              )}
             </button>
           ))}
         </div>

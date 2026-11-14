@@ -12,6 +12,10 @@ import {
   CalendarDays,
   Building,
   Tag,
+  Package,
+  CalendarRange,
+  Calculator,
+  Landmark,
 } from 'lucide-react';
 
 export interface MenuItemConfig {
@@ -20,10 +24,12 @@ export interface MenuItemConfig {
   iconName: string;
   color: string;
   roles: string[];
+  /** Etiqueta opcional, p. ej. 'En desarrollo' para módulos planteados pero incompletos. */
+  badge?: string;
 }
 
-export const getMenuItems = (tipoOrganizacion?: 'ong' | 'ekklesia'): MenuItemConfig[] => {
-  const isEkklesia = tipoOrganizacion === 'ekklesia';
+const getOngMenuItems = (): MenuItemConfig[] => {
+  const isEkklesia = false;
 
   return [
     {
@@ -119,7 +125,98 @@ export const getMenuItems = (tipoOrganizacion?: 'ong' | 'ekklesia'): MenuItemCon
     },
   ];
 };
+/**
+ * Menú de Mateo Ekklesia. Agrupa los módulos heredados de la ONG según lo acordado:
+ * - Ingresos y Gastos: diezmos y ofrendas + solicitudes de gasto + comprobantes.
+ * - Contabilidad: conciliación bancaria + estados financieros.
+ * - Presupuesto: por ministerio, con el catálogo dentro.
+ */
+const getEkklesiaMenuItems = (): MenuItemConfig[] => [
+  {
+    id: 'dashboard',
+    label: 'Tablero General',
+    iconName: 'LayoutDashboard',
+    color: '#714B67',
+    roles: ['administrador', 'auditor', 'director', 'donante'],
+  },
+  {
+    id: 'organization',
+    label: 'Perfil de la Iglesia',
+    iconName: 'Building',
+    color: '#2563EB',
+    roles: ['administrador', 'director', 'coordinador', 'auditor', 'donante', 'auxiliar_campo'],
+  },
+  {
+    id: 'beneficiaries',
+    label: 'Miembros y Comunidad',
+    iconName: 'UserCheck',
+    color: '#EC4899',
+    roles: ['administrador', 'coordinador', 'director', 'auxiliar_campo'],
+  },
+  {
+    id: 'jornadas',
+    label: 'Estructura y Ministerios',
+    iconName: 'CalendarDays',
+    color: '#F59E0B',
+    roles: ['administrador', 'director', 'coordinador'],
+    badge: 'En desarrollo',
+  },
+  {
+    id: 'finance',
+    label: 'Ingresos y Gastos',
+    iconName: 'Wallet',
+    color: '#10B981',
+    roles: ['administrador', 'coordinador', 'director', 'auditor'],
+  },
+  {
+    id: 'budgets',
+    label: 'Presupuesto',
+    iconName: 'PieChart',
+    color: '#EF4444',
+    roles: ['administrador', 'auditor', 'director'],
+    badge: 'En desarrollo',
+  },
+  {
+    id: 'accounting',
+    label: 'Contabilidad',
+    iconName: 'Calculator',
+    color: '#06B6D4',
+    roles: ['administrador', 'auditor'],
+  },
+  {
+    id: 'inventory',
+    label: 'Inventario',
+    iconName: 'Package',
+    color: '#8B5CF6',
+    roles: ['administrador', 'director', 'coordinador'],
+    badge: 'En desarrollo',
+  },
+  {
+    id: 'calendar',
+    label: 'Calendario',
+    iconName: 'CalendarRange',
+    color: '#0EA5E9',
+    roles: ['administrador', 'director', 'coordinador', 'auxiliar_campo'],
+    badge: 'En desarrollo',
+  },
+  {
+    id: 'tasas',
+    label: 'Tasas BCV',
+    iconName: 'ArrowRightLeft',
+    color: '#64748B',
+    roles: ['administrador', 'director'],
+  },
+  {
+    id: 'users',
+    label: 'Gestión de Usuarios',
+    iconName: 'Users',
+    color: '#1E3A8A',
+    roles: ['administrador'],
+  },
+];
 
+export const getMenuItems = (tipoOrganizacion?: 'ong' | 'ekklesia'): MenuItemConfig[] =>
+  tipoOrganizacion === 'ekklesia' ? getEkklesiaMenuItems() : getOngMenuItems();
 export const menuItems: MenuItemConfig[] = getMenuItems('ong');
 
 export const getMenuIcon = (name: string, size = 20) => {
@@ -151,6 +248,14 @@ export const getMenuIcon = (name: string, size = 20) => {
       return <Building {...props} />;
     case 'Tag':
       return <Tag {...props} />;
+    case 'Package':
+      return <Package {...props} />;
+    case 'CalendarRange':
+      return <CalendarRange {...props} />;
+    case 'Calculator':
+      return <Calculator {...props} />;
+    case 'Landmark':
+      return <Landmark {...props} />;
     default:
       return null;
   }
