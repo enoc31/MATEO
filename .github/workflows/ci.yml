@@ -2,9 +2,9 @@ name: Integration & Safeguards CI
 
 on:
   push:
-    branches: [main]
+    branches: [main, develop]
   pull_request:
-    branches: [main]
+    branches: [main, develop]
   schedule:
     - cron: '0 6 * * 1' # Runs weekly on Monday mornings to detect drift
 
@@ -62,7 +62,7 @@ jobs:
           badge-file: scorecard-badge.json
 
       - name: Commit Scorecard Badge and Report
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        if: github.event_name == 'push' && github.ref == 'refs/heads/develop'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
