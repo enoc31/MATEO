@@ -104,12 +104,39 @@ export function getTelemetryConfigFromEnv(): TelemetryConfig {
       ? (import.meta.env as unknown as Record<string, string | undefined>)
       : {};
 
+  const grafanaToken = env.VITE_GRAFANA_TOKEN || '';
+  const instanceId = env.VITE_GRAFANA_INSTANCE_ID || '';
+  let autoEndpoint = '';
+  if (grafanaToken.startsWith('glc_')) {
+    try {
+      const rawPayload = grafanaToken.replace(/^glc_/, '');
+      const decoded = JSON.parse(
+        typeof atob !== 'undefined'
+          ? atob(rawPayload)
+          : Buffer.from(rawPayload, 'base64').toString('utf8'),
+      );
+      if (decoded?.m?.r) {
+        autoEndpoint = `https://otlp-gateway-${decoded.m.r}.grafana.net/otlp`;
+      }
+    } catch {
+      // Ignore
+    }
+  }
+
+  const baseEndpoint = env.VITE_OTEL_EXPORTER_OTLP_ENDPOINT || autoEndpoint || '';
+  let rawHeaders = env.VITE_OTEL_EXPORTER_OTLP_HEADERS || '';
+  if (!rawHeaders && instanceId && grafanaToken) {
+    const credentials = `${instanceId}:${grafanaToken}`;
+    const encoded =
+      typeof btoa !== 'undefined' ? btoa(credentials) : Buffer.from(credentials).toString('base64');
+    rawHeaders = `Authorization=Basic ${encoded}`;
+  }
+
   const enabled =
     env.VITE_OTEL_ENABLED !== 'false' &&
-    Boolean(env.VITE_OTEL_EXPORTER_OTLP_ENDPOINT || env.VITE_OTEL_EXPORTER_OTLP_TRACES_ENDPOINT);
+    Boolean(baseEndpoint || env.VITE_OTEL_EXPORTER_OTLP_TRACES_ENDPOINT);
 
-  const baseEndpoint = env.VITE_OTEL_EXPORTER_OTLP_ENDPOINT || '';
-  const headers = parseOtelHeaders(env.VITE_OTEL_EXPORTER_OTLP_HEADERS || '');
+  const headers = parseOtelHeaders(rawHeaders);
 
   return {
     enabled,

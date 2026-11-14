@@ -11,29 +11,53 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
-// Load .env if present
-const envPath = path.resolve(process.cwd(), '.env');
-if (fs.existsSync(envPath)) {
-  const content = fs.readFileSync(envPath, 'utf8');
-  for (const line of content.split('\n')) {
-    const trimmed = line.trim();
-    if (!trimmed || trimmed.startsWith('#')) continue;
-    const eqIdx = trimmed.indexOf('=');
-    if (eqIdx !== -1) {
-      const key = trimmed.slice(0, eqIdx).trim();
-      const val = trimmed
-        .slice(eqIdx + 1)
-        .trim()
-        .replace(/^["']|["']$/g, '');
-      if (!process.env[key]) {
+// Helper to load env file
+function loadEnvFile(filePath) {
+  if (fs.existsSync(filePath)) {
+    const content = fs.readFileSync(filePath, 'utf8');
+    for (const line of content.split('\n')) {
+      const trimmed = line.trim();
+      if (!trimmed || trimmed.startsWith('#')) continue;
+      const eqIdx = trimmed.indexOf('=');
+      if (eqIdx !== -1) {
+        const key = trimmed.slice(0, eqIdx).trim();
+        const val = trimmed
+          .slice(eqIdx + 1)
+          .trim()
+          .replace(/^["']|["']$/g, '');
         process.env[key] = val;
       }
     }
   }
 }
 
+// Load .env then .env.local (override)
+loadEnvFile(path.resolve(process.cwd(), '.env'));
+loadEnvFile(path.resolve(process.cwd(), '.env.local'));
+
+// Parse token metadata if GLC token is provided
+const grafanaToken = process.env.GRAFANA_TOKEN || process.env.GRAFANA_CLOUD_API_KEY || '';
+let detectedZone = '';
+if (grafanaToken.startsWith('glc_')) {
+  try {
+    const rawPayload = grafanaToken.replace(/^glc_/, '');
+    const decoded = JSON.parse(Buffer.from(rawPayload, 'base64').toString('utf8'));
+    if (decoded?.m?.r) {
+      detectedZone = decoded.m.r;
+    }
+  } catch {
+    // Ignore payload decoding error
+  }
+}
+
+const instanceId =
+  process.env.GRAFANA_CLOUD_INSTANCE_ID ||
+  process.env.GRAFANA_INSTANCE_ID ||
+  '';
+
 const endpoint =
   process.env.GRAFANA_CLOUD_OTLP_ENDPOINT ||
+  (detectedZone ? `https://otlp-gateway-${detectedZone}.grafana.net/otlp` : '') ||
   process.env.OTEL_EXPORTER_OTLP_ENDPOINT ||
   process.env.VITE_OTEL_EXPORTER_OTLP_ENDPOINT ||
   'http://localhost:4318';
@@ -41,10 +65,8 @@ const endpoint =
 let authHeader =
   process.env.OTEL_EXPORTER_OTLP_HEADERS || process.env.VITE_OTEL_EXPORTER_OTLP_HEADERS || '';
 
-if (!authHeader && process.env.GRAFANA_CLOUD_INSTANCE_ID && process.env.GRAFANA_CLOUD_API_KEY) {
-  const token = Buffer.from(
-    `${process.env.GRAFANA_CLOUD_INSTANCE_ID}:${process.env.GRAFANA_CLOUD_API_KEY}`,
-  ).toString('base64');
+if (!authHeader && instanceId && grafanaToken) {
+  const token = Buffer.from(`${instanceId}:${grafanaToken}`).toString('base64');
   authHeader = `Authorization=Basic ${token}`;
 }
 
@@ -75,9 +97,26 @@ console.log('='.repeat(65));
 console.log(' OpenTelemetry -> Grafana Cloud Connectivity Diagnostic');
 console.log('='.repeat(65));
 console.log(`Target Endpoint: ${baseUrl}`);
+if (detectedZone) {
+  console.log(`Detected Zone:   ${detectedZone}`);
+}
 console.log(
-  `Authorization:   ${headers['Authorization'] ? 'Configured (Basic ***)' : 'None (Local / Collector mode)'}`,
+  `Authorization:   ${headers['Authorization'] ? 'Configured (Basic ***)' : 'None'}`,
 );
+if (grafanaToken && !instanceId) {
+  console.log(
+    `\n⚠️  GRAFANA_TOKEN detected, but GRAFANA_CLOUD_INSTANCE_ID is missing.`,
+  );
+  console.log(
+    `   Grafana Cloud OTLP Gateway requires Basic Auth: <instance_id>:<token>.`,
+  );
+  console.log(
+    `   Please add to .env.local: GRAFANA_CLOUD_INSTANCE_ID=<tu_instance_id>`,
+  );
+  console.log(
+    `   (Found in Grafana Cloud -> My Account -> Stacks -> OpenTelemetry card)\n`,
+  );
+}
 console.log('='.repeat(65));
 
 const nowNano = String(Date.now() * 1000000);

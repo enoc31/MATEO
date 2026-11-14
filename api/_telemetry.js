@@ -3,11 +3,36 @@
  * Exports traces, metrics, and logs via OTLP HTTP to Grafana Cloud or an OpenTelemetry Collector.
  */
 
-const OTLP_ENDPOINT =
-  process.env.OTEL_EXPORTER_OTLP_ENDPOINT || process.env.VITE_OTEL_EXPORTER_OTLP_ENDPOINT || '';
+const grafanaToken = process.env.GRAFANA_TOKEN || process.env.GRAFANA_CLOUD_API_KEY || '';
+const instanceId = process.env.GRAFANA_CLOUD_INSTANCE_ID || process.env.GRAFANA_INSTANCE_ID || '';
 
-const OTLP_HEADERS_RAW =
+let detectedZone = '';
+if (grafanaToken.startsWith('glc_')) {
+  try {
+    const rawPayload = grafanaToken.replace(/^glc_/, '');
+    const decoded = JSON.parse(Buffer.from(rawPayload, 'base64').toString('utf8'));
+    if (decoded?.m?.r) {
+      detectedZone = decoded.m.r;
+    }
+  } catch {
+    // Ignore payload decoding error
+  }
+}
+
+const OTLP_ENDPOINT =
+  process.env.GRAFANA_CLOUD_OTLP_ENDPOINT ||
+  (detectedZone ? `https://otlp-gateway-${detectedZone}.grafana.net/otlp` : '') ||
+  process.env.OTEL_EXPORTER_OTLP_ENDPOINT ||
+  process.env.VITE_OTEL_EXPORTER_OTLP_ENDPOINT ||
+  '';
+
+let OTLP_HEADERS_RAW =
   process.env.OTEL_EXPORTER_OTLP_HEADERS || process.env.VITE_OTEL_EXPORTER_OTLP_HEADERS || '';
+
+if (!OTLP_HEADERS_RAW && instanceId && grafanaToken) {
+  const basicToken = Buffer.from(`${instanceId}:${grafanaToken}`).toString('base64');
+  OTLP_HEADERS_RAW = `Authorization=Basic ${basicToken}`;
+}
 
 const SERVICE_NAME =
   process.env.OTEL_SERVICE_NAME || process.env.VITE_OTEL_SERVICE_NAME || 'mateo-api';
