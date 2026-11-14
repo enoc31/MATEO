@@ -35,10 +35,17 @@ describe('menuConfig — menú de Mateo Ekklesia', () => {
     }
   });
 
-  it('marca como "En desarrollo" los módulos incompletos', () => {
+  it('marca como deshabilitados los módulos planteados pero incompletos', () => {
     const items = getMenuItems('ekklesia');
     for (const id of ['inventory', 'calendar', 'jornadas', 'budgets']) {
-      expect(items.find((item) => item.id === id)?.badge).toBe('En desarrollo');
+      expect(items.find((item) => item.id === id)?.disabled).toBe(true);
+    }
+  });
+
+  it('deja habilitados los módulos que ya funcionan', () => {
+    const items = getMenuItems('ekklesia');
+    for (const id of ['dashboard', 'organization', 'beneficiaries', 'finance', 'accounting']) {
+      expect(items.find((item) => item.id === id)?.disabled).toBeFalsy();
     }
   });
 

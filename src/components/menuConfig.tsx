@@ -24,8 +24,8 @@ export interface MenuItemConfig {
   iconName: string;
   color: string;
   roles: string[];
-  /** Etiqueta opcional, p. ej. 'En desarrollo' para módulos planteados pero incompletos. */
-  badge?: string;
+  /** Módulo planteado pero aún no disponible: se muestra atenuado y sin navegación. */
+  disabled?: boolean;
 }
 
 const getOngMenuItems = (): MenuItemConfig[] => {
@@ -159,7 +159,7 @@ const getEkklesiaMenuItems = (): MenuItemConfig[] => [
     iconName: 'CalendarDays',
     color: '#F59E0B',
     roles: ['administrador', 'director', 'coordinador'],
-    badge: 'En desarrollo',
+    disabled: true,
   },
   {
     id: 'finance',
@@ -174,7 +174,7 @@ const getEkklesiaMenuItems = (): MenuItemConfig[] => [
     iconName: 'PieChart',
     color: '#EF4444',
     roles: ['administrador', 'auditor', 'director'],
-    badge: 'En desarrollo',
+    disabled: true,
   },
   {
     id: 'accounting',
@@ -189,7 +189,7 @@ const getEkklesiaMenuItems = (): MenuItemConfig[] => [
     iconName: 'Package',
     color: '#8B5CF6',
     roles: ['administrador', 'director', 'coordinador'],
-    badge: 'En desarrollo',
+    disabled: true,
   },
   {
     id: 'calendar',
@@ -197,7 +197,7 @@ const getEkklesiaMenuItems = (): MenuItemConfig[] => [
     iconName: 'CalendarRange',
     color: '#0EA5E9',
     roles: ['administrador', 'director', 'coordinador', 'auxiliar_campo'],
-    badge: 'En desarrollo',
+    disabled: true,
   },
   {
     id: 'tasas',

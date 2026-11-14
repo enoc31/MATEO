@@ -297,19 +297,37 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
           <ul className="nav-menu">
             {visibleMenuItems.map((item) => (
               <li key={item.id}>
-                <NavLink
-                  to={`/app/${item.id}`}
-                  className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.5rem',
-                  }}
-                  onClick={() => setIsMobileMenuOpen(false)} // Close menu on mobile
-                >
-                  <span>{getMenuIcon(item.iconName)}</span>
-                  <span>{item.label}</span>
-                </NavLink>
+                {item.disabled ? (
+                  <span
+                    className="nav-link"
+                    aria-disabled="true"
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.5rem',
+                      opacity: 0.35,
+                      cursor: 'default',
+                      pointerEvents: 'none',
+                    }}
+                  >
+                    <span>{getMenuIcon(item.iconName)}</span>
+                    <span>{item.label}</span>
+                  </span>
+                ) : (
+                  <NavLink
+                    to={`/app/${item.id}`}
+                    className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.5rem',
+                    }}
+                    onClick={() => setIsMobileMenuOpen(false)} // Close menu on mobile
+                  >
+                    <span>{getMenuIcon(item.iconName)}</span>
+                    <span>{item.label}</span>
+                  </NavLink>
+                )}
               </li>
             ))}
           </ul>
@@ -683,15 +701,26 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
         <nav className="sidebar-nav">
           {visibleMenuItems.map((item) => (
             <li key={item.id}>
-              <NavLink
-                to={`/app/${item.id}`}
-                className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}
-                onClick={() => setIsMobileMenuOpen(false)}
-              >
-                <span className="sidebar-icon">{getMenuIcon(item.iconName)}</span>
-                <span className="sidebar-text">{item.label}</span>
-                {currentPath === item.id && <div className="active-indicator" />}
-              </NavLink>
+              {item.disabled ? (
+                <span
+                  className="sidebar-link"
+                  aria-disabled="true"
+                  style={{ opacity: 0.35, cursor: 'default', pointerEvents: 'none' }}
+                >
+                  <span className="sidebar-icon">{getMenuIcon(item.iconName)}</span>
+                  <span className="sidebar-text">{item.label}</span>
+                </span>
+              ) : (
+                <NavLink
+                  to={`/app/${item.id}`}
+                  className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  <span className="sidebar-icon">{getMenuIcon(item.iconName)}</span>
+                  <span className="sidebar-text">{item.label}</span>
+                  {currentPath === item.id && <div className="active-indicator" />}
+                </NavLink>
+              )}
             </li>
           ))}
         </nav>

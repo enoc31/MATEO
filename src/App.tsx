@@ -401,37 +401,6 @@ const MainAppContent: React.FC = () => {
             />
           }
         />
-        <Route
-          path="inventory"
-          element={
-            <ProtectedRoute
-              allowedRoles={['administrador', 'director', 'coordinador']}
-              element={
-                <ModuleHub
-                  title="Inventario"
-                  description="Registro de los bienes de la iglesia."
-                  statusNote="Módulo en desarrollo. Aún no está disponible."
-                />
-              }
-            />
-          }
-        />
-        <Route
-          path="calendar"
-          element={
-            <ProtectedRoute
-              allowedRoles={['administrador', 'director', 'coordinador', 'auxiliar_campo']}
-              element={
-                <ModuleHub
-                  title="Calendario"
-                  description="Calendario de actividades de la iglesia."
-                  statusNote="Módulo en desarrollo. Aún no está disponible."
-                />
-              }
-            />
-          }
-        />
-
         {/* Sub-screens that hide the layout or show over it */}
         <Route path="nuevo-ingreso" element={<IncomeRegistrationForm />} />
         <Route path="importar-extracto" element={<ImportBankStatement />} />
