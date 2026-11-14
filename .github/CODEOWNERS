@@ -7,3 +7,16 @@
 /src/context/AuthContext.tsx @gerar
 /src/services/api.ts @gerar
 /src/services/storage.ts @gerar
+
+# Observability, Telemetry & SRE Infrastructure
+/src/services/telemetry.ts @anyulled
+/src/services/telemetry.test.ts @anyulled
+/src/components/TelemetryErrorBoundary.tsx @anyulled
+/src/components/TelemetryErrorBoundary.test.tsx @anyulled
+/api/_telemetry.js @anyulled
+/api/otlp.js @anyulled
+/docs/OPENTELEMETRY_GRAFANA_CLOUD.md @anyulled
+/otel-collector-config.yaml @anyulled
+/docker-compose.otel.yml @anyulled
+/scripts/verify-otel-grafana.mjs @anyulled
+
