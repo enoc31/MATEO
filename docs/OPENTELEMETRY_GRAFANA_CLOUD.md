@@ -7,18 +7,18 @@ Esta guía detalla la configuración y puesta en marcha de observabilidad comple
 ## 1. Arquitectura de Observabilidad
 
 ```
-┌─────────────────────────────────┐
-│   MATEO Frontend (React 19/Vite)│
-│  - Trazas: Fetch / DocumentLoad │
-│  - Métricas: Web Vitals / Apps  │
-│  - Logs: Structured Events      │
-└───────────────┬─────────────────┘
-                │ OTLP/HTTP (JSON)
+┌─────────────────────────────────────────────────────────────┐
+│              MATEO Frontend (React 19 / Vite SPA)           │
+│  - Trazas: Fetch / DocumentLoad                             │
+│  - Métricas: Rendimiento / Interacción                      │
+│  - Logs: Structured Events                                  │
+└───────────────┬─────────────────────────────────────────────┘
+                │ OTLP/HTTP (/api/otlp/v1/* en producción)
                 ▼
 ┌─────────────────────────────────────────────────────────────┐
-│  Opción B: OpenTelemetry Collector (Docker Compose) [Rec.]   │
-│  - Puerto 4318 (HTTP) con CORS habilitado                   │
-│  - Batching, compresión y basicauth seguro                  │
+│         Vercel Serverless OTLP Proxy (api/otlp.js)          │
+│  - Inyecta credenciales Basic Auth de forma segura          │
+│  - Elimina CORS y previene filtración de tokens al cliente  │
 └───────────────┬─────────────────────────────────────────────┘
                 │ OTLP / HTTPS (Basic Auth)
                 ▼
@@ -30,7 +30,10 @@ Esta guía detalla la configuración y puesta en marcha de observabilidad comple
 └─────────────────────────────────────────────────────────────┘
 ```
 
-También se incluye soporte para la **Opción A (Envío Directo)** desde el navegador o funciones Serverless (`api/*`) directamente al gateway OTLP de Grafana Cloud.
+En desarrollo local, puedes optar por:
+
+- **Local OTel Collector** (`docker compose -f docker-compose.otel.yml up -d`) en el puerto 4318.
+- O el proxy serverless (`api/otlp.js`) al ejecutar `vercel dev`.
 
 ---
 
@@ -197,3 +200,20 @@ La salida mostrará el estado HTTP de cada señal:
 3. **Grafana Loki (Logs)**:
    - Dirígete a **Explore** -> selecciona la fuente de datos **Loki**.
    - Consulta: `{service_name="mateo-humanitaria"}`.
+
+---
+
+## 7. Despliegue en Vercel
+
+Al desplegar en Vercel:
+
+1. **Variables de Entorno en Vercel Dashboard** (Settings → Environment Variables):
+   - `GRAFANA_CLOUD_OTLP_ENDPOINT`: `https://otlp-gateway-prod-us-east-6.grafana.net/otlp`
+   - `GRAFANA_CLOUD_INSTANCE_ID`: `1923445`
+   - `GRAFANA_CLOUD_API_TOKEN`: Tu token `glc_...`
+   - `OTEL_SERVICE_NAME`: `mateo-api`
+   - `VITE_OTEL_ENABLED`: `true`
+   - `VITE_OTEL_SERVICE_NAME`: `mateo-humanitaria`
+
+2. **Seguridad y CORS**:
+   El cliente web en producción envía sus eventos a `/api/otlp/v1/*`. La función Serverless `api/otlp.js` autentica y reenvía las solicitudes hacia Grafana Cloud de forma transparente sin exponer tus tokens ni sufrir bloqueos por CORS.
