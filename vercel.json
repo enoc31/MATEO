@@ -1,5 +1,6 @@
 {
   "rewrites": [
+    { "source": "/api/otlp/(.*)", "destination": "/api/otlp?signal=$1" },
     { "source": "/api/(.*)", "destination": "/api/$1" },
     { "source": "/registro", "destination": "/api/registro" },
     { "source": "/(.*)", "destination": "/index.html" }

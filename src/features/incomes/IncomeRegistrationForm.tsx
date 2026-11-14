@@ -13,6 +13,7 @@ import {
 import { api } from '../../services/api';
 import type { Project, Donante, BankTransaction, TasaBCV } from '../../services/api';
 import { formatDateForFrontEnd } from '../../utils/formatters';
+import { traceOperation, recordMetric, emitLog, recordException } from '../../services/telemetry';
 
 const formatCurrency = (amount: number) =>
   new Intl.NumberFormat('es-VE', { style: 'currency', currency: 'USD' }).format(amount);
@@ -239,27 +240,52 @@ export const IncomeRegistrationForm: React.FC = () => {
     setSubmitting(true);
     try {
       const donante = donantes.find((d) => d.id === donanteId);
-      await api.createDonation({
-        proyecto_id: proyectoId || null,
-        transaccion_id:
-          tipoRegistro === 'bancario' && selectedTxIds.length > 0 ? selectedTxIds[0] : null,
-        donante: donante?.nombre || 'Donante Desconocido',
-        monto: calculatedMontoUsd,
-        descripcion: descripcion.trim(),
-        fecha,
+      await traceOperation(
+        'donations.create',
+        async () => {
+          await api.createDonation({
+            proyecto_id: proyectoId || null,
+            transaccion_id:
+              tipoRegistro === 'bancario' && selectedTxIds.length > 0 ? selectedTxIds[0] : null,
+            donante: donante?.nombre || 'Donante Desconocido',
+            monto: calculatedMontoUsd,
+            descripcion: descripcion.trim(),
+            fecha,
+            moneda,
+            medio_pago: medioPago,
+            monto_original: numMontoOriginal,
+            tasa_bcv: finalTasaBcv,
+            monto_usd: calculatedMontoUsd,
+            monto_ves: calculatedMontoVes,
+            vinculo_transaccion_ids: selectedTxIds.length > 0 ? selectedTxIds : undefined,
+          });
+        },
+        {
+          moneda,
+          medio_pago: medioPago,
+          tipo_registro: tipoRegistro,
+          monto_usd: calculatedMontoUsd,
+        },
+      );
+
+      recordMetric('mateo_donations_created_total', 1, {
         moneda,
         medio_pago: medioPago,
-        monto_original: numMontoOriginal,
-        tasa_bcv: finalTasaBcv,
+        tipo_registro: tipoRegistro,
+      });
+      emitLog('INFO', 'Donación / Ofrenda registrada con éxito', {
         monto_usd: calculatedMontoUsd,
-        monto_ves: calculatedMontoVes,
-        vinculo_transaccion_ids: selectedTxIds.length > 0 ? selectedTxIds : undefined,
+        moneda,
       });
 
       alert('✅ Ofrenda / Diezmo registrado con éxito.');
       navigate(-1);
-    } catch (err: any) {
-      alert('Error al registrar la ofrenda: ' + (err.message || ''));
+    } catch (err: unknown) {
+      const errMsg = err instanceof Error ? err.message : String(err);
+      recordException(err instanceof Error ? err : new Error(errMsg), {
+        operation: 'donations.create',
+      });
+      alert('Error al registrar la ofrenda: ' + errMsg);
     } finally {
       setSubmitting(false);
     }
