@@ -50,4 +50,55 @@ describe('ModuleHub', () => {
     expect(screen.queryByRole('status')).not.toBeInTheDocument();
     expect(screen.queryByRole('link')).not.toBeInTheDocument();
   });
+
+  describe('filtrado de enlaces por rol', () => {
+    const financeLinks = [
+      {
+        to: '/app/incomes',
+        label: 'Diezmos y Ofrendas',
+        description: 'Ingresos.',
+        roles: ['administrador', 'director', 'auditor'],
+      },
+      {
+        to: '/app/requisitions',
+        label: 'Solicitudes de Gasto',
+        description: 'Gastos.',
+        roles: ['administrador', 'coordinador', 'director'],
+      },
+    ];
+
+    const renderHub = (userRole?: string) =>
+      render(
+        <MemoryRouter>
+          <ModuleHub
+            title="Ingresos y Gastos"
+            description="Finanzas."
+            links={financeLinks}
+            userRole={userRole}
+          />
+        </MemoryRouter>,
+      );
+
+    it('el coordinador no ve Diezmos y Ofrendas (no tiene acceso a esa pantalla)', () => {
+      renderHub('coordinador');
+      expect(screen.queryByRole('link', { name: /Diezmos y Ofrendas/ })).not.toBeInTheDocument();
+      expect(screen.getByRole('link', { name: /Solicitudes de Gasto/ })).toBeInTheDocument();
+    });
+
+    it('el auditor no ve Solicitudes de Gasto (no tiene acceso a esa pantalla)', () => {
+      renderHub('auditor');
+      expect(screen.getByRole('link', { name: /Diezmos y Ofrendas/ })).toBeInTheDocument();
+      expect(screen.queryByRole('link', { name: /Solicitudes de Gasto/ })).not.toBeInTheDocument();
+    });
+
+    it('el administrador ve todos los enlaces', () => {
+      renderHub('administrador');
+      expect(screen.getAllByRole('link')).toHaveLength(2);
+    });
+
+    it('sin rol de usuario oculta los enlaces que exigen rol', () => {
+      renderHub(undefined);
+      expect(screen.queryByRole('link')).not.toBeInTheDocument();
+    });
+  });
 });

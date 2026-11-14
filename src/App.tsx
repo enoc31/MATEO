@@ -352,21 +352,25 @@ const MainAppContent: React.FC = () => {
                   title="Ingresos y Gastos"
                   description="Registro de ingresos de la iglesia y de los gastos de cada ministerio."
                   statusNote="Módulo en consolidación: hoy reúne las pantallas existentes."
+                  userRole={profile.rol}
                   links={[
                     {
                       to: '/app/incomes',
                       label: 'Diezmos y Ofrendas',
                       description: 'Registro de ingresos.',
+                      roles: ['administrador', 'director', 'auditor'],
                     },
                     {
                       to: '/app/requisitions',
                       label: 'Solicitudes de Gasto',
                       description: 'Solicitudes y aprobación de gastos ministeriales.',
+                      roles: ['administrador', 'coordinador', 'director'],
                     },
                     {
                       to: '/app/field-entry',
                       label: 'Comprobantes y Gastos',
                       description: 'Registro de comprobantes y gastos.',
+                      roles: ['administrador', 'coordinador', 'director'],
                     },
                   ]}
                 />
@@ -384,16 +388,19 @@ const MainAppContent: React.FC = () => {
                   title="Contabilidad"
                   description="Conciliación bancaria y estados financieros de la iglesia."
                   statusNote="Módulo en consolidación: hoy reúne las pantallas existentes."
+                  userRole={profile.rol}
                   links={[
                     {
                       to: '/app/reconciliation',
                       label: 'Conciliación Bancaria',
                       description: 'Conciliar movimientos con el estado de cuenta.',
+                      roles: ['administrador'],
                     },
                     {
                       to: '/app/audit',
                       label: 'Estados Financieros (EEFF)',
                       description: 'Informes y estados financieros.',
+                      roles: ['administrador', 'auditor'],
                     },
                   ]}
                 />
