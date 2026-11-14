@@ -36,7 +36,11 @@ loadEnvFile(path.resolve(process.cwd(), '.env'));
 loadEnvFile(path.resolve(process.cwd(), '.env.local'));
 
 // Parse token metadata if GLC token is provided
-const grafanaToken = process.env.GRAFANA_TOKEN || process.env.GRAFANA_CLOUD_API_KEY || '';
+const grafanaToken =
+  process.env.GRAFANA_CLOUD_API_TOKEN ||
+  process.env.GRAFANA_TOKEN ||
+  process.env.GRAFANA_CLOUD_API_KEY ||
+  '';
 let detectedZone = '';
 if (grafanaToken.startsWith('glc_')) {
   try {
