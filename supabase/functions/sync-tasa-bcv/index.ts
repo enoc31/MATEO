@@ -69,12 +69,34 @@ serve(async (_req) => {
 
     // 5. Insertar la tasa — ignorar si ya existe para esa fecha
     //    (ON CONFLICT DO NOTHING vía ignoreDuplicates)
-    const { error } = await supabase
-      .from('tasas_bcv')
-      .upsert(
-        { fecha: fechaDestino, tasa, fuente: 'bcv_api' },
-        { onConflict: 'fecha', ignoreDuplicates: true },
-      );
+    //    Expand/Contract (Option B): intentar primero con (ong_id, fecha) y hacer
+    //    fallback a (fecha) si la BD aún mantiene la restricción única legacy.
+    let { error } = await supabase.from('tasas_bcv').upsert(
+      {
+        fecha: fechaDestino,
+        tasa,
+        fuente: 'bcv_api',
+        ong_id: '11111111-1111-1111-1111-111111111111',
+      },
+      { onConflict: 'ong_id,fecha', ignoreDuplicates: true },
+    );
+
+    const isConstraintMismatch =
+      error &&
+      (error.code === '42P10' ||
+        error.message
+          ?.toLowerCase()
+          .includes('no unique or exclusion constraint matching the on conflict'));
+
+    if (isConstraintMismatch) {
+      const fallback = await supabase
+        .from('tasas_bcv')
+        .upsert(
+          { fecha: fechaDestino, tasa, fuente: 'bcv_api' },
+          { onConflict: 'fecha', ignoreDuplicates: true },
+        );
+      error = fallback.error;
+    }
 
     if (error) throw error;
 

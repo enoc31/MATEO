@@ -450,7 +450,7 @@ const PendingApproval: React.FC<PendingApprovalProps> = ({ logout, refreshProfil
     if (!userId || isSimulationMode) return;
 
     setIsListening(true);
-    // Escuchar actualizaciones de la tabla 'usuarios' en tiempo real
+    // Escuchar actualizaciones de la tabla 'usuarios_perfiles' en tiempo real
     const channel = supabase
       .channel(`user-approval-${userId}`)
       .on(
@@ -458,7 +458,7 @@ const PendingApproval: React.FC<PendingApprovalProps> = ({ logout, refreshProfil
         {
           event: 'UPDATE',
           schema: 'public',
-          table: 'usuarios',
+          table: 'usuarios_perfiles',
           filter: `id=eq.${userId}`,
         },
         async (payload) => {
