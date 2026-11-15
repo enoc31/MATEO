@@ -1,3 +1,16 @@
-project_id = "TU_PROJECT_REF"
-# Reemplaza "TU_PROJECT_REF" con el Reference ID de tu proyecto.
-# Lo encuentras en: Supabase Dashboard → Settings → General → Reference ID
+project_id = "ydnylydulwjecdllbnev"
+
+[api]
+enabled = true
+port = 54321
+schemas = ["public", "graphql_public"]
+extra_search_path = ["public", "extensions"]
+max_rows = 1000
+
+[db]
+port = 54322
+major_version = 17
+
+[db.seed]
+enabled = true
+sql_paths = ["./seed.sql"]
