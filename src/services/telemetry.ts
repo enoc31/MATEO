@@ -1,4 +1,11 @@
-import { trace, propagation, type Tracer, type Meter, SpanStatusCode } from '@opentelemetry/api';
+import {
+  trace,
+  propagation,
+  type Tracer,
+  type Meter,
+  type Counter,
+  SpanStatusCode,
+} from '@opentelemetry/api';
 import { WebTracerProvider } from '@opentelemetry/sdk-trace-web';
 import { BatchSpanProcessor } from '@opentelemetry/sdk-trace-base';
 import { MeterProvider, PeriodicExportingMetricReader } from '@opentelemetry/sdk-metrics';
@@ -33,6 +40,7 @@ let globalLogger: Logger | null = null;
 let tracerProviderInstance: WebTracerProvider | null = null;
 let meterProviderInstance: MeterProvider | null = null;
 let loggerProviderInstance: LoggerProvider | null = null;
+const countersCache = new Map<string, Counter>();
 
 /**
  * Parses header strings in formats like:
@@ -317,9 +325,13 @@ export function recordMetric(
     const meter = getMeter();
     if (!meter) return;
 
-    const counter = meter.createCounter(metricName, {
-      description: `Metric tracking ${metricName}`,
-    });
+    let counter = countersCache.get(metricName);
+    if (!counter) {
+      counter = meter.createCounter(metricName, {
+        description: `Metric tracking ${metricName}`,
+      });
+      countersCache.set(metricName, counter);
+    }
     counter.add(value, attributes);
   } catch {
     // Ignore metric recording errors to protect runtime flow

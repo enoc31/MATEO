@@ -58,10 +58,12 @@ export const Login: React.FC = () => {
       );
 
       recordMetric('mateo_auth_logins_total', 1, { status: 'success', method: 'password' });
+      recordMetric('mateo_auth_login_success_total', 1, { method: 'password' });
       emitLog('INFO', 'Usuario inició sesión exitosamente');
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Error al iniciar sesión';
       recordMetric('mateo_auth_logins_total', 1, { status: 'failure', method: 'password' });
+      recordMetric('mateo_auth_login_failure_total', 1, { method: 'password' });
       recordException(err instanceof Error ? err : new Error(message), { operation: 'auth.login' });
       setError(message);
     } finally {
