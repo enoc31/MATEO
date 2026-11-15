@@ -73,28 +73,41 @@ export function parseOtelHeaders(raw?: string): Record<string, string> {
 }
 
 /**
- * Resolves standard OTLP signal endpoints from base URL or overrides
+ * Resolves standard OTLP signal endpoints from base URL or overrides.
+ * Ensures relative paths (/api/otlp) are converted to absolute URLs in browser contexts,
+ * as OpenTelemetry's exporter URL parser requires absolute URLs (new URL(url)).
  */
 export function resolveSignalEndpoints(baseEndpoint: string, config: Partial<TelemetryConfig>) {
-  const normalizedBase = baseEndpoint ? baseEndpoint.replace(/\/+$/, '') : '';
+  let normalizedBase = baseEndpoint ? baseEndpoint.replace(/\/+$/, '') : '';
+  if (normalizedBase.startsWith('/') && typeof window !== 'undefined' && window.location?.origin) {
+    normalizedBase = `${window.location.origin}${normalizedBase}`;
+  }
+
+  const makeAbsolute = (url?: string) => {
+    if (!url) return '';
+    if (url.startsWith('/') && typeof window !== 'undefined' && window.location?.origin) {
+      return `${window.location.origin}${url}`;
+    }
+    return url;
+  };
 
   return {
     traces:
-      config.tracesEndpoint ||
+      makeAbsolute(config.tracesEndpoint) ||
       (normalizedBase
         ? normalizedBase.endsWith('/v1/traces')
           ? normalizedBase
           : `${normalizedBase}/v1/traces`
         : ''),
     metrics:
-      config.metricsEndpoint ||
+      makeAbsolute(config.metricsEndpoint) ||
       (normalizedBase
         ? normalizedBase.endsWith('/v1/metrics')
           ? normalizedBase
           : `${normalizedBase}/v1/metrics`
         : ''),
     logs:
-      config.logsEndpoint ||
+      makeAbsolute(config.logsEndpoint) ||
       (normalizedBase
         ? normalizedBase.endsWith('/v1/logs')
           ? normalizedBase
@@ -135,10 +148,13 @@ export function getTelemetryConfigFromEnv(): TelemetryConfig {
     }
   }
 
-  const baseEndpoint =
+  let baseEndpoint =
     env.VITE_OTEL_EXPORTER_OTLP_ENDPOINT ||
     autoEndpoint ||
     (env.PROD && typeof window !== 'undefined' ? '/api/otlp' : '');
+  if (baseEndpoint.startsWith('/') && typeof window !== 'undefined' && window.location?.origin) {
+    baseEndpoint = `${window.location.origin}${baseEndpoint}`;
+  }
   let rawHeaders = env.VITE_OTEL_EXPORTER_OTLP_HEADERS || '';
   if (!rawHeaders && instanceId && grafanaToken) {
     const credentials = `${instanceId}:${grafanaToken}`;
@@ -497,6 +513,23 @@ export function recordException(
   } catch {
     // Non-blocking
   }
+}
+
+/**
+ * Flushes all pending spans, metrics, and logs immediately.
+ */
+export async function forceFlushTelemetry(): Promise<void> {
+  const flushes: Promise<unknown>[] = [];
+  if (tracerProviderInstance) {
+    flushes.push(tracerProviderInstance.forceFlush().catch(() => {}));
+  }
+  if (meterProviderInstance) {
+    flushes.push(meterProviderInstance.forceFlush().catch(() => {}));
+  }
+  if (loggerProviderInstance) {
+    flushes.push(loggerProviderInstance.forceFlush().catch(() => {}));
+  }
+  await Promise.all(flushes);
 }
 
 /**
