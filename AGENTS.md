@@ -35,6 +35,20 @@ Welcome! You are an AI assistant helping developers build, optimize, and maintai
 - **Test Locations**: Group test files adjacent to the files they test (e.g., `Login.test.tsx` next to `Login.tsx`).
 - **Linter & Formatter**: Run `npm run lint` and `npm run format` before finalizing code edits. Ensure there are no warnings or errors.
 
+## Git Branching, Pull Requests & Spec-Driven Workflow
+
+- **No Direct Pushes to `main` or `develop`**: AI agents and developers must **never** commit or push directly to `main` (production) or `develop` (integration).
+- **Short-Lived Working Branches**: Always create a descriptive branch from `develop` before making changes:
+  - `feature/<short-name>` for new features or modules.
+  - `fix/<short-name>` for bug fixes.
+  - `chore/<short-name>` for tooling, CI, or documentation updates.
+- **Spec Before Code**: Before implementing a new module or complex feature, use the `/grill-me` and `/to-spec` skills (`.agents/skills/grill-me/`, `.agents/skills/to-spec/`) to interview the user, resolve edge cases, and synthesize a clear specification.
+- **Pull Request Flow & Merge Strategy**:
+  1. Push the working branch to `origin` and open a Pull Request targeting `develop` (link related GitHub Issues with `Closes #N` when applicable).
+  2. Ensure all CI checks (`build-and-test`, `sonar`) pass before merging.
+  3. Merge `feature/*` → `develop` using **Squash and merge**, and delete the working branch after merging.
+  4. Promote changes to production by opening a Pull Request from `develop` → `main` and merging with **Create a merge commit** (never Squash merge `develop` into `main`, so both branches keep a shared commit history).
+
 ## AI Agents Registry & Slack Synchronization Protocol
 
 - **Mandatory Canvas Update**: Whenever a new AI agent, subagent, or automated service is created or added to this project:
