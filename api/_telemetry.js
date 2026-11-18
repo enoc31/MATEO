@@ -95,7 +95,7 @@ export async function sendServerlessLog(level, message, attributes = {}) {
                 observedTimeUnixNano: nowNano,
                 severityText: level,
                 body: { stringValue: message },
-                attributes: Object.entries(attributes).map(([k, v]) => ({
+                attributes: Object.entries(attributes || {}).map(([k, v]) => ({
                   key: k,
                   value: { stringValue: String(v) },
                 })),
@@ -197,14 +197,18 @@ export async function traceServerless(name, req, fn) {
         ],
       };
 
-      fetch(url, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...parsedHeaders,
-        },
-        body: JSON.stringify(tracePayload),
-      }).catch(() => {});
+      try {
+        await fetch(url, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            ...parsedHeaders,
+          },
+          body: JSON.stringify(tracePayload),
+        });
+      } catch {
+        /* ignore telemetry errors */
+      }
     }
   }
 }
