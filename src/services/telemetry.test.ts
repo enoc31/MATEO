@@ -12,6 +12,7 @@ import {
   getCurrentTraceId,
   registerGlobalErrorHandlers,
   unregisterGlobalErrorHandlers,
+  forceFlushTelemetry,
   shutdownTelemetry,
 } from './telemetry';
 
@@ -86,6 +87,13 @@ describe('telemetry service', () => {
       const base = 'http://localhost:4318/';
       const endpoints = resolveSignalEndpoints(base, {});
       expect(endpoints.traces).toBe('http://localhost:4318/v1/traces');
+    });
+
+    it('converts relative path to absolute URL in browser environments', () => {
+      const endpoints = resolveSignalEndpoints('/api/otlp', {});
+      expect(endpoints.traces).toMatch(/^https?:\/\/.*\/api\/otlp\/v1\/traces$/);
+      expect(endpoints.metrics).toMatch(/^https?:\/\/.*\/api\/otlp\/v1\/metrics$/);
+      expect(endpoints.logs).toMatch(/^https?:\/\/.*\/api\/otlp\/v1\/logs$/);
     });
   });
 
@@ -213,6 +221,10 @@ describe('telemetry service', () => {
         );
         unregisterGlobalErrorHandlers();
       }).not.toThrow();
+    });
+
+    it('flushes telemetry safely even if providers are uninitialized or active', async () => {
+      await expect(forceFlushTelemetry()).resolves.not.toThrow();
     });
   });
 });

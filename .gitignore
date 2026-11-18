@@ -27,6 +27,11 @@ dist-ssr
 *.sw?
 
 .vercel
+coverage
+scratch
+eslint-output.json
+load-test-results.json
+supabase/.temp
 
 # Informe interno AS-IS / TO-BE (no versionar)
 docs/INFORME_AS-IS_TO-BE.md

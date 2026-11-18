@@ -263,8 +263,9 @@ export const ChurchMembersManager: React.FC = () => {
             setLoading(false);
             hasCache = true;
           }
-        } catch (e) {
-          // Ignorar error de parsing cache
+        } catch (err) {
+          console.warn('Error parsing cached members:', err);
+          sessionStorage.removeItem(cacheKey);
         }
       }
     }

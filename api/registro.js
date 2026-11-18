@@ -3,19 +3,33 @@ import { traceServerless, sendServerlessLog } from './_telemetry.js';
 
 const supabaseUrl = process.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = process.env.VITE_SUPABASE_ANON_KEY;
-const supabase = createClient(supabaseUrl, supabaseAnonKey);
+const supabase = supabaseUrl && supabaseAnonKey ? createClient(supabaseUrl, supabaseAnonKey) : null;
+
+/**
+ * Escapes HTML special characters to prevent XSS in meta tags and attributes.
+ * @param {unknown} value
+ * @returns {string}
+ */
+function escapeHtml(value) {
+  return String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
 
 export default async function handler(req, res) {
   return traceServerless('api_registro', req, async () => {
     // Obtener el ID de la jornada desde la query string
-    const jornadaId = req.query.jornadaId || req.query.jornadald;
+    const jornadaId = req.query?.jornadaId || req.query?.jornadald;
 
     let title = 'Formulario de Registro Entrega de Donación';
     let description =
       'Plataforma integral de gestión humanitaria para ONGs. Control presupuestario, auditoría y transparencia financiera.';
     let ogImage = '/mateo_logo.png';
 
-    if (jornadaId) {
+    if (jornadaId && supabase) {
       try {
         // 1. Obtener detalles de la jornada y el logo de la ONG asociada
         const { data: jornada, error: jError } = await supabase
@@ -60,7 +74,7 @@ export default async function handler(req, res) {
 
     try {
       // Determinar protocolo y host actual de forma dinámica
-      const host = req.headers['x-forwarded-host'] || req.headers.host || 'localhost:3000';
+      const host = req.headers?.['x-forwarded-host'] || req.headers?.host || 'localhost:3000';
       const protocol = host.includes('localhost') || host.includes('127.0.0.1') ? 'http' : 'https';
       const indexUrl = `${protocol}://${host}/index.html`;
 
@@ -71,44 +85,55 @@ export default async function handler(req, res) {
       }
       let html = await fetchRes.text();
 
-      // Reemplazar dinámicamente las etiquetas meta de index.html
-      html = html
-        // Título principal
-        .replace(/<title>[^<]*<\/title>/, `<title>${title}</title>`)
-        // og:title
-        .replace(
-          /<meta\s+property="og:title"\s+content="[^"]*"\s*\/?>/,
-          `<meta property="og:title" content="${title}" />`,
-        )
-        // description
-        .replace(
-          /<meta\s+name="description"\s+content="[^"]*"\s*\/?>/,
-          `<meta name="description" content="${description}" />`,
-        )
-        // og:description
-        .replace(
-          /<meta\s+property="og:description"\s+content="[^"]*"\s*\/?>/,
-          `<meta property="og:description" content="${description}" />`,
-        );
-
       // Asegurar que la URL de la imagen sea absoluta para que la cargue WhatsApp
       let ogImageUrl = ogImage;
       if (ogImage && !ogImage.startsWith('http')) {
         ogImageUrl = `${protocol}://${host}${ogImage.startsWith('/') ? '' : '/'}${ogImage}`;
       }
-      html = html.replace(
-        /<meta\s+property="og:image"\s+content="[^"]*"\s*\/?>/,
-        `<meta property="og:image" content="${ogImageUrl}" />`,
-      );
+
+      const safeTitle = escapeHtml(title);
+      const safeDescription = escapeHtml(description);
+      const safeOgImageUrl = escapeHtml(ogImageUrl);
+
+      // Reemplazar dinámicamente las etiquetas meta de index.html (usando callbacks para evitar sustituciones $-pattern)
+      html = html
+        // Título principal
+        .replace(/<title>[^<]*<\/title>/, () => `<title>${safeTitle}</title>`)
+        // og:title
+        .replace(
+          /<meta\s+property="og:title"\s+content="[^"]*"\s*\/?>/,
+          () => `<meta property="og:title" content="${safeTitle}" />`,
+        )
+        // description
+        .replace(
+          /<meta\s+name="description"\s+content="[^"]*"\s*\/?>/,
+          () => `<meta name="description" content="${safeDescription}" />`,
+        )
+        // og:description
+        .replace(
+          /<meta\s+property="og:description"\s+content="[^"]*"\s*\/?>/,
+          () => `<meta property="og:description" content="${safeDescription}" />`,
+        )
+        .replace(
+          /<meta\s+property="og:image"\s+content="[^"]*"\s*\/?>/,
+          () => `<meta property="og:image" content="${safeOgImageUrl}" />`,
+        );
 
       // Retornar el HTML con cabecera correcta
       res.setHeader('Content-Type', 'text/html; charset=utf-8');
+      res.setHeader('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=300');
       return res.status(200).send(html);
     } catch (err) {
       console.error('Error rendering dynamic registration preview:', err);
-      sendServerlessLog('ERROR', `Error rendering dynamic registration preview: ${err.message}`, {
-        stack: err.stack,
-      });
+      const errMessage = err instanceof Error ? err.message : String(err);
+      const errStack = err instanceof Error ? err.stack : undefined;
+      await sendServerlessLog(
+        'ERROR',
+        `Error rendering dynamic registration preview: ${errMessage}`,
+        {
+          stack: errStack,
+        },
+      );
       return res.status(500).send('Internal Server Error');
     }
   });
