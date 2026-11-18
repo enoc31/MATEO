@@ -16,6 +16,44 @@ const API_TOKEN =
   process.env.GRAFANA_TOKEN ||
   '';
 
+function resolveAuthHeader() {
+  const rawHeader = process.env.OTEL_EXPORTER_OTLP_HEADERS || '';
+  if (rawHeader) {
+    let cleaned = rawHeader.trim().replace(/^Authorization\s*[:=]\s*/i, '');
+    if (!cleaned.toLowerCase().startsWith('basic ')) {
+      cleaned = `Basic ${cleaned}`;
+    }
+    return cleaned;
+  }
+
+  if (!API_TOKEN) return '';
+
+  let token = API_TOKEN.trim().replace(/^['"]|['"]$/g, '');
+
+  if (/^Authorization\s*[:=]\s*/i.test(token)) {
+    token = token.replace(/^Authorization\s*[:=]\s*/i, '').trim();
+  }
+  if (/^Basic\s+/i.test(token)) {
+    return token;
+  }
+
+  try {
+    const decoded = Buffer.from(token, 'base64').toString('utf8');
+    if (decoded.includes(':') && (decoded.includes('glc_') || /^\d+:/.test(decoded))) {
+      return `Basic ${token}`;
+    }
+  } catch {
+    // Ignore decode error
+  }
+
+  const id = (INSTANCE_ID || '').trim().replace(/^['"]|['"]$/g, '');
+  if (id) {
+    return `Basic ${Buffer.from(`${id}:${token}`).toString('base64')}`;
+  }
+
+  return `Bearer ${token}`;
+}
+
 export default async function handler(req, res) {
   // CORS support for web clients
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -38,20 +76,22 @@ export default async function handler(req, res) {
   const cleanSignalPath = signalPath.replace(/^\/+/, '');
   const targetUrl = `${OTLP_BASE.replace(/\/+$/, '')}/${cleanSignalPath}`;
 
-  const authHeader =
-    process.env.OTEL_EXPORTER_OTLP_HEADERS ||
-    (INSTANCE_ID && API_TOKEN
-      ? `Basic ${Buffer.from(`${INSTANCE_ID}:${API_TOKEN}`).toString('base64')}`
-      : '');
+  const authHeader = resolveAuthHeader();
 
   try {
+    const requestBody = Buffer.isBuffer(req.body)
+      ? req.body
+      : typeof req.body === 'string'
+        ? req.body
+        : JSON.stringify(req.body);
+
     const upstreamResponse = await fetch(targetUrl, {
       method: 'POST',
       headers: {
         'Content-Type': req.headers['content-type'] || 'application/json',
-        ...(authHeader ? { Authorization: authHeader.replace(/^Authorization=/, '') } : {}),
+        ...(authHeader ? { Authorization: authHeader } : {}),
       },
-      body: typeof req.body === 'string' ? req.body : JSON.stringify(req.body),
+      body: requestBody,
     });
 
     const responseText = await upstreamResponse.text();
