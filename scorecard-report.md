@@ -1,10 +1,10 @@
 # AI Harness Scorecard: MATEO
 
-**Grade: A** (95.0/100) | Strong harness. AI-generated code has robust mechanical safeguards.
+**Grade: A** (96.5/100) | Strong harness. AI-generated code has robust mechanical safeguards.
 
 - **Repository**: `/home/runner/work/MATEO/MATEO`
 - **Languages**: javascript, typescript
-- **Assessed**: 2026-11-15 01:46 UTC
+- **Assessed**: 2026-11-18 16:49 UTC
 - **Checks**: 31/31 passed
 
 ## Summary
@@ -13,7 +13,7 @@
 | --------------------------- | ------ | ----------------- | ------ |
 | Architectural Documentation | 20%    | 100% [##########] | 5/5    |
 | Mechanical Constraints      | 25%    | 100% [##########] | 7/7    |
-| Testing & Stability         | 25%    | 86% [#########-]  | 8/8    |
+| Testing & Stability         | 25%    | 92% [#########-]  | 8/8    |
 | Review & Drift Prevention   | 15%    | 100% [##########] | 6/6    |
 | AI-Specific Safeguards      | 15%    | 90% [#########-]  | 5/5    |
 
@@ -55,7 +55,7 @@ _DORA 2025 - AI-accessible documentation_
 
 _DORA 2025 Report_
 
-**Evidence**: CI detected: github, github
+**Evidence**: CI detected: github, github, github, github
 
 ### [PASS] Linter Enforcement (4/4)
 
@@ -93,7 +93,7 @@ _Blog: 80% problem in AI-generated code_
 
 **Evidence**: ESLint unsafe pattern rules found
 
-## Testing & Stability (86%)
+## Testing & Stability (92%)
 
 ### [PASS] Test Suite (3/3)
 
@@ -101,13 +101,11 @@ _Kent Beck - tests define what correct means_
 
 **Evidence**: Tests present and executed in CI
 
-### [PASS] Feature Matrix Testing (2/3)
+### [PASS] Feature Matrix Testing (3/3)
 
 _DORA 2025 - stability through comprehensive testing_
 
-**Evidence**: Two test jobs found, consider adding more configurations
-
-**Remediation**: Test with different feature flags, environments, or dependency versions.
+**Evidence**: Multiple test jobs in CI: build-and-test, validate-and-dry-run, sonar
 
 ### [PASS] Code Coverage (4/4)
 
@@ -145,7 +143,7 @@ _OpenAI Harness Engineering - mechanical constraints_
 
 _DORA 2025 - stability metrics_
 
-**Evidence**: All test jobs are blocking: build-and-test, sonar
+**Evidence**: All test jobs are blocking: build-and-test, validate-and-dry-run, sonar
 
 ## Review & Drift Prevention (100%)
 
