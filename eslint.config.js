@@ -40,11 +40,41 @@ export default tseslint.config(
       ...reactHooks.configs.recommended.rules,
       'react-refresh/only-export-components': ['warn', { allowConstantExport: true }],
       'prettier/prettier': 'error',
-      '@typescript-eslint/no-unused-vars': ['warn', { argsIgnorePattern: '^_' }],
+      '@typescript-eslint/no-unused-vars': [
+        'error',
+        { argsIgnorePattern: '^_', caughtErrorsIgnorePattern: '^_' },
+      ],
       '@typescript-eslint/no-explicit-any': 'warn',
       'react-hooks/set-state-in-effect': 'off',
       'no-eval': 'error',
       'no-implied-eval': 'error',
+    },
+  },
+  {
+    files: ['src/utils/**/*.{ts,tsx}'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            '../features/*',
+            '../components/*',
+            '../services/*',
+            '../context/*',
+            '**/features/**',
+            '**/components/**',
+            '**/services/**',
+            '**/context/**',
+          ],
+        },
+      ],
+    },
+  },
+  {
+    // Legacy non-pure utilities: track as warnings until moved to src/services/ in a dedicated refactor PR per ARCHITECTURE.md
+    files: ['src/utils/bcvSync.ts', 'src/utils/pdfReport.ts'],
+    rules: {
+      'no-restricted-imports': 'warn',
     },
   },
   eslintConfigPrettier,
