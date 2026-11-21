@@ -2,6 +2,7 @@ node_modules
 dist
 coverage
 .agents
+.claude/skills
 scratch
 .vercel
 *.png
