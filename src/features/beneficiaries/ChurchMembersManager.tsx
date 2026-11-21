@@ -277,7 +277,11 @@ export const ChurchMembersManager: React.FC = () => {
     try {
       const data = await api.getBeneficiaries(activeOng?.id);
       setMembers(data);
-      sessionStorage.setItem(cacheKey, JSON.stringify(data));
+      try {
+        sessionStorage.setItem(cacheKey, JSON.stringify(data));
+      } catch (storageErr) {
+        console.warn('No se pudo guardar caché de miembros en sessionStorage:', storageErr);
+      }
     } catch (err) {
       console.error('Error al cargar miembros:', err);
     } finally {
@@ -456,9 +460,9 @@ export const ChurchMembersManager: React.FC = () => {
     return members.filter((m) => {
       const matchesSearch =
         !term ||
-        m.nombre.toLowerCase().includes(term) ||
-        m.apellido.toLowerCase().includes(term) ||
-        m.cedula.toLowerCase().includes(term) ||
+        (m.nombre || '').toLowerCase().includes(term) ||
+        (m.apellido || '').toLowerCase().includes(term) ||
+        (m.cedula || '').toLowerCase().includes(term) ||
         (m.email && m.email.toLowerCase().includes(term)) ||
         (m.telefono && m.telefono.includes(term));
 

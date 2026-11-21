@@ -31,6 +31,19 @@ export class TelemetryErrorBoundary extends Component<
   }
 
   static getDerivedStateFromError(error: Error): Partial<TelemetryErrorBoundaryState> {
+    const isChunkError =
+      error.name === 'ChunkLoadError' ||
+      error.message.includes('Failed to fetch dynamically imported module') ||
+      error.message.includes('Importing a module script failed');
+
+    if (isChunkError && typeof window !== 'undefined') {
+      const reloadKey = 'mateo_chunk_reload_attempted';
+      if (!window.sessionStorage.getItem(reloadKey)) {
+        window.sessionStorage.setItem(reloadKey, 'true');
+        window.location.reload();
+      }
+    }
+
     const traceId = getCurrentTraceId();
     const fallbackId = `err-${Math.random().toString(36).substring(2, 10)}`;
     return {
