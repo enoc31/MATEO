@@ -9,18 +9,11 @@ lerna-debug.log*
 
 node_modules
 dist
-dist-e2e
 dist-ssr
 *.local
 .env
 .env.*
 !.env.example
-
-# Playwright E2E
-/test-results/
-/playwright-report/
-/blob-report/
-/playwright/.cache/
 
 # Editor directories and files
 .vscode/*
