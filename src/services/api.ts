@@ -90,12 +90,21 @@ export interface Donation {
   descripcion: string;
   fecha: string;
   moneda: 'USD' | 'VES';
-  medio_pago: 'efectivo' | 'transferencia';
+  medio_pago: 'efectivo' | 'transferencia' | 'pago_movil';
   monto_original: number;
   tasa_bcv: number | null;
   monto_usd: number;
   monto_ves: number | null;
   created_at?: string;
+  categoria_aporte?: string | null;
+  referencia?: string | null;
+  banco_emisor?: string | null;
+  telefono_emisor?: string | null;
+  comprobante_url?: string | null;
+  miembro_id?: string | null;
+  cuenta_receptora_id?: string | null;
+  reporte_origen_id?: string | null;
+  actividad_o_responsable?: string | null;
 }
 
 export interface Jornada {

@@ -18,7 +18,13 @@ export const RequisitionDetailsModal: React.FC<ModalProps> = ({ req, onClose, on
 
   if (!profile) return null;
 
-  const isAuditorOrAdmin = ['administrador', 'director'].includes(profile.rol);
+  const isAuditorOrAdmin = [
+    'administrador',
+    'admin_iglesia',
+    'tesorero',
+    'pastor',
+    'director',
+  ].includes(profile.rol);
 
   // Regla: No auto-aprobación
   const isSolicitante = req.solicitante_id === profile.id;

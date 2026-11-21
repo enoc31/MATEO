@@ -3,6 +3,7 @@ import { Mail, ShieldCheck, Copy, Check, X, Send, Sparkles } from 'lucide-react'
 import { requisitionsApi, type UserRole, type Invitation } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 import { supabase } from '../../supabaseClient';
+import { EKKLESIA_ROLE_OPTIONS, ONG_ROLE_OPTIONS } from '../../utils/rolePermissions';
 
 interface UserInviteModalProps {
   isOpen: boolean;
@@ -12,9 +13,11 @@ interface UserInviteModalProps {
 
 export const UserInviteModal: React.FC<UserInviteModalProps> = ({ isOpen, onClose, onSuccess }) => {
   const { profile, activeOng } = useAuth();
+  const isEkklesia = activeOng?.tipo_organizacion === 'ekklesia';
+  const roleOptions = isEkklesia ? EKKLESIA_ROLE_OPTIONS : ONG_ROLE_OPTIONS;
 
   const [email, setEmail] = useState('');
-  const [rol, setRol] = useState<UserRole>('coordinador');
+  const [rol, setRol] = useState<UserRole>(isEkklesia ? 'lider_ministerio' : 'coordinador');
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -314,24 +317,11 @@ export const UserInviteModal: React.FC<UserInviteModalProps> = ({ isOpen, onClos
                   onChange={(e) => setRol(e.target.value as UserRole)}
                   style={{ cursor: 'pointer' }}
                 >
-                  <option value="coordinador">
-                    Coordinador / Pastor de Área (Gestión de ministerios, diezmos y ofrendas)
-                  </option>
-                  <option value="director">
-                    Pastor Principal / Consejo (Visualización estratégica)
-                  </option>
-                  <option value="auditor">
-                    Tesorero / Auditor (Revisión y auditoría de egresos)
-                  </option>
-                  <option value="auxiliar_campo">
-                    Servidor / Voluntario (Registro de miembros y asistencia)
-                  </option>
-                  <option value="donante">
-                    Feligrés / Aportante (Visualización de reportes de transparencia)
-                  </option>
-                  <option value="administrador">
-                    Administrador General (Control total de la Iglesia)
-                  </option>
+                  {roleOptions.map((opt) => (
+                    <option key={opt.value} value={opt.value}>
+                      {opt.label} ({opt.description})
+                    </option>
+                  ))}
                 </select>
               </div>
             </div>

@@ -56,6 +56,9 @@ export const MemberProfileModal: React.FC<MemberProfileModalProps> = ({
         const memberCedula = member.cedula?.toLowerCase().trim();
 
         const matched = allIncomes.filter((inc: Donation) => {
+          if (inc.miembro_id && inc.miembro_id === member.id) {
+            return true;
+          }
           const donName = (inc.donante || '').toLowerCase().trim();
           return (
             donName.includes(fullName) ||
