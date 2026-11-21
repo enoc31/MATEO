@@ -4,7 +4,7 @@
 
 - **Repository**: `/home/runner/work/MATEO/MATEO`
 - **Languages**: javascript, typescript
-- **Assessed**: 2026-11-18 16:49 UTC
+- **Assessed**: 2026-11-21 03:08 UTC
 - **Checks**: 31/31 passed
 
 ## Summary
@@ -105,7 +105,7 @@ _Kent Beck - tests define what correct means_
 
 _DORA 2025 - stability through comprehensive testing_
 
-**Evidence**: Multiple test jobs in CI: build-and-test, validate-and-dry-run, sonar
+**Evidence**: Multiple test jobs in CI: build-and-test, e2e, validate-and-dry-run, sonar
 
 ### [PASS] Code Coverage (4/4)
 
@@ -137,13 +137,13 @@ _Blog: 80% problem - catching what AI misses_
 
 _OpenAI Harness Engineering - mechanical constraints_
 
-**Evidence**: Contract/compatibility tests found: .agents/skills/ui-ux-pro-max/scripts/reasoning_contract.py, .agents/skills/ui-ux-pro-max/scripts/tests/test_data_contracts.py, src/services/**snapshots**/api.snapshot.test.ts.snap
+**Evidence**: Contract/compatibility tests found: .agents/skills/ui-ux-pro-max/scripts/reasoning_contract.py, .agents/skills/ui-ux-pro-max/scripts/tests/test_data_contracts.py, .claude/skills/ui-ux-pro-max/scripts/reasoning_contract.py
 
 ### [PASS] Tests Block Merge (2/2)
 
 _DORA 2025 - stability metrics_
 
-**Evidence**: All test jobs are blocking: build-and-test, validate-and-dry-run, sonar
+**Evidence**: All test jobs are blocking: build-and-test, e2e, validate-and-dry-run
 
 ## Review & Drift Prevention (100%)
 
