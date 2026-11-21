@@ -635,7 +635,7 @@ CREATE POLICY "Lectura de comprobantes para roles autorizados"
   USING (
     ong_id = public.get_user_ong_id()
     AND (
-      auth.uid() = usuario_id
+      auth.uid() = solicitante_id
       OR public.get_user_role() IN ('administrador', 'auditor', 'director', 'super_admin', 'admin_iglesia', 'tesorero', 'pastor', 'auditor_iglesia')
     )
   );
@@ -647,7 +647,7 @@ CREATE POLICY "Coordinadores pueden insertar comprobantes"
   TO authenticated
   WITH CHECK (
     ong_id = public.get_user_ong_id()
-    AND auth.uid() = usuario_id
+    AND auth.uid() = solicitante_id
     AND public.get_user_role() IN ('coordinador', 'administrador', 'director', 'lider_ministerio', 'admin_iglesia', 'tesorero', 'pastor')
   );
 
