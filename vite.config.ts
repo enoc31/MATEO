@@ -1,5 +1,5 @@
 /// <reference types="vitest" />
-import { configDefaults, defineConfig } from 'vitest/config';
+import { defineConfig } from 'vitest/config';
 import react from '@vitejs/plugin-react';
 
 // https://vite.dev/config/
@@ -9,13 +9,6 @@ export default defineConfig({
     environment: 'jsdom',
     setupFiles: ['./src/setupTests.ts'],
     globals: true,
-    exclude: [
-      ...configDefaults.exclude,
-      'e2e/**',
-      'dist-e2e/**',
-      'playwright-report/**',
-      'test-results/**',
-    ],
     coverage: {
       provider: 'v8',
       reporter: ['text', 'lcov', 'json'],
@@ -23,12 +16,7 @@ export default defineConfig({
       exclude: [
         'node_modules/**',
         'dist/**',
-        'dist-e2e/**',
         'coverage/**',
-        'e2e/**',
-        'playwright.config.ts',
-        'playwright-report/**',
-        'test-results/**',
         '**/*.test.{ts,tsx}',
         'src/setupTests.ts',
         'vite.config.ts',

@@ -2,13 +2,8 @@
   "$schema": "./node_modules/oxlint/configuration_schema.json",
   "ignorePatterns": [
     "dist",
-    "dist-e2e",
     "node_modules",
     "coverage",
-    "playwright-report",
-    "test-results",
-    "blob-report",
-    "playwright/.cache",
     ".vercel",
     "scratch",
     ".agents",
@@ -19,14 +14,5 @@
     "react/rules-of-hooks": "error",
     "react/only-export-components": ["warn", { "allowConstantExport": true }],
     "no-unused-vars": "error"
-  },
-  "overrides": [
-    {
-      "files": ["playwright.config.ts", "e2e/**/*.ts"],
-      "rules": {
-        "react/rules-of-hooks": "off",
-        "react/only-export-components": "off"
-      }
-    }
-  ]
+  }
 }
