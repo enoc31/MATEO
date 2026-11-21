@@ -38,7 +38,7 @@ CREATE TABLE IF NOT EXISTS public.reportes_aportes (
   codigo_confirmacion TEXT NOT NULL,
   ong_id UUID NOT NULL REFERENCES public.ongs(id) ON DELETE CASCADE,
   cuenta_receptora_id UUID REFERENCES public.cuentas_receptoras_iglesia(id) ON DELETE SET NULL,
-  miembro_id UUID REFERENCES public.beneficiarios(id) ON DELETE SET NULL,
+  miembro_id TEXT REFERENCES public.beneficiarios(id) ON DELETE SET NULL,
   es_anonimo BOOLEAN NOT NULL DEFAULT FALSE,
   nombre_aportante TEXT,
   telefono_aportante TEXT,
@@ -76,7 +76,7 @@ ALTER TABLE public.donaciones
   ADD COLUMN IF NOT EXISTS banco_emisor TEXT,
   ADD COLUMN IF NOT EXISTS telefono_emisor TEXT,
   ADD COLUMN IF NOT EXISTS comprobante_url TEXT,
-  ADD COLUMN IF NOT EXISTS miembro_id UUID,
+  ADD COLUMN IF NOT EXISTS miembro_id TEXT,
   ADD COLUMN IF NOT EXISTS cuenta_receptora_id UUID,
   ADD COLUMN IF NOT EXISTS reporte_origen_id UUID,
   ADD COLUMN IF NOT EXISTS actividad_o_responsable TEXT;
