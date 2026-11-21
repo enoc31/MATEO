@@ -414,17 +414,30 @@ export const financeApi = {
     const codigo = generateConfirmationCode();
 
     if (!isSimulationMode) {
-      const { data, error } = await supabase
-        .from('reportes_aportes')
-        .insert([
-          {
-            ...input,
-            codigo_confirmacion: codigo,
-            estado: 'pendiente',
-          },
-        ])
-        .select()
-        .single();
+      const { data, error } = await supabase.rpc('crear_reporte_aporte', {
+        p_ong_id: input.ong_id,
+        p_cuenta_receptora_id: input.cuenta_receptora_id,
+        p_miembro_id: input.miembro_id,
+        p_es_anonimo: input.es_anonimo,
+        p_nombre_aportante: input.nombre_aportante,
+        p_telefono_aportante: input.telefono_aportante,
+        p_cedula_aportante: input.cedula_aportante,
+        p_categoria_aporte: input.categoria_aporte,
+        p_moneda: input.moneda,
+        p_monto_original: input.monto_original,
+        p_tasa_bcv: input.tasa_bcv,
+        p_monto_usd: input.monto_usd,
+        p_monto_ves: input.monto_ves,
+        p_medio_pago: input.medio_pago,
+        p_banco_emisor: input.banco_emisor,
+        p_telefono_emisor: input.telefono_emisor,
+        p_referencia: input.referencia,
+        p_sin_referencia_mismo_banco: input.sin_referencia_mismo_banco,
+        p_fecha_pago: input.fecha_pago,
+        p_actividad_o_responsable: input.actividad_o_responsable,
+        p_comprobante_url: input.comprobante_url,
+        p_codigo_confirmacion: codigo,
+      });
       if (error) throw error;
       return data as ReporteAporte;
     }
