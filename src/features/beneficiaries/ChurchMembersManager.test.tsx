@@ -68,6 +68,9 @@ describe('ChurchMembersManager', () => {
       expect(screen.getByText(/Ricardo Flores/i)).toBeInTheDocument();
     });
 
+    // Verifica que inicia por defecto en modo lista (tabla)
+    expect(screen.getByRole('table')).toBeInTheDocument();
+
     const searchInput = screen.getByPlaceholderText(/Buscar por Nombre, Cédula, Teléfono/i);
     fireEvent.change(searchInput, { target: { value: 'Ricardo' } });
 
