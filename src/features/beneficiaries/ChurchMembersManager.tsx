@@ -34,7 +34,7 @@ export const ChurchMembersManager: React.FC = () => {
 
   const [members, setMembers] = useState<Beneficiary[]>([]);
   const [loading, setLoading] = useState(true);
-  const [viewMode, setViewMode] = useState<'cards' | 'list'>('cards');
+  const [viewMode, setViewMode] = useState<'cards' | 'list'>('list');
   const [screenMode, setScreenMode] = useState<'directory' | 'form'>('directory');
 
   const [searchTerm, setSearchTerm] = useState('');
