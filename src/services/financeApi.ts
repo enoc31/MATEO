@@ -242,6 +242,30 @@ export function findDuplicateReferences(
 }
 
 export const financeApi = {
+  getPublicTasaBcv: async (ongId: string, fecha: string): Promise<number | null> => {
+    if (!isSimulationMode && ongId) {
+      const { data, error } = await supabase.rpc('get_public_tasa_bcv', {
+        p_ong_id: ongId,
+        p_fecha: fecha,
+      });
+      if (!error && data !== null && data !== undefined) {
+        const parsed = Number(data);
+        if (Number.isFinite(parsed) && parsed > 1) {
+          return parsed;
+        }
+      }
+    }
+
+    let rateObj = await api.getTasaByDate(fecha);
+    if (!rateObj || rateObj.tasa <= 1) {
+      const todas = await api.getTasasBCV();
+      if (todas && todas.length > 0) {
+        rateObj = todas[0];
+      }
+    }
+    return rateObj && rateObj.tasa > 1 ? rateObj.tasa : null;
+  },
+
   getPublicOngInfo: async (ongId: string): Promise<PublicOngInfo | null> => {
     if (!isSimulationMode) {
       const { data, error } = await supabase
@@ -414,7 +438,7 @@ export const financeApi = {
     const codigo = generateConfirmationCode();
 
     if (!isSimulationMode) {
-      const { data, error } = await supabase.rpc('crear_reporte_aporte', {
+      const { data, error } = await supabase.rpc('registrar_reporte_aporte', {
         p_ong_id: input.ong_id,
         p_cuenta_receptora_id: input.cuenta_receptora_id,
         p_miembro_id: input.miembro_id,

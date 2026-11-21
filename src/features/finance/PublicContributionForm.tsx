@@ -14,7 +14,6 @@ import {
   UserCheck,
   UserX,
 } from 'lucide-react';
-import { api } from '../../services/api';
 import {
   financeApi,
   type CuentaReceptora,
@@ -105,20 +104,14 @@ export const PublicContributionForm: React.FC = () => {
     const loadRate = async () => {
       if (!fechaPago) return;
       try {
-        let rateObj = await api.getTasaByDate(fechaPago);
-        if (!rateObj || rateObj.tasa <= 1) {
-          const todas = await api.getTasasBCV();
-          if (todas && todas.length > 0) {
-            rateObj = todas[0];
-          }
-        }
-        setTasaBcv(rateObj && rateObj.tasa > 1 ? rateObj.tasa : null);
+        const tasa = await financeApi.getPublicTasaBcv(ongId, fechaPago);
+        setTasaBcv(tasa);
       } catch (err) {
         console.error('Error consultando tasa BCV:', err);
       }
     };
     void loadRate();
-  }, [fechaPago]);
+  }, [ongId, fechaPago]);
 
   const handleCopy = async (key: string, text: string) => {
     try {
