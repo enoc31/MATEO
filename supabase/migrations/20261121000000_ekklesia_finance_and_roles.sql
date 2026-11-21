@@ -248,7 +248,7 @@ DECLARE
 BEGIN
   v_user_id := auth.uid();
   v_user_ong := public.get_user_ong_id();
-  v_user_role := public.get_user_role();
+  v_user_role := public.get_user_role()::text;
 
   IF v_user_id IS NULL OR v_user_role NOT IN ('administrador', 'admin_iglesia', 'tesorero', 'director', 'super_admin') THEN
     RAISE EXCEPTION 'No autorizado para aprobar reportes de aportes.';
@@ -382,7 +382,7 @@ DECLARE
 BEGIN
   v_user_id := auth.uid();
   v_user_ong := public.get_user_ong_id();
-  v_user_role := public.get_user_role();
+  v_user_role := public.get_user_role()::text;
 
   IF v_user_id IS NULL OR v_user_role NOT IN ('administrador', 'admin_iglesia', 'tesorero', 'director', 'super_admin') THEN
     RAISE EXCEPTION 'No autorizado para rechazar reportes de aportes.';
@@ -438,7 +438,7 @@ CREATE POLICY "cuentas_receptoras_public_read"
     OR public.is_super_admin()
     OR (
       ong_id = public.get_user_ong_id()
-      AND public.get_user_role() IN ('administrador', 'admin_iglesia', 'tesorero', 'pastor', 'auditor_iglesia')
+      AND public.get_user_role()::text IN ('administrador', 'admin_iglesia', 'tesorero', 'pastor', 'auditor_iglesia')
     )
   );
 
@@ -451,14 +451,14 @@ CREATE POLICY "cuentas_receptoras_manage"
     public.is_super_admin()
     OR (
       ong_id = public.get_user_ong_id()
-      AND public.get_user_role() IN ('administrador', 'admin_iglesia', 'tesorero')
+      AND public.get_user_role()::text IN ('administrador', 'admin_iglesia', 'tesorero')
     )
   )
   WITH CHECK (
     public.is_super_admin()
     OR (
       ong_id = public.get_user_ong_id()
-      AND public.get_user_role() IN ('administrador', 'admin_iglesia', 'tesorero')
+      AND public.get_user_role()::text IN ('administrador', 'admin_iglesia', 'tesorero')
     )
   );
 
@@ -482,7 +482,7 @@ CREATE POLICY "reportes_aportes_finance_read"
     public.is_super_admin()
     OR (
       ong_id = public.get_user_ong_id()
-      AND public.get_user_role() IN ('administrador', 'admin_iglesia', 'tesorero', 'pastor', 'auditor_iglesia', 'director', 'auditor')
+      AND public.get_user_role()::text IN ('administrador', 'admin_iglesia', 'tesorero', 'pastor', 'auditor_iglesia', 'director', 'auditor')
     )
   );
 
@@ -495,14 +495,14 @@ CREATE POLICY "reportes_aportes_finance_update"
     public.is_super_admin()
     OR (
       ong_id = public.get_user_ong_id()
-      AND public.get_user_role() IN ('administrador', 'admin_iglesia', 'tesorero', 'director')
+      AND public.get_user_role()::text IN ('administrador', 'admin_iglesia', 'tesorero', 'director')
     )
   )
   WITH CHECK (
     public.is_super_admin()
     OR (
       ong_id = public.get_user_ong_id()
-      AND public.get_user_role() IN ('administrador', 'admin_iglesia', 'tesorero', 'director')
+      AND public.get_user_role()::text IN ('administrador', 'admin_iglesia', 'tesorero', 'director')
     )
   );
 
@@ -516,14 +516,14 @@ CREATE POLICY "ongs_admin_update"
     public.is_super_admin()
     OR (
       id = public.get_user_ong_id()
-      AND public.get_user_role() IN ('administrador', 'admin_iglesia')
+      AND public.get_user_role()::text IN ('administrador', 'admin_iglesia')
     )
   )
   WITH CHECK (
     public.is_super_admin()
     OR (
       id = public.get_user_ong_id()
-      AND public.get_user_role() IN ('administrador', 'admin_iglesia')
+      AND public.get_user_role()::text IN ('administrador', 'admin_iglesia')
     )
   );
 
@@ -536,7 +536,7 @@ CREATE POLICY "upd_perfiles_aislamiento"
     public.is_super_admin()
     OR (
       ong_id = public.get_user_ong_id()
-      AND public.get_user_role() IN ('administrador', 'admin_iglesia')
+      AND public.get_user_role()::text IN ('administrador', 'admin_iglesia')
     )
     OR auth.uid() = id
   )
@@ -544,11 +544,11 @@ CREATE POLICY "upd_perfiles_aislamiento"
     public.is_super_admin()
     OR (
       ong_id = public.get_user_ong_id()
-      AND public.get_user_role() IN ('administrador', 'admin_iglesia')
+      AND public.get_user_role()::text IN ('administrador', 'admin_iglesia')
     )
     OR (
       auth.uid() = id
-      AND rol::text = public.get_user_role()
+      AND rol::text = public.get_user_role()::text
     )
   );
 
@@ -559,7 +559,7 @@ CREATE POLICY "Lectura de donaciones por ong y rol"
   TO authenticated
   USING (
     ong_id = public.get_user_ong_id()
-    AND public.get_user_role() IN (
+    AND public.get_user_role()::text IN (
       'administrador', 'auditor', 'director', 'coordinador', 'donante', 'super_admin',
       'admin_iglesia', 'tesorero', 'pastor', 'auditor_iglesia'
     )
@@ -572,7 +572,7 @@ CREATE POLICY "Insercion de donaciones por ong"
   TO authenticated
   WITH CHECK (
     ong_id = public.get_user_ong_id()
-    AND public.get_user_role() IN ('administrador', 'auditor', 'director', 'admin_iglesia', 'tesorero')
+    AND public.get_user_role()::text IN ('administrador', 'auditor', 'director', 'admin_iglesia', 'tesorero')
   );
 
 DROP POLICY IF EXISTS "Actualizacion de donaciones por ong" ON public.donaciones;
@@ -582,11 +582,11 @@ CREATE POLICY "Actualizacion de donaciones por ong"
   TO authenticated
   USING (
     ong_id = public.get_user_ong_id()
-    AND public.get_user_role() IN ('administrador', 'auditor', 'director', 'admin_iglesia', 'tesorero')
+    AND public.get_user_role()::text IN ('administrador', 'auditor', 'director', 'admin_iglesia', 'tesorero')
   )
   WITH CHECK (
     ong_id = public.get_user_ong_id()
-    AND public.get_user_role() IN ('administrador', 'auditor', 'director', 'admin_iglesia', 'tesorero')
+    AND public.get_user_role()::text IN ('administrador', 'auditor', 'director', 'admin_iglesia', 'tesorero')
   );
 
 DROP POLICY IF EXISTS "Visualización de solicitudes según rol" ON public.solicitudes_gasto;
@@ -598,7 +598,7 @@ CREATE POLICY "Visualización de solicitudes según rol"
     ong_id = public.get_user_ong_id()
     AND (
       auth.uid() = solicitante_id
-      OR public.get_user_role() IN ('administrador', 'auditor', 'director', 'super_admin', 'admin_iglesia', 'tesorero', 'pastor', 'auditor_iglesia')
+      OR public.get_user_role()::text IN ('administrador', 'auditor', 'director', 'super_admin', 'admin_iglesia', 'tesorero', 'pastor', 'auditor_iglesia')
     )
   );
 
@@ -610,7 +610,7 @@ CREATE POLICY "Coordinadores pueden crear solicitudes"
   WITH CHECK (
     ong_id = public.get_user_ong_id()
     AND auth.uid() = solicitante_id
-    AND public.get_user_role() IN ('coordinador', 'administrador', 'director', 'lider_ministerio', 'admin_iglesia', 'tesorero', 'pastor')
+    AND public.get_user_role()::text IN ('coordinador', 'administrador', 'director', 'lider_ministerio', 'admin_iglesia', 'tesorero', 'pastor')
   );
 
 DROP POLICY IF EXISTS "Roles autorizados aprueban o rechazan solicitudes ONG" ON public.solicitudes_gasto;
@@ -620,11 +620,11 @@ CREATE POLICY "Roles autorizados aprueban o rechazan solicitudes ONG"
   TO authenticated
   USING (
     ong_id = public.get_user_ong_id()
-    AND public.get_user_role() IN ('administrador', 'director', 'admin_iglesia', 'tesorero', 'pastor')
+    AND public.get_user_role()::text IN ('administrador', 'director', 'admin_iglesia', 'tesorero', 'pastor')
   )
   WITH CHECK (
     ong_id = public.get_user_ong_id()
-    AND public.get_user_role() IN ('administrador', 'director', 'admin_iglesia', 'tesorero', 'pastor')
+    AND public.get_user_role()::text IN ('administrador', 'director', 'admin_iglesia', 'tesorero', 'pastor')
   );
 
 DROP POLICY IF EXISTS "Lectura de comprobantes para roles autorizados" ON public.comprobantes_gasto;
@@ -636,7 +636,7 @@ CREATE POLICY "Lectura de comprobantes para roles autorizados"
     ong_id = public.get_user_ong_id()
     AND (
       auth.uid() = solicitante_id
-      OR public.get_user_role() IN ('administrador', 'auditor', 'director', 'super_admin', 'admin_iglesia', 'tesorero', 'pastor', 'auditor_iglesia')
+      OR public.get_user_role()::text IN ('administrador', 'auditor', 'director', 'super_admin', 'admin_iglesia', 'tesorero', 'pastor', 'auditor_iglesia')
     )
   );
 
@@ -648,7 +648,7 @@ CREATE POLICY "Coordinadores pueden insertar comprobantes"
   WITH CHECK (
     ong_id = public.get_user_ong_id()
     AND auth.uid() = solicitante_id
-    AND public.get_user_role() IN ('coordinador', 'administrador', 'director', 'lider_ministerio', 'admin_iglesia', 'tesorero', 'pastor')
+    AND public.get_user_role()::text IN ('coordinador', 'administrador', 'director', 'lider_ministerio', 'admin_iglesia', 'tesorero', 'pastor')
   );
 
 DROP POLICY IF EXISTS "Administradores leen invitaciones de su ONG" ON public.invitaciones;
@@ -658,7 +658,7 @@ CREATE POLICY "Administradores leen invitaciones de su ONG"
   TO authenticated
   USING (
     ong_id = public.get_user_ong_id()
-    AND public.get_user_role() IN ('administrador', 'admin_iglesia')
+    AND public.get_user_role()::text IN ('administrador', 'admin_iglesia')
   );
 
 DROP POLICY IF EXISTS "Administradores crean invitaciones para su ONG" ON public.invitaciones;
@@ -668,7 +668,7 @@ CREATE POLICY "Administradores crean invitaciones para su ONG"
   TO authenticated
   WITH CHECK (
     ong_id = public.get_user_ong_id()
-    AND public.get_user_role() IN ('administrador', 'admin_iglesia')
+    AND public.get_user_role()::text IN ('administrador', 'admin_iglesia')
   );
 
 DROP POLICY IF EXISTS "Administradores actualizan invitaciones de su ONG" ON public.invitaciones;
@@ -678,11 +678,11 @@ CREATE POLICY "Administradores actualizan invitaciones de su ONG"
   TO authenticated
   USING (
     ong_id = public.get_user_ong_id()
-    AND public.get_user_role() IN ('administrador', 'admin_iglesia')
+    AND public.get_user_role()::text IN ('administrador', 'admin_iglesia')
   )
   WITH CHECK (
     ong_id = public.get_user_ong_id()
-    AND public.get_user_role() IN ('administrador', 'admin_iglesia')
+    AND public.get_user_role()::text IN ('administrador', 'admin_iglesia')
   );
 
 DROP POLICY IF EXISTS "Administradores eliminan invitaciones de su ONG" ON public.invitaciones;
@@ -692,5 +692,5 @@ CREATE POLICY "Administradores eliminan invitaciones de su ONG"
   TO authenticated
   USING (
     ong_id = public.get_user_ong_id()
-    AND public.get_user_role() IN ('administrador', 'admin_iglesia')
+    AND public.get_user_role()::text IN ('administrador', 'admin_iglesia')
   );
