@@ -9,12 +9,12 @@ SET statement_timeout = '30s';
 -- -----------------------------------------------------------------------------
 -- 1. EXTEND public.user_role ENUM WITH EKKLESIA CHURCH ROLES
 -- -----------------------------------------------------------------------------
-ALTER TYPE public.user_role ADD VALUE IF NOT EXISTS 'admin_iglesia';
-ALTER TYPE public.user_role ADD VALUE IF NOT EXISTS 'tesorero';
-ALTER TYPE public.user_role ADD VALUE IF NOT EXISTS 'pastor';
-ALTER TYPE public.user_role ADD VALUE IF NOT EXISTS 'lider_ministerio';
-ALTER TYPE public.user_role ADD VALUE IF NOT EXISTS 'auditor_iglesia';
-ALTER TYPE public.user_role ADD VALUE IF NOT EXISTS 'secretario';
+ALTER TYPE public.user_role ADD VALUE IF NOT EXISTS 'admin_iglesia' AFTER 'super_admin';
+ALTER TYPE public.user_role ADD VALUE IF NOT EXISTS 'tesorero' AFTER 'admin_iglesia';
+ALTER TYPE public.user_role ADD VALUE IF NOT EXISTS 'pastor' AFTER 'tesorero';
+ALTER TYPE public.user_role ADD VALUE IF NOT EXISTS 'lider_ministerio' AFTER 'pastor';
+ALTER TYPE public.user_role ADD VALUE IF NOT EXISTS 'auditor_iglesia' AFTER 'lider_ministerio';
+ALTER TYPE public.user_role ADD VALUE IF NOT EXISTS 'secretario' AFTER 'auditor_iglesia';
 
 -- -----------------------------------------------------------------------------
 -- 2. NEW TABLES: cuentas_receptoras_iglesia & reportes_aportes
@@ -76,10 +76,34 @@ ALTER TABLE public.donaciones
   ADD COLUMN IF NOT EXISTS banco_emisor TEXT,
   ADD COLUMN IF NOT EXISTS telefono_emisor TEXT,
   ADD COLUMN IF NOT EXISTS comprobante_url TEXT,
-  ADD COLUMN IF NOT EXISTS miembro_id UUID REFERENCES public.beneficiarios(id) ON DELETE SET NULL,
-  ADD COLUMN IF NOT EXISTS cuenta_receptora_id UUID REFERENCES public.cuentas_receptoras_iglesia(id) ON DELETE SET NULL,
-  ADD COLUMN IF NOT EXISTS reporte_origen_id UUID REFERENCES public.reportes_aportes(id) ON DELETE SET NULL,
+  ADD COLUMN IF NOT EXISTS miembro_id UUID,
+  ADD COLUMN IF NOT EXISTS cuenta_receptora_id UUID,
+  ADD COLUMN IF NOT EXISTS reporte_origen_id UUID,
   ADD COLUMN IF NOT EXISTS actividad_o_responsable TEXT;
+
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'donaciones_miembro_id_fkey') THEN
+    ALTER TABLE public.donaciones
+      ADD CONSTRAINT donaciones_miembro_id_fkey
+      FOREIGN KEY (miembro_id) REFERENCES public.beneficiarios(id) ON DELETE SET NULL NOT VALID;
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'donaciones_cuenta_receptora_id_fkey') THEN
+    ALTER TABLE public.donaciones
+      ADD CONSTRAINT donaciones_cuenta_receptora_id_fkey
+      FOREIGN KEY (cuenta_receptora_id) REFERENCES public.cuentas_receptoras_iglesia(id) ON DELETE SET NULL NOT VALID;
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'donaciones_reporte_origen_id_fkey') THEN
+    ALTER TABLE public.donaciones
+      ADD CONSTRAINT donaciones_reporte_origen_id_fkey
+      FOREIGN KEY (reporte_origen_id) REFERENCES public.reportes_aportes(id) ON DELETE SET NULL NOT VALID;
+  END IF;
+END
+$$;
+
+ALTER TABLE public.donaciones VALIDATE CONSTRAINT donaciones_miembro_id_fkey;
+ALTER TABLE public.donaciones VALIDATE CONSTRAINT donaciones_cuenta_receptora_id_fkey;
+ALTER TABLE public.donaciones VALIDATE CONSTRAINT donaciones_reporte_origen_id_fkey;
 
 -- -----------------------------------------------------------------------------
 -- 4. TRIGGERS FOR AUTOMATIC ong_id ASSIGNMENT
