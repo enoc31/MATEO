@@ -3,6 +3,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { api } from '../../services/api';
 import type { TasaBCV } from '../../services/api';
 import { formatDateForFrontEnd, getCaracasDateParts } from '../../utils/formatters';
+import { forceSyncBCVRate } from '../../utils/bcvSync';
 import { useAuth } from '../../context/AuthContext';
 import Papa from 'papaparse';
 
@@ -50,53 +51,65 @@ export const TasasManager: React.FC = () => {
     loadTasas();
   }, []);
 
-  // Sincronizar histórico desde API
+  // Sincronizar histórico desde API (con fallback en cascada a dolarapi / bcvSync)
   const handleSyncHistory = async () => {
     setSyncingHistory(true);
     try {
-      // DolarVZLA public CDN returns history per year or month
-      // Fetching current year to get recent history
-      const res = await fetch('https://rates.dolarvzla.com/bcv/2026/list.json');
-      if (!res.ok) throw new Error('No se pudo conectar al API de histórico');
-      const data = await res.json();
+      let syncedCount = 0;
+      try {
+        const res = await fetch('https://rates.dolarvzla.com/bcv/2026/list.json');
+        if (res.ok) {
+          const data = await res.json();
+          const parsed: {
+            fecha: string;
+            tasa: number;
+            fuente: 'bcv_api' | 'manual' | 'historico_csv';
+          }[] = [];
 
-      const parsed: {
-        fecha: string;
-        tasa: number;
-        fuente: 'bcv_api' | 'manual' | 'historico_csv';
-      }[] = [];
-
-      if (Array.isArray(data)) {
-        (data as DolarVzlaResponseItem[]).forEach((item) => {
-          if (item && item.date && item.usd) {
-            parsed.push({
-              fecha: item.date,
-              tasa: item.usd,
-              fuente: 'bcv_api',
+          if (Array.isArray(data)) {
+            (data as DolarVzlaResponseItem[]).forEach((item) => {
+              if (item && item.date && item.usd) {
+                parsed.push({
+                  fecha: item.date,
+                  tasa: item.usd,
+                  fuente: 'bcv_api',
+                });
+              }
+            });
+          } else if (data && typeof data === 'object') {
+            Object.values(data as Record<string, DolarVzlaResponseItem>).forEach((item) => {
+              if (item && item.date && item.usd) {
+                parsed.push({
+                  fecha: item.date,
+                  tasa: item.usd,
+                  fuente: 'bcv_api',
+                });
+              }
             });
           }
-        });
-      } else if (data && typeof data === 'object') {
-        Object.values(data as Record<string, DolarVzlaResponseItem>).forEach((item) => {
-          if (item && item.date && item.usd) {
-            parsed.push({
-              fecha: item.date,
-              tasa: item.usd,
-              fuente: 'bcv_api',
-            });
+
+          if (parsed.length > 0) {
+            const recentRates = parsed.sort((a, b) => b.fecha.localeCompare(a.fecha)).slice(0, 35);
+            await api.bulkUpsertTasasBCV(recentRates);
+            syncedCount = recentRates.length;
           }
-        });
+        }
+      } catch (histErr) {
+        console.warn('No se pudo obtener histórico de dolarvzla, intentando API en vivo:', histErr);
       }
 
-      if (parsed.length > 0) {
-        // Solo insertamos los últimos 35 días para no sobrecargar
-        const recentRates = parsed.sort((a, b) => b.fecha.localeCompare(a.fecha)).slice(0, 35);
+      // Siempre intentar sincronizar también la tasa vigente del día en vivo (ve.dolarapi.com)
+      const liveRate = await forceSyncBCVRate();
+      await loadTasas();
 
-        await api.bulkUpsertTasasBCV(recentRates);
-        alert(`✅ Se sincronizaron ${recentRates.length} tasas históricas correctamente.`);
-        await loadTasas();
+      if (syncedCount > 0 || liveRate) {
+        alert(
+          liveRate
+            ? `✅ Tasa BCV actualizada: ${liveRate.toFixed(4)} Bs/$${syncedCount > 0 ? ` (${syncedCount} registros históricos sincronizados)` : ''}.`
+            : `✅ Se sincronizaron ${syncedCount} tasas históricas correctamente.`,
+        );
       } else {
-        alert('No se encontraron registros históricos en la API.');
+        alert('No se pudieron obtener tasas nuevas desde las APIs públicas.');
       }
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err);
