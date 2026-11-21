@@ -36,10 +36,16 @@ export const RequisitionsManager: React.FC = () => {
 
   if (!profile) return null;
 
-  const isAuditorOrAdmin = ['administrador', 'director'].includes(profile.rol);
+  const isAuditorOrAdmin = [
+    'administrador',
+    'admin_iglesia',
+    'tesorero',
+    'pastor',
+    'director',
+  ].includes(profile.rol);
 
-  // Filtrar según rol: coordinadores y auxiliares de campo solo ven las suyas
-  const myRequisitions = ['coordinador', 'auxiliar_campo'].includes(profile.rol)
+  // Filtrar según rol: coordinadores, líderes de ministerio y auxiliares de campo solo ven las suyas
+  const myRequisitions = ['coordinador', 'lider_ministerio', 'auxiliar_campo'].includes(profile.rol)
     ? requisitions.filter((r) => r.solicitante_id === profile.id)
     : requisitions;
 
@@ -152,7 +158,15 @@ export const RequisitionsManager: React.FC = () => {
           >
             📖 Manual COSO
           </button>
-          {['coordinador', 'auxiliar_campo', 'director'].includes(profile.rol) && (
+          {[
+            'coordinador',
+            'lider_ministerio',
+            'auxiliar_campo',
+            'director',
+            'pastor',
+            'tesorero',
+            'admin_iglesia',
+          ].includes(profile.rol) && (
             <button
               className="btn btn-primary"
               onClick={() => setShowCreateForm(true)}

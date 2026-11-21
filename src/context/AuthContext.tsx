@@ -11,7 +11,13 @@ export type UserRole =
   | 'director'
   | 'auxiliar_campo'
   | 'donante'
-  | 'super_admin';
+  | 'super_admin'
+  | 'admin_iglesia'
+  | 'tesorero'
+  | 'pastor'
+  | 'lider_ministerio'
+  | 'auditor_iglesia'
+  | 'secretario';
 
 export interface UserProfile {
   id: string;
@@ -148,16 +154,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               })
               .then();
           } else if (
-            metaRol === 'administrador' &&
-            (profileData.rol !== 'administrador' || !profileData.aprobado)
+            (metaRol === 'administrador' || metaRol === 'admin_iglesia') &&
+            (profileData.rol !== metaRol || !profileData.aprobado)
           ) {
-            profileData = { ...profileData, rol: 'administrador', aprobado: true };
+            profileData = { ...profileData, rol: metaRol, aprobado: true };
             supabase
               .from('usuarios_perfiles')
-              .update({ rol: 'administrador', aprobado: true })
+              .update({ rol: metaRol, aprobado: true })
               .eq('id', currentUser.id)
               .then();
-          } else if (profileData.rol === 'administrador' && !profileData.aprobado) {
+          } else if (
+            (profileData.rol === 'administrador' || profileData.rol === 'admin_iglesia') &&
+            !profileData.aprobado
+          ) {
             profileData = { ...profileData, aprobado: true };
             supabase
               .from('usuarios_perfiles')

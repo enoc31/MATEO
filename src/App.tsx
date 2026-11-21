@@ -113,6 +113,16 @@ const OrganizationProfile = lazy(() =>
     default: module.OrganizationProfile,
   })),
 );
+const FinanceHub = lazy(() =>
+  import('./features/finance/FinanceHub').then((module) => ({
+    default: module.FinanceHub,
+  })),
+);
+const PublicContributionForm = lazy(() =>
+  import('./features/finance/PublicContributionForm').then((module) => ({
+    default: module.PublicContributionForm,
+  })),
+);
 
 // SaaS lazy loaded features
 const SaasLogin = lazy(() =>
@@ -186,7 +196,11 @@ const MainAppContent: React.FC = () => {
   }
 
   // Si está logueado pero no ha sido aprobado por un administrador
-  if (profile.aprobado === false && profile.rol !== 'administrador') {
+  if (
+    profile.aprobado === false &&
+    profile.rol !== 'administrador' &&
+    profile.rol !== 'admin_iglesia'
+  ) {
     return <PendingApproval logout={logout} refreshProfile={refreshProfile} userId={user?.id} />;
   }
 
@@ -215,26 +229,57 @@ const MainAppContent: React.FC = () => {
           path="dashboard"
           element={
             <ProtectedRoute
-              allowedRoles={['administrador', 'auditor', 'director', 'donante']}
+              allowedRoles={[
+                'administrador',
+                'admin_iglesia',
+                'tesorero',
+                'pastor',
+                'auditor_iglesia',
+                'auditor',
+                'director',
+                'donante',
+              ]}
               element={<Dashboard />}
             />
           }
         />
         <Route
           path="reconciliation"
-          element={<ProtectedRoute allowedRoles={['administrador']} element={<Reconciliation />} />}
+          element={
+            <ProtectedRoute
+              allowedRoles={['administrador', 'admin_iglesia', 'tesorero', 'auditor_iglesia']}
+              element={<Reconciliation />}
+            />
+          }
         />
         <Route
           path="audit"
           element={
-            <ProtectedRoute allowedRoles={['administrador', 'auditor']} element={<Audit />} />
+            <ProtectedRoute
+              allowedRoles={[
+                'administrador',
+                'admin_iglesia',
+                'tesorero',
+                'auditor_iglesia',
+                'auditor',
+              ]}
+              element={<Audit />}
+            />
           }
         />
         <Route
           path="budgets"
           element={
             <ProtectedRoute
-              allowedRoles={['administrador', 'auditor', 'director']}
+              allowedRoles={[
+                'administrador',
+                'admin_iglesia',
+                'tesorero',
+                'pastor',
+                'auditor_iglesia',
+                'auditor',
+                'director',
+              ]}
               element={<BudgetsAndReports />}
             />
           }
@@ -243,7 +288,15 @@ const MainAppContent: React.FC = () => {
           path="field-entry"
           element={
             <ProtectedRoute
-              allowedRoles={['administrador', 'coordinador', 'director']}
+              allowedRoles={[
+                'administrador',
+                'admin_iglesia',
+                'tesorero',
+                'pastor',
+                'lider_ministerio',
+                'coordinador',
+                'director',
+              ]}
               element={<MobileEntry />}
             />
           }
@@ -252,7 +305,16 @@ const MainAppContent: React.FC = () => {
           path="beneficiaries"
           element={
             <ProtectedRoute
-              allowedRoles={['administrador', 'director', 'auxiliar_campo', 'coordinador']}
+              allowedRoles={[
+                'administrador',
+                'admin_iglesia',
+                'tesorero',
+                'pastor',
+                'secretario',
+                'director',
+                'auxiliar_campo',
+                'coordinador',
+              ]}
               element={<BeneficiaryRegistry />}
             />
           }
@@ -261,7 +323,7 @@ const MainAppContent: React.FC = () => {
           path="jornadas"
           element={
             <ProtectedRoute
-              allowedRoles={['administrador', 'director', 'coordinador']}
+              allowedRoles={['administrador', 'admin_iglesia', 'pastor', 'director', 'coordinador']}
               element={<JornadasManager />}
             />
           }
@@ -270,20 +332,41 @@ const MainAppContent: React.FC = () => {
           path="requisitions"
           element={
             <ProtectedRoute
-              allowedRoles={['administrador', 'coordinador', 'director']}
+              allowedRoles={[
+                'administrador',
+                'admin_iglesia',
+                'tesorero',
+                'pastor',
+                'lider_ministerio',
+                'coordinador',
+                'director',
+              ]}
               element={<RequisitionsManager />}
             />
           }
         />
         <Route
           path="users"
-          element={<ProtectedRoute allowedRoles={['administrador']} element={<UserManagement />} />}
+          element={
+            <ProtectedRoute
+              allowedRoles={['administrador', 'admin_iglesia']}
+              element={<UserManagement />}
+            />
+          }
         />
         <Route
           path="incomes"
           element={
             <ProtectedRoute
-              allowedRoles={['administrador', 'director', 'auditor']}
+              allowedRoles={[
+                'administrador',
+                'admin_iglesia',
+                'tesorero',
+                'pastor',
+                'auditor_iglesia',
+                'director',
+                'auditor',
+              ]}
               element={<IncomesManager />}
             />
           }
@@ -292,7 +375,7 @@ const MainAppContent: React.FC = () => {
           path="tasas"
           element={
             <ProtectedRoute
-              allowedRoles={['administrador', 'director']}
+              allowedRoles={['administrador', 'admin_iglesia', 'tesorero', 'director']}
               element={<TasasManager />}
             />
           }
@@ -301,7 +384,7 @@ const MainAppContent: React.FC = () => {
           path="catalog"
           element={
             <ProtectedRoute
-              allowedRoles={['administrador', 'director']}
+              allowedRoles={['administrador', 'admin_iglesia', 'director']}
               element={<CustomCatalogManager />}
             />
           }
@@ -310,7 +393,7 @@ const MainAppContent: React.FC = () => {
           path="project-partidas/:projectId"
           element={
             <ProtectedRoute
-              allowedRoles={['administrador', 'director']}
+              allowedRoles={['administrador', 'admin_iglesia', 'director']}
               element={<ProjectPartidasConfig />}
             />
           }
@@ -319,7 +402,7 @@ const MainAppContent: React.FC = () => {
           path="create-project"
           element={
             <ProtectedRoute
-              allowedRoles={['administrador', 'director']}
+              allowedRoles={['administrador', 'admin_iglesia', 'director']}
               element={<CreateProjectPage />}
             />
           }
@@ -330,6 +413,12 @@ const MainAppContent: React.FC = () => {
             <ProtectedRoute
               allowedRoles={[
                 'administrador',
+                'admin_iglesia',
+                'tesorero',
+                'pastor',
+                'lider_ministerio',
+                'auditor_iglesia',
+                'secretario',
                 'director',
                 'coordinador',
                 'auditor',
@@ -346,35 +435,18 @@ const MainAppContent: React.FC = () => {
           path="finance"
           element={
             <ProtectedRoute
-              allowedRoles={['administrador', 'coordinador', 'director', 'auditor']}
-              element={
-                <ModuleHub
-                  title="Ingresos y Gastos"
-                  description="Registro de ingresos de la iglesia y de los gastos de cada ministerio."
-                  statusNote="Módulo en consolidación: hoy reúne las pantallas existentes."
-                  userRole={profile.rol}
-                  links={[
-                    {
-                      to: '/app/incomes',
-                      label: 'Diezmos y Ofrendas',
-                      description: 'Registro de ingresos.',
-                      roles: ['administrador', 'director', 'auditor'],
-                    },
-                    {
-                      to: '/app/requisitions',
-                      label: 'Solicitudes de Gasto',
-                      description: 'Solicitudes y aprobación de gastos ministeriales.',
-                      roles: ['administrador', 'coordinador', 'director'],
-                    },
-                    {
-                      to: '/app/field-entry',
-                      label: 'Comprobantes y Gastos',
-                      description: 'Registro de comprobantes y gastos.',
-                      roles: ['administrador', 'coordinador', 'director'],
-                    },
-                  ]}
-                />
-              }
+              allowedRoles={[
+                'administrador',
+                'admin_iglesia',
+                'tesorero',
+                'pastor',
+                'auditor_iglesia',
+                'lider_ministerio',
+                'coordinador',
+                'director',
+                'auditor',
+              ]}
+              element={<FinanceHub />}
             />
           }
         />
@@ -382,7 +454,13 @@ const MainAppContent: React.FC = () => {
           path="accounting"
           element={
             <ProtectedRoute
-              allowedRoles={['administrador', 'auditor']}
+              allowedRoles={[
+                'administrador',
+                'admin_iglesia',
+                'tesorero',
+                'auditor_iglesia',
+                'auditor',
+              ]}
               element={
                 <ModuleHub
                   title="Contabilidad"
@@ -394,13 +472,19 @@ const MainAppContent: React.FC = () => {
                       to: '/app/reconciliation',
                       label: 'Conciliación Bancaria',
                       description: 'Conciliar movimientos con el estado de cuenta.',
-                      roles: ['administrador'],
+                      roles: ['administrador', 'admin_iglesia', 'tesorero', 'auditor_iglesia'],
                     },
                     {
                       to: '/app/audit',
                       label: 'Estados Financieros (EEFF)',
                       description: 'Informes y estados financieros.',
-                      roles: ['administrador', 'auditor'],
+                      roles: [
+                        'administrador',
+                        'admin_iglesia',
+                        'tesorero',
+                        'auditor_iglesia',
+                        'auditor',
+                      ],
                     },
                   ]}
                 />
@@ -902,6 +986,20 @@ function App() {
               }
             />
             <Route path="/update-password" element={<UpdatePassword />} />
+            <Route
+              path="/aportar/:ongId"
+              element={
+                <Suspense
+                  fallback={
+                    <div style={{ textAlign: 'center', padding: '3rem' }}>
+                      Cargando Portal de Aportes...
+                    </div>
+                  }
+                >
+                  <PublicContributionForm />
+                </Suspense>
+              }
+            />
             <Route
               path="/registro"
               element={

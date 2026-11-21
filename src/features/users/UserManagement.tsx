@@ -3,6 +3,7 @@ import { Plus } from 'lucide-react';
 import { api } from '../../services/api';
 import { useAuth, type UserRole } from '../../context/AuthContext';
 import { UserInviteModal } from './UserInviteModal';
+import { EKKLESIA_ROLE_OPTIONS, ONG_ROLE_OPTIONS } from '../../utils/rolePermissions';
 
 interface UserItem {
   id: string;
@@ -411,12 +412,18 @@ export const UserManagement: React.FC = () => {
                           value={currentTempRole}
                           onChange={(e) => handleRoleChange(user.id, e.target.value as UserRole)}
                         >
-                          <option value="coordinador">Coordinador / Pastor de Área</option>
-                          <option value="auxiliar_campo">Servidor / Voluntario</option>
-                          <option value="auditor">Auditor / Tesorero</option>
-                          <option value="director">Pastor Principal / Consejo</option>
-                          <option value="donante">Feligrés / Aportante</option>
-                          <option value="administrador">Administrador General</option>
+                          {(activeOng?.tipo_organizacion === 'ekklesia'
+                            ? EKKLESIA_ROLE_OPTIONS
+                            : ONG_ROLE_OPTIONS
+                          ).map((opt) => (
+                            <option key={opt.value} value={opt.value}>
+                              {opt.label}
+                            </option>
+                          ))}
+                          {activeOng?.tipo_organizacion === 'ekklesia' &&
+                            currentTempRole === 'administrador' && (
+                              <option value="administrador">Administrador General (Legacy)</option>
+                            )}
                         </select>
                       </div>
                     </td>
