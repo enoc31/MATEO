@@ -10,8 +10,13 @@ export default tseslint.config(
   {
     ignores: [
       'dist',
+      'dist-e2e',
       'node_modules',
       'coverage',
+      'playwright-report',
+      'test-results',
+      'blob-report',
+      'playwright/.cache',
       '.vercel',
       'scratch',
       '*.cjs',
@@ -75,6 +80,20 @@ export default tseslint.config(
     files: ['src/utils/bcvSync.ts', 'src/utils/pdfReport.ts'],
     rules: {
       'no-restricted-imports': 'warn',
+    },
+  },
+  {
+    files: ['playwright.config.ts', 'e2e/**/*.{ts,tsx}'],
+    languageOptions: {
+      globals: {
+        ...globals.node,
+        ...globals.browser,
+        ...globals.es2020,
+      },
+    },
+    rules: {
+      'react-hooks/rules-of-hooks': 'off',
+      'react-refresh/only-export-components': 'off',
     },
   },
   eslintConfigPrettier,
