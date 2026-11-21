@@ -2044,7 +2044,7 @@ export const api = {
     let rawList: Beneficiary[];
     if (!isSimulationMode) {
       const SELECT_COLUMNS =
-        'id, jornada_id, nombre, apellido, cedula, sexo, fecha_nacimiento, tipo_donacion, url_firma, ip_captura, ong_id, created_at, direccion, telefono, email, redes_sociales, foto_url, foto_cedula_url, bautizado, grado_instruccion, enfermedad, fecha_membresia, huella_url, cargo_eclesiastico, areas_ministeriales';
+        'id, jornada_id, nombre, apellido, cedula, sexo, fecha_nacimiento, tipo_donacion, ip_captura, ong_id, created_at, direccion, telefono, email, redes_sociales, foto_url, bautizado, grado_instruccion, enfermedad, fecha_membresia, cargo_eclesiastico, areas_ministeriales';
 
       let query = supabase
         .from('beneficiarios')
@@ -2052,7 +2052,7 @@ export const api = {
         .order('created_at', { ascending: false });
 
       if (ongId) {
-        query = query.or(`ong_id.eq.${ongId},ong_id.is.null`);
+        query = query.eq('ong_id', ongId);
       }
 
       const { data, error } = await query;
