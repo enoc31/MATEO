@@ -217,12 +217,6 @@ export const Login: React.FC = () => {
     <div className="login-page">
       <div className="login-top-accent" aria-hidden="true" />
 
-      <div className="login-topbar">
-        <Link to="/registro-ong" className="login-register-top-btn">
-          Regístrate
-        </Link>
-      </div>
-
       <main className="login-grid">
         {/* Columna izquierda: Formulario de acceso */}
         <section className="login-form-col">
