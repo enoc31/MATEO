@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { CreateOngWizard } from './CreateOngWizard';
-import { api } from '../../services/api';
+import { api, type Ong } from '../../services/api';
 
 vi.mock('../../services/api', async () => {
   const actual = await vi.importActual<typeof import('../../services/api')>('../../services/api');
@@ -51,9 +51,10 @@ describe('CreateOngWizard Component', () => {
   });
 
   it('advances through steps and submits 14-day trial ONG creation', async () => {
-    const mockCreatedOng = {
+    const mockCreatedOng: Ong = {
       id: 'ong-trial-123',
       nombre: 'Iglesia Evangélica Nueva Vida',
+      logo_url: null,
       rif_identificacion: 'En Proceso de Registro',
       plan: 'trial',
       estado: 'trial',
