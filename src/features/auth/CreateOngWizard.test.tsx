@@ -2,10 +2,10 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { CreateOngWizard } from './CreateOngWizard';
-import { api } from '../../services/api';
+import { api, type Ong } from '../../services/api';
 
 vi.mock('../../services/api', async () => {
-  const actual: any = await vi.importActual('../../services/api');
+  const actual = await vi.importActual<typeof import('../../services/api')>('../../services/api');
   return {
     ...actual,
     isSimulationMode: true,
@@ -51,16 +51,17 @@ describe('CreateOngWizard Component', () => {
   });
 
   it('advances through steps and submits 14-day trial ONG creation', async () => {
-    const mockCreatedOng = {
+    const mockCreatedOng: Ong = {
       id: 'ong-trial-123',
       nombre: 'Iglesia Evangélica Nueva Vida',
+      logo_url: null,
       rif_identificacion: 'En Proceso de Registro',
       plan: 'trial',
       estado: 'trial',
       trial_ends_at: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(),
     };
 
-    (api.createOng as any).mockResolvedValue(mockCreatedOng);
+    vi.mocked(api.createOng).mockResolvedValue(mockCreatedOng);
 
     render(
       <MemoryRouter>
@@ -82,7 +83,7 @@ describe('CreateOngWizard Component', () => {
     fireEvent.click(screen.getByText(/Siguiente: Identificación Legal/i));
 
     // Step 2
-    expect(await screen.findByText(/Identificación Legal & Administrador/i)).toBeInTheDocument();
+    expect(await screen.findByText(/Identificación legal y administrador/i)).toBeInTheDocument();
 
     fireEvent.change(screen.getByPlaceholderText(/María Rodríguez/i), {
       target: { value: 'Carlos Admin' },
@@ -97,17 +98,17 @@ describe('CreateOngWizard Component', () => {
       target: { value: 'password123' },
     });
 
-    fireEvent.click(screen.getByText(/Siguiente: Identidad & Verificación/i));
+    fireEvent.click(screen.getByText(/Siguiente: Identidad y verificación/i));
 
     // Step 3
-    expect(await screen.findByText(/3\. Identidad Eclesiástica/i)).toBeInTheDocument();
+    expect(await screen.findByText(/3\. Identidad eclesiástica/i)).toBeInTheDocument();
 
     // Check legal declaration
     const checkLegal = screen.getByRole('checkbox');
     fireEvent.click(checkLegal);
 
     // Submit form
-    fireEvent.click(screen.getByText(/Registrar Iglesia e Iniciar Trial/i));
+    fireEvent.click(screen.getByText(/Registrar iglesia e iniciar prueba/i));
 
     await waitFor(() => {
       expect(api.createOng).toHaveBeenCalledWith({

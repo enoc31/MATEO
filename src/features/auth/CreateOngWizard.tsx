@@ -1,26 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import {
-  Building2,
-  User,
-  ShieldCheck,
-  CheckCircle2,
-  ArrowRight,
-  ArrowLeft,
-  Lock,
-  Sparkles,
-  Phone,
-  FileText,
-  Briefcase,
-  Mail,
-  Check,
-  Upload,
-} from 'lucide-react';
+import { ArrowRight, Check } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { api, isSimulationMode } from '../../services/api';
 import { uploadToGCS } from '../../services/storage';
 import { supabase } from '../../supabaseClient';
 import { LocationSelector } from '../../components/LocationSelector';
 import { formatFullAddress } from '../../data/venezuelaLocations';
+import './CreateOngWizard.css';
 
 interface CustomWindow extends Window {
   onWizardRecaptchaSuccess?: (token: string) => void;
@@ -296,514 +282,328 @@ export const CreateOngWizard: React.FC = () => {
       });
 
       setStep(4); // Pasar al paso final de éxito
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Error al registrar la nueva ONG:', err);
-      setError(err.message || 'Ocurrió un error al procesar el registro de la organización.');
+      const errMsg =
+        err instanceof Error
+          ? err.message
+          : 'Ocurrió un error al procesar el registro de la organización.';
+      setError(errMsg);
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div
-      style={{
-        minHeight: '100vh',
-        backgroundColor: '#f1f5f9',
-        backgroundImage: 'radial-gradient(at 50% 0%, rgba(47, 90, 174, 0.06) 0px, transparent 75%)',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '2.5rem 1rem',
-      }}
-    >
-      {/* Header con Marca */}
-      <div style={{ textAlign: 'center', marginBottom: '1.8rem' }}>
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: '0.75rem',
-          }}
-        >
-          <img
-            src="/mateo_logo.png"
-            alt="MATEO Logo"
-            style={{
-              height: '54px',
-              width: '54px',
-              objectFit: 'contain',
-              borderRadius: '14px',
-              boxShadow: '0 8px 16px -4px rgba(47, 90, 174, 0.2)',
-            }}
-          />
-          <div style={{ textAlign: 'left' }}>
-            <h1
-              style={{
-                fontSize: '1.75rem',
-                fontWeight: 900,
-                color: 'var(--primary)',
-                letterSpacing: '-0.5px',
-                margin: 0,
-                lineHeight: 1,
-              }}
-            >
-              MATEO ekklesia
-            </h1>
-            <span
-              style={{
-                fontSize: '0.68rem',
-                color: '#64748b',
-                fontWeight: 700,
-                letterSpacing: '1.5px',
-                textTransform: 'uppercase',
-              }}
-            >
-              Plataforma Financiera para Iglesias
-            </span>
-          </div>
-        </div>
-      </div>
+    <div className="cow-page">
+      <div className="cow-top-accent" aria-hidden="true" />
 
-      {/* Tarjeta Contenedora Principal (Wizard Card) */}
-      <div
-        className="wizard-card animate-fade-in-up"
-        style={{
-          maxWidth: '640px',
-          width: '100%',
-        }}
-      >
-        {/* Banner de Trial Gratis de 14 Días */}
-        {step !== 4 && (
-          <div className="wizard-badge-trial" style={{ marginBottom: '1.8rem' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-              <div
-                style={{
-                  width: '36px',
-                  height: '36px',
-                  borderRadius: '10px',
-                  backgroundColor: 'rgba(47, 90, 174, 0.12)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  color: 'var(--primary)',
-                }}
-              >
-                <Sparkles size={20} />
+      <main className="cow-grid">
+        <div className="cow-left-col">
+          {step !== 4 && (
+            <>
+              <div className="cow-presentation">
+                <h1 className="cow-title">Registra tu iglesia</h1>
+                <p className="cow-subtitle">
+                  {step === 1 && 'Comencemos con los datos de tu congregación.'}
+                  {step === 2 && 'Configura la identificación legal y el acceso del administrador.'}
+                  {step === 3 && 'Un último paso para comenzar con MATEO.'}
+                </p>
               </div>
-              <div>
-                <span
-                  style={{
-                    fontSize: '0.9rem',
-                    fontWeight: 700,
-                    color: 'var(--primary)',
-                    display: 'block',
-                  }}
-                >
-                  Prueba Gratuita de 14 Días (Acceso Completo)
-                </span>
-                <span style={{ fontSize: '0.75rem', color: '#64748b' }}>
-                  Sin tarjeta de crédito • Cancela cuando quieras
-                </span>
-              </div>
-            </div>
-            <span
-              style={{
-                fontSize: '0.75rem',
-                backgroundColor: 'var(--primary)',
-                color: 'white',
-                padding: '0.3rem 0.75rem',
-                borderRadius: '20px',
-                fontWeight: 700,
-                letterSpacing: '0.5px',
-                boxShadow: '0 2px 4px rgba(47, 90, 174, 0.25)',
-              }}
-            >
-              Proceso Seguro
-            </span>
-          </div>
-        )}
 
-        {/* Indicador de Progreso del Wizard (Stepper) */}
-        {step !== 4 && (
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              marginBottom: '2.2rem',
-              position: 'relative',
-            }}
-          >
-            {/* Paso 1 Node */}
-            <div className="wizard-step-node">
-              <div
-                className={`wizard-step-bubble ${
-                  step === 1 ? 'active' : step > 1 ? 'completed' : 'pending'
-                }`}
-              >
-                {step > 1 ? <Check size={18} /> : 1}
-              </div>
-              <div style={{ display: 'flex', flexDirection: 'column' }}>
-                <span
-                  style={{
-                    fontSize: '0.82rem',
-                    fontWeight: step === 1 ? 700 : 600,
-                    color: step === 1 ? 'var(--primary)' : step > 1 ? '#10b981' : '#64748b',
-                  }}
-                >
-                  Iglesia
-                </span>
-                <span style={{ fontSize: '0.7rem', color: '#94a3b8' }}>Datos Legales</span>
-              </div>
-            </div>
+              {/* Indicador de Progreso del Wizard (Stepper Figma) */}
+              <div className="cow-stepper">
+                <div className="cow-step-item">
+                  <div
+                    className={`cow-step-circle ${
+                      step === 1
+                        ? 'cow-step-circle--active'
+                        : step > 1
+                          ? 'cow-step-circle--completed'
+                          : ''
+                    }`}
+                  >
+                    {step > 1 ? <Check size={16} /> : 1}
+                  </div>
+                  <div className="cow-step-labels">
+                    <span
+                      className={`cow-step-title ${
+                        step === 1
+                          ? 'cow-step-title--active'
+                          : step > 1
+                            ? 'cow-step-title--completed'
+                            : ''
+                      }`}
+                    >
+                      Iglesia
+                    </span>
+                    <span className="cow-step-sub">Datos legales</span>
+                  </div>
+                </div>
 
+                <div
+                  className={`cow-step-connector ${
+                    step > 1 ? 'cow-step-connector--completed' : ''
+                  }`}
+                />
+
+                <div className="cow-step-item">
+                  <div
+                    className={`cow-step-circle ${
+                      step === 2
+                        ? 'cow-step-circle--active'
+                        : step > 2
+                          ? 'cow-step-circle--completed'
+                          : ''
+                    }`}
+                  >
+                    {step > 2 ? <Check size={16} /> : 2}
+                  </div>
+                  <div className="cow-step-labels">
+                    <span
+                      className={`cow-step-title ${
+                        step === 2
+                          ? 'cow-step-title--active'
+                          : step > 2
+                            ? 'cow-step-title--completed'
+                            : ''
+                      }`}
+                    >
+                      Administrador
+                    </span>
+                    <span className="cow-step-sub">Credenciales</span>
+                  </div>
+                </div>
+
+                <div
+                  className={`cow-step-connector ${
+                    step > 2 ? 'cow-step-connector--completed' : ''
+                  }`}
+                />
+
+                <div className="cow-step-item">
+                  <div className={`cow-step-circle ${step === 3 ? 'cow-step-circle--active' : ''}`}>
+                    3
+                  </div>
+                  <div className="cow-step-labels">
+                    <span
+                      className={`cow-step-title ${step === 3 ? 'cow-step-title--active' : ''}`}
+                    >
+                      Verificación
+                    </span>
+                    <span className="cow-step-sub">Seguridad</span>
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
+
+          {/* Mensaje de Error */}
+          {error && (
             <div
               style={{
-                flex: 1,
-                height: '3px',
-                backgroundColor: step > 1 ? '#10b981' : '#e2e8f0',
-                margin: '0 0.75rem',
-                borderRadius: '2px',
-                transition: 'background-color 0.3s ease',
-              }}
-            />
-
-            {/* Paso 2 Node */}
-            <div className="wizard-step-node">
-              <div
-                className={`wizard-step-bubble ${
-                  step === 2 ? 'active' : step > 2 ? 'completed' : 'pending'
-                }`}
-              >
-                {step > 2 ? <Check size={18} /> : 2}
-              </div>
-              <div style={{ display: 'flex', flexDirection: 'column' }}>
-                <span
-                  style={{
-                    fontSize: '0.82rem',
-                    fontWeight: step === 2 ? 700 : 600,
-                    color: step === 2 ? 'var(--primary)' : step > 2 ? '#10b981' : '#64748b',
-                  }}
-                >
-                  Administrador
-                </span>
-                <span style={{ fontSize: '0.7rem', color: '#94a3b8' }}>Credenciales</span>
-              </div>
-            </div>
-
-            <div
-              style={{
-                flex: 1,
-                height: '3px',
-                backgroundColor: step > 2 ? '#10b981' : '#e2e8f0',
-                margin: '0 0.75rem',
-                borderRadius: '2px',
-                transition: 'background-color 0.3s ease',
-              }}
-            />
-
-            {/* Paso 3 Node */}
-            <div className="wizard-step-node">
-              <div className={`wizard-step-bubble ${step === 3 ? 'active' : 'pending'}`}>3</div>
-              <div style={{ display: 'flex', flexDirection: 'column' }}>
-                <span
-                  style={{
-                    fontSize: '0.82rem',
-                    fontWeight: step === 3 ? 700 : 600,
-                    color: step === 3 ? 'var(--primary)' : '#64748b',
-                  }}
-                >
-                  Verificación
-                </span>
-                <span style={{ fontSize: '0.7rem', color: '#94a3b8' }}>Seguridad</span>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Mensaje de Error */}
-        {error && (
-          <div
-            style={{
-              padding: '0.85rem 1.2rem',
-              backgroundColor: 'rgba(239, 68, 68, 0.08)',
-              border: '1px solid rgba(239, 68, 68, 0.3)',
-              borderRadius: '10px',
-              color: '#dc2626',
-              fontSize: '0.85rem',
-              fontWeight: 600,
-              marginBottom: '1.8rem',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.5rem',
-            }}
-          >
-            ⚠️ {error}
-          </div>
-        )}
-
-        {/* ========================================================================= */}
-        {/* PASO 1: DATOS FUNDAMENTALES & UBICACIÓN EN VENEZUELA                      */}
-        {/* ========================================================================= */}
-        {step === 1 && (
-          <form
-            noValidate
-            onSubmit={handleNextFromStep1}
-            style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}
-          >
-            <div
-              style={{
-                borderBottom: '1px solid #f1f5f9',
-                paddingBottom: '0.75rem',
-                marginBottom: '0.5rem',
+                padding: '0.85rem 1.2rem',
+                backgroundColor: 'rgba(239, 68, 68, 0.08)',
+                border: '1px solid rgba(239, 68, 68, 0.3)',
+                borderRadius: '10px',
+                color: '#dc2626',
+                fontSize: '0.85rem',
+                fontWeight: 600,
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem',
               }}
             >
-              <h3
-                style={{
-                  margin: 0,
-                  fontSize: '1.2rem',
-                  color: 'var(--primary)',
-                  fontWeight: 700,
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.5rem',
-                }}
-              >
-                <Building2 size={22} /> 1. Datos Fundamentales del Templo
-              </h3>
-              <p style={{ fontSize: '0.82rem', color: '#64748b', margin: '0.25rem 0 0 0' }}>
-                Ingresa el nombre oficial de la congregación y selecciona su ubicación estandarizada
-                en Venezuela.
-              </p>
+              ⚠️ {error}
             </div>
+          )}
 
-            {/* Nombre de la Iglesia */}
-            <div className="form-field">
-              <label className="form-field-label">
-                Nombre de la Iglesia / Congregación <span className="form-field-required">*</span>
-              </label>
-              <div className="input-with-icon">
-                <Building2 size={18} className="input-icon" />
+          {/* ========================================================================= */}
+          {/* PASO 1: DATOS FUNDAMENTALES & UBICACIÓN EN VENEZUELA                      */}
+          {/* ========================================================================= */}
+          {step === 1 && (
+            <form
+              noValidate
+              onSubmit={handleNextFromStep1}
+              style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}
+            >
+              <div className="cow-section-intro">
+                <h2 className="cow-section-heading">1. Datos fundamentales del templo</h2>
+                <p className="cow-section-desc">
+                  Ingresa el nombre oficial de la congregación y selecciona su ubicación
+                  estandarizada en Venezuela.
+                </p>
+              </div>
+
+              {/* Nombre de la Iglesia */}
+              <div className="cow-field">
+                <label className="cow-label" htmlFor="cow-nombre-iglesia">
+                  Nombre de la iglesia / congregación *
+                </label>
                 <input
+                  id="cow-nombre-iglesia"
                   type="text"
-                  className="form-input-premium"
+                  className="cow-input"
                   placeholder="Ej. Iglesia Evangélica Bautista Central"
                   value={nombreOng}
                   onChange={(e) => setNombreOng(e.target.value)}
                   required
                 />
               </div>
-            </div>
 
-            {/* Ubicación Estandarizada: Estado, Municipio, Parroquia y Dirección */}
-            <LocationSelector
-              estado={estadoSel}
-              municipio={municipioSel}
-              parroquia={parroquiaSel}
-              direccionDetalle={direccionDetalle}
-              onChangeEstado={setEstadoSel}
-              onChangeMunicipio={setMunicipioSel}
-              onChangeParroquia={setParroquiaSel}
-              onChangeDireccionDetalle={setDireccionDetalle}
-              required={true}
-              labelDireccion="Dirección Física del Templo (Calle, Sector, Edificio)"
-              placeholderDireccion="Ej. Av. Andrés Bello, Calle Los Mangos, Templo Central #45"
-            />
+              {/* Ubicación Estandarizada: Estado, Municipio, Parroquia y Dirección */}
+              <div className="cow-location-wrap">
+                <LocationSelector
+                  estado={estadoSel}
+                  municipio={municipioSel}
+                  parroquia={parroquiaSel}
+                  direccionDetalle={direccionDetalle}
+                  onChangeEstado={setEstadoSel}
+                  onChangeMunicipio={setMunicipioSel}
+                  onChangeParroquia={setParroquiaSel}
+                  onChangeDireccionDetalle={setDireccionDetalle}
+                  required={true}
+                  labelDireccion="Dirección física del templo (calle, sector, edificio)"
+                  placeholderDireccion="Ej. Av. Andrés Bello, calle Los Mangos, templo central #45"
+                />
+              </div>
 
-            {/* Teléfono de Contacto */}
-            <div className="form-field">
-              <label className="form-field-label">Teléfono Oficial de Contacto</label>
-              <div className="input-with-icon">
-                <Phone size={18} className="input-icon" />
+              {/* Teléfono de Contacto */}
+              <div className="cow-field">
+                <label className="cow-label" htmlFor="cow-telefono">
+                  Teléfono oficial de contacto
+                </label>
                 <input
+                  id="cow-telefono"
                   type="tel"
-                  className="form-input-premium"
+                  className="cow-input"
                   placeholder="+58 412 1234567"
                   value={telefono}
                   onChange={(e) => setTelefono(e.target.value)}
                 />
               </div>
-            </div>
 
-            <div
-              style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                marginTop: '1.8rem',
-                alignItems: 'center',
-              }}
+              <p className="cow-required-note">* Campos obligatorios</p>
+
+              <div className="cow-actions-row">
+                <button type="submit" className="cow-next-btn">
+                  Siguiente: Identificación Legal <ArrowRight size={20} />
+                </button>
+
+                <Link to="/login" className="cow-back-login-link">
+                  Volver al acceso
+                </Link>
+              </div>
+            </form>
+          )}
+
+          {/* ========================================================================= */}
+          {/* PASO 2: IDENTIFICACIÓN LEGAL FLEXIBLE & ADMINISTRADOR                      */}
+          {/* ========================================================================= */}
+          {step === 2 && (
+            <form
+              noValidate
+              onSubmit={handleNextFromStep2}
+              style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}
             >
-              <Link
-                to="/login"
-                style={{
-                  color: '#64748b',
-                  fontSize: '0.88rem',
-                  fontWeight: 600,
-                  textDecoration: 'none',
-                }}
-              >
-                Volver al Login
-              </Link>
+              <div className="cow-section-intro">
+                <h2 className="cow-section-heading">2. Identificación legal y administrador</h2>
+                <p className="cow-section-desc">
+                  En MATEO entendemos que muchas congregaciones están en proceso de constitución
+                  jurídica. Puedes registrar el RIF de la iglesia o la cédula del pastor /
+                  administrador.
+                </p>
+              </div>
 
-              <button
-                type="submit"
-                className="btn btn-primary"
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.5rem',
-                  padding: '0.85rem 1.75rem',
-                  fontWeight: 700,
-                  borderRadius: '10px',
-                }}
-              >
-                Siguiente: Identificación Legal <ArrowRight size={18} />
-              </button>
-            </div>
-          </form>
-        )}
+              {/* Tipo y Número de Identificación Legal */}
+              <div className="cow-legal-card">
+                <div className="cow-legal-row">
+                  <div className="cow-field">
+                    <label className="cow-label" htmlFor="cow-tipo-id">
+                      Documento de identificación
+                    </label>
+                    <select
+                      id="cow-tipo-id"
+                      className="cow-input"
+                      value={tipoIdentificacion}
+                      onChange={(e) => setTipoIdentificacion(e.target.value as 'RIF' | 'CI')}
+                    >
+                      <option value="RIF">RIF Jurídico (J)</option>
+                      <option value="CI">Cédula Identidad (V / E)</option>
+                    </select>
+                  </div>
 
-        {/* ========================================================================= */}
-        {/* PASO 2: IDENTIFICACIÓN LEGAL FLEXIBLE & ADMINISTRADOR                      */}
-        {/* ========================================================================= */}
-        {step === 2 && (
-          <form
-            noValidate
-            onSubmit={handleNextFromStep2}
-            style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}
-          >
-            <div
-              style={{
-                borderBottom: '1px solid #f1f5f9',
-                paddingBottom: '0.75rem',
-                marginBottom: '0.5rem',
-              }}
-            >
-              <h3
-                style={{
-                  margin: 0,
-                  fontSize: '1.2rem',
-                  color: 'var(--primary)',
-                  fontWeight: 700,
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.5rem',
-                }}
-              >
-                <FileText size={22} /> 2. Identificación Legal & Administrador
-              </h3>
-              <p style={{ fontSize: '0.82rem', color: '#64748b', margin: '0.25rem 0 0 0' }}>
-                En MATEO entendemos que muchas congregaciones están en proceso de constitución
-                jurídica. Puedes registrar el RIF de la iglesia o la Cédula del Pastor /
-                Administrador.
-              </p>
-            </div>
-
-            {/* Tipo y Número de Identificación Legal */}
-            <div
-              style={{
-                backgroundColor: '#f8fafc',
-                padding: '1rem',
-                borderRadius: '12px',
-                border: '1px solid #e2e8f0',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '1rem',
-              }}
-            >
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '1rem' }}>
-                <div className="form-field">
-                  <label className="form-field-label">Documento de Identificación</label>
-                  <select
-                    className="form-input-premium"
-                    value={tipoIdentificacion}
-                    onChange={(e) => setTipoIdentificacion(e.target.value as 'RIF' | 'CI')}
-                    style={{ paddingLeft: '1rem' }}
-                  >
-                    <option value="RIF">RIF Jurídico (J-)</option>
-                    <option value="CI">Cédula Identidad (V- / E-)</option>
-                  </select>
-                </div>
-
-                <div className="form-field">
-                  <label className="form-field-label">Número de Documento</label>
-                  <div className="input-with-icon">
-                    <FileText size={18} className="input-icon" />
+                  <div className="cow-field">
+                    <label className="cow-label" htmlFor="cow-num-id">
+                      Número de documento
+                    </label>
                     <input
+                      id="cow-num-id"
                       type="text"
-                      className="form-input-premium"
+                      className="cow-input"
                       placeholder={tipoIdentificacion === 'RIF' ? 'J-12345678-0' : 'V-12345678'}
                       value={numIdentificacion}
                       onChange={(e) => setNumIdentificacion(e.target.value)}
                     />
                   </div>
                 </div>
-              </div>
 
-              <div className="form-field">
-                <label className="form-field-label">Nombre del Titular o Razón Social</label>
-                <div className="input-with-icon">
-                  <User size={18} className="input-icon" />
+                <div className="cow-field">
+                  <label className="cow-label" htmlFor="cow-razon-social">
+                    Nombre del titular o razón social
+                  </label>
                   <input
+                    id="cow-razon-social"
                     type="text"
-                    className="form-input-premium"
-                    placeholder="Ej. Iglesia Evangélica Bautista Central ó Pbro. Juan Pérez"
+                    className="cow-input"
+                    placeholder="Ej. Iglesia Evangélica Bautista Central o Pbro. Juan Pérez"
                     value={nombreResponsableLegal}
                     onChange={(e) => setNombreResponsableLegal(e.target.value)}
                   />
                 </div>
               </div>
-            </div>
 
-            {/* Nombre Completo del Administrador */}
-            <div className="form-field">
-              <label className="form-field-label">
-                Nombre Completo del Administrador Principal{' '}
-                <span className="form-field-required">*</span>
-              </label>
-              <div className="input-with-icon">
-                <User size={18} className="input-icon" />
+              {/* Nombre Completo del Administrador */}
+              <div className="cow-field">
+                <label className="cow-label" htmlFor="cow-nombre-admin">
+                  Nombre completo del administrador principal *
+                </label>
                 <input
+                  id="cow-nombre-admin"
                   type="text"
-                  className="form-input-premium"
+                  className="cow-input"
                   placeholder="Ej. María Rodríguez"
                   value={nombreAdmin}
                   onChange={(e) => setNombreAdmin(e.target.value)}
                   required
                 />
               </div>
-            </div>
 
-            {/* Cargo y Email */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-              <div className="form-field">
-                <label className="form-field-label">
-                  Cargo en la Iglesia <span className="form-field-required">*</span>
-                </label>
-                <div className="input-with-icon">
-                  <Briefcase size={18} className="input-icon" />
+              {/* Cargo y Email */}
+              <div className="cow-two-col-row">
+                <div className="cow-field">
+                  <label className="cow-label" htmlFor="cow-cargo-admin">
+                    Cargo en la iglesia *
+                  </label>
                   <input
+                    id="cow-cargo-admin"
                     type="text"
-                    className="form-input-premium"
-                    placeholder="Pastor Principal / Tesorero"
+                    className="cow-input"
+                    placeholder="Pastor Principal"
                     value={cargo}
                     onChange={(e) => setCargo(e.target.value)}
                     required
                   />
                 </div>
-              </div>
 
-              <div className="form-field">
-                <label className="form-field-label">
-                  Correo Electrónico Institucional <span className="form-field-required">*</span>
-                </label>
-                <div className="input-with-icon">
-                  <Mail size={18} className="input-icon" />
+                <div className="cow-field">
+                  <label className="cow-label" htmlFor="cow-email-admin">
+                    Correo electrónico institucional *
+                  </label>
                   <input
+                    id="cow-email-admin"
                     type="email"
-                    className="form-input-premium"
+                    className="cow-input"
                     placeholder="pastor@iglesia.org"
                     value={emailAdmin}
                     onChange={(e) => setEmailAdmin(e.target.value)}
@@ -811,36 +611,32 @@ export const CreateOngWizard: React.FC = () => {
                   />
                 </div>
               </div>
-            </div>
 
-            {/* Contraseñas */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-              <div className="form-field">
-                <label className="form-field-label">
-                  Contraseña de Acceso <span className="form-field-required">*</span>
-                </label>
-                <div className="input-with-icon">
-                  <Lock size={18} className="input-icon" />
+              {/* Contraseñas */}
+              <div className="cow-two-col-row">
+                <div className="cow-field">
+                  <label className="cow-label" htmlFor="cow-password">
+                    Contraseña de acceso *
+                  </label>
                   <input
+                    id="cow-password"
                     type="password"
-                    className="form-input-premium"
+                    className="cow-input"
                     placeholder="Mínimo 6 caracteres"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
                   />
                 </div>
-              </div>
 
-              <div className="form-field">
-                <label className="form-field-label">
-                  Confirmar Contraseña <span className="form-field-required">*</span>
-                </label>
-                <div className="input-with-icon">
-                  <Lock size={18} className="input-icon" />
+                <div className="cow-field">
+                  <label className="cow-label" htmlFor="cow-confirm-password">
+                    Confirmar contraseña *
+                  </label>
                   <input
+                    id="cow-confirm-password"
                     type="password"
-                    className="form-input-premium"
+                    className="cow-input"
                     placeholder="Repite la contraseña"
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
@@ -848,156 +644,115 @@ export const CreateOngWizard: React.FC = () => {
                   />
                 </div>
               </div>
-            </div>
 
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '1.8rem' }}>
-              <button
-                type="button"
-                className="btn btn-outline"
-                onClick={() => setStep(1)}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.5rem',
-                  borderRadius: '10px',
-                }}
-              >
-                <ArrowLeft size={18} /> Atrás
-              </button>
+              <p className="cow-required-note">* Campos obligatorios</p>
 
-              <button
-                type="submit"
-                className="btn btn-primary"
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.5rem',
-                  padding: '0.85rem 1.75rem',
-                  fontWeight: 700,
-                  borderRadius: '10px',
-                }}
-              >
-                Siguiente: Identidad & Verificación <ArrowRight size={18} />
-              </button>
-            </div>
-          </form>
-        )}
+              <div className="cow-actions-row">
+                <button type="submit" className="cow-next-btn">
+                  Siguiente: Identidad y verificación <ArrowRight size={20} />
+                </button>
 
-        {/* ========================================================================= */}
-        {/* PASO 3: IDENTIDAD ECLESIÁSTICA, MARCA & VERIFICACIÓN                      */}
-        {/* ========================================================================= */}
-        {step === 3 && (
-          <form
-            onSubmit={handleSubmitFinal}
-            style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}
-          >
-            <div
-              style={{
-                borderBottom: '1px solid #f1f5f9',
-                paddingBottom: '0.75rem',
-                marginBottom: '0.5rem',
-              }}
+                <button type="button" className="cow-back-login-link" onClick={() => setStep(1)}>
+                  Atrás
+                </button>
+              </div>
+            </form>
+          )}
+
+          {/* ========================================================================= */}
+          {/* ========================================================================= */}
+          {/* PASO 3: IDENTIDAD ECLESIÁSTICA, MARCA & VERIFICACIÓN                      */}
+          {/* ========================================================================= */}
+          {step === 3 && (
+            <form
+              noValidate
+              onSubmit={handleSubmitFinal}
+              style={{ display: 'flex', flexDirection: 'column', gap: '1.15rem' }}
             >
-              <h3
-                style={{
-                  margin: 0,
-                  fontSize: '1.2rem',
-                  color: 'var(--primary)',
-                  fontWeight: 700,
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.5rem',
-                }}
-              >
-                <ShieldCheck size={22} /> 3. Identidad Eclesiástica & Verificación
-              </h3>
-              <p style={{ fontSize: '0.82rem', color: '#64748b', margin: '0.25rem 0 0 0' }}>
-                Personaliza la identidad visual de tu templo y realiza la verificación de seguridad.
-              </p>
-            </div>
-
-            {/* Denominación y Afiliación */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-              <div className="form-field">
-                <label className="form-field-label">Denominación / Tradición Eclesiástica</label>
-                <select
-                  className="form-input-premium"
-                  value={denominacion}
-                  onChange={(e) => setDenominacion(e.target.value)}
-                  style={{ paddingLeft: '1rem' }}
-                >
-                  <option value="Bautista">Bautista</option>
-                  <option value="Pentecostal">Pentecostal</option>
-                  <option value="Presbiteriana">Presbiteriana</option>
-                  <option value="Metodista">Metodista</option>
-                  <option value="Asambleas de Dios">Asambleas de Dios</option>
-                  <option value="Libre / Independiente">Libre / Independiente</option>
-                  <option value="Otra">Otra Tradición</option>
-                </select>
+              <div className="cow-section-intro">
+                <h2 className="cow-section-heading">3. Identidad eclesiástica y verificación</h2>
+                <p className="cow-section-desc">
+                  Personaliza la identidad visual de tu templo y realiza la verificación de
+                  seguridad.
+                </p>
               </div>
 
-              <div className="form-field">
-                <label className="form-field-label">Afiliación o Confraternidad</label>
-                <input
-                  type="text"
-                  className="form-input-premium"
-                  placeholder="Ej. Consejo Evangélico de Venezuela"
-                  value={afiliacion}
-                  onChange={(e) => setAfiliacion(e.target.value)}
-                  style={{ paddingLeft: '1rem' }}
-                />
-              </div>
-            </div>
-
-            {/* Carga de Logo del Templo */}
-            <div className="form-field">
-              <label className="form-field-label">Logo de la Iglesia (Opcional)</label>
-              <div
-                style={{
-                  border: '2px dashed #cbd5e1',
-                  borderRadius: '12px',
-                  padding: '1rem',
-                  textAlign: 'center',
-                  backgroundColor: '#f8fafc',
-                  cursor: 'pointer',
-                }}
-              >
-                {logoUrl ? (
-                  <div
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      gap: '1rem',
-                    }}
+              {/* Denominación y Afiliación */}
+              <div className="cow-two-col-row">
+                <div className="cow-field">
+                  <label className="cow-label" htmlFor="cow-denominacion">
+                    Denominación / tradición eclesiástica
+                  </label>
+                  <select
+                    id="cow-denominacion"
+                    className="cow-input"
+                    value={denominacion}
+                    onChange={(e) => setDenominacion(e.target.value)}
                   >
-                    <img
-                      src={logoUrl}
-                      alt="Logo Previsto"
+                    <option value="Bautista">Bautista</option>
+                    <option value="Pentecostal">Pentecostal</option>
+                    <option value="Presbiteriana">Presbiteriana</option>
+                    <option value="Metodista">Metodista</option>
+                    <option value="Asambleas de Dios">Asambleas de Dios</option>
+                    <option value="Libre / Independiente">Libre / Independiente</option>
+                    <option value="Otra">Otra Tradición</option>
+                  </select>
+                </div>
+
+                <div className="cow-field">
+                  <label className="cow-label" htmlFor="cow-afiliacion">
+                    Afiliación o confraternidad
+                  </label>
+                  <input
+                    id="cow-afiliacion"
+                    type="text"
+                    className="cow-input"
+                    placeholder="Consejo Evangélico de Venezuela"
+                    value={afiliacion}
+                    onChange={(e) => setAfiliacion(e.target.value)}
+                  />
+                </div>
+              </div>
+
+              {/* Carga de Logo del Templo */}
+              <div className="cow-field">
+                <span className="cow-label">Logo de la iglesia (opcional)</span>
+                {logoUrl ? (
+                  <div className="cow-logo-dropzone">
+                    <div
                       style={{
-                        height: '50px',
-                        width: '50px',
-                        objectFit: 'contain',
-                        borderRadius: '8px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '0.85rem',
                       }}
-                    />
-                    <span style={{ fontSize: '0.85rem', color: '#10b981', fontWeight: 600 }}>
-                      ✓ Logo Cargado Exitosamente
-                    </span>
+                    >
+                      <img
+                        src={logoUrl}
+                        alt="Logo Previsto"
+                        style={{
+                          height: '48px',
+                          width: '48px',
+                          objectFit: 'contain',
+                          borderRadius: '6px',
+                        }}
+                      />
+                      <span
+                        style={{
+                          fontSize: '0.88rem',
+                          color: 'var(--secondary, #2d6a4f)',
+                          fontWeight: 600,
+                        }}
+                      >
+                        ✓ Logo cargado exitosamente
+                      </span>
+                    </div>
                   </div>
                 ) : (
-                  <label
-                    style={{
-                      cursor: 'pointer',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      alignItems: 'center',
-                      gap: '0.5rem',
-                    }}
-                  >
-                    <Upload size={24} style={{ color: 'var(--primary)' }} />
-                    <span style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--primary)' }}>
-                      {uploadingLogo ? 'Subiendo Logo...' : 'Subir imagen de Logo del Templo'}
+                  <label className="cow-logo-dropzone">
+                    <span className="cow-logo-dropzone-arrow">↑</span>
+                    <span className="cow-logo-dropzone-text">
+                      {uploadingLogo ? 'Subiendo logo...' : 'Subir imagen del logo del templo'}
                     </span>
                     <input
                       type="file"
@@ -1008,271 +763,161 @@ export const CreateOngWizard: React.FC = () => {
                   </label>
                 )}
               </div>
-            </div>
 
-            {/* Resumen del Registro */}
-            <div
-              style={{
-                backgroundColor: '#f8fafc',
-                border: '1px solid #e2e8f0',
-                borderRadius: '12px',
-                padding: '1.2rem',
-                fontSize: '0.85rem',
-              }}
-            >
-              <strong
-                style={{
-                  color: 'var(--primary)',
-                  display: 'block',
-                  marginBottom: '0.75rem',
-                  fontSize: '0.9rem',
-                }}
-              >
-                Resumen del Registro:
-              </strong>
-              <div
-                style={{
-                  display: 'grid',
-                  gridTemplateColumns: '1fr 1fr',
-                  gap: '0.75rem',
-                  color: '#334155',
-                }}
-              >
-                <div>
-                  <span style={{ color: '#94a3b8', display: 'block', fontSize: '0.75rem' }}>
-                    CONGREGACIÓN / TEMPLO
-                  </span>
-                  <strong>{nombreOng}</strong>
-                </div>
-                <div>
-                  <span style={{ color: '#94a3b8', display: 'block', fontSize: '0.75rem' }}>
-                    DOCUMENTO LEGAL / FISCAL
-                  </span>
-                  <strong>
-                    {numIdentificacion
-                      ? `${tipoIdentificacion}: ${numIdentificacion}`
-                      : 'En Proceso'}
-                  </strong>
-                </div>
-                <div>
-                  <span style={{ color: '#94a3b8', display: 'block', fontSize: '0.75rem' }}>
-                    UBICACIÓN
-                  </span>
-                  <strong>
-                    {estadoSel}, {municipioSel}
-                  </strong>
-                </div>
-                <div>
-                  <span style={{ color: '#94a3b8', display: 'block', fontSize: '0.75rem' }}>
-                    ADMINISTRADOR
-                  </span>
-                  <strong>
-                    {nombreAdmin} ({cargo})
-                  </strong>
+              {/* Resumen del Registro */}
+              <div className="cow-summary-card">
+                <p className="cow-summary-title">Resumen del registro</p>
+                <div className="cow-summary-grid">
+                  <div className="cow-summary-item">
+                    <span className="cow-summary-label">CONGREGACIÓN / TEMPLO</span>
+                    <span className="cow-summary-value">{nombreOng}</span>
+                  </div>
+                  <div className="cow-summary-item">
+                    <span className="cow-summary-label">DOCUMENTO LEGAL / FISCAL</span>
+                    <span className="cow-summary-value">
+                      {numIdentificacion
+                        ? `${tipoIdentificacion}: ${numIdentificacion}`
+                        : 'En Proceso'}
+                    </span>
+                  </div>
+                  <div className="cow-summary-item">
+                    <span className="cow-summary-label">UBICACIÓN</span>
+                    <span className="cow-summary-value">
+                      {estadoSel}, {municipioSel}
+                    </span>
+                  </div>
+                  <div className="cow-summary-item">
+                    <span className="cow-summary-label">ADMINISTRADOR</span>
+                    <span className="cow-summary-value">
+                      {nombreAdmin} ({cargo})
+                    </span>
+                  </div>
                 </div>
               </div>
-            </div>
 
-            {/* Protección Anti-Bot reCAPTCHA */}
-            {!isSimulationMode && (
-              <div>
-                <label className="form-field-label" style={{ marginBottom: '0.5rem' }}>
-                  Verificación Anti-Bot (reCAPTCHA) <span className="form-field-required">*</span>
-                </label>
-                <div
-                  id="wizard-recaptcha-container"
-                  style={{ display: 'flex', justifyContent: 'center' }}
-                ></div>
+              {/* Protección Anti-Bot reCAPTCHA */}
+              <div className="cow-field">
+                <span className="cow-label">Verificación anti-bot (reCAPTCHA) *</span>
+                {isSimulationMode ? (
+                  <div
+                    className="cow-recaptcha-mock"
+                    onClick={() => setCaptchaToken((prev) => (prev ? null : 'sim-captcha-token'))}
+                  >
+                    <div
+                      className={`cow-recaptcha-box ${
+                        captchaToken ? 'cow-recaptcha-box--checked' : ''
+                      }`}
+                    >
+                      {captchaToken && <Check size={14} />}
+                    </div>
+                    <span className="cow-recaptcha-text">No soy un robot</span>
+                    <div className="cow-recaptcha-brand">
+                      <span className="cow-recaptcha-brand-title">reCAPTCHA</span>
+                      <span className="cow-recaptcha-brand-sub">Privacidad · Términos</span>
+                    </div>
+                  </div>
+                ) : (
+                  <div
+                    id="wizard-recaptcha-container"
+                    style={{ display: 'flex', justifyContent: 'flex-start' }}
+                  />
+                )}
               </div>
-            )}
 
-            {/* Declaración de Responsabilidad Legal */}
-            <label
-              className={`checkbox-card-container ${declaracionLegal ? 'checked' : ''}`}
-              htmlFor="declaracionLegal"
-            >
-              <input
-                type="checkbox"
-                id="declaracionLegal"
-                checked={declaracionLegal}
-                onChange={(e) => setDeclaracionLegal(e.target.checked)}
-                style={{ marginTop: '0.2rem', width: '20px', height: '20px', cursor: 'pointer' }}
-                required
-              />
-              <span
-                style={{
-                  fontSize: '0.82rem',
-                  color: 'var(--neutral-dark)',
-                  lineHeight: '1.5',
-                  cursor: 'pointer',
-                }}
-              >
-                Declaro bajo fe de juramento que la información legal de la iglesia es verídica y
-                que poseo las facultades para representar a la organización y activar su espacio en
-                MATEO ekklesia.
-              </span>
-            </label>
+              {/* Declaración de Responsabilidad Legal */}
+              <label className="cow-declaration-card" htmlFor="declaracionLegal">
+                <input
+                  type="checkbox"
+                  id="declaracionLegal"
+                  className="cow-declaration-checkbox"
+                  checked={declaracionLegal}
+                  onChange={(e) => setDeclaracionLegal(e.target.checked)}
+                  required
+                />
+                <span className="cow-declaration-text">
+                  Declaro bajo fe de juramento que la información legal de la iglesia es verídica y
+                  que poseo las facultades para representar a la congregación y activar su espacio
+                  en MATEO ekklesia.
+                </span>
+              </label>
 
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '1.8rem' }}>
+              <div className="cow-actions-row">
+                <button type="submit" className="cow-next-btn" disabled={loading}>
+                  {loading ? 'Creando iglesia...' : 'Registrar iglesia e iniciar prueba'}
+                </button>
+
+                <button
+                  type="button"
+                  className="cow-back-login-link"
+                  onClick={() => setStep(2)}
+                  disabled={loading}
+                >
+                  Atrás
+                </button>
+              </div>
+            </form>
+          )}
+
+          {/* ========================================================================= */}
+          {/* PASO 4: CONFIRMACIÓN Y ÉXITO                                              */}
+          {/* ========================================================================= */}
+          {step === 4 && createdOngData && (
+            <div className="cow-success-wrap">
+              <div className="cow-success-header">
+                <div className="cow-success-badge" aria-hidden="true">
+                  ✓
+                </div>
+
+                <h2 className="cow-success-title">¡Iglesia registrada con éxito!</h2>
+
+                <p className="cow-success-subtitle">
+                  Tu iglesia <strong>{createdOngData.nombre}</strong> ha sido activada con una
+                  prueba gratuita de 14 días.
+                </p>
+              </div>
+
+              <div className="cow-trial-card">
+                <p className="cow-trial-title">Detalles de tu período de prueba</p>
+                <div className="cow-trial-row">
+                  <span className="cow-trial-label">Plan asignado</span>
+                  <span className="cow-trial-value">Prueba completa (14 días)</span>
+                </div>
+                <div className="cow-trial-row">
+                  <span className="cow-trial-label">Fecha de vencimiento</span>
+                  <span className="cow-trial-value">{createdOngData.trialEndsAt}</span>
+                </div>
+                <div className="cow-trial-row">
+                  <span className="cow-trial-label">Tu rol</span>
+                  <span className="cow-trial-value">Administrador principal de la iglesia</span>
+                </div>
+              </div>
+
+              <div className="cow-email-verify-card">
+                <p className="cow-email-verify-title">Verifica tu correo electrónico</p>
+                <p className="cow-email-verify-text">
+                  Hemos enviado un enlace de confirmación a{' '}
+                  <span className="cow-email-highlight">{emailAdmin}</span>. Por favor, revisa tu
+                  bandeja de entrada y haz clic en el enlace para habilitar tu cuenta e ingresar al
+                  sistema.
+                </p>
+              </div>
+
               <button
                 type="button"
-                className="btn btn-outline"
-                onClick={() => setStep(2)}
-                disabled={loading}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.5rem',
-                  borderRadius: '10px',
-                }}
+                onClick={() => navigate('/login')}
+                className="cow-login-cta-btn"
               >
-                <ArrowLeft size={18} /> Atrás
-              </button>
-
-              <button
-                type="submit"
-                className="btn btn-primary"
-                disabled={loading}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.6rem',
-                  padding: '0.85rem 1.8rem',
-                  fontWeight: 700,
-                  borderRadius: '10px',
-                  boxShadow: '0 4px 12px rgba(47, 90, 174, 0.25)',
-                }}
-              >
-                {loading ? (
-                  <span>Creando Iglesia...</span>
-                ) : (
-                  <>
-                    Registrar Iglesia e Iniciar Trial <Sparkles size={18} />
-                  </>
-                )}
+                Ir al inicio de sesión
               </button>
             </div>
-          </form>
-        )}
+          )}
+        </div>
 
-        {/* ========================================================================= */}
-        {/* PASO 4: CONFIRMACIÓN Y ÉXITO                                              */}
-        {/* ========================================================================= */}
-        {step === 4 && createdOngData && (
-          <div style={{ textAlign: 'center', padding: '1rem 0' }}>
-            <div
-              style={{
-                display: 'flex',
-                justifyContent: 'center',
-                marginBottom: '1.25rem',
-                color: '#10b981',
-              }}
-            >
-              <CheckCircle2 size={80} strokeWidth={1.5} />
-            </div>
-
-            <h2
-              style={{
-                color: 'var(--primary)',
-                fontWeight: 900,
-                fontSize: '1.65rem',
-                margin: 0,
-                letterSpacing: '-0.5px',
-              }}
-            >
-              ¡Iglesia Registrada con Éxito!
-            </h2>
-
-            <p
-              style={{
-                fontSize: '0.95rem',
-                color: 'var(--neutral-dark)',
-                marginTop: '0.8rem',
-                lineHeight: '1.6',
-              }}
-            >
-              Tu iglesia <strong>{createdOngData.nombre}</strong> ha sido activada con una prueba
-              gratuita de 14 días.
-            </p>
-
-            <div
-              style={{
-                backgroundColor: 'rgba(16, 185, 129, 0.08)',
-                border: '1px solid rgba(16, 185, 129, 0.25)',
-                borderRadius: '14px',
-                padding: '1.4rem',
-                margin: '1.8rem 0',
-                fontSize: '0.88rem',
-                color: 'var(--neutral-dark)',
-                textAlign: 'left',
-              }}
-            >
-              <strong
-                style={{
-                  color: '#047857',
-                  display: 'block',
-                  marginBottom: '0.6rem',
-                  fontSize: '0.95rem',
-                }}
-              >
-                Detalles de tu Período de Prueba (Trial):
-              </strong>
-              <ul
-                style={{
-                  margin: 0,
-                  paddingLeft: '1.2rem',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: '0.4rem',
-                }}
-              >
-                <li>
-                  <strong>Plan Asignado:</strong> Prueba Completa (14 días).
-                </li>
-                <li>
-                  <strong>Fecha de Vencimiento:</strong> {createdOngData.trialEndsAt}.
-                </li>
-                <li>
-                  <strong>Tu Rol:</strong> Administrador Principal de la Iglesia.
-                </li>
-              </ul>
-            </div>
-
-            <div
-              style={{
-                backgroundColor: '#f8fafc',
-                border: '1px solid #e2e8f0',
-                borderRadius: '12px',
-                padding: '1.2rem',
-                fontSize: '0.85rem',
-                color: '#475569',
-                marginBottom: '2rem',
-                textAlign: 'left',
-                lineHeight: '1.5',
-              }}
-            >
-              📩 <strong>Verificación de Correo Electrónico:</strong> Hemos enviado un enlace de
-              confirmación a <strong>{emailAdmin}</strong>. Por favor revisa tu bandeja de entrada y
-              haz clic en el enlace para habilitar tu cuenta e ingresar al sistema.
-            </div>
-
-            <button
-              onClick={() => navigate('/login')}
-              className="btn btn-primary"
-              style={{
-                width: '100%',
-                padding: '0.9rem',
-                fontWeight: 700,
-                fontSize: '1rem',
-                borderRadius: '10px',
-                boxShadow: '0 4px 12px rgba(47, 90, 174, 0.25)',
-              }}
-            >
-              Ir al Inicio de Sesión
-            </button>
-          </div>
-        )}
-      </div>
+        {/* Columna derecha: Logotipo MATEO centrado */}
+        <section className="cow-right-col" aria-label="Identidad MATEO">
+          <img src="/mateo_logo_wordmark.png" alt="Logo Mateo" className="cow-logo" />
+        </section>
+      </main>
     </div>
   );
 };
