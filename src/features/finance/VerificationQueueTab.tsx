@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import type { BankTransaction, Donation } from '../../services/api';
 import { financeApi, findDuplicateReferences, type ReporteAporte } from '../../services/financeApi';
+import { formatAmount, formatUsd, formatVes } from '../../utils/formatters';
 import { formatCategoriaAporte } from '../../utils/rolePermissions';
 import { formatDateForFrontEnd } from '../../utils/formatters';
 
@@ -249,12 +250,12 @@ export const VerificationQueueTab: React.FC<VerificationQueueTabProps> = ({
                   <div style={{ textAlign: 'right' }}>
                     <div style={{ fontSize: '1.15rem', fontWeight: 800, color: '#0f172a' }}>
                       {rep.moneda === 'VES'
-                        ? `Bs. ${rep.monto_original.toFixed(2)}`
-                        : `$${rep.monto_original.toFixed(2)} USD`}
+                        ? formatVes(rep.monto_original)
+                        : `${formatUsd(rep.monto_original)} USD`}
                     </div>
                     <div style={{ fontSize: '0.78rem', color: '#64748b' }}>
-                      Equiv. USD: <strong>${rep.monto_usd.toFixed(2)}</strong>
-                      {rep.tasa_bcv ? ` (Tasa ${rep.tasa_bcv.toFixed(4)})` : ''}
+                      Equiv. USD: <strong>{formatUsd(rep.monto_usd)}</strong>
+                      {rep.tasa_bcv ? ` (Tasa ${formatAmount(rep.tasa_bcv, 4)})` : ''}
                     </div>
                   </div>
                 </div>
@@ -461,7 +462,7 @@ export const VerificationQueueTab: React.FC<VerificationQueueTabProps> = ({
                   <small style={{ color: '#475569' }}>
                     Monto confirmado en USD:{' '}
                     <strong>
-                      ${(approvingReport.monto_original / parseFloat(approveRate)).toFixed(2)}
+                      {formatUsd(approvingReport.monto_original / parseFloat(approveRate))}
                     </strong>
                   </small>
                 )}
@@ -482,7 +483,7 @@ export const VerificationQueueTab: React.FC<VerificationQueueTabProps> = ({
                   <option value="">Sin vincular por ahora</option>
                   {bankTxs.map((tx) => (
                     <option key={tx.id} value={tx.id}>
-                      {tx.fecha} · Ref {tx.referencia} · {tx.monto.toFixed(2)}
+                      {tx.fecha} · Ref {tx.referencia} · {formatAmount(tx.monto)}
                     </option>
                   ))}
                 </select>

@@ -81,7 +81,7 @@ describe('PublicContributionForm', () => {
     expect(screen.getByText(/0414-1234567/)).toBeInTheDocument();
 
     fireEvent.change(screen.getByLabelText(/Monto \(VES\)/i), { target: { value: '500' } });
-    expect(await screen.findByText('$5.00')).toBeInTheDocument();
+    expect(await screen.findByText('$5,00')).toBeInTheDocument();
   });
 
   it('allows exact cedula lookup with masked confirmation and submitting a Transferencia without reference when same-bank is checked', async () => {

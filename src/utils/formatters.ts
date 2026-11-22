@@ -68,3 +68,25 @@ export const getErrorMessage = (err: unknown, defaultMsg = 'Error desconocido'):
     return defaultMsg;
   }
 };
+
+/**
+ * Formatea un monto numérico con separadores de miles en punto (.)
+ * y separador decimal en coma (,), por ejemplo: 1234.5 -> "1.234,50".
+ */
+export const formatAmount = (amount?: number | string | null, decimals = 2): string => {
+  const num = typeof amount === 'string' ? Number(amount) : amount;
+  if (num === null || num === undefined || Number.isNaN(num) || !Number.isFinite(num)) {
+    return (0).toFixed(decimals).replace('.', ',');
+  }
+  const isNegative = num < 0;
+  const absFixed = Math.abs(num).toFixed(decimals);
+  const [intPart, decPart] = absFixed.split('.');
+  const formattedInt = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+  const formatted = decPart !== undefined ? `${formattedInt},${decPart}` : formattedInt;
+  return isNegative ? `-${formatted}` : formatted;
+};
+
+export const formatUsd = (amount?: number | string | null): string => `$${formatAmount(amount, 2)}`;
+
+export const formatVes = (amount?: number | string | null): string =>
+  `Bs. ${formatAmount(amount, 2)}`;

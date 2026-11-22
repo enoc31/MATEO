@@ -1307,7 +1307,7 @@ export const ChurchMembersManager: React.FC = () => {
       >
         <div>
           <h2 style={{ color: 'var(--primary)', fontSize: '1.75rem', fontWeight: 800, margin: 0 }}>
-            👤 Miembros y Fieles
+            Miembros y Fieles
           </h2>
           <p style={{ opacity: 0.8, fontSize: '0.9rem', marginTop: '0.25rem', color: '#475569' }}>
             Data congregacional completa, cargos eclesiásticos, ministerios y ficha 360°.

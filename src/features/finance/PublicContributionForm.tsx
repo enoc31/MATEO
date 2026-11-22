@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
+import { formatAmount, formatUsd } from '../../utils/formatters';
 import {
   Check,
   CheckCircle2,
@@ -375,10 +376,10 @@ export const PublicContributionForm: React.FC = () => {
               <strong>Categoría:</strong> {formatCategoriaAporte(submittedReport.categoria_aporte)}
             </div>
             <div>
-              <strong>Monto:</strong> {submittedReport.monto_original.toFixed(2)}{' '}
+              <strong>Monto:</strong> {formatAmount(submittedReport.monto_original)}{' '}
               {submittedReport.moneda}{' '}
               {submittedReport.moneda === 'VES' &&
-                `(Equiv. $${submittedReport.monto_usd.toFixed(2)} USD)`}
+                `(Equiv. ${formatUsd(submittedReport.monto_usd)} USD)`}
             </div>
             <div>
               <strong>Método:</strong>{' '}
@@ -865,7 +866,7 @@ export const PublicContributionForm: React.FC = () => {
                   <strong>{tasaBcv ? `${tasaBcv.toFixed(4)} Bs/$` : 'N/D'}</strong>
                 </span>
                 <span>
-                  Equivalente en USD: <strong>${equivalentUsd.toFixed(2)}</strong>
+                  Equivalente en USD: <strong>{formatUsd(equivalentUsd)}</strong>
                 </span>
               </div>
             )}

@@ -302,7 +302,7 @@ const MainAppContent: React.FC = () => {
           }
         />
         <Route
-          path="beneficiaries"
+          path="miembros"
           element={
             <ProtectedRoute
               allowedRoles={[
@@ -319,6 +319,7 @@ const MainAppContent: React.FC = () => {
             />
           }
         />
+        <Route path="beneficiaries" element={<Navigate to="/app/miembros" replace />} />
         <Route
           path="jornadas"
           element={

@@ -9,7 +9,6 @@ import {
   Landmark,
   Plus,
   RefreshCw,
-  Wallet,
 } from 'lucide-react';
 import { api, type BankTransaction, type Donation, type Requisition } from '../../services/api';
 import { requisitionsApi } from '../../services/api';
@@ -20,7 +19,7 @@ import {
   FINANCE_VIEW_ROLES,
   formatCategoriaAporte,
 } from '../../utils/rolePermissions';
-import { formatDateForFrontEnd } from '../../utils/formatters';
+import { formatDateForFrontEnd, formatUsd, formatVes } from '../../utils/formatters';
 import { VerificationQueueTab } from './VerificationQueueTab';
 import { InternalIncomeModal } from './InternalIncomeModal';
 import { AccountsAndLinkTab } from './AccountsAndLinkTab';
@@ -130,7 +129,7 @@ export const FinanceHub: React.FC = () => {
               gap: '0.5rem',
             }}
           >
-            <Wallet size={22} /> Ingresos y Gastos
+            Ingresos y Gastos
           </h1>
           <p style={{ margin: '0.2rem 0 0', color: '#64748b', fontSize: '0.88rem' }}>
             Gestión unificada de diezmos, ofrendas, reportes externos y gastos ministeriales.
@@ -239,11 +238,11 @@ export const FinanceHub: React.FC = () => {
                       marginTop: '0.25rem',
                     }}
                   >
-                    ${totalIngresosUsd.toFixed(2)}
+                    {formatUsd(totalIngresosUsd)}
                   </div>
                   {totalIngresosVes > 0 && (
                     <div style={{ fontSize: '0.8rem', color: '#64748b' }}>
-                      Equiv. VES: Bs. {totalIngresosVes.toFixed(2)}
+                      Equiv. VES: {formatVes(totalIngresosVes)}
                     </div>
                   )}
                 </div>
@@ -279,7 +278,7 @@ export const FinanceHub: React.FC = () => {
                       marginTop: '0.25rem',
                     }}
                   >
-                    ${approvedReqsTotal.toFixed(2)}
+                    {formatUsd(approvedReqsTotal)}
                   </div>
                 </div>
 
@@ -295,7 +294,7 @@ export const FinanceHub: React.FC = () => {
                       marginTop: '0.25rem',
                     }}
                   >
-                    ${(totalIngresosUsd - approvedReqsTotal).toFixed(2)}
+                    {formatUsd(totalIngresosUsd - approvedReqsTotal)}
                   </div>
                 </div>
               </div>
@@ -385,10 +384,17 @@ export const FinanceHub: React.FC = () => {
                                 ? 'Transferencia'
                                 : 'Efectivo'}
                           </td>
-                          <td style={{ padding: '0.75rem 1rem', textAlign: 'right' }}>
+                          <td
+                            style={{
+                              padding: '0.75rem 1rem',
+                              textAlign: 'right',
+                              whiteSpace: 'nowrap',
+                              fontVariantNumeric: 'tabular-nums',
+                            }}
+                          >
                             {d.moneda === 'VES'
-                              ? `Bs. ${(d.monto_original || 0).toFixed(2)}`
-                              : `$${(d.monto_original || d.monto).toFixed(2)}`}
+                              ? formatVes(d.monto_original || 0)
+                              : formatUsd(d.monto_original || d.monto)}
                           </td>
                           <td
                             style={{
@@ -396,9 +402,11 @@ export const FinanceHub: React.FC = () => {
                               textAlign: 'right',
                               fontWeight: 700,
                               color: '#059669',
+                              whiteSpace: 'nowrap',
+                              fontVariantNumeric: 'tabular-nums',
                             }}
                           >
-                            ${(d.monto_usd || d.monto).toFixed(2)}
+                            {formatUsd(d.monto_usd || d.monto)}
                           </td>
                         </tr>
                       ))}
