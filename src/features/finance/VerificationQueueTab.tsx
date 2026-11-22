@@ -234,9 +234,13 @@ export const VerificationQueueTab: React.FC<VerificationQueueTabProps> = ({
                       ) : rep.miembro_id ? (
                         <>
                           <UserCheck size={14} color="#10b981" />{' '}
-                          {rep.miembro_nombre ||
-                            rep.nombre_aportante ||
-                            `Miembro (${rep.miembro_id.slice(0, 8)}…)`}
+                          <span>
+                            {rep.miembro_nombre ||
+                              rep.nombre_aportante ||
+                              `Miembro (${rep.miembro_id.slice(0, 8)}…)`}
+                            {(rep.miembro_cedula || rep.cedula_aportante) &&
+                              ` · C.I. ${rep.miembro_cedula || rep.cedula_aportante}`}
+                          </span>
                         </>
                       ) : (
                         <>

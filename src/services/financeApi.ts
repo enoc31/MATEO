@@ -39,6 +39,7 @@ export interface ReporteAporte {
   cuenta_receptora_id: string | null;
   miembro_id: string | null;
   miembro_nombre?: string | null;
+  miembro_cedula?: string | null;
   es_anonimo: boolean;
   nombre_aportante: string | null;
   telefono_aportante: string | null;
@@ -88,6 +89,7 @@ export interface SubmitReporteAporteInput {
   cuenta_receptora_id: string | null;
   miembro_id: string | null;
   miembro_nombre?: string | null;
+  miembro_cedula?: string | null;
   es_anonimo: boolean;
   nombre_aportante: string | null;
   telefono_aportante: string | null;
@@ -503,18 +505,28 @@ export const financeApi = {
       if (memberIds.length > 0) {
         const { data: membersData } = await supabase
           .from('beneficiarios')
-          .select('id, nombre, apellido')
+          .select('id, nombre, apellido, cedula')
           .in('id', memberIds);
-        const nameMap = new Map<string, string>();
-        for (const m of (membersData || []) as { id: string; nombre: string; apellido: string }[]) {
+        const memberMap = new Map<string, { nombre: string; cedula: string | null }>();
+        for (const m of (membersData || []) as {
+          id: string;
+          nombre: string;
+          apellido: string;
+          cedula?: string | null;
+        }[]) {
           const fullName = `${m.nombre || ''} ${m.apellido || ''}`.trim();
-          if (fullName) nameMap.set(m.id, fullName);
+          memberMap.set(m.id, { nombre: fullName, cedula: m.cedula || null });
         }
-        return reports.map((r) =>
-          r.miembro_id && nameMap.has(r.miembro_id)
-            ? { ...r, miembro_nombre: nameMap.get(r.miembro_id) || null }
-            : r,
-        );
+        return reports.map((r) => {
+          const info = r.miembro_id ? memberMap.get(r.miembro_id) : undefined;
+          return info
+            ? {
+                ...r,
+                miembro_nombre: info.nombre || null,
+                miembro_cedula: info.cedula,
+              }
+            : r;
+        });
       }
       return reports;
     }
@@ -526,16 +538,21 @@ export const financeApi = {
     const hasMemberLinks = filtered.some((r) => Boolean(r.miembro_id));
     if (hasMemberLinks) {
       const members = await api.getBeneficiaries();
-      const nameMap = new Map<string, string>();
+      const memberMap = new Map<string, { nombre: string; cedula: string | null }>();
       for (const m of members) {
         const fullName = `${m.nombre || ''} ${m.apellido || ''}`.trim();
-        if (fullName) nameMap.set(m.id, fullName);
+        memberMap.set(m.id, { nombre: fullName, cedula: m.cedula || null });
       }
-      return filtered.map((r) =>
-        r.miembro_id && nameMap.has(r.miembro_id)
-          ? { ...r, miembro_nombre: nameMap.get(r.miembro_id) || null }
-          : r,
-      );
+      return filtered.map((r) => {
+        const info = r.miembro_id ? memberMap.get(r.miembro_id) : undefined;
+        return info
+          ? {
+              ...r,
+              miembro_nombre: info.nombre || null,
+              miembro_cedula: info.cedula,
+            }
+          : r;
+      });
     }
     return filtered;
   },
