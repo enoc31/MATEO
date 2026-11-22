@@ -53,7 +53,7 @@ test.describe('Acceso y roles', () => {
     await page.goto('/login');
 
     await page.getByLabel('Correo electrónico').fill('nadie@ejemplo.org');
-    await page.getByLabel('Contraseña').fill('cualquier-clave');
+    await page.getByLabel('Contraseña', { exact: true }).fill('cualquier-clave');
     await page.getByRole('button', { name: /^Iniciar sesión$/i }).click();
 
     await expect(
