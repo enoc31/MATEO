@@ -220,9 +220,6 @@ export const Login: React.FC = () => {
       <main className="login-grid">
         {/* Columna izquierda: Formulario de acceso */}
         <section className="login-form-col">
-          <h1 className="login-heading">Inicia sesión</h1>
-          <p className="login-subtitle">¡Hola! Qué bueno verte de nuevo!</p>
-
           {error && <div className="login-alert login-alert--error">⚠️ {error}</div>}
           {success && <div className="login-alert login-alert--success">{success}</div>}
 
