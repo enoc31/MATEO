@@ -1,27 +1,16 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import {
-  ArrowRight,
-  Camera,
-  CheckCircle2,
-  ClipboardList,
-  Clock,
-  Landmark,
-  Plus,
-  RefreshCw,
-} from 'lucide-react';
+import { ArrowRight, Camera, ClipboardList, Clock, RefreshCw } from 'lucide-react';
 import { api, type BankTransaction, type Donation, type Requisition } from '../../services/api';
 import { requisitionsApi } from '../../services/api';
 import { financeApi, type CuentaReceptora, type ReporteAporte } from '../../services/financeApi';
 import { useAuth } from '../../context/AuthContext';
-import {
-  FINANCE_MANAGE_ROLES,
-  FINANCE_VIEW_ROLES,
-  formatCategoriaAporte,
-} from '../../utils/rolePermissions';
-import { formatDateForFrontEnd, formatUsd, formatVes } from '../../utils/formatters';
+import { FINANCE_MANAGE_ROLES, FINANCE_VIEW_ROLES } from '../../utils/rolePermissions';
+import { formatUsd, formatVes } from '../../utils/formatters';
 import { VerificationQueueTab } from './VerificationQueueTab';
 import { InternalIncomeModal } from './InternalIncomeModal';
+import { FinanceIncomesTable } from './FinanceIncomesTable';
+import { FinanceExpensesTable } from './FinanceExpensesTable';
 import { AccountsAndLinkTab } from './AccountsAndLinkTab';
 
 type FinanceTab = 'resumen' | 'verificar' | 'ingresos' | 'gastos' | 'cuentas';
@@ -314,107 +303,12 @@ export const FinanceHub: React.FC = () => {
           )}
 
           {activeTab === 'ingresos' && canViewFinance && (
-            <div style={{ display: 'grid', gap: '1rem' }}>
-              <div
-                style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                  flexWrap: 'wrap',
-                  gap: '0.5rem',
-                }}
-              >
-                <strong style={{ color: '#1e293b' }}>
-                  Aportes Confirmados ({donations.length})
-                </strong>
-                {canManageFinance && (
-                  <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-                    <button
-                      type="button"
-                      className="btn btn-outline"
-                      onClick={() => navigate('/app/importar-extracto')}
-                    >
-                      <Landmark size={15} /> Importar Extracto
-                    </button>
-                    <button
-                      type="button"
-                      className="btn btn-primary"
-                      onClick={() => setShowInternalModal(true)}
-                    >
-                      <Plus size={15} /> Registrar Aporte Interno
-                    </button>
-                  </div>
-                )}
-              </div>
-
-              {donations.length === 0 ? (
-                <div
-                  className="card"
-                  style={{ padding: '2rem', textAlign: 'center', color: '#64748b' }}
-                >
-                  Aún no hay aportes confirmados.
-                </div>
-              ) : (
-                <div className="card table-responsive" style={{ padding: 0, overflowX: 'auto' }}>
-                  <table className="table" style={{ width: '100%', borderCollapse: 'collapse' }}>
-                    <thead>
-                      <tr style={{ backgroundColor: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
-                        <th style={{ padding: '0.85rem 1rem', textAlign: 'left' }}>Fecha</th>
-                        <th style={{ padding: '0.85rem 1rem', textAlign: 'left' }}>Aportante</th>
-                        <th style={{ padding: '0.85rem 1rem', textAlign: 'left' }}>Categoría</th>
-                        <th style={{ padding: '0.85rem 1rem', textAlign: 'left' }}>Método</th>
-                        <th style={{ padding: '0.85rem 1rem', textAlign: 'right' }}>Original</th>
-                        <th style={{ padding: '0.85rem 1rem', textAlign: 'right' }}>USD</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {donations.map((d) => (
-                        <tr key={d.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
-                          <td style={{ padding: '0.75rem 1rem', fontSize: '0.85rem' }}>
-                            {formatDateForFrontEnd(d.fecha)}
-                          </td>
-                          <td style={{ padding: '0.75rem 1rem', fontWeight: 600 }}>{d.donante}</td>
-                          <td style={{ padding: '0.75rem 1rem', fontSize: '0.85rem' }}>
-                            {formatCategoriaAporte(d.categoria_aporte)}
-                          </td>
-                          <td style={{ padding: '0.75rem 1rem', fontSize: '0.82rem' }}>
-                            {d.medio_pago === 'pago_movil'
-                              ? 'Pago Móvil'
-                              : d.medio_pago === 'transferencia'
-                                ? 'Transferencia'
-                                : 'Efectivo'}
-                          </td>
-                          <td
-                            style={{
-                              padding: '0.75rem 1rem',
-                              textAlign: 'right',
-                              whiteSpace: 'nowrap',
-                              fontVariantNumeric: 'tabular-nums',
-                            }}
-                          >
-                            {d.moneda === 'VES'
-                              ? formatVes(d.monto_original || 0)
-                              : formatUsd(d.monto_original || d.monto)}
-                          </td>
-                          <td
-                            style={{
-                              padding: '0.75rem 1rem',
-                              textAlign: 'right',
-                              fontWeight: 700,
-                              color: '#059669',
-                              whiteSpace: 'nowrap',
-                              fontVariantNumeric: 'tabular-nums',
-                            }}
-                          >
-                            {formatUsd(d.monto_usd || d.monto)}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </div>
+            <FinanceIncomesTable
+              donations={donations}
+              canManage={canManageFinance}
+              onImportStatement={() => navigate('/app/importar-extracto')}
+              onRegisterInternal={() => setShowInternalModal(true)}
+            />
           )}
 
           {activeTab === 'gastos' && (
@@ -483,25 +377,10 @@ export const FinanceHub: React.FC = () => {
                 </div>
               </div>
 
-              <div className="card" style={{ padding: '1rem 1.25rem' }}>
-                <div
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.45rem',
-                    marginBottom: '0.5rem',
-                  }}
-                >
-                  <CheckCircle2 size={16} color="#10b981" />
-                  <strong>Resumen de Solicitudes visibles ({requisitions.length})</strong>
-                </div>
-                <p style={{ margin: 0, fontSize: '0.84rem', color: '#64748b' }}>
-                  Tienes {requisitions.filter((r) => r.estado.startsWith('pendiente')).length}{' '}
-                  solicitudes pendientes y{' '}
-                  {requisitions.filter((r) => r.estado === 'aprobada_ejecucion').length} aprobadas
-                  para ejecución.
-                </p>
-              </div>
+              <FinanceExpensesTable
+                requisitions={requisitions}
+                onNavigateRequisitions={() => navigate('/app/requisitions')}
+              />
             </div>
           )}
 
