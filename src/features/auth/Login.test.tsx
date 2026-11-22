@@ -14,50 +14,59 @@ describe('Login Component', () => {
 
   beforeEach(() => {
     vi.resetAllMocks();
+    localStorage.clear();
     vi.mocked(AuthContextModule.useAuth).mockReturnValue({
       refreshProfile: mockRefreshProfile,
     } as unknown as ReturnType<typeof AuthContextModule.useAuth>);
   });
 
-  it('renders login form correctly', () => {
+  it('renders login form, Google button, and password toggle correctly', () => {
     render(
       <MemoryRouter>
         <Login />
       </MemoryRouter>,
     );
 
-    // Verificar que los campos de correo y contraseña están presentes
-    expect(screen.getByLabelText(/Correo Electrónico/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/Contraseña/i)).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /Ingresar a la Plataforma/i })).toBeInTheDocument();
+    expect(screen.getByLabelText(/Correo electrónico/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/^Contraseña$/i)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /^Iniciar sesión$/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Iniciar sesión con Google/i })).toBeInTheDocument();
+    expect(screen.getByRole('checkbox', { name: /Recuérdame/i })).toBeInTheDocument();
   });
 
-  it('updates email and password fields on user input', () => {
+  it('updates email, password, and toggles password visibility', () => {
     render(
       <MemoryRouter>
         <Login />
       </MemoryRouter>,
     );
 
-    const emailInput = screen.getByLabelText(/Correo Electrónico/i) as HTMLInputElement;
-    const passwordInput = screen.getByLabelText(/Contraseña/i) as HTMLInputElement;
+    const emailInput = screen.getByLabelText(/Correo electrónico/i) as HTMLInputElement;
+    const passwordInput = screen.getByLabelText(/^Contraseña$/i) as HTMLInputElement;
 
     fireEvent.change(emailInput, { target: { value: 'test@ejemplo.com' } });
     fireEvent.change(passwordInput, { target: { value: 'password123' } });
 
     expect(emailInput.value).toBe('test@ejemplo.com');
     expect(passwordInput.value).toBe('password123');
+    expect(passwordInput.type).toBe('password');
+
+    fireEvent.click(screen.getByRole('button', { name: /Mostrar contraseña/i }));
+    expect(passwordInput.type).toBe('text');
   });
 
-  it('renders CTA link for registering a new NGO in trial', () => {
+  it('renders registration links pointing to /registro-ong', () => {
     render(
       <MemoryRouter>
         <Login />
       </MemoryRouter>,
     );
 
-    expect(screen.getByText(/¿Deseas registrar una nueva ONG\?/i)).toBeInTheDocument();
-    expect(screen.getByText(/Prueba Gratuita de 14 Días/i)).toBeInTheDocument();
+    const registerLinks = screen.getAllByRole('link', { name: /Regístrate|Crea una cuenta/i });
+    expect(registerLinks.length).toBeGreaterThanOrEqual(2);
+    registerLinks.forEach((link) => {
+      expect(link).toHaveAttribute('href', '/registro-ong');
+    });
   });
 
   it('renders invitation acceptance link for invited users', () => {

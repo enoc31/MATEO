@@ -1,0 +1,480 @@
+/* =========================================================================
+   SidebarNav — Adaptación del diseño Figma "Sidebar Navigation Menu"
+   (Light + Animated Collapse/Expand + Tree Submenu + Floating Popover)
+   al MATEO Branding System (src/index.css)
+   ========================================================================= */
+
+.sn-sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100vh;
+  background: rgba(255, 255, 255, 0.96);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-right: 1px solid var(--border-color, #e2e8f0);
+  box-shadow: 0 24px 48px -18px rgba(15, 23, 42, 0.12);
+  z-index: 2001;
+  display: flex;
+  flex-direction: column;
+  transition:
+    width 0.28s cubic-bezier(0.4, 0, 0.2, 1),
+    transform 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow: visible;
+}
+
+@media (max-width: 768px) {
+  .sn-sidebar {
+    width: 280px;
+    transform: translateX(-100%);
+  }
+
+  .sn-sidebar.sn-sidebar--mobile-open {
+    transform: translateX(0);
+  }
+
+  .sn-collapse-btn {
+    display: none !important;
+  }
+}
+
+@media (min-width: 769px) {
+  .sn-sidebar {
+    width: 76px;
+  }
+
+  .sn-sidebar.sn-sidebar--expanded {
+    width: 260px;
+  }
+
+  .sn-mobile-close {
+    display: none !important;
+  }
+}
+
+/* Botón circular flotante en el borde derecho (estilo Figma < / >) */
+.sn-collapse-btn {
+  position: absolute;
+  top: 28px;
+  right: -13px;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: #ffffff;
+  border: 1px solid var(--border-color, #e2e8f0);
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.1);
+  color: var(--neutral-dark, #0f172a);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 10;
+  transition:
+    transform 0.2s ease,
+    background-color 0.2s ease,
+    color 0.2s ease;
+}
+
+.sn-collapse-btn:hover {
+  background-color: var(--primary, #1b5cb6);
+  color: #ffffff;
+  border-color: var(--primary, #1b5cb6);
+  transform: scale(1.06);
+}
+
+/* Cabecera de usuario y organización */
+.sn-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1.25rem 1rem 1rem 1rem;
+  border-bottom: 1px solid #f1f5f9;
+  position: relative;
+}
+
+.sn-sidebar:not(.sn-sidebar--expanded) .sn-header {
+  justify-content: center;
+  padding: 1.25rem 0.5rem 1rem 0.5rem;
+}
+
+.sn-avatar-btn {
+  position: relative;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 2px solid #e2e8f0;
+  background: linear-gradient(135deg, #1b5cb6 0%, #469be7 100%);
+  color: #ffffff;
+  font-weight: 800;
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  cursor: pointer;
+  overflow: hidden;
+  padding: 0;
+}
+
+.sn-avatar-btn img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.sn-user-meta {
+  min-width: 0;
+  flex: 1;
+  transition: opacity 0.2s ease;
+}
+
+.sn-sidebar:not(.sn-sidebar--expanded) .sn-user-meta,
+.sn-sidebar:not(.sn-sidebar--expanded) .sn-section-label,
+.sn-sidebar:not(.sn-sidebar--expanded) .sn-item-label,
+.sn-sidebar:not(.sn-sidebar--expanded) .sn-item-chevron,
+.sn-sidebar:not(.sn-sidebar--expanded) .sn-cta-card-copy {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .sn-sidebar .sn-user-meta,
+  .sn-sidebar .sn-section-label,
+  .sn-sidebar .sn-item-label,
+  .sn-sidebar .sn-item-chevron,
+  .sn-sidebar .sn-cta-card-copy {
+    display: block;
+  }
+}
+
+.sn-user-role {
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #64748b;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sn-user-name {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--neutral-dark, #0f172a);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sn-mobile-close {
+  background: none;
+  border: none;
+  font-size: 1.4rem;
+  color: #64748b;
+  cursor: pointer;
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Cuerpo scrollable del menú */
+.sn-scroll {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: visible;
+  padding: 0.85rem 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.sn-sidebar:not(.sn-sidebar--expanded) .sn-scroll {
+  padding: 0.85rem 0.65rem;
+}
+
+.sn-section-label {
+  padding: 0 0.75rem 0.35rem 0.75rem;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #94a3b8;
+}
+
+.sn-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+/* Item de navegación */
+.sn-item-wrap {
+  position: relative;
+}
+
+.sn-link {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  padding: 0.65rem 0.75rem;
+  min-height: 42px;
+  border-radius: 12px;
+  border: none;
+  background: transparent;
+  color: #475569;
+  font-size: 0.865rem;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    background-color 0.18s ease,
+    color 0.18s ease;
+}
+
+.sn-sidebar:not(.sn-sidebar--expanded) .sn-link {
+  justify-content: center;
+  padding: 0.65rem 0;
+}
+
+@media (max-width: 768px) {
+  .sn-sidebar .sn-link {
+    justify-content: flex-start !important;
+    padding: 0.65rem 0.75rem !important;
+  }
+}
+
+.sn-link:hover {
+  background-color: #f1f5f9;
+  color: var(--neutral-dark, #0f172a);
+}
+
+.sn-link.active,
+.sn-link--group-active {
+  background-color: rgba(27, 92, 182, 0.1);
+  color: var(--primary, #1b5cb6);
+}
+
+.sn-link--disabled {
+  opacity: 0.35;
+  cursor: default;
+  pointer-events: none;
+}
+
+.sn-item-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+}
+
+.sn-item-label {
+  flex: 1;
+  text-align: left;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sn-item-chevron {
+  color: #64748b;
+  transition: transform 0.2s ease;
+  flex-shrink: 0;
+}
+
+.sn-item-chevron--open {
+  transform: rotate(180deg);
+}
+
+/* Submenú con líneas conectoras tipo árbol (estilo Figma) */
+.sn-submenu {
+  list-style: none;
+  margin: 0.2rem 0 0.35rem 1.35rem;
+  padding: 0 0 0 0.85rem;
+  border-left: 1.5px solid #e2e8f0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.sn-sublink {
+  position: relative;
+  display: flex;
+  align-items: center;
+  padding: 0.5rem 0.75rem;
+  border-radius: 10px;
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: #64748b;
+  text-decoration: none;
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease;
+}
+
+.sn-sublink::before {
+  content: '';
+  position: absolute;
+  left: -0.85rem;
+  top: 50%;
+  width: 0.65rem;
+  height: 1.5px;
+  background-color: #e2e8f0;
+}
+
+.sn-sublink:hover {
+  background-color: #f8fafc;
+  color: var(--neutral-dark, #0f172a);
+}
+
+.sn-sublink.active {
+  background-color: rgba(27, 92, 182, 0.09);
+  color: var(--primary, #1b5cb6);
+  font-weight: 600;
+}
+
+/* Popover flotante cuando el sidebar está colapsado (estilo Figma Small) */
+.sn-popover {
+  position: absolute;
+  left: calc(100% + 10px);
+  top: 0;
+  min-width: 210px;
+  padding: 0.5rem;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.97);
+  backdrop-filter: blur(20px);
+  border: 1px solid var(--border-color, #e2e8f0);
+  box-shadow: 0 18px 36px -10px rgba(15, 23, 42, 0.18);
+  z-index: 2050;
+  display: none;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.sn-sidebar:not(.sn-sidebar--expanded) .sn-item-wrap:hover .sn-popover,
+.sn-sidebar:not(.sn-sidebar--expanded) .sn-item-wrap:focus-within .sn-popover {
+  display: flex;
+}
+
+@media (max-width: 768px) {
+  .sn-popover {
+    display: none !important;
+  }
+}
+
+.sn-popover-title {
+  padding: 0.35rem 0.65rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #94a3b8;
+}
+
+/* Tarjeta inferior (estilo Figma "Let's start! / + Add New Task") + Salir */
+.sn-footer {
+  padding: 0.75rem;
+  border-top: 1px solid #f1f5f9;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.sn-cta-card {
+  background-color: #f8fafc;
+  border: 1px solid var(--border-color, #e2e8f0);
+  border-radius: 16px;
+  padding: 0.85rem;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+.sn-sidebar:not(.sn-sidebar--expanded) .sn-cta-card {
+  padding: 0;
+  border: none;
+  background: transparent;
+  align-items: center;
+}
+
+@media (max-width: 768px) {
+  .sn-sidebar .sn-cta-card {
+    padding: 0.85rem !important;
+    border: 1px solid var(--border-color, #e2e8f0) !important;
+    background-color: #f8fafc !important;
+  }
+}
+
+.sn-cta-title {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--neutral-dark, #0f172a);
+}
+
+.sn-cta-desc {
+  font-size: 0.74rem;
+  color: #64748b;
+  line-height: 1.35;
+}
+
+.sn-cta-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  width: 100%;
+  height: 38px;
+  border: none;
+  border-radius: 10px;
+  background-color: var(--primary, #1b5cb6);
+  color: #ffffff;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.sn-cta-btn:hover {
+  background-color: var(--primary-hover, #154b96);
+}
+
+.sn-sidebar:not(.sn-sidebar--expanded) .sn-cta-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  padding: 0;
+}
+
+.sn-logout-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  padding: 0.6rem 0.75rem;
+  border-radius: 10px;
+  border: none;
+  background: transparent;
+  color: var(--danger, #ef4444);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.sn-sidebar:not(.sn-sidebar--expanded) .sn-logout-btn {
+  justify-content: center;
+  padding: 0.6rem 0;
+}
+
+.sn-logout-btn:hover {
+  background-color: #fef2f2;
+}
