@@ -810,7 +810,8 @@ export const VerificationQueueTab: React.FC<VerificationQueueTabProps> = ({
             >
               {(previewReport.comprobante_url || '/comprobante-prueba.jpg')
                 .toLowerCase()
-                .endsWith('.pdf') ? (
+                .endsWith('.pdf') ||
+              (previewReport.comprobante_url || '').startsWith('data:application/pdf') ? (
                 <iframe
                   src={previewReport.comprobante_url || '/comprobante-prueba.jpg'}
                   title={`Comprobante ${previewReport.codigo_confirmacion}`}

@@ -8,6 +8,7 @@ import {
   type Ong,
 } from './api';
 import { uploadToGCS } from './storage';
+import { compressImage } from '../utils/imageCompression';
 import {
   generateConfirmationCode,
   maskPersonName,
@@ -430,12 +431,35 @@ export const financeApi = {
   },
 
   uploadComprobanteAporte: async (file: File): Promise<string> => {
+    const fileToDataUrl = async (input: File): Promise<string> => {
+      let targetFile = input;
+      try {
+        targetFile = await compressImage(input, 1200, 0.72);
+      } catch {
+        targetFile = input;
+      }
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(String(reader.result || ''));
+        reader.onerror = () => reject(new Error('No se pudo procesar el comprobante adjunto'));
+        reader.readAsDataURL(targetFile);
+      });
+    };
+
     if (!isSimulationMode) {
-      const uploaded = await uploadToGCS(file);
-      return uploaded.url;
+      try {
+        const uploaded = await uploadToGCS(file);
+        return uploaded.url;
+      } catch (err) {
+        console.warn(
+          'Fallo subida a GCS (Edge Function), aplicando respaldo Data URL comprimido:',
+          err,
+        );
+        return fileToDataUrl(file);
+      }
     }
 
-    return URL.createObjectURL(file);
+    return fileToDataUrl(file);
   },
 
   submitReporteAporte: async (input: SubmitReporteAporteInput): Promise<ReporteAporte> => {
