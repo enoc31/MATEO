@@ -152,6 +152,10 @@ describe('financeApi (Modo Simulación)', () => {
     expect(storedReportes[0].monto_usd).toBe(5);
     expect(storedReportes[0].miembro_nombre).toBe('Carlos Mendoza');
     expect(storedReportes[0].miembro_cedula).toBe('18555444');
+
+    const samplePdf = new File(['%PDF-1.4 dummy'], 'recibo.pdf', { type: 'application/pdf' });
+    const dataUrl = await financeApi.uploadComprobanteAporte(samplePdf);
+    expect(dataUrl.startsWith('data:application/pdf;base64,')).toBe(true);
   });
 
   it('rejects a pending report requiring a mandatory reason', async () => {
