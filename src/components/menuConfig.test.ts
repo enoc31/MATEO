@@ -44,7 +44,7 @@ describe('menuConfig — menú de Mateo Ekklesia', () => {
 
   it('deja habilitados los módulos que ya funcionan', () => {
     const items = getMenuItems('ekklesia');
-    for (const id of ['dashboard', 'organization', 'beneficiaries', 'finance', 'accounting']) {
+    for (const id of ['dashboard', 'organization', 'miembros', 'finance', 'accounting']) {
       expect(items.find((item) => item.id === id)?.disabled).toBeFalsy();
     }
   });

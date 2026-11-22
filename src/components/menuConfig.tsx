@@ -58,7 +58,7 @@ const getOngMenuItems = (): MenuItemConfig[] => [
     roles: ['administrador', 'coordinador', 'director'],
   },
   {
-    id: 'beneficiaries',
+    id: 'miembros',
     label: 'Beneficiarios',
     iconName: 'UserCheck',
     color: '#EC4899', // Pink/Rose
@@ -166,7 +166,7 @@ const getEkklesiaMenuItems = (): MenuItemConfig[] => [
     ],
   },
   {
-    id: 'beneficiaries',
+    id: 'miembros',
     label: 'Miembros y Comunidad',
     iconName: 'UserCheck',
     color: '#EC4899',
