@@ -38,6 +38,8 @@ export interface ReporteAporte {
   ong_id: string;
   cuenta_receptora_id: string | null;
   miembro_id: string | null;
+  miembro_nombre?: string | null;
+  miembro_cedula?: string | null;
   es_anonimo: boolean;
   nombre_aportante: string | null;
   telefono_aportante: string | null;
@@ -86,6 +88,8 @@ export interface SubmitReporteAporteInput {
   ong_id: string;
   cuenta_receptora_id: string | null;
   miembro_id: string | null;
+  miembro_nombre?: string | null;
+  miembro_cedula?: string | null;
   es_anonimo: boolean;
   nombre_aportante: string | null;
   telefono_aportante: string | null;
@@ -494,11 +498,63 @@ export const financeApi = {
       }
       const { data, error } = await query;
       if (error) throw error;
-      return (data || []) as ReporteAporte[];
+      const reports = (data || []) as ReporteAporte[];
+      const memberIds = Array.from(
+        new Set(reports.map((r) => r.miembro_id).filter((id): id is string => Boolean(id))),
+      );
+      if (memberIds.length > 0) {
+        const { data: membersData } = await supabase
+          .from('beneficiarios')
+          .select('id, nombre, apellido, cedula')
+          .in('id', memberIds);
+        const memberMap = new Map<string, { nombre: string; cedula: string | null }>();
+        for (const m of (membersData || []) as {
+          id: string;
+          nombre: string;
+          apellido: string;
+          cedula?: string | null;
+        }[]) {
+          const fullName = `${m.nombre || ''} ${m.apellido || ''}`.trim();
+          memberMap.set(m.id, { nombre: fullName, cedula: m.cedula || null });
+        }
+        return reports.map((r) => {
+          const info = r.miembro_id ? memberMap.get(r.miembro_id) : undefined;
+          return info
+            ? {
+                ...r,
+                miembro_nombre: info.nombre || null,
+                miembro_cedula: info.cedula,
+              }
+            : r;
+        });
+      }
+      return reports;
     }
 
     const all = getStoredReportes();
-    return ongId ? all.filter((r) => r.ong_id === ongId || r.ong_id.startsWith('11111111')) : all;
+    const filtered = ongId
+      ? all.filter((r) => r.ong_id === ongId || r.ong_id.startsWith('11111111'))
+      : all;
+    const hasMemberLinks = filtered.some((r) => Boolean(r.miembro_id));
+    if (hasMemberLinks) {
+      const members = await api.getBeneficiaries();
+      const memberMap = new Map<string, { nombre: string; cedula: string | null }>();
+      for (const m of members) {
+        const fullName = `${m.nombre || ''} ${m.apellido || ''}`.trim();
+        memberMap.set(m.id, { nombre: fullName, cedula: m.cedula || null });
+      }
+      return filtered.map((r) => {
+        const info = r.miembro_id ? memberMap.get(r.miembro_id) : undefined;
+        return info
+          ? {
+              ...r,
+              miembro_nombre: info.nombre || null,
+              miembro_cedula: info.cedula,
+            }
+          : r;
+      });
+    }
+    return filtered;
   },
 
   aprobarReporteAporte: async (input: ApproveReporteAporteInput): Promise<string> => {

@@ -48,8 +48,8 @@ test.describe('Ingresos y Gastos (Ekklesia) & Portal Público de Aportes', () =>
     await expect(page.getByText('88776655')).toBeVisible();
 
     // 6. Aprobar el reporte pendiente
-    const reportCard = page.locator('.card').filter({ hasText: 'María Fernanda Pérez' }).first();
-    await reportCard.getByRole('button', { name: 'Aprobar', exact: true }).click();
+    const reportRow = page.locator('tr').filter({ hasText: 'María Fernanda Pérez' }).first();
+    await reportRow.getByRole('button', { name: 'Aprobar', exact: true }).click();
     await page.getByRole('button', { name: 'Confirmar Aprobación' }).click();
 
     await expect(page.getByText('Aporte aprobado y sumado al libro de ingresos.')).toBeVisible();
