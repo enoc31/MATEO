@@ -79,6 +79,20 @@ const AGENTS_REGISTRY = [
       'Detección de divergencias entre la documentación y el código; opera en modo solo documentación, sin modificar código de la aplicación.',
     ],
   },
+  {
+    name: 'Figma UX & UI Designer (`figma-ux-designer`)',
+    emoji: '🎨',
+    role: 'Especialista en Figma, Diseño UI/UX y Sistemas de Diseño',
+    description:
+      'Especialista en Figma.com encargado de auditar, diseñar y mejorar la experiencia de usuario (UX) y la interfaz visual (UI) de MATEO, sincronizando tokens y componentes con React 19, TypeScript y Vanilla CSS.',
+    keyFunctions: [
+      'Definido en `.agents/agents/figma-ux-designer/` (`agent.json` y `SYSTEM_PROMPT.md`).',
+      'Conexión con Figma.com (vía plugin/MCP de Figma) para leer frames, variables de diseño, editar diseños y mapear componentes con Code Connect.',
+      'Sincronización de Design Tokens (colores, tipografías, radios, sombras) entre Figma y el sistema de marca MATEO en `src/index.css`.',
+      'Auditoría y rediseño de flujos críticos (donaciones públicas, conciliación BCV, auditoría, estados vacíos/carga/error) bajo criterios WCAG 2.1 AA/AAA y diseño mobile-first.',
+      'Implementación de componentes UI reutilizables en `src/components/` y vistas en `src/features/` cumpliendo `ARCHITECTURE.md` y `AGENTS.md`.',
+    ],
+  },
 ];
 function buildMarkdown() {
   let md = `# 🤖 Ecosistema de Agentes de IA en el Proyecto MATEO\n`;

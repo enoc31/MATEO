@@ -4,7 +4,7 @@ import { useAuth } from '../../context/AuthContext';
 import { supabase } from '../../supabaseClient';
 import { isSimulationMode } from '../../services/api';
 import { Link } from 'react-router-dom';
-import { Lock, Mail, Building2, KeyRound, ArrowRight } from 'lucide-react';
+import { Eye, EyeOff, KeyRound } from 'lucide-react';
 import {
   traceOperation,
   recordMetric,
@@ -12,13 +12,28 @@ import {
   recordException,
   forceFlushTelemetry,
 } from '../../services/telemetry';
+import './Login.css';
+
+const REMEMBERED_EMAIL_KEY = 'mateo_remembered_email';
 
 export const Login: React.FC = () => {
   const { refreshProfile } = useAuth();
 
   // Estados del formulario
-  const [email, setEmail] = useState('');
+  const [email, setEmail] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem(REMEMBERED_EMAIL_KEY) || '';
+    }
+    return '';
+  });
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return Boolean(localStorage.getItem(REMEMBERED_EMAIL_KEY));
+    }
+    return false;
+  });
 
   // Estados de control
   const [loading, setLoading] = useState(false);
@@ -36,6 +51,33 @@ export const Login: React.FC = () => {
     }
   }, []);
 
+  // Manejador para login con Google OAuth
+  const handleGoogleLogin = async () => {
+    if (isSimulationMode) {
+      setError('El acceso con Google OAuth solo está disponible conectado a Supabase.');
+      return;
+    }
+    setLoading(true);
+    setError(null);
+    setSuccess(null);
+    try {
+      const { error: oauthError } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/app`,
+        },
+      });
+      if (oauthError) throw oauthError;
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Error al iniciar sesión con Google';
+      recordException(err instanceof Error ? err : new Error(message), {
+        operation: 'auth.login.google',
+      });
+      setError(message);
+      setLoading(false);
+    }
+  };
+
   // Manejador para login en Supabase real
   const handleRealLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -43,6 +85,15 @@ export const Login: React.FC = () => {
     setLoading(true);
     setError(null);
     setSuccess(null);
+
+    if (typeof window !== 'undefined') {
+      if (rememberMe) {
+        localStorage.setItem(REMEMBERED_EMAIL_KEY, email);
+      } else {
+        localStorage.removeItem(REMEMBERED_EMAIL_KEY);
+      }
+    }
+
     try {
       await traceOperation(
         'auth.login',
@@ -163,336 +214,174 @@ export const Login: React.FC = () => {
   };
 
   return (
-    <div
-      style={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        minHeight: '100vh',
-        backgroundColor: '#f1f5f9',
-        backgroundImage: 'radial-gradient(at 50% 0%, rgba(47, 90, 174, 0.06) 0px, transparent 75%)',
-        padding: '2rem 1rem',
-      }}
-    >
-      <div
-        className="card animate-fade-in-up"
-        style={{
-          maxWidth: '460px',
-          width: '100%',
-          padding: '2.5rem',
-          backgroundColor: '#ffffff',
-          borderRadius: '16px',
-          boxShadow: '0 20px 25px -5px rgba(0,0,0,0.08), 0 10px 10px -5px rgba(0,0,0,0.02)',
-        }}
-      >
-        {/* Header con imagen corporativa MATEO */}
-        <div style={{ textAlign: 'center', marginBottom: '1.8rem' }}>
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '0.75rem',
-              marginBottom: '0.75rem',
-            }}
-          >
-            <img
-              src="/mateo_logo.png"
-              alt="Logo MATEO"
-              style={{
-                height: '56px',
-                width: '56px',
-                objectFit: 'contain',
-                borderRadius: '14px',
-                boxShadow: '0 8px 16px -4px rgba(47, 90, 174, 0.2)',
-              }}
-            />
-            <div style={{ textAlign: 'left' }}>
-              <div
-                style={{
-                  fontSize: '1.8rem',
-                  fontWeight: 900,
-                  color: 'var(--primary)',
-                  letterSpacing: '-0.5px',
-                  lineHeight: 1,
-                }}
-              >
-                MATEO
-              </div>
-              <div
-                style={{
-                  fontSize: '0.65rem',
-                  color: '#64748b',
-                  fontWeight: 700,
-                  letterSpacing: '1.5px',
-                  textTransform: 'uppercase',
-                }}
-              >
-                Plataforma de Auditoría & Donaciones
-              </div>
-            </div>
-          </div>
-          <h2
-            style={{
-              color: 'var(--primary)',
-              fontSize: '1.1rem',
-              fontWeight: 700,
-              margin: '0.5rem 0 0 0',
-            }}
-          >
-            Iniciar Sesión
-          </h2>
-        </div>
+    <div className="login-page">
+      <div className="login-top-accent" aria-hidden="true" />
 
-        {error && (
-          <div
-            style={{
-              padding: '0.85rem 1rem',
-              backgroundColor: 'rgba(239, 68, 68, 0.08)',
-              border: '1px solid rgba(239, 68, 68, 0.3)',
-              borderRadius: '10px',
-              color: '#dc2626',
-              fontSize: '0.85rem',
-              fontWeight: 600,
-              marginBottom: '1.25rem',
-              textAlign: 'center',
-            }}
-          >
-            ⚠️ {error}
-          </div>
-        )}
+      <main className="login-grid">
+        {/* Columna izquierda: Formulario de acceso */}
+        <section className="login-form-col">
+          {error && <div className="login-alert login-alert--error">⚠️ {error}</div>}
+          {success && <div className="login-alert login-alert--success">{success}</div>}
 
-        {success && (
-          <div
-            style={{
-              padding: '0.85rem 1rem',
-              backgroundColor: 'rgba(16, 185, 129, 0.08)',
-              border: '1px solid rgba(16, 185, 129, 0.3)',
-              borderRadius: '10px',
-              color: '#047857',
-              fontSize: '0.85rem',
-              fontWeight: 600,
-              marginBottom: '1.25rem',
-              textAlign: 'center',
-            }}
+          <button
+            type="button"
+            className="login-google-btn"
+            onClick={handleGoogleLogin}
+            disabled={loading}
           >
-            {success}
-          </div>
-        )}
+            <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true">
+              <path
+                fill="#4285F4"
+                d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.17Z"
+              />
+              <path
+                fill="#34A853"
+                d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.11-6.72-4.96H1.29v3.14C3.26 21.3 7.31 24 12 24Z"
+              />
+              <path
+                fill="#FBBC05"
+                d="M5.28 14.24c-.24-.72-.38-1.49-.38-2.24s.14-1.52.38-2.24V6.62H1.29C.47 8.24 0 10.06 0 12s.47 3.76 1.29 5.38l3.99-3.14Z"
+              />
+              <path
+                fill="#EA4335"
+                d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.31 0 3.26 2.7 1.29 6.62l3.99 3.14c.95-2.85 3.6-4.96 6.72-4.96Z"
+              />
+            </svg>
+            <span>Iniciar sesión con Google</span>
+          </button>
 
-        {/* Formulario de Login */}
-        <form
-          noValidate
-          onSubmit={isSimulationMode ? handleSimulatedPasswordLogin : handleRealLogin}
-          style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}
-        >
-          <div className="form-field">
-            <label className="form-field-label" htmlFor="email">
-              Correo Electrónico
-            </label>
-            <div className="input-with-icon">
-              <Mail size={18} className="input-icon" />
+          <div className="login-divider">o accede con tu correo</div>
+
+          <form
+            noValidate
+            className="login-form"
+            onSubmit={isSimulationMode ? handleSimulatedPasswordLogin : handleRealLogin}
+          >
+            <div>
+              <label className="login-label" htmlFor="email">
+                Correo electrónico
+              </label>
               <input
                 id="email"
                 type="email"
-                className="form-input-premium"
+                className="login-input"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
                 disabled={loading}
-                placeholder="usuario@tu-ong.org"
+                placeholder="Introduce tu correo electrónico"
               />
             </div>
-          </div>
 
-          <div className="form-field">
-            <div
-              style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                marginBottom: '0.4rem',
-              }}
-            >
-              <label className="form-field-label" htmlFor="password" style={{ marginBottom: 0 }}>
+            <div>
+              <label className="login-label" htmlFor="password">
                 Contraseña
               </label>
-              <Link
-                to="/forgot-password"
-                style={{
-                  fontSize: '0.8rem',
-                  color: 'var(--primary)',
-                  fontWeight: 600,
-                  textDecoration: 'none',
-                  transition: 'color 0.2s ease',
-                }}
-                onMouseEnter={(e) => (e.currentTarget.style.textDecoration = 'underline')}
-                onMouseLeave={(e) => (e.currentTarget.style.textDecoration = 'none')}
-              >
+              <div className="login-input-wrap">
+                <input
+                  id="password"
+                  type={showPassword ? 'text' : 'password'}
+                  className="login-input"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  disabled={loading}
+                  placeholder="Introduce tu contraseña"
+                />
+                <button
+                  type="button"
+                  className="login-eye-btn"
+                  onClick={() => setShowPassword((prev) => !prev)}
+                  aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+                >
+                  {showPassword ? <Eye size={20} /> : <EyeOff size={20} />}
+                </button>
+              </div>
+            </div>
+
+            <div className="login-options-row">
+              <label className="login-remember-label">
+                <input
+                  type="checkbox"
+                  className="login-remember-checkbox"
+                  checked={rememberMe}
+                  onChange={(e) => setRememberMe(e.target.checked)}
+                />
+                <span>Recuérdame</span>
+              </label>
+              <Link to="/forgot-password" className="login-forgot-link">
                 ¿Olvidaste tu contraseña?
               </Link>
             </div>
-            <div className="input-with-icon">
-              <Lock size={18} className="input-icon" />
-              <input
-                id="password"
-                type="password"
-                className="form-input-premium"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                disabled={loading}
-                placeholder="••••••••"
-              />
+
+            <button type="submit" className="login-submit-btn" disabled={loading}>
+              {loading ? 'Iniciando Sesión...' : 'Iniciar sesión'}
+            </button>
+          </form>
+
+          <div className="login-footer-links">
+            <div>
+              ¿Aún no tienes cuenta?{' '}
+              <Link to="/registro-ong" className="login-link-primary">
+                Crea una cuenta
+              </Link>{' '}
+              <Link to="/registro-ong" className="login-link-secondary">
+                Regístrate
+              </Link>
             </div>
+
+            <Link to="/aceptar-invitacion" className="login-invite-link">
+              <KeyRound size={15} />
+              <span>¿Tienes un código de invitación? Aceptar Invitación</span>
+            </Link>
           </div>
 
-          <button
-            type="submit"
-            className="btn btn-primary"
-            disabled={loading}
-            style={{
-              width: '100%',
-              padding: '0.85rem',
-              fontWeight: 700,
-              borderRadius: '10px',
-              marginTop: '0.5rem',
-              boxShadow: '0 4px 12px rgba(47, 90, 174, 0.25)',
-            }}
-          >
-            {loading ? 'Iniciando Sesión...' : 'Ingresar a la Plataforma'}
-          </button>
-        </form>
-
-        {/* Accesos de Registro de ONG e Invitaciones */}
-        <div
-          style={{
-            marginTop: '1.8rem',
-            borderTop: '1px solid #f1f5f9',
-            paddingTop: '1.25rem',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '0.85rem',
-          }}
-        >
-          {/* CTA Crear Nueva ONG en Trial */}
-          <Link
-            to="/registro-ong"
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              padding: '0.85rem 1rem',
-              backgroundColor: 'rgba(47, 90, 174, 0.06)',
-              border: '1px solid rgba(47, 90, 174, 0.2)',
-              borderRadius: '12px',
-              textDecoration: 'none',
-              transition: 'all 0.2s ease',
-            }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
-              <Building2 size={20} color="var(--primary)" />
-              <div style={{ textAlign: 'left' }}>
-                <span
-                  style={{
-                    fontSize: '0.85rem',
-                    fontWeight: 700,
-                    color: 'var(--primary)',
-                    display: 'block',
-                  }}
+          {isSimulationMode && (
+            <div className="login-sim-box">
+              <span className="login-sim-title">DEMO LOCAL SIMULADO (ACCESO RÁPIDO):</span>
+              <div className="login-sim-actions">
+                <button
+                  type="button"
+                  onClick={() => handleSimulatedLogin('administrador')}
+                  className="btn btn-outline"
+                  style={{ fontSize: '0.72rem', padding: '0.3rem 0.6rem', borderRadius: '6px' }}
                 >
-                  ¿Deseas registrar una nueva ONG?
-                </span>
-                <span style={{ fontSize: '0.72rem', color: '#64748b' }}>
-                  Prueba Gratuita de 14 Días (Acceso Completo)
-                </span>
+                  Admin ONG
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleSimulatedLogin('coordinador')}
+                  className="btn btn-outline"
+                  style={{ fontSize: '0.72rem', padding: '0.3rem 0.6rem', borderRadius: '6px' }}
+                >
+                  Coordinador
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleSimulatedLogin('auditor')}
+                  className="btn btn-outline"
+                  style={{ fontSize: '0.72rem', padding: '0.3rem 0.6rem', borderRadius: '6px' }}
+                >
+                  Auditor
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleSimulatedLogin('super_admin')}
+                  className="btn btn-outline"
+                  style={{ fontSize: '0.72rem', padding: '0.3rem 0.6rem', borderRadius: '6px' }}
+                >
+                  SuperAdmin
+                </button>
               </div>
             </div>
-            <ArrowRight size={18} color="var(--primary)" />
-          </Link>
+          )}
+        </section>
 
-          {/* Enlace para aceptar invitación */}
-          <Link
-            to="/aceptar-invitacion"
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '0.5rem',
-              fontSize: '0.82rem',
-              color: '#64748b',
-              fontWeight: 600,
-              textDecoration: 'none',
-              padding: '0.4rem',
-            }}
-          >
-            <KeyRound size={16} /> ¿Tienes un código o enlace de invitación?{' '}
-            <span style={{ color: 'var(--primary)', textDecoration: 'underline' }}>
-              Aceptar Invitación
-            </span>
-          </Link>
-        </div>
-
-        {/* Accesos rápidos en Modo Simulación local */}
-        {isSimulationMode && (
-          <div
-            style={{
-              marginTop: '1.5rem',
-              paddingTop: '1rem',
-              borderTop: '1px dashed #cbd5e1',
-              textAlign: 'center',
-            }}
-          >
-            <span
-              style={{
-                fontSize: '0.72rem',
-                color: '#64748b',
-                fontWeight: 700,
-                display: 'block',
-                marginBottom: '0.5rem',
-              }}
-            >
-              DEMO LOCAL SIMULADO (ACCESO RÁPIDO):
-            </span>
-            <div
-              style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem', justifyContent: 'center' }}
-            >
-              <button
-                type="button"
-                onClick={() => handleSimulatedLogin('administrador')}
-                className="btn btn-outline"
-                style={{ fontSize: '0.72rem', padding: '0.3rem 0.6rem', borderRadius: '6px' }}
-              >
-                Admin ONG
-              </button>
-              <button
-                type="button"
-                onClick={() => handleSimulatedLogin('coordinador')}
-                className="btn btn-outline"
-                style={{ fontSize: '0.72rem', padding: '0.3rem 0.6rem', borderRadius: '6px' }}
-              >
-                Coordinador
-              </button>
-              <button
-                type="button"
-                onClick={() => handleSimulatedLogin('auditor')}
-                className="btn btn-outline"
-                style={{ fontSize: '0.72rem', padding: '0.3rem 0.6rem', borderRadius: '6px' }}
-              >
-                Auditor
-              </button>
-              <button
-                type="button"
-                onClick={() => handleSimulatedLogin('super_admin')}
-                className="btn btn-outline"
-                style={{ fontSize: '0.72rem', padding: '0.3rem 0.6rem', borderRadius: '6px' }}
-              >
-                SuperAdmin
-              </button>
-            </div>
-          </div>
-        )}
-      </div>
+        {/* Columna derecha: Logotipo MATEO */}
+        <section className="login-brand-showcase" aria-label="Identidad MATEO">
+          <img src="/mateo_logo_wordmark.png" alt="Logo Mateo" className="login-brand-logo" />
+        </section>
+      </main>
     </div>
   );
 };

@@ -1,0 +1,38 @@
+{
+  "name": "figma-ux-designer",
+  "displayName": "Figma UX & UI Designer",
+  "emoji": "🎨",
+  "role": "Especialista en Figma, Diseño UI/UX y Sistemas de Diseño",
+  "description": "Especialista en Figma.com encargado de auditar, diseñar y mejorar la experiencia de usuario (UX) y la interfaz visual (UI) de MATEO, sincronizando tokens de diseño, componentes Code Connect y prototipos de Figma con React 19, TypeScript y Vanilla CSS.",
+  "systemPromptFile": "SYSTEM_PROMPT.md",
+  "capabilities": {
+    "readRepository": true,
+    "writeCode": true,
+    "modifyDesignTokens": true,
+    "figmaMcp": true,
+    "network": false
+  },
+  "skills": [
+    ".agents/skills/ui-ux-pro-max/SKILL.md",
+    ".agents/skills/frontend-design/SKILL.md",
+    ".agents/skills/design-system/SKILL.md"
+  ],
+  "writeScope": [
+    "src/index.css",
+    "src/components/",
+    "src/features/",
+    "docs/design/"
+  ],
+  "forbiddenPaths": [
+    ".env",
+    "supabase/migrations/",
+    "database/",
+    ".github/workflows/"
+  ],
+  "conventions": {
+    "language": "es",
+    "framework": "React 19 + TypeScript (estricto, sin any) + Vanilla CSS",
+    "designSystem": "MATEO Branding System (src/index.css)",
+    "postWrite": "npm run lint && npm run format"
+  }
+}

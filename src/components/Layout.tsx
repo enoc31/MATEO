@@ -1,15 +1,5 @@
 import React, { useState, useCallback } from 'react';
-import {
-  LogOut,
-  Pin,
-  PinOff,
-  Menu,
-  Lightbulb,
-  LayoutGrid,
-  Building,
-  Compass,
-  RefreshCw,
-} from 'lucide-react';
+import { LogOut, Menu, Lightbulb, LayoutGrid, Building, Compass, RefreshCw } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { api, isSimulationMode } from '../services/api';
 import { InternalControlModal } from './InternalControlModal';
@@ -18,6 +8,7 @@ import { getCaracasDateParts } from '../utils/formatters';
 import { checkAndSyncBCVRate, forceSyncBCVRate } from '../utils/bcvSync';
 import { useLocation, NavLink, useNavigate } from 'react-router-dom';
 import { getMenuItems, getMenuIcon } from './menuConfig';
+import { SidebarNav } from './SidebarNav';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -565,188 +556,27 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
         {children}
       </main>
 
-      {/* Sidebar Navigation para Móvil */}
+      {/* Sidebar Navigation (Figma Animated Light Sidebar) */}
       <div
         className={`sidebar-overlay ${isMobileMenuOpen ? 'open' : ''}`}
         onClick={() => setIsMobileMenuOpen(false)}
         aria-hidden="true"
       ></div>
-      <aside
-        id="mobile-sidebar-drawer"
-        aria-label="Menú principal de navegación"
-        aria-hidden={!isMobileMenuOpen && window.innerWidth < 769}
-        className={`sidebar-container ${isMobileMenuOpen ? 'open' : ''} ${isPinned ? 'pinned' : ''}`}
-      >
-        <div
-          className="sidebar-header"
-          style={{ flexDirection: 'column', alignItems: 'center', gap: '0.5rem' }}
-        >
-          <div
-            style={{
-              display: 'flex',
-              width: '100%',
-              justifyContent: 'center',
-              alignItems: 'center',
-              position: 'relative',
-              minHeight: '40px',
-            }}
-          >
-            <button
-              onClick={() => {
-                setIsMobileMenuOpen(false);
-                navigate('/app');
-              }}
-              style={{
-                position: 'absolute',
-                left: 0,
-                background: 'none',
-                border: 'none',
-                cursor: 'pointer',
-                color: 'var(--primary)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                minWidth: '44px',
-                minHeight: '44px',
-              }}
-              aria-label="Ir al Panel de Aplicaciones"
-              title="Panel de Aplicaciones"
-            >
-              <LayoutGrid size={20} strokeWidth={1.5} />
-            </button>
-            <img
-              src={activeOng?.logo_url || '/mateo_logo.png'}
-              alt={activeOng?.nombre || 'MATEO'}
-              className="sidebar-logo"
-              style={{ cursor: 'pointer' }}
-              onClick={() => {
-                setIsMobileMenuOpen(false);
-                navigate('/app');
-              }}
-            />
-            <button
-              className="sidebar-close"
-              onClick={() => setIsMobileMenuOpen(false)}
-              style={{ position: 'absolute', right: 0 }}
-              aria-label="Cerrar menú de navegación"
-            >
-              ×
-            </button>
-            <button
-              className="pin-btn"
-              onClick={() => setIsPinned(!isPinned)}
-              title={isPinned ? 'Soltar Menú' : 'Fijar Menú'}
-              style={{
-                position: 'absolute',
-                right: '-5px',
-                background: 'none',
-                border: 'none',
-                cursor: 'pointer',
-                color: 'var(--primary)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            >
-              {isPinned ? (
-                <PinOff size={18} strokeWidth={1.5} />
-              ) : (
-                <Pin size={18} strokeWidth={1.5} />
-              )}
-            </button>
-          </div>
-          <div
-            className="user-info mobile-only-user-info"
-            style={{
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              textAlign: 'center',
-            }}
-          >
-            <span style={{ fontWeight: 700, color: 'var(--primary)', fontSize: '0.9rem' }}>
-              {profile.nombre_completo}
-            </span>
-            {activeOng && (
-              <span
-                style={{
-                  fontSize: '0.72rem',
-                  color: 'var(--primary)',
-                  background: 'rgba(113, 75, 103, 0.08)',
-                  padding: '0.15rem 0.5rem',
-                  borderRadius: '4px',
-                  marginTop: '0.25rem',
-                  fontWeight: 600,
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '0.25rem',
-                  maxWidth: '220px',
-                  whiteSpace: 'nowrap',
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                }}
-                title={activeOng.nombre}
-              >
-                <Building size={12} style={{ flexShrink: 0 }} />
-                {activeOng.nombre}
-              </span>
-            )}
-            <span
-              style={{ fontSize: '0.75rem', color: 'var(--neutral-dark)', marginTop: '0.25rem' }}
-            >
-              {role.toUpperCase()}
-            </span>
-          </div>
-        </div>
-        <nav className="sidebar-nav">
-          {visibleMenuItems.map((item) => (
-            <li key={item.id}>
-              {item.disabled ? (
-                <span
-                  className="sidebar-link"
-                  aria-disabled="true"
-                  style={{ opacity: 0.35, cursor: 'default', pointerEvents: 'none' }}
-                >
-                  <span className="sidebar-icon">{getMenuIcon(item.iconName)}</span>
-                  <span className="sidebar-text">{item.label}</span>
-                </span>
-              ) : (
-                <NavLink
-                  to={`/app/${item.id}`}
-                  className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}
-                  onClick={() => setIsMobileMenuOpen(false)}
-                >
-                  <span className="sidebar-icon">{getMenuIcon(item.iconName)}</span>
-                  <span className="sidebar-text">{item.label}</span>
-                  {currentPath === item.id && <div className="active-indicator" />}
-                </NavLink>
-              )}
-            </li>
-          ))}
-        </nav>
-        <div className="sidebar-footer">
-          <button
-            onClick={() => {
-              setIsMobileMenuOpen(false);
-              logout();
-            }}
-            className="sidebar-link"
-            style={{ color: 'var(--danger)' }}
-          >
-            <span
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                width: '24px',
-              }}
-            >
-              <LogOut size={20} strokeWidth={1.5} />
-            </span>
-            <span>Cerrar Sesión</span>
-          </button>
-        </div>
-      </aside>
+      <SidebarNav
+        visibleMenuItems={visibleMenuItems}
+        currentPath={currentPath}
+        isPinned={isPinned}
+        onTogglePin={() => setIsPinned((prev) => !prev)}
+        isMobileMenuOpen={isMobileMenuOpen}
+        onCloseMobileMenu={() => setIsMobileMenuOpen(false)}
+        userName={profile.nombre_completo}
+        userRole={role}
+        orgName={activeOng?.nombre}
+        orgLogoUrl={activeOng?.logo_url}
+        onNavigateHome={() => navigate('/app')}
+        onOpenGuide={() => setIsGuideModalOpen(true)}
+        onLogout={logout}
+      />
       {/* Modal de Control Interno (COSO) */}
       <InternalControlModal isOpen={isCosoModalOpen} onClose={handleCloseCosoModal} />
       {/* Modal de Ruta Guiada de Implementación */}

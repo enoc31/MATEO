@@ -52,9 +52,9 @@ test.describe('Acceso y roles', () => {
     await prepareSimulatedApp(page);
     await page.goto('/login');
 
-    await page.getByLabel('Correo Electrónico').fill('nadie@ejemplo.org');
-    await page.getByLabel('Contraseña').fill('cualquier-clave');
-    await page.getByRole('button', { name: 'Ingresar a la Plataforma' }).click();
+    await page.getByLabel('Correo electrónico').fill('nadie@ejemplo.org');
+    await page.getByLabel('Contraseña', { exact: true }).fill('cualquier-clave');
+    await page.getByRole('button', { name: /^Iniciar sesión$/i }).click();
 
     await expect(
       page.getByText('Usuario no encontrado en la base de datos simulada local.'),
@@ -86,6 +86,6 @@ test.describe('Acceso y roles', () => {
     await loginAs(page, 'Admin ONG');
 
     await page.getByRole('button', { name: 'Salir' }).click();
-    await expect(page.getByRole('heading', { name: 'Iniciar Sesión' })).toBeVisible();
+    await expect(page.getByRole('button', { name: /^Iniciar sesión$/i })).toBeVisible();
   });
 });
