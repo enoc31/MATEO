@@ -150,6 +150,7 @@ describe('financeApi (Modo Simulación)', () => {
     const storedReportes = await financeApi.getReportesAportes('ong-1');
     expect(storedReportes[0].estado).toBe('aprobado');
     expect(storedReportes[0].monto_usd).toBe(5);
+    expect(storedReportes[0].miembro_nombre).toBe('Carlos Mendoza');
   });
 
   it('rejects a pending report requiring a mandatory reason', async () => {
