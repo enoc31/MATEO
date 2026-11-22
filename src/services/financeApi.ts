@@ -502,7 +502,7 @@ export const financeApi = {
       );
       if (memberIds.length > 0) {
         const { data: membersData } = await supabase
-          .from('beneficiaries')
+          .from('beneficiarios')
           .select('id, nombre, apellido')
           .in('id', memberIds);
         const nameMap = new Map<string, string>();
@@ -525,7 +525,7 @@ export const financeApi = {
       : all;
     const hasMemberLinks = filtered.some((r) => Boolean(r.miembro_id));
     if (hasMemberLinks) {
-      const members = await api.getBeneficiaries(ongId);
+      const members = await api.getBeneficiaries();
       const nameMap = new Map<string, string>();
       for (const m of members) {
         const fullName = `${m.nombre || ''} ${m.apellido || ''}`.trim();
