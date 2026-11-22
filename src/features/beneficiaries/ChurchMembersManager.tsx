@@ -21,6 +21,7 @@ import { api, type Beneficiary } from '../../services/api';
 import { uploadToGCS } from '../../services/storage';
 import { useAuth } from '../../context/AuthContext';
 import { MemberProfileModal } from './MemberProfileModal';
+import { MembersDataTable } from './MembersDataTable';
 import { useNotifications } from '../../components/NotificationProvider';
 import { SkeletonMembers } from '../../components/SkeletonMembers';
 import { LocationSelector } from '../../components/LocationSelector';
@@ -1531,176 +1532,39 @@ export const ChurchMembersManager: React.FC = () => {
       </div>
 
       {/* VISTA 1: LISTA TABULAR */}
-      {viewMode === 'list' && (
-        <div
-          style={{
-            backgroundColor: '#FFFFFF',
-            borderRadius: '16px',
-            border: '1px solid #E2E8F0',
-            overflow: 'hidden',
-          }}
-        >
-          {loading && members.length === 0 ? (
+      {viewMode === 'list' &&
+        (loading && members.length === 0 ? (
+          <div
+            style={{
+              backgroundColor: '#FFFFFF',
+              borderRadius: '16px',
+              border: '1px solid #E2E8F0',
+              overflow: 'hidden',
+            }}
+          >
             <SkeletonMembers viewMode="list" />
-          ) : filteredMembers.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: '3rem', color: '#64748B' }}>
-              <Users size={48} style={{ margin: '0 auto 1rem auto', opacity: 0.3 }} />
-              <p style={{ fontWeight: 700, margin: 0 }}>No se encontraron miembros</p>
-            </div>
-          ) : (
-            <>
-              <div style={{ overflowX: 'auto' }}>
-                <table
-                  style={{
-                    width: '100%',
-                    borderCollapse: 'collapse',
-                    fontSize: '0.9rem',
-                    textAlign: 'left',
-                  }}
-                >
-                  <thead>
-                    <tr
-                      style={{
-                        borderBottom: '2px solid #E2E8F0',
-                        backgroundColor: '#F8FAFC',
-                        color: '#475569',
-                        fontSize: '0.8rem',
-                        textTransform: 'uppercase',
-                      }}
-                    >
-                      <th style={{ padding: '1rem 1.2rem' }}>Miembro / Feligrés</th>
-                      <th style={{ padding: '1rem 1.2rem' }}>Cédula</th>
-                      <th style={{ padding: '1rem 1.2rem' }}>Cargo Eclesiástico</th>
-                      <th style={{ padding: '1rem 1.2rem' }}>Bautizado</th>
-                      <th style={{ padding: '1rem 1.2rem' }}>Teléfono / Correo</th>
-                      <th style={{ padding: '1rem 1.2rem', textAlign: 'center' }}>Acciones</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {currentMembersPage.map((member) => (
-                      <tr key={member.id} style={{ borderBottom: '1px solid #F1F5F9' }}>
-                        <td style={{ padding: '1rem 1.2rem' }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
-                            {member.foto_url ? (
-                              <img
-                                src={member.foto_url}
-                                alt="Foto"
-                                loading="lazy"
-                                decoding="async"
-                                style={{
-                                  width: '40px',
-                                  height: '40px',
-                                  borderRadius: '50%',
-                                  objectFit: 'cover',
-                                  flexShrink: 0,
-                                }}
-                              />
-                            ) : (
-                              <div
-                                style={{
-                                  width: '40px',
-                                  height: '40px',
-                                  borderRadius: '50%',
-                                  backgroundColor: '#1B5CB6',
-                                  color: 'white',
-                                  display: 'flex',
-                                  alignItems: 'center',
-                                  justifyContent: 'center',
-                                  fontWeight: 800,
-                                  fontSize: '0.95rem',
-                                  flexShrink: 0,
-                                }}
-                              >
-                                {member.nombre?.[0]?.toUpperCase()}
-                                {member.apellido?.[0]?.toUpperCase()}
-                              </div>
-                            )}
-                            <div>
-                              <div style={{ fontWeight: 800, color: '#0F172A' }}>
-                                {member.nombre} {member.apellido}
-                              </div>
-                              <div style={{ fontSize: '0.78rem', color: '#64748B' }}>
-                                F. Nac:{' '}
-                                {member.fecha_nacimiento
-                                  ? new Date(member.fecha_nacimiento).toLocaleDateString('es-VE')
-                                  : 'N/I'}
-                              </div>
-                            </div>
-                          </div>
-                        </td>
-                        <td style={{ padding: '1rem 1.2rem', fontWeight: 700, color: '#334155' }}>
-                          {member.cedula || 'N/I'}
-                        </td>
-                        <td style={{ padding: '1rem 1.2rem' }}>
-                          <span
-                            style={{
-                              padding: '0.25rem 0.6rem',
-                              borderRadius: '999px',
-                              fontSize: '0.75rem',
-                              fontWeight: 800,
-                              backgroundColor: '#EFF6FF',
-                              color: '#1E40AF',
-                              border: '1px solid #BFDBFE',
-                            }}
-                          >
-                            {member.cargo_eclesiastico || 'MIEMBRO GENERAL'}
-                          </span>
-                        </td>
-                        <td style={{ padding: '1rem 1.2rem' }}>
-                          <span
-                            style={{
-                              padding: '0.2rem 0.6rem',
-                              borderRadius: '999px',
-                              fontSize: '0.75rem',
-                              fontWeight: 800,
-                              backgroundColor: member.bautizado ? '#DCFCE7' : '#FEF3C7',
-                              color: member.bautizado ? '#15803D' : '#D97706',
-                            }}
-                          >
-                            {member.bautizado ? 'SÍ' : 'NO'}
-                          </span>
-                        </td>
-                        <td
-                          style={{ padding: '1rem 1.2rem', color: '#475569', fontSize: '0.85rem' }}
-                        >
-                          <div>{member.telefono || 'Sin Teléfono'}</div>
-                          <div style={{ fontSize: '0.78rem', color: '#64748B' }}>
-                            {member.email}
-                          </div>
-                        </td>
-                        <td style={{ padding: '1rem 1.2rem', textAlign: 'center' }}>
-                          <button
-                            onClick={() => {
-                              setSelectedMember(member);
-                              setIsProfileModalOpen(true);
-                            }}
-                            style={{
-                              padding: '0.45rem 0.9rem',
-                              backgroundColor: '#1B5CB6',
-                              color: 'white',
-                              border: 'none',
-                              borderRadius: '8px',
-                              fontWeight: 700,
-                              fontSize: '0.8rem',
-                              cursor: 'pointer',
-                              display: 'inline-flex',
-                              alignItems: 'center',
-                              gap: '0.4rem',
-                            }}
-                          >
-                            <Eye size={14} /> Ficha 360°
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-              {renderPagination()}
-            </>
-          )}
-        </div>
-      )}
+          </div>
+        ) : (
+          <MembersDataTable
+            members={members}
+            searchTerm={searchTerm}
+            onSearchChange={setSearchTerm}
+            cargoFilter={cargoFilter}
+            onCargoFilterChange={setCargoFilter}
+            bautizadoFilter={bautizadoFilter}
+            onBautizadoFilterChange={setBautizadoFilter}
+            pageSize={pageSize}
+            onPageSizeChange={setPageSize}
+            currentPage={currentPage}
+            onPageChange={setCurrentPage}
+            onViewProfile={(member) => {
+              setSelectedMember(member);
+              setIsProfileModalOpen(true);
+            }}
+            onEditMember={handleOpenEditModal}
+            onNewMember={() => setScreenMode('form')}
+          />
+        ))}
 
       {/* VISTA 2: VISTA TARJETAS (CARD GRID) */}
       {viewMode === 'cards' && (
