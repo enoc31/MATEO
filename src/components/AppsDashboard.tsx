@@ -175,10 +175,9 @@ export const AppsDashboardContent: React.FC<{ navigate: (path: string) => void }
 
   return (
     <div className="ad-page">
-      <div className="ad-top-accent" aria-hidden="true" />
-
-      {/* Cabecera de la aplicación (Figma node 218:4) */}
+      {/* Cabecera de la aplicación siempre visible (Figma node 218:4) */}
       <header className="ad-header">
+        <div className="ad-top-accent" aria-hidden="true" />
         <div className="ad-header-inner">
           <div className="ad-brand-group">
             <img src="/mateo_logo_wordmark.png" alt="Logo Mateo" className="ad-logo" />
