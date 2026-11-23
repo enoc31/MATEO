@@ -17,16 +17,13 @@ serve(async (req) => {
   }
 
   try {
-    const { email, nombre, ongId, rolSugerido } = await req.json();
+    const { email, nombre, ongId, ongNombre: bodyOngNombre, rolSugerido, cargo } = await req.json();
 
-    if (!email || !nombre || !ongId) {
-      return new Response(
-        JSON.stringify({ error: 'Faltan campos obligatorios: email, nombre o ongId' }),
-        {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          status: 400,
-        },
-      );
+    if (!email || !nombre) {
+      return new Response(JSON.stringify({ error: 'Faltan campos obligatorios: email o nombre' }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 400,
+      });
     }
 
     if (!RESEND_API_KEY) {
@@ -44,8 +41,15 @@ serve(async (req) => {
     const supabase = createClient(SUPABASE_URL!, SUPABASE_SERVICE_ROLE_KEY!);
 
     // 1. Obtener el nombre de la ONG
-    const { data: ongData } = await supabase.from('ongs').select('nombre').eq('id', ongId).single();
-    const ongNombre = ongData?.nombre || 'Organización';
+    let ongNombre = bodyOngNombre || 'Organización';
+    if (ongId && !bodyOngNombre) {
+      const { data: ongData } = await supabase
+        .from('ongs')
+        .select('nombre')
+        .eq('id', ongId)
+        .single();
+      if (ongData?.nombre) ongNombre = ongData.nombre;
+    }
 
     // 2. Obtener correos del Super Admin
     const { data: superAdmins } = await supabase
@@ -53,22 +57,24 @@ serve(async (req) => {
       .select('email')
       .eq('rol', 'super_admin');
 
-    // 3. Obtener correos de los Administradores de la ONG
-    const { data: ongAdmins } = await supabase
-      .from('usuarios_perfiles')
-      .select('email')
-      .eq('rol', 'administrador')
-      .eq('ong_id', ongId);
-
     // Consolidar destinatarios únicos
     const recipients = new Set<string>();
 
     superAdmins?.forEach((u) => {
       if (u.email) recipients.add(u.email);
     });
-    ongAdmins?.forEach((u) => {
-      if (u.email) recipients.add(u.email);
-    });
+
+    // 3. Obtener correos de los Administradores de la ONG
+    if (ongId) {
+      const { data: ongAdmins } = await supabase
+        .from('usuarios_perfiles')
+        .select('email')
+        .in('rol', ['administrador', 'admin_iglesia'])
+        .eq('ong_id', ongId);
+      ongAdmins?.forEach((u) => {
+        if (u.email) recipients.add(u.email);
+      });
+    }
 
     // Fallback de seguridad si no hay destinatarios configurados en la DB
     if (recipients.size === 0) {
@@ -118,7 +124,7 @@ serve(async (req) => {
               <p style="margin: 0; font-size: 14px; color: #64748b;"><strong>Nombre Completo:</strong> <span style="color: #0f172a;">${nombre}</span></p>
               <p style="margin: 0; font-size: 14px; color: #64748b;"><strong>Correo Electrónico:</strong> <span style="color: #0f172a;">${email}</span></p>
               <p style="margin: 0; font-size: 14px; color: #64748b;"><strong>Organización (ONG):</strong> <span style="color: #0f172a;">${ongNombre}</span></p>
-              <p style="margin: 0; font-size: 14px; color: #64748b;"><strong>Rol Solicitado:</strong> <span style="color: #0f172a;">${rolSugerido}</span></p>
+              <p style="margin: 0; font-size: 14px; color: #64748b;"><strong>Rol Solicitado:</strong> <span style="color: #0f172a;">${rolSugerido || cargo || 'Administrador'}</span></p>
             </div>
             <p style="font-size: 15px; line-height: 1.6; color: #334155; margin-bottom: 24px;">
               Este usuario se encuentra en estado <strong>Pendiente de Aprobación</strong> y no podrá acceder a las funciones del sistema hasta que apruebes su registro.

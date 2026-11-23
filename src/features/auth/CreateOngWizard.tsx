@@ -263,6 +263,7 @@ export const CreateOngWizardForm: React.FC<{
               email: emailAdmin.trim(),
               nombre: nombreAdmin.trim(),
               cargo: cargo.trim(),
+              ongId: newOng.id,
               ongNombre: nombreOng.trim(),
               rif: formattedRifOrCi,
               pais: 'Venezuela',
