@@ -17,7 +17,7 @@ import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 // ── Constantes de entorno ─────────────────────────────────────
-const DEFAULT_SLACK_BOT_TOKEN = 'xoxb-11707506536257-12408012454738-5ORkQ1Krf3dzTWB9ATmI756Z';
+const DEFAULT_SLACK_BOT_TOKEN = '';
 const DEFAULT_SLACK_CHANNEL_ID = 'C0CBJMA2NK1';
 
 const ENV_SLACK_BOT_TOKEN = Deno.env.get('SLACK_BOT_TOKEN');

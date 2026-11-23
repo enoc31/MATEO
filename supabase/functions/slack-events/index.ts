@@ -8,8 +8,7 @@
 
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 
-const SLACK_BOT_TOKEN =
-  Deno.env.get('SLACK_BOT_TOKEN') || 'xoxb-11707506536257-12408012454738-5ORkQ1Krf3dzTWB9ATmI756Z';
+const SLACK_BOT_TOKEN = Deno.env.get('SLACK_BOT_TOKEN') || '';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',

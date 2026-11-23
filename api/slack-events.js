@@ -6,8 +6,7 @@
 // - Publica automáticamente la pestaña de inicio de Mateo
 // ============================================================
 
-const SLACK_BOT_TOKEN =
-  process.env.SLACK_BOT_TOKEN || 'xoxb-11707506536257-12408012454738-5ORkQ1Krf3dzTWB9ATmI756Z';
+const SLACK_BOT_TOKEN = process.env.SLACK_BOT_TOKEN || '';
 
 async function publishHomeView(userId) {
   try {

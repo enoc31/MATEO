@@ -4,8 +4,7 @@
  * Channel: #agents (ID: C0CBV626CLB)
  */
 
-const SLACK_BOT_TOKEN =
-  process.env.SLACK_BOT_TOKEN || 'xoxb-11707506536257-12408012454738-5ORkQ1Krf3dzTWB9ATmI756Z';
+const SLACK_BOT_TOKEN = process.env.SLACK_BOT_TOKEN || '';
 const CANVAS_ID = process.env.SLACK_AGENTS_CANVAS_ID || 'F0CBW49L21K';
 
 // Official Registry of AI Agents in the MATEO Project

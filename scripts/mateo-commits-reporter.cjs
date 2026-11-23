@@ -7,8 +7,7 @@
 const { execSync } = require('child_process');
 const https = require('https');
 
-const SLACK_BOT_TOKEN =
-  process.env.SLACK_BOT_TOKEN || 'xoxb-11707506536257-12408012454738-5ORkQ1Krf3dzTWB9ATmI756Z';
+const SLACK_BOT_TOKEN = process.env.SLACK_BOT_TOKEN || '';
 const DEFAULT_COMMITS_CHANNEL = process.env.SLACK_COMMITS_CHANNEL || 'commits';
 const QA_REVIEWS_CHANNEL = process.env.SLACK_QA_REVIEWS_CHANNEL || 'C0CBJMA2NK1';
 
