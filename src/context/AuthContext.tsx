@@ -37,6 +37,10 @@ interface AuthContextType {
     nombre: string;
     logo_url: string | null;
     tipo_organizacion?: 'ong' | 'ekklesia';
+    direccion?: string | null;
+    plan?: string;
+    estado?: string;
+    trial_ends_at?: string | null;
   } | null;
   loading: boolean;
   authError: string | null;
@@ -56,6 +60,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     nombre: string;
     logo_url: string | null;
     tipo_organizacion?: 'ong' | 'ekklesia';
+    direccion?: string | null;
+    plan?: string;
+    estado?: string;
+    trial_ends_at?: string | null;
   } | null>(null);
   const [loading, setLoading] = useState(true);
   const [authError, setAuthError] = useState<string | null>(null);
@@ -111,7 +119,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               if (insertedProfile.ong_id) {
                 const { data: ongData } = await supabase
                   .from('ongs')
-                  .select('id, nombre, logo_url, tipo_organizacion')
+                  .select(
+                    'id, nombre, logo_url, tipo_organizacion, direccion, plan, estado, trial_ends_at',
+                  )
                   .eq('id', insertedProfile.ong_id)
                   .single();
                 if (ongData) {
@@ -192,7 +202,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           if (profileData.ong_id) {
             const { data: ongData, error: ongError } = await supabase
               .from('ongs')
-              .select('id, nombre, logo_url, tipo_organizacion')
+              .select(
+                'id, nombre, logo_url, tipo_organizacion, direccion, plan, estado, trial_ends_at',
+              )
               .eq('id', profileData.ong_id)
               .single();
             if (!ongError && ongData) {
