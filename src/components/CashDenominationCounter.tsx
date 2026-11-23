@@ -260,8 +260,8 @@ export const CashDenominationCounter: React.FC<CashDenominationCounterProps> = (
         aria-label={`Billetes del cono ${cone.coneLabel}`}
         style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fill, minmax(255px, 1fr))',
-          gap: '0.65rem',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(335px, 1fr))',
+          gap: '0.75rem',
         }}
       >
         {cone.denominations.map((denom) => {
@@ -278,8 +278,8 @@ export const CashDenominationCounter: React.FC<CashDenominationCounterProps> = (
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'space-between',
-                gap: '0.65rem',
-                padding: '0.55rem 0.7rem',
+                gap: '0.85rem',
+                padding: '0.65rem 0.85rem',
                 borderRadius: '10px',
                 backgroundColor: isRowActive ? '#ffffff' : '#f1f5f9',
                 border: isRowActive ? `2px solid ${denom.primaryColor}` : '1px solid #e2e8f0',
@@ -288,7 +288,15 @@ export const CashDenominationCounter: React.FC<CashDenominationCounterProps> = (
               }}
             >
               {/* Miniatura del Billete + Denominación */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', minWidth: 0 }}>
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.75rem',
+                  minWidth: 0,
+                  flex: 1,
+                }}
+              >
                 <BanknoteThumbnail
                   currency={activeCurrency}
                   denomination={denom}
@@ -300,9 +308,10 @@ export const CashDenominationCounter: React.FC<CashDenominationCounterProps> = (
                     style={{
                       display: 'block',
                       fontWeight: 800,
-                      fontSize: '0.84rem',
+                      fontSize: '0.92rem',
                       color: '#0f172a',
                       cursor: 'pointer',
+                      whiteSpace: 'nowrap',
                     }}
                   >
                     {denom.shortLabel}
@@ -310,10 +319,11 @@ export const CashDenominationCounter: React.FC<CashDenominationCounterProps> = (
                   <div
                     data-testid={`subtotal-${activeCurrency}-${denom.value}`}
                     style={{
-                      fontSize: '0.75rem',
+                      fontSize: '0.78rem',
                       fontWeight: isRowActive ? 700 : 500,
                       color: isRowActive ? '#059669' : '#64748b',
                       whiteSpace: 'nowrap',
+                      marginTop: '0.1rem',
                     }}
                   >
                     {isRowActive
@@ -324,16 +334,23 @@ export const CashDenominationCounter: React.FC<CashDenominationCounterProps> = (
               </div>
 
               {/* Controles de Cantidad (- / input / +) */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.35rem',
+                  flexShrink: 0,
+                }}
+              >
                 <button
                   type="button"
                   aria-label={`Restar billete de ${denom.shortLabel} (${activeCurrency})`}
                   onClick={() => handleStep(denom.value, -1)}
                   disabled={count <= 0}
                   style={{
-                    width: '34px',
-                    height: '36px',
-                    borderRadius: '6px',
+                    width: '36px',
+                    height: '38px',
+                    borderRadius: '8px',
                     border: '1px solid #cbd5e1',
                     backgroundColor: count > 0 ? '#ffffff' : '#f8fafc',
                     color: count > 0 ? '#0f172a' : '#94a3b8',
@@ -341,6 +358,7 @@ export const CashDenominationCounter: React.FC<CashDenominationCounterProps> = (
                     alignItems: 'center',
                     justifyContent: 'center',
                     cursor: count > 0 ? 'pointer' : 'not-allowed',
+                    flexShrink: 0,
                   }}
                 >
                   <Minus size={14} />
@@ -358,12 +376,12 @@ export const CashDenominationCounter: React.FC<CashDenominationCounterProps> = (
                   placeholder="0"
                   onChange={(e) => handleInputChange(denom.value, e.target.value)}
                   style={{
-                    width: '56px',
-                    height: '36px',
+                    width: '62px',
+                    height: '38px',
                     textAlign: 'center',
                     fontWeight: 800,
-                    fontSize: '0.9rem',
-                    borderRadius: '6px',
+                    fontSize: '0.92rem',
+                    borderRadius: '8px',
                     border: '1px solid #cbd5e1',
                     backgroundColor: '#ffffff',
                     color: '#0f172a',
@@ -375,9 +393,9 @@ export const CashDenominationCounter: React.FC<CashDenominationCounterProps> = (
                   aria-label={`Sumar billete de ${denom.shortLabel} (${activeCurrency})`}
                   onClick={() => handleStep(denom.value, 1)}
                   style={{
-                    width: '34px',
-                    height: '36px',
-                    borderRadius: '6px',
+                    width: '36px',
+                    height: '38px',
+                    borderRadius: '8px',
                     border: '1px solid var(--primary)',
                     backgroundColor: 'var(--primary)',
                     color: '#ffffff',
@@ -385,6 +403,7 @@ export const CashDenominationCounter: React.FC<CashDenominationCounterProps> = (
                     alignItems: 'center',
                     justifyContent: 'center',
                     cursor: 'pointer',
+                    flexShrink: 0,
                   }}
                 >
                   <Plus size={14} />
