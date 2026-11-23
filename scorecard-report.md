@@ -1,23 +1,23 @@
 # AI Harness Scorecard: MATEO
 
-**Grade: A** (96.5/100) | Strong harness. AI-generated code has robust mechanical safeguards.
+**Grade: A** (92.5/100) | Strong harness. AI-generated code has robust mechanical safeguards.
 
 - **Repository**: `/home/runner/work/MATEO/MATEO`
 - **Languages**: javascript, typescript
-- **Assessed**: 2026-11-23 14:35 UTC
-- **Checks**: 31/31 passed
+- **Assessed**: 2026-11-23 14:42 UTC
+- **Checks**: 30/31 passed
 
 ## Summary
 
 | Category                    | Weight | Score             | Checks |
 | --------------------------- | ------ | ----------------- | ------ |
-| Architectural Documentation | 20%    | 100% [##########] | 5/5    |
+| Architectural Documentation | 20%    | 80% [########--]  | 4/5    |
 | Mechanical Constraints      | 25%    | 100% [##########] | 7/7    |
 | Testing & Stability         | 25%    | 92% [#########-]  | 8/8    |
 | Review & Drift Prevention   | 15%    | 100% [##########] | 6/6    |
 | AI-Specific Safeguards      | 15%    | 90% [#########-]  | 5/5    |
 
-## Architectural Documentation (100%)
+## Architectural Documentation (80%)
 
 ### [PASS] Architecture Documentation (5/5)
 
@@ -37,11 +37,13 @@ _DORA 2025 Report - AI-accessible documentation_
 
 **Evidence**: Found ADR directory: docs/adr
 
-### [PASS] Module Boundary Documentation (4/4)
+### [FAIL] Module Boundary Documentation (0/4)
 
 _matklad ARCHITECTURE.md - constraints as absences_
 
-**Evidence**: Module boundary constraints found in ARCHITECTURE.md
+**Evidence**: No module boundary constraints documented
+
+**Remediation**: Document which modules must NOT depend on each other in ARCHITECTURE.md. Example: 'The fields crate never depends on any other workspace crate.'
 
 ### [PASS] API Documentation (3/3)
 
