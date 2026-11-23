@@ -131,3 +131,6 @@ REVOKE ALL ON FUNCTION public.crear_reporte_aporte(
 GRANT EXECUTE ON FUNCTION public.crear_reporte_aporte(
   UUID, UUID, UUID, BOOLEAN, TEXT, TEXT, TEXT, TEXT, TEXT, NUMERIC, NUMERIC, NUMERIC, NUMERIC, TEXT, TEXT, TEXT, TEXT, BOOLEAN, DATE, TEXT, TEXT, TEXT
 ) TO anon, authenticated;
+
+RESET lock_timeout;
+RESET statement_timeout;
