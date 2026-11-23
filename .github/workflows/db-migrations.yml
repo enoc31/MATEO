@@ -62,11 +62,7 @@ jobs:
           set -euo pipefail
           supabase start -x studio,mailpit,logflare,vector,imgproxy,edge-runtime
           supabase db reset --local
-          lint_exit=0
-          supabase db lint --local --level error --fail-on error --output json > /tmp/mateo-db-lint.json || lint_exit=$?
-          cat /tmp/mateo-db-lint.json
-          node --test scripts/check-db-lint.node-tests.cjs
-          node scripts/check-db-lint.cjs /tmp/mateo-db-lint.json "$lint_exit"
+          supabase db lint --local --level error --fail-on error
           supabase test db --local
           npm run test:integration:local
 
