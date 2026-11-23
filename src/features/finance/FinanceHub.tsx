@@ -324,18 +324,18 @@ export const FinanceHubContent: React.FC<{ navigate: (path: string) => void }> =
                       }}
                     >
                       <Banknote size={20} />
-                      <strong>Arqueo de Efectivo y Registro de Aporte Interno</strong>
+                      <strong>Arqueo y Registro de Efectivo</strong>
                     </div>
                     <p style={{ margin: 0, fontSize: '0.85rem', color: '#475569' }}>
-                      Abre la pantalla dedicada para contar billetes por especie monetaria
-                      (Venezolano, Estadounidense, Europeo o Colombiano) o registrar aportes
-                      internos de culto.
+                      Abre la pantalla adicional dedicada exclusivamente al arqueo y conteo de
+                      billetes en efectivo por cono monetario (Venezolano, Estadounidense, Europeo o
+                      Colombiano).
                     </p>
                   </div>
                   <button
                     type="button"
                     className="btn btn-primary"
-                    onClick={() => navigate('/app/registrar-aporte')}
+                    onClick={() => navigate('/app/arqueo-efectivo')}
                     style={{ display: 'inline-flex', alignItems: 'center', gap: '0.45rem' }}
                   >
                     Ir a Arqueo y Registro <ArrowRight size={15} />
@@ -363,6 +363,7 @@ export const FinanceHubContent: React.FC<{ navigate: (path: string) => void }> =
               canManage={canManageFinance}
               onImportStatement={() => navigate('/app/importar-extracto')}
               onRegisterInternal={() => navigate('/app/registrar-aporte')}
+              onOpenCashCounter={() => navigate('/app/arqueo-efectivo')}
             />
           )}
 

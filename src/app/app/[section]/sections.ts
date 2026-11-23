@@ -15,6 +15,7 @@ export const migratedSections = [
   'audit-detail',
   'nuevo-ingreso',
   'registrar-aporte',
+  'arqueo-efectivo',
   'importar-extracto',
   'create-project',
   'budget-wizard',

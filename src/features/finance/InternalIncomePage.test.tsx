@@ -1,7 +1,7 @@
 import React from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { InternalIncomePageContent } from './InternalIncomePage';
+import { InternalBankIncomePageContent, InternalIncomePageContent } from './InternalIncomePage';
 import * as AuthContextModule from '../../context/AuthContext';
 import { api } from '../../services/api';
 import { financeApi } from '../../services/financeApi';
@@ -99,12 +99,41 @@ describe('InternalIncomePage', () => {
     fireEvent.change(screen.getByTestId('rate-input-EUR'), { target: { value: '1.1' } });
     fireEvent.change(screen.getByTestId('bill-input-EUR-100'), { target: { value: '1' } });
 
-    fireEvent.click(screen.getByRole('button', { name: /Guardar Aporte/i }));
+    fireEvent.click(screen.getByRole('button', { name: /Guardar Arqueo en Efectivo/i }));
 
     await waitFor(() => {
       expect(financeApi.registrarAporteInterno).toHaveBeenCalledTimes(2);
     });
 
     expect(await screen.findByText(/2 conos monetarios/i)).toBeInTheDocument();
+  });
+
+  it('renders dedicated full-page InternalBankIncomePageContent for bank transfers and mobile payments without modals', async () => {
+    const navigate = vi.fn();
+    render(<InternalBankIncomePageContent navigate={navigate} />);
+
+    expect(await screen.findByTestId('internal-bank-income-page')).toBeInTheDocument();
+    expect(screen.queryByTestId('cash-denomination-counter')).not.toBeInTheDocument();
+
+    fireEvent.change(screen.getByLabelText(/Monto \(USD\)/i), {
+      target: { value: '250' },
+    });
+    fireEvent.change(screen.getByLabelText(/Referencia/i), {
+      target: { value: 'REF-5544' },
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: /Guardar Aporte/i }));
+
+    await waitFor(() => {
+      expect(financeApi.registrarAporteInterno).toHaveBeenCalledWith(
+        expect.objectContaining({
+          moneda: 'USD',
+          medio_pago: 'transferencia',
+          monto_original: 250,
+          monto_usd: 250,
+          referencia: 'REF-5544',
+        }),
+      );
+    });
   });
 });

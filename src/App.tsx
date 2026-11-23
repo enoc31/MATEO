@@ -60,6 +60,11 @@ const IncomeRegistrationForm = lazy(() =>
     default: module.IncomeRegistrationForm,
   })),
 );
+const InternalBankIncomePage = lazy(() =>
+  import('./features/finance/InternalIncomePage').then((module) => ({
+    default: module.InternalBankIncomePage,
+  })),
+);
 const InternalIncomePage = lazy(() =>
   import('./features/finance/InternalIncomePage').then((module) => ({
     default: module.InternalIncomePage,
@@ -502,6 +507,15 @@ const MainAppContent: React.FC = () => {
         <Route path="nuevo-ingreso" element={<IncomeRegistrationForm />} />
         <Route
           path="registrar-aporte"
+          element={
+            <ProtectedRoute
+              allowedRoles={['administrador', 'admin_iglesia', 'tesorero', 'director']}
+              element={<InternalBankIncomePage />}
+            />
+          }
+        />
+        <Route
+          path="arqueo-efectivo"
           element={
             <ProtectedRoute
               allowedRoles={['administrador', 'admin_iglesia', 'tesorero', 'director']}
