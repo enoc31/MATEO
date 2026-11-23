@@ -1,0 +1,304 @@
+/* =========================================================================
+   OrganizationProfile — Diseño "Perfil de la iglesia" (Figma node 234:8)
+   con MATEO Branding System (src/index.css)
+   ========================================================================= */
+
+.op-container {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 1.5rem 0 3rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  font-family: var(--font-body, 'Inter', sans-serif);
+}
+
+.op-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.op-header-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.op-title {
+  font-size: clamp(1.65rem, 2.5vw, 2rem);
+  font-weight: 700;
+  color: var(--neutral-dark, #0f172a);
+  margin: 0;
+  line-height: 1.25;
+}
+
+.op-subtitle {
+  font-size: 1rem;
+  font-weight: 400;
+  color: var(--neutral-dark, #0f172a);
+  margin: 0;
+  line-height: 1.4;
+}
+
+.op-edit-btn {
+  height: 48px;
+  padding: 0 1.5rem;
+  background-color: var(--primary, #1b5cb6);
+  color: var(--neutral-light, #f8fafc);
+  border: none;
+  border-radius: 8px;
+  font-size: 0.94rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  transition: background-color var(--transition-fast, 0.15s ease);
+}
+
+.op-edit-btn:hover {
+  background-color: var(--primary-hover, #154b96);
+}
+
+/* Tarjeta Identidad de la iglesia */
+.op-identity-card {
+  background-color: var(--neutral-light, #f8fafc);
+  border: 1px solid var(--border-color, #e2e8f0);
+  border-radius: 8px;
+  padding: 1.5rem;
+  display: grid;
+  grid-template-columns: 112px 1fr auto;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+@media (max-width: 820px) {
+  .op-identity-card {
+    grid-template-columns: 1fr;
+    align-items: start;
+  }
+}
+
+.op-logo-box {
+  width: 112px;
+  height: 112px;
+  border-radius: 8px;
+  border: 1px solid var(--border-color, #e2e8f0);
+  background-color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.op-logo-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.op-identity-main {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  min-width: 0;
+}
+
+.op-badges-row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.op-org-type-badge {
+  display: inline-flex;
+  align-items: center;
+  height: 28px;
+  padding: 0 0.65rem;
+  background-color: var(--neutral-light, #f8fafc);
+  border: 1px solid var(--border-color, #e2e8f0);
+  border-radius: 8px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--primary, #1b5cb6);
+  text-transform: uppercase;
+}
+
+.op-trial-inline {
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: var(--neutral-dark, #0f172a);
+}
+
+.op-org-name {
+  font-size: clamp(1.35rem, 2.2vw, 1.625rem);
+  font-weight: 700;
+  color: var(--neutral-dark, #0f172a);
+  margin: 0;
+  line-height: 1.3;
+}
+
+.op-org-id-block {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.op-org-id-label {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--neutral-dark, #0f172a);
+}
+
+.op-org-id-value {
+  font-size: 0.82rem;
+  font-weight: 400;
+  color: var(--neutral-dark, #0f172a);
+  word-break: break-all;
+}
+
+/* Tarjeta Tiempo de prueba */
+.op-trial-card {
+  width: 196px;
+  min-height: 148px;
+  padding: 1rem;
+  background-color: var(--neutral-light, #f8fafc);
+  border: 1px solid var(--primary, #1b5cb6);
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+@media (max-width: 820px) {
+  .op-trial-card {
+    width: 100%;
+    min-height: auto;
+    gap: 0.35rem;
+  }
+}
+
+.op-trial-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--primary, #1b5cb6);
+  text-transform: uppercase;
+}
+
+.op-trial-days {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--primary, #1b5cb6);
+  line-height: 1.2;
+}
+
+.op-trial-sub {
+  font-size: 0.82rem;
+  font-weight: 400;
+  color: var(--neutral-dark, #0f172a);
+}
+
+/* Grid de información inferior (2 columnas iguales) */
+.op-info-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1.5rem;
+}
+
+@media (max-width: 820px) {
+  .op-info-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.op-section-card {
+  background-color: var(--neutral-light, #f8fafc);
+  border: 1px solid var(--border-color, #e2e8f0);
+  border-radius: 8px;
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.4rem;
+}
+
+.op-section-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--primary, #1b5cb6);
+  margin: 0;
+  line-height: 1.35;
+}
+
+.op-field-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.op-field-label {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--neutral-dark, #0f172a);
+  text-transform: uppercase;
+}
+
+.op-field-value {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--neutral-dark, #0f172a);
+}
+
+.op-field-link {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--primary, #1b5cb6);
+  text-decoration: underline;
+  word-break: break-all;
+}
+
+.op-loc-row {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+@media (max-width: 520px) {
+  .op-loc-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+.op-detail-address-box {
+  border: 1px solid var(--border-color, #e2e8f0);
+  border-radius: 8px;
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.op-detail-address-text {
+  font-size: 0.94rem;
+  font-weight: 500;
+  color: var(--neutral-dark, #0f172a);
+  line-height: 1.45;
+}
+
+/* Modo edición */
+.op-edit-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.op-edit-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
