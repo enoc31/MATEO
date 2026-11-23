@@ -19,7 +19,7 @@ export interface ReconciliationItem {
   tipo: 'gasto' | 'donacion';
   monto: number; // En USD siempre
   monto_original?: number;
-  moneda?: 'USD' | 'VES';
+  moneda?: Donation['moneda'];
   tasa_bcv?: number | null;
   descripcion: string;
   fecha: string;
