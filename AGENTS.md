@@ -4,16 +4,16 @@ Welcome! You are an AI assistant helping developers build, optimize, and maintai
 
 ## Tech Stack & Code Style
 
-- **Framework**: React 19 (using functional components and hooks).
+- **Framework**: Next.js App Router and React 19 (using functional components and hooks).
 - **Language**: TypeScript (enforce strict typing; avoid the `any` type).
-- **Build Tool**: Vite.
+- **Application Build**: Next.js; Vitest uses Vite for test transforms.
 - **Styling**: Vanilla CSS (modular and scoped where possible) and UI styling rules in `src/index.css`.
 - **Database / Auth**: Supabase JS SDK.
 - **UI/UX Intelligence**: `ui-ux-pro-max` skill (located in `.agents/skills/ui-ux-pro-max/`). Use it for interface decisions, accessible financial data presentation, and interaction design.
 
 ## Module Boundaries & Import Rules
 
-- Adhere to the rules in [ARCHITECTURE.md](file:///c:/Users/gerar/Desktop/AppGravity/ONG-DONATION-AUDIT/ARCHITECTURE.md).
+- Adhere to the rules in [ARCHITECTURE.md](ARCHITECTURE.md).
 - **No Cross-Feature Imports**: A feature under `src/features/A` must **never** import from `src/features/B`.
 - Promote shared logic to `src/services/` or `src/utils/` and shared UI to `src/components/`.
 

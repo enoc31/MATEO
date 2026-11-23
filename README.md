@@ -22,6 +22,8 @@ La aplicación implementa rutas protegidas y menús dinámicos para tres perfile
 
 ---
 
+La [arquitectura](ARCHITECTURE.md), sus diagramas y las [decisiones arquitectónicas](docs/adr/) describen la implementación y las limitaciones actuales.
+
 ## 🛠️ Tecnologías Utilizadas
 
 - **Frontend**: Next.js (App Router), React 19 y TypeScript.
