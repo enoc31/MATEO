@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import {
+  Banknote,
   ChevronDown,
   ChevronLeft,
   ChevronRight,
@@ -22,6 +23,7 @@ export interface FinanceIncomesTableProps {
   canManage: boolean;
   onImportStatement: () => void;
   onRegisterInternal: () => void;
+  onOpenCashCounter?: () => void;
 }
 
 export const FinanceIncomesTable: React.FC<FinanceIncomesTableProps> = ({
@@ -29,6 +31,7 @@ export const FinanceIncomesTable: React.FC<FinanceIncomesTableProps> = ({
   canManage,
   onImportStatement,
   onRegisterInternal,
+  onOpenCashCounter,
 }) => {
   const [activeTab, setActiveTab] = useState<IncomeTab>('todos');
   const [searchTerm, setSearchTerm] = useState('');
@@ -203,6 +206,12 @@ export const FinanceIncomesTable: React.FC<FinanceIncomesTableProps> = ({
                 <Landmark size={15} />
                 Importar Extracto
               </button>
+              {onOpenCashCounter && (
+                <button type="button" className="mdt-secondary-btn" onClick={onOpenCashCounter}>
+                  <Banknote size={15} />
+                  Arqueo de Efectivo
+                </button>
+              )}
               <button type="button" className="mdt-primary-btn" onClick={onRegisterInternal}>
                 <Plus size={15} />
                 Registrar Aporte

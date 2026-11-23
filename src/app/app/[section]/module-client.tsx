@@ -133,6 +133,14 @@ const modules: Record<
     roles: ['administrador', 'admin_iglesia', 'tesorero', 'director'],
     component: lazy(() =>
       import('../../../features/finance/InternalIncomePage').then((m) => ({
+        default: m.InternalBankIncomePageContent,
+      })),
+    ),
+  },
+  'arqueo-efectivo': {
+    roles: ['administrador', 'admin_iglesia', 'tesorero', 'director'],
+    component: lazy(() =>
+      import('../../../features/finance/InternalIncomePage').then((m) => ({
         default: m.InternalIncomePageContent,
       })),
     ),
