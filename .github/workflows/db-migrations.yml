@@ -56,7 +56,7 @@ jobs:
           lint_exit=0
           supabase db lint --local --level error --fail-on error --output json > /tmp/mateo-db-lint.json || lint_exit=$?
           cat /tmp/mateo-db-lint.json
-          node --test scripts/check-db-lint.test.cjs
+          node --test scripts/check-db-lint.node-tests.cjs
           node scripts/check-db-lint.cjs /tmp/mateo-db-lint.json "$lint_exit"
           supabase test db --local
 
