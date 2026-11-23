@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowRight, Camera, ClipboardList, Clock, Plus, RefreshCw } from 'lucide-react';
+import { ArrowRight, Banknote, Camera, ClipboardList, Clock, Plus, RefreshCw } from 'lucide-react';
 import { api, type BankTransaction, type Donation, type Requisition } from '../../services/api';
 import { requisitionsApi } from '../../services/api';
 import { financeApi, type CuentaReceptora, type ReporteAporte } from '../../services/financeApi';
@@ -8,7 +8,6 @@ import { useAuth } from '../../context/AuthContext';
 import { FINANCE_MANAGE_ROLES, FINANCE_VIEW_ROLES } from '../../utils/rolePermissions';
 import { formatUsd, formatVes } from '../../utils/formatters';
 import { VerificationQueueTab } from './VerificationQueueTab';
-import { InternalIncomeModal } from './InternalIncomeModal';
 import { FinanceIncomesTable } from './FinanceIncomesTable';
 import { FinanceExpensesTable } from './FinanceExpensesTable';
 import { AccountsAndLinkTab } from './AccountsAndLinkTab';
@@ -36,7 +35,6 @@ export const FinanceHubContent: React.FC<{ navigate: (path: string) => void }> =
   const [cuentas, setCuentas] = useState<CuentaReceptora[]>([]);
   const [bankTxs, setBankTxs] = useState<BankTransaction[]>([]);
   const [requisitions, setRequisitions] = useState<Requisition[]>([]);
-  const [showInternalModal, setShowInternalModal] = useState(false);
 
   const showFeedback = (msg: string, type: 'success' | 'error' = 'success') => {
     setFeedback({ msg, type });
@@ -134,7 +132,7 @@ export const FinanceHubContent: React.FC<{ navigate: (path: string) => void }> =
             <button
               type="button"
               className="btn btn-primary"
-              onClick={() => setShowInternalModal(true)}
+              onClick={() => navigate('/app/registrar-aporte')}
               style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}
             >
               <Plus size={16} /> Registrar Aporte Interno
@@ -303,6 +301,47 @@ export const FinanceHubContent: React.FC<{ navigate: (path: string) => void }> =
                   </div>
                 </div>
               </div>
+
+              {canManageFinance && (
+                <div
+                  className="card"
+                  style={{
+                    padding: '1.25rem',
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    flexWrap: 'wrap',
+                    gap: '1rem',
+                  }}
+                >
+                  <div style={{ display: 'grid', gap: '0.35rem' }}>
+                    <div
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.5rem',
+                        color: 'var(--primary)',
+                      }}
+                    >
+                      <Banknote size={20} />
+                      <strong>Arqueo de Efectivo y Registro de Aporte Interno</strong>
+                    </div>
+                    <p style={{ margin: 0, fontSize: '0.85rem', color: '#475569' }}>
+                      Abre la pantalla dedicada para contar billetes por especie monetaria
+                      (Venezolano, Estadounidense, Europeo o Colombiano) o registrar aportes
+                      internos de culto.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    className="btn btn-primary"
+                    onClick={() => navigate('/app/registrar-aporte')}
+                    style={{ display: 'inline-flex', alignItems: 'center', gap: '0.45rem' }}
+                  >
+                    Ir a Arqueo y Registro <ArrowRight size={15} />
+                  </button>
+                </div>
+              )}
             </div>
           )}
 
@@ -323,7 +362,7 @@ export const FinanceHubContent: React.FC<{ navigate: (path: string) => void }> =
               donations={donations}
               canManage={canManageFinance}
               onImportStatement={() => navigate('/app/importar-extracto')}
-              onRegisterInternal={() => setShowInternalModal(true)}
+              onRegisterInternal={() => navigate('/app/registrar-aporte')}
             />
           )}
 
@@ -411,15 +450,6 @@ export const FinanceHubContent: React.FC<{ navigate: (path: string) => void }> =
           )}
         </>
       )}
-
-      <InternalIncomeModal
-        isOpen={showInternalModal}
-        ongId={resolvedOngId}
-        userId={profile?.id}
-        onClose={() => setShowInternalModal(false)}
-        onSuccess={loadAll}
-        onFeedback={showFeedback}
-      />
     </div>
   );
 };

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { Save, X } from 'lucide-react';
 import { api, type Beneficiary } from '../../services/api';
 import { financeApi, type MedioPagoAporte } from '../../services/financeApi';
@@ -63,16 +64,23 @@ export const InternalIncomeModal: React.FC<InternalIncomeModalProps> = ({
     if (!isOpen) return;
     const loadData = async () => {
       try {
-        const [memList, rateObj] = await Promise.all([
+        const [memList, rateByDate] = await Promise.all([
           api.getBeneficiaries(),
           api.getTasaByDate(fecha),
         ]);
         setMembers(memList);
-        if (rateObj && rateObj.tasa > 1) {
-          setTasaBcv(String(rateObj.tasa));
+        let resolvedRate = rateByDate && rateByDate.tasa > 1 ? rateByDate.tasa : null;
+        if (!resolvedRate) {
+          const allRates = await api.getTasasBCV();
+          if (allRates && allRates.length > 0 && allRates[0].tasa > 1) {
+            resolvedRate = allRates[0].tasa;
+          }
+        }
+        if (resolvedRate) {
+          setTasaBcv(String(resolvedRate));
           setCashRates((prev) => ({
             ...prev,
-            VES: rateObj.tasa,
+            VES: resolvedRate,
           }));
         }
       } catch (err) {
@@ -276,7 +284,7 @@ export const InternalIncomeModal: React.FC<InternalIncomeModalProps> = ({
     }
   };
 
-  return (
+  const modalContent = (
     <div
       role="dialog"
       aria-modal="true"
@@ -284,12 +292,12 @@ export const InternalIncomeModal: React.FC<InternalIncomeModalProps> = ({
       style={{
         position: 'fixed',
         inset: 0,
-        backgroundColor: 'rgba(15, 23, 42, 0.55)',
+        backgroundColor: 'rgba(15, 23, 42, 0.6)',
         display: 'flex',
-        alignItems: 'center',
+        alignItems: 'flex-start',
         justifyContent: 'center',
-        padding: '1rem',
-        zIndex: 1200,
+        padding: '1.25rem 1rem',
+        zIndex: 9999,
         overflowY: 'auto',
       }}
     >
@@ -297,14 +305,14 @@ export const InternalIncomeModal: React.FC<InternalIncomeModalProps> = ({
         onSubmit={handleSubmit}
         className="card"
         style={{
-          maxWidth: isCash ? '900px' : '580px',
+          maxWidth: isCash ? '880px' : '580px',
           width: '100%',
+          margin: 'auto',
           padding: '1.5rem',
           display: 'grid',
           gap: '0.9rem',
-          maxHeight: '92vh',
-          overflowY: 'auto',
           transition: 'max-width 0.2s ease',
+          boxShadow: '0 20px 45px -15px rgba(15, 23, 42, 0.35)',
         }}
       >
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -595,4 +603,6 @@ export const InternalIncomeModal: React.FC<InternalIncomeModalProps> = ({
       </form>
     </div>
   );
+
+  return typeof document !== 'undefined' ? createPortal(modalContent, document.body) : modalContent;
 };

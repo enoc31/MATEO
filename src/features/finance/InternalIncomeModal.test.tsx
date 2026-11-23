@@ -13,6 +13,7 @@ vi.mock('../../services/api', async (importOriginal) => {
       ...actual.api,
       getBeneficiaries: vi.fn(),
       getTasaByDate: vi.fn(),
+      getTasasBCV: vi.fn(),
     },
   };
 });
@@ -32,6 +33,7 @@ describe('InternalIncomeModal', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.mocked(api.getBeneficiaries).mockResolvedValue([]);
+    vi.mocked(api.getTasasBCV).mockResolvedValue([]);
     vi.mocked(api.getTasaByDate).mockResolvedValue({
       id: 't-1',
       fecha: '2026-11-23',
