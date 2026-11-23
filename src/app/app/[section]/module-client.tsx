@@ -129,6 +129,14 @@ const modules: Record<
       })),
     ),
   },
+  'registrar-aporte': {
+    roles: ['administrador', 'admin_iglesia', 'tesorero', 'director'],
+    component: lazy(() =>
+      import('../../../features/finance/InternalIncomePage').then((m) => ({
+        default: m.InternalIncomePageContent,
+      })),
+    ),
+  },
   'importar-extracto': {
     roles: [
       'administrador',
