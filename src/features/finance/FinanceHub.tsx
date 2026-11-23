@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowRight, Camera, ClipboardList, Clock, RefreshCw } from 'lucide-react';
+import { ArrowRight, Camera, ClipboardList, Clock, Plus, RefreshCw } from 'lucide-react';
 import { api, type BankTransaction, type Donation, type Requisition } from '../../services/api';
 import { requisitionsApi } from '../../services/api';
 import { financeApi, type CuentaReceptora, type ReporteAporte } from '../../services/financeApi';
@@ -129,15 +129,27 @@ export const FinanceHubContent: React.FC<{ navigate: (path: string) => void }> =
           </p>
         </div>
 
-        <button
-          type="button"
-          className="btn btn-outline"
-          onClick={() => void loadAll()}
-          disabled={loading}
-          style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}
-        >
-          <RefreshCw size={15} /> Actualizar
-        </button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+          {canManageFinance && (
+            <button
+              type="button"
+              className="btn btn-primary"
+              onClick={() => setShowInternalModal(true)}
+              style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}
+            >
+              <Plus size={16} /> Registrar Aporte Interno
+            </button>
+          )}
+          <button
+            type="button"
+            className="btn btn-outline"
+            onClick={() => void loadAll()}
+            disabled={loading}
+            style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}
+          >
+            <RefreshCw size={15} /> Actualizar
+          </button>
+        </div>
       </div>
 
       {feedback && (

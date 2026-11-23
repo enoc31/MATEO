@@ -13,6 +13,15 @@ import {
 import { api } from '../../services/api';
 import type { Project, Donante, BankTransaction, TasaBCV } from '../../services/api';
 import { formatDateForFrontEnd } from '../../utils/formatters';
+import {
+  calculateMultiCurrencySessionSummary,
+  createDefaultMultiCurrencyRates,
+  createEmptyMultiCurrencyCounts,
+  type CashCurrencyCode,
+  type MultiCurrencyBillCounts,
+  type MultiCurrencyRatesToUsd,
+} from '../../utils/currencyDenominations';
+import { CashDenominationCounter } from '../../components/CashDenominationCounter';
 import { traceOperation, recordMetric, emitLog, recordException } from '../../services/telemetry';
 
 const formatCurrency = (amount: number) =>
@@ -66,6 +75,13 @@ export const IncomeRegistrationFormContent: React.FC<{
   const [fecha, setFecha] = useState(new Date().toISOString().split('T')[0]);
   const [selectedTxIds, setSelectedTxIds] = useState<string[]>([]);
   const [tipoRegistro, setTipoRegistro] = useState<'manual' | 'bancario'>('manual');
+  const [activeCashCone, setActiveCashCone] = useState<CashCurrencyCode>('VES');
+  const [cashCounts, setCashCounts] = useState<MultiCurrencyBillCounts>(() =>
+    createEmptyMultiCurrencyCounts(),
+  );
+  const [cashRates, setCashRates] = useState<MultiCurrencyRatesToUsd>(() =>
+    createDefaultMultiCurrencyRates(),
+  );
 
   // Multi-conversion totals calculated dynamically
   const [calculatedTotals, setCalculatedTotals] = useState<{
@@ -90,6 +106,9 @@ export const IncomeRegistrationFormContent: React.FC<{
 
       const latest = ratesList[0];
       setLatestRate(latest ? latest.tasa : null);
+      if (latest && latest.tasa > 1) {
+        setCashRates((prev) => ({ ...prev, VES: latest.tasa }));
+      }
     } catch (err) {
       console.error(err);
     } finally {
@@ -683,6 +702,60 @@ export const IncomeRegistrationFormContent: React.FC<{
                 </div>
               </div>
             </div>
+
+            {/* Arqueo de Billetes cuando es Manual + Dinero en Efectivo */}
+            {tipoRegistro === 'manual' && medioPago === 'efectivo' && (
+              <CashDenominationCounter
+                counts={cashCounts}
+                rates={cashRates}
+                activeCurrency={activeCashCone}
+                onActiveCurrencyChange={(code) => {
+                  setActiveCashCone(code);
+                  if (code === 'USD' || code === 'VES') {
+                    setMoneda(code);
+                  }
+                }}
+                onChangeCount={(currency, denomination, count) => {
+                  const nextCounts: MultiCurrencyBillCounts = {
+                    ...cashCounts,
+                    [currency]: {
+                      ...cashCounts[currency],
+                      [denomination]: count,
+                    },
+                  };
+                  setCashCounts(nextCounts);
+                  const nextSummary = calculateMultiCurrencySessionSummary(nextCounts, cashRates);
+                  if (nextSummary.totalConsolidatedUsd > 0) {
+                    const activeBreakdown = nextSummary.activeCones
+                      .map((c) => c.breakdownText)
+                      .join(' | ');
+                    setMontoOriginal(String(nextSummary.totalConsolidatedUsd));
+                    setMoneda('USD');
+                    setDescripcion(activeBreakdown);
+                  }
+                }}
+                onChangeRate={(currency, rate) => {
+                  const nextRates: MultiCurrencyRatesToUsd = {
+                    ...cashRates,
+                    [currency]: rate,
+                  };
+                  setCashRates(nextRates);
+                  if (currency === 'VES' && rate > 0) {
+                    setTasaBcv(rate);
+                  }
+                  const nextSummary = calculateMultiCurrencySessionSummary(cashCounts, nextRates);
+                  if (nextSummary.totalConsolidatedUsd > 0) {
+                    setMontoOriginal(String(nextSummary.totalConsolidatedUsd));
+                  }
+                }}
+                onClearCurrency={(currency) => {
+                  setCashCounts((prev) => ({ ...prev, [currency]: {} }));
+                }}
+                onClearAll={() => {
+                  setCashCounts(createEmptyMultiCurrencyCounts());
+                }}
+              />
+            )}
 
             {/* Fecha y Monto */}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
