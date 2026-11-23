@@ -3055,6 +3055,36 @@ export const requisitionsApi = {
     }
   },
 
+  getInvitationsByOng: async (ongId?: string): Promise<Invitation[]> => {
+    if (!ongId) return [];
+    if (!isSimulationMode) {
+      const { data, error } = await supabase
+        .from('invitaciones')
+        .select('*')
+        .eq('ong_id', ongId)
+        .eq('estado', 'pendiente')
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      return (data || []) as Invitation[];
+    } else {
+      const list = JSON.parse(localStorage.getItem('cnbv_invitations') || '[]') as Invitation[];
+      return list
+        .filter((i) => i.ong_id === ongId && i.estado === 'pendiente')
+        .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+    }
+  },
+
+  cancelInvitation: async (invitationId: string): Promise<void> => {
+    if (!isSimulationMode) {
+      const { error } = await supabase.from('invitaciones').delete().eq('id', invitationId);
+      if (error) throw error;
+    } else {
+      const list = JSON.parse(localStorage.getItem('cnbv_invitations') || '[]') as Invitation[];
+      const filtered = list.filter((i) => i.id !== invitationId);
+      localStorage.setItem('cnbv_invitations', JSON.stringify(filtered));
+    }
+  },
+
   getInvitationByToken: async (token: string): Promise<Invitation> => {
     if (!isSimulationMode) {
       const { data, error } = await supabase

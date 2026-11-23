@@ -1,13 +1,17 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { UserManagement } from './UserManagement';
-import { api } from '../../services/api';
+import { api, requisitionsApi } from '../../services/api';
 
 vi.mock('../../services/api', () => ({
   api: {
     getUsers: vi.fn(),
     updateUserProfile: vi.fn(),
     createInvitationToken: vi.fn(),
+  },
+  requisitionsApi: {
+    getInvitationsByOng: vi.fn(),
+    cancelInvitation: vi.fn(),
   },
 }));
 
@@ -45,6 +49,28 @@ describe('UserManagement', () => {
     vi.clearAllMocks();
     (api.getUsers as any).mockResolvedValue(mockUsers);
     (api.updateUserProfile as any).mockResolvedValue({ success: true });
+    (requisitionsApi.getInvitationsByOng as any).mockResolvedValue([]);
+  });
+
+  it('renders pending sent invitations waiting for response', async () => {
+    (requisitionsApi.getInvitationsByOng as any).mockResolvedValue([
+      {
+        id: 'inv-1',
+        ong_id: 'ong-1',
+        email: 'invitado@iglesia.org',
+        rol: 'lider_ministerio',
+        token: 'inv-token-123',
+        estado: 'pendiente',
+        created_at: '2026-11-23T12:00:00Z',
+        expires_at: '2026-11-30T12:00:00Z',
+      },
+    ]);
+
+    render(<UserManagement />);
+    await waitFor(() => {
+      expect(screen.getByText(/Invitaciones Enviadas en Espera de Respuesta/i)).toBeInTheDocument();
+      expect(screen.getByText('invitado@iglesia.org')).toBeInTheDocument();
+    });
   });
 
   it('renders user list correctly', async () => {
