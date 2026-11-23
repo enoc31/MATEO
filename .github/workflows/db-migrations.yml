@@ -48,6 +48,15 @@ jobs:
         with:
           version: 2.75.0
 
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: 'npm'
+
+      - name: Install Dependencies
+        run: npm ci
+
       - name: Ephemeral DB Reset, Lint & pgTAP Tests
         run: |
           set -euo pipefail
@@ -55,6 +64,7 @@ jobs:
           supabase db reset --local
           supabase db lint --local --level error --fail-on error
           supabase test db --local
+          npm run test:integration:local
 
       - name: Production Migration Dry-Run
         env:

@@ -14,13 +14,16 @@ import { defineConfig, devices } from '@playwright/test';
  */
 const PORT = 5180;
 const isCI = !!process.env.CI;
+const nextMode = process.env.MATEO_E2E_NEXT ?? '1';
 
 export default defineConfig({
   testDir: './e2e',
   fullyParallel: true,
   forbidOnly: isCI,
   retries: isCI ? 2 : 0,
-  workers: isCI ? 1 : undefined,
+  workers: isCI || nextMode === '1' ? 1 : undefined,
+  timeout: 60_000,
+  expect: { timeout: 15_000 },
   reporter: isCI
     ? [['github'], ['html', { open: 'never' }]]
     : [['list'], ['html', { open: 'never' }]],
@@ -33,13 +36,18 @@ export default defineConfig({
   },
   projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
   webServer: {
-    command: `npm run dev -- --port ${PORT} --strictPort`,
+    command:
+      nextMode === 'production'
+        ? `npm run start:next -- --port ${PORT}`
+        : `npm run dev:next -- --port ${PORT}`,
     url: `http://localhost:${PORT}`,
     reuseExistingServer: false,
     timeout: 120_000,
     env: {
       VITE_SUPABASE_URL: 'https://placeholder-url.supabase.co',
       VITE_SUPABASE_ANON_KEY: 'placeholder-anon-key',
+      NEXT_PUBLIC_SUPABASE_URL: 'https://placeholder-url.supabase.co',
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: 'placeholder-anon-key',
     },
   },
 });
