@@ -49,7 +49,11 @@ serve(async (req) => {
       throw new Error('Forbidden: could not verify administrator profile');
     }
 
-    if (adminProfile.rol !== 'administrador' && adminProfile.rol !== 'super_admin') {
+    if (
+      adminProfile.rol !== 'administrador' &&
+      adminProfile.rol !== 'admin_iglesia' &&
+      adminProfile.rol !== 'super_admin'
+    ) {
       throw new Error('Forbidden: Only administrators can create users');
     }
 

@@ -500,9 +500,8 @@ export const UserManagement: React.FC = () => {
         isOpen={showInviteModal}
         onClose={() => setShowInviteModal(false)}
         onSuccess={() => {
-          setShowInviteModal(false);
           setSuccess(
-            '✅ Invitación enviada exitosamente. El nuevo usuario recibirá un correo para activar su cuenta y crear su contraseña.',
+            '✅ Invitación generada. Puedes copiar el enlace directo o verificar el estado del correo en el modal.',
           );
           loadUsers();
         }}

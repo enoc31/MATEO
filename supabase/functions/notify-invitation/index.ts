@@ -105,10 +105,19 @@ serve(async (req) => {
 
     const result = await response.json();
 
-    return new Response(JSON.stringify(result), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      status: response.status,
-    });
+    return new Response(
+      JSON.stringify({
+        ...result,
+        sandboxRedirected:
+          SENDER_EMAIL === 'onboarding@resend.dev' &&
+          email.toLowerCase() !== 'gerardoh31@gmail.com',
+        deliveredTo: toList,
+      }),
+      {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: response.status,
+      },
+    );
   } catch (error: unknown) {
     const msg = error instanceof Error ? error.message : String(error);
     return new Response(JSON.stringify({ error: msg }), {

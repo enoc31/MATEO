@@ -80,6 +80,10 @@ export const UserInviteModal: React.FC<UserInviteModalProps> = ({ isOpen, onClos
           setEmailWarning(
             `La invitación fue creada, pero Resend reportó un error: "${fnData.error}". Comparte el enlace manualmente.`,
           );
+        } else if (fnData?.sandboxRedirected) {
+          setEmailWarning(
+            `Modo Sandbox de Resend activo (onboarding@resend.dev): el correo fue enviado a ${fnData.deliveredTo?.[0] || 'gerardoh31@gmail.com'}. Copia el enlace de abajo para enviárselo directamente a ${email.trim()}.`,
+          );
         }
       } catch (fnErr: any) {
         console.error('Excepción al invocar notify-invitation:', fnErr);
