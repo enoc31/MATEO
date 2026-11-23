@@ -104,7 +104,7 @@ VITE_OTEL_EXPORTER_OTLP_HEADERS="Authorization=Basic <BASE64_TOKEN>"
 
 ### 4.1. Inicialización Automática
 
-OpenTelemetry se inicializa automáticamente al arrancar la aplicación en `src/main.tsx` llamando a `initTelemetry()`. Si `VITE_OTEL_ENABLED=false` o no hay endpoint configurado, entra en modo no-op sin afectar el funcionamiento del frontend.
+OpenTelemetry se inicializa automáticamente al arrancar la aplicación en `src/app/next-providers.tsx` llamando a `initTelemetry()`. Si `VITE_OTEL_ENABLED=false` o no hay endpoint configurado, entra en modo no-op sin afectar el funcionamiento del frontend.
 
 ### 4.2. Registro de Métricas Personalizadas
 

@@ -24,7 +24,7 @@ La aplicación implementa rutas protegidas y menús dinámicos para tres perfile
 
 ## 🛠️ Tecnologías Utilizadas
 
-- **Frontend**: React 19, TypeScript, Vite.
+- **Frontend**: Next.js (App Router), React 19 y TypeScript.
 - **Gráficos**: Recharts.
 - **Procesamiento de Archivos**: PapaParse (CSV), XLSX (Excel) y JsPDF / html2canvas (PDF).
 - **Backend / Base de Datos**: PostgreSQL y Supabase (con RLS y Triggers automáticos).
@@ -60,8 +60,8 @@ El sistema cuenta con un **Modo Simulación automático**. Si la aplicación no 
    Crea un archivo `.env` en la raíz del proyecto basándote en [.env.example](file:///.env.example):
 
    ```env
-   VITE_SUPABASE_URL=https://tu-proyecto.supabase.co
-   VITE_SUPABASE_ANON_KEY=tu-clave-anonima-de-supabase
+   NEXT_PUBLIC_SUPABASE_URL=https://tu-proyecto.supabase.co
+   NEXT_PUBLIC_SUPABASE_ANON_KEY=tu-clave-anonima-de-supabase
    ```
 
 4. **Correr en desarrollo**:
@@ -71,9 +71,12 @@ El sistema cuenta con un **Modo Simulación automático**. Si la aplicación no 
    ```
 
 5. **Compilar para producción**:
+
    ```bash
    npm run build
    ```
+
+6. **Ejecutar pruebas de navegador**: `npm run test:e2e` compila Next.js con datos simulados y ejecuta Playwright sin conectarse a servicios externos.
 
 ---
 
