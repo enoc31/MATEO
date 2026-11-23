@@ -109,7 +109,7 @@ test.describe('Next.js migration contracts', () => {
       ['users', /Consola de Gestión de Usuarios/],
       ['tasas', /Administración de Tasas BCV/],
       ['catalog', /Catálogo de Partidas/],
-      ['organization', /Perfil de la Organización/],
+      ['organization', /Perfil de la organización/i],
       ['audit', /Auditoría y Conformidad de Gastos/],
       ['incomes', /Registro de Diezmos y Ofrendas/],
       ['budgets', /Presupuestos Modelo UNDG/],
