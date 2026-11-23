@@ -20,6 +20,13 @@ import { useNotifications } from '../../components/NotificationProvider';
 export const ProjectPartidasConfig: React.FC = () => {
   const { projectId } = useParams<{ projectId: string }>();
   const navigate = useNavigate();
+  return <ProjectPartidasConfigContent projectId={projectId} navigate={navigate} />;
+};
+
+export const ProjectPartidasConfigContent: React.FC<{
+  projectId: string | undefined;
+  navigate: (path: string) => void;
+}> = ({ projectId, navigate }) => {
   const { profile } = useAuth();
   const { addNotification } = useNotifications();
 

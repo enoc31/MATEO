@@ -4,6 +4,7 @@ import { useAuth } from '../../context/AuthContext';
 import { supabase } from '../../supabaseClient';
 import { isSimulationMode } from '../../services/api';
 import { Link } from 'react-router-dom';
+import { NativeLink } from '../../components/NativeLink';
 import { Eye, EyeOff, KeyRound } from 'lucide-react';
 import {
   traceOperation,
@@ -16,7 +17,8 @@ import './Login.css';
 
 const REMEMBERED_EMAIL_KEY = 'mateo_remembered_email';
 
-export const Login: React.FC = () => {
+export const Login: React.FC<{ nativeLinks?: boolean }> = ({ nativeLinks = false }) => {
+  const LoginLink = nativeLinks ? NativeLink : Link;
   const { refreshProfile } = useAuth();
 
   // Estados del formulario
@@ -161,6 +163,7 @@ export const Login: React.FC = () => {
                     ? 'Donante Internacional (Alianza)'
                     : 'Coordinador Ayuda Apure',
         rol: role,
+        ong_id: '11111111-1111-1111-1111-111111111111',
         aprobado: true,
         created_at: new Date().toISOString(),
       };
@@ -309,9 +312,9 @@ export const Login: React.FC = () => {
                 />
                 <span>Recuérdame</span>
               </label>
-              <Link to="/forgot-password" className="login-forgot-link">
+              <LoginLink to="/forgot-password" className="login-forgot-link">
                 ¿Olvidaste tu contraseña?
-              </Link>
+              </LoginLink>
             </div>
 
             <button type="submit" className="login-submit-btn" disabled={loading}>
@@ -322,18 +325,18 @@ export const Login: React.FC = () => {
           <div className="login-footer-links">
             <div>
               ¿Aún no tienes cuenta?{' '}
-              <Link to="/registro-ong" className="login-link-primary">
+              <LoginLink to="/registro-ong" className="login-link-primary">
                 Crea una cuenta
-              </Link>{' '}
-              <Link to="/registro-ong" className="login-link-secondary">
+              </LoginLink>{' '}
+              <LoginLink to="/registro-ong" className="login-link-secondary">
                 Regístrate
-              </Link>
+              </LoginLink>
             </div>
 
-            <Link to="/aceptar-invitacion" className="login-invite-link">
+            <LoginLink to="/aceptar-invitacion" className="login-invite-link">
               <KeyRound size={15} />
               <span>¿Tienes un código de invitación? Aceptar Invitación</span>
-            </Link>
+            </LoginLink>
           </div>
 
           {isSimulationMode && (

@@ -10,6 +10,8 @@ lerna-debug.log*
 node_modules
 dist
 dist-ssr
+.next/
+next-env.d.ts
 *.local
 .env
 .env.*
@@ -28,6 +30,8 @@ dist-ssr
 
 .vercel
 coverage
+.stryker-tmp/
+reports/mutation/
 scratch
 eslint-output.json
 load-test-results.json
@@ -41,3 +45,6 @@ docs/INFORME_AS-IS_TO-BE.md
 /playwright-report/
 /blob-report/
 /playwright/.cache/
+
+# Supabase local branch state
+supabase/.branches/

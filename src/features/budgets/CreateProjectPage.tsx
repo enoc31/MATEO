@@ -26,6 +26,12 @@ const FLAG_MAP: Record<string, string> = {
 
 export const CreateProjectPage: React.FC = () => {
   const navigate = useNavigate();
+  return <CreateProjectPageContent navigate={navigate} />;
+};
+
+export const CreateProjectPageContent: React.FC<{ navigate: (path: string) => void }> = ({
+  navigate,
+}) => {
   const { profile } = useAuth();
   const { addNotification } = useNotifications();
 

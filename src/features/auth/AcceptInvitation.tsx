@@ -11,11 +11,21 @@ import {
   KeyRound,
 } from 'lucide-react';
 import { requisitionsApi, type Invitation } from '../../services/api';
+import { NativeLink } from '../../components/NativeLink';
 
 export const AcceptInvitation: React.FC = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const tokenFromUrl = searchParams.get('token') || '';
+  return <AcceptInvitationForm tokenFromUrl={tokenFromUrl} navigate={navigate} />;
+};
+
+export const AcceptInvitationForm: React.FC<{
+  tokenFromUrl: string;
+  navigate: (path: string) => void;
+  nativeLinks?: boolean;
+}> = ({ tokenFromUrl, navigate, nativeLinks = false }) => {
+  const InvitationLink = nativeLinks ? NativeLink : Link;
 
   const [inputToken, setInputToken] = useState(tokenFromUrl);
   const [invitation, setInvitation] = useState<Invitation | null>(null);
@@ -296,12 +306,12 @@ export const AcceptInvitation: React.FC = () => {
                 </button>
 
                 <div style={{ textAlign: 'center', marginTop: '0.5rem' }}>
-                  <Link
+                  <InvitationLink
                     to="/login"
                     style={{ fontSize: '0.85rem', color: '#64748b', textDecoration: 'none' }}
                   >
                     Volver al Inicio de Sesión
-                  </Link>
+                  </InvitationLink>
                 </div>
               </form>
             )}

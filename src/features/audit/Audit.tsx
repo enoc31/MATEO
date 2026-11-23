@@ -9,6 +9,10 @@ import { formatDateForFrontEnd } from '../../utils/formatters';
 
 export const Audit: React.FC = () => {
   const navigate = useNavigate();
+  return <AuditContent navigate={navigate} />;
+};
+
+export const AuditContent: React.FC<{ navigate: (path: string) => void }> = ({ navigate }) => {
   const [loading, setLoading] = useState(true);
   const [expenses, setExpenses] = useState<ExpenseReceipt[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);

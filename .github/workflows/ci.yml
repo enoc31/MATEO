@@ -47,6 +47,9 @@ jobs:
       - name: Run Tests with Coverage
         run: npx vitest run --coverage
 
+      - name: Test reconciliation with local PostgreSQL
+        run: npm run test:postgres
+
       - name: Stale Documentation Detection
         run: |
           echo "Scanning for TODO and FIXME tags..."

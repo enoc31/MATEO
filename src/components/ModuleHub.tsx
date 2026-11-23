@@ -1,5 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { NativeLink } from './NativeLink';
 import { ArrowRight, Construction } from 'lucide-react';
 
 export interface ModuleHubLink {
@@ -11,6 +12,7 @@ export interface ModuleHubLink {
 }
 
 interface ModuleHubProps {
+  nativeLinks?: boolean;
   title: string;
   description: string;
   /** Secciones existentes que viven dentro de este módulo. */
@@ -31,7 +33,9 @@ export const ModuleHub: React.FC<ModuleHubProps> = ({
   links = [],
   statusNote,
   userRole,
+  nativeLinks = false,
 }) => {
+  const HubLink = nativeLinks ? NativeLink : Link;
   const visibleLinks = links.filter(
     (link) => !link.roles || (userRole !== undefined && link.roles.includes(userRole)),
   );
@@ -70,7 +74,7 @@ export const ModuleHub: React.FC<ModuleHubProps> = ({
         <ul style={{ listStyle: 'none', padding: 0, display: 'grid', gap: '0.75rem' }}>
           {visibleLinks.map((link) => (
             <li key={link.to}>
-              <Link
+              <HubLink
                 to={link.to}
                 style={{
                   display: 'flex',
@@ -89,7 +93,7 @@ export const ModuleHub: React.FC<ModuleHubProps> = ({
                   <span style={{ color: '#64748b', fontSize: '0.85rem' }}>{link.description}</span>
                 </span>
                 <ArrowRight size={18} aria-hidden="true" />
-              </Link>
+              </HubLink>
             </li>
           ))}
         </ul>

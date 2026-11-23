@@ -1,6 +1,9 @@
 node_modules
 dist
+.next
 coverage
+.stryker-tmp
+reports/mutation
 .agents
 .claude/skills
 scratch

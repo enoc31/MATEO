@@ -8,8 +8,7 @@ const https = require('https');
 const { generateSmartReply } = require('./mateo-knowledge.cjs');
 const { sendDailyCommitReport, buildCommitReportMessage } = require('./mateo-commits-reporter.cjs');
 
-const SLACK_BOT_TOKEN =
-  process.env.SLACK_BOT_TOKEN || 'xoxb-11707506536257-12408012454738-5ORkQ1Krf3dzTWB9ATmI756Z';
+const SLACK_BOT_TOKEN = process.env.SLACK_BOT_TOKEN || '';
 const BOT_USER_ID = 'U0CC00CDCMQ';
 
 const CHANNELS_TO_WATCH = [

@@ -25,4 +25,17 @@ describe('formatters', () => {
     expect(formatUsd(1234.56)).toBe('$1.234,56');
     expect(formatVes(98765.4)).toBe('Bs. 98.765,40');
   });
+
+  it('preserves cent amounts through localized formatting', () => {
+    fc.assert(
+      fc.property(fc.integer({ min: -1_000_000_000, max: 1_000_000_000 }), (cents) => {
+        const formatted = formatAmount(cents / 100);
+        expect(formatted).toMatch(/^-?\d{1,3}(\.\d{3})*,\d{2}$/);
+        const parsed = Number(formatted.replaceAll('.', '').replace(',', '.'));
+        expect(Math.round(parsed * 100)).toBe(cents);
+        expect(formatUsd(cents / 100)).toBe(`$${formatted}`);
+        expect(formatVes(cents / 100)).toBe(`Bs. ${formatted}`);
+      }),
+    );
+  });
 });

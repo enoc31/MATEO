@@ -7,9 +7,16 @@ import { formatDateForFrontEnd } from '../../utils/formatters';
 import { useAuth } from '../../context/AuthContext';
 
 export const AuditDetail: React.FC = () => {
-  const { profile } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
+  return <AuditDetailContent search={location.search} navigate={navigate} />;
+};
+
+export const AuditDetailContent: React.FC<{ search: string; navigate: (path: string) => void }> = ({
+  search,
+  navigate,
+}) => {
+  const { profile } = useAuth();
   const [expense, setExpense] = useState<ExpenseReceipt | null>(null);
   const [projects, setProjects] = useState<Project[]>([]);
   const [partidas, setPartidas] = useState<PartidaGasto[]>([]);
@@ -26,7 +33,7 @@ export const AuditDetail: React.FC = () => {
 
   useEffect(() => {
     const fetchData = async () => {
-      const params = new URLSearchParams(location.search);
+      const params = new URLSearchParams(search);
       const id = params.get('id');
       if (!id) {
         setError('No se proporcionó un ID de gasto válido.');
@@ -57,7 +64,7 @@ export const AuditDetail: React.FC = () => {
       }
     };
     fetchData();
-  }, [location.search]);
+  }, [search]);
 
   const getProjectName = (id: string) =>
     projects.find((p) => p.id === id)?.nombre || 'Proyecto Desconocido';

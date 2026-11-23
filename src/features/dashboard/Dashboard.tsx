@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Download,
   CheckCircle,
@@ -12,7 +13,7 @@ import {
 import { api } from '../../services/api';
 import type { ExpenseCategory, DashboardMetrics, ProjectExecutionMetric } from '../../services/api';
 import { SkeletonDashboard } from '../../components/SkeletonDashboard';
-import { ChurchImplementationGuideModal } from '../auth/ChurchImplementationGuideModal';
+import { ChurchImplementationGuideModalContent } from '../auth/ChurchImplementationGuideModal';
 import { getErrorMessage } from '../../utils/formatters';
 import {
   ResponsiveContainer,
@@ -28,6 +29,11 @@ import {
 } from 'recharts';
 
 export const Dashboard: React.FC = () => {
+  const navigate = useNavigate();
+  return <DashboardContent navigate={navigate} />;
+};
+
+export const DashboardContent: React.FC<{ navigate: (path: string) => void }> = ({ navigate }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [metrics, setMetrics] = useState<DashboardMetrics | null>(null);
@@ -695,9 +701,10 @@ export const Dashboard: React.FC = () => {
         </div>
       </div>
 
-      <ChurchImplementationGuideModal
+      <ChurchImplementationGuideModalContent
         isOpen={showGuideModal}
         onClose={() => setShowGuideModal(false)}
+        navigate={navigate}
       />
     </div>
   );

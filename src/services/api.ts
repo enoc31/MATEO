@@ -1,7 +1,9 @@
 import { supabase } from '../supabaseClient';
+import { supabaseConfig } from '../supabaseConfig';
 import type { UserRole } from '../context/AuthContext';
 export type { UserRole };
 import { uploadToGCS } from './storage';
+import { postAuthenticated } from './bffClient';
 
 // Interfaces del Dominio
 export interface Donante {
@@ -255,16 +257,7 @@ export interface Invitation {
   ong_nombre?: string;
 }
 
-// Determinar si Supabase está configurado correctamente
-const isSupabaseConfigured = () => {
-  const url = import.meta.env.VITE_SUPABASE_URL;
-  const key = import.meta.env.VITE_SUPABASE_ANON_KEY;
-  return (
-    url && url !== 'https://placeholder-url.supabase.co' && key && key !== 'placeholder-anon-key'
-  );
-};
-
-export const isSimulationMode = !isSupabaseConfigured();
+export const isSimulationMode = supabaseConfig.isSimulationMode;
 
 // =========================================================================
 // MOCK DATA PARA MODO SIMULACIÓN (INSPIRADO EN CNBV)
@@ -1239,6 +1232,13 @@ export const api = {
     };
 
     if (!isSimulationMode) {
+      if (import.meta.env.VITE_APP_FRAMEWORK === 'next') {
+        return postAuthenticated<ExpenseReceipt>(
+          '/api/expenses',
+          newExpense,
+          'No se pudo registrar el gasto.',
+        );
+      }
       // Construcción estricta del payload para evitar cualquier propiedad fantasma (como solicitante_nombre)
       const dbExpense: Record<string, unknown> = {
         proyecto_id: newExpense.proyecto_id,
@@ -1283,6 +1283,13 @@ export const api = {
     auditorId: string,
   ): Promise<ExpenseReceipt> => {
     if (!isSimulationMode) {
+      if (import.meta.env.VITE_APP_FRAMEWORK === 'next') {
+        return postAuthenticated<ExpenseReceipt>(
+          '/api/expenses/audit',
+          { expenseId, estado, comentarios, auditorId },
+          'No se pudo actualizar la auditoría.',
+        );
+      }
       const { data, error } = await supabase
         .from('comprobantes_gasto')
         .update({
@@ -1348,6 +1355,13 @@ export const api = {
     transactionId: string,
   ): Promise<{ expense: ExpenseReceipt; transaction: BankTransaction }> => {
     if (!isSimulationMode) {
+      if (import.meta.env.VITE_APP_FRAMEWORK === 'next') {
+        return postAuthenticated(
+          '/api/reconciliation',
+          { kind: 'expense', recordId: expenseId, transactionId },
+          'No se pudo conciliar el gasto.',
+        );
+      }
       // 1. Vincular el gasto con la transacción
       const { data: expenseData, error: expError } = await supabase
         .from('comprobantes_gasto')
@@ -1397,6 +1411,13 @@ export const api = {
     transactionId: string,
   ): Promise<{ donation: Donation; transaction: BankTransaction }> => {
     if (!isSimulationMode) {
+      if (import.meta.env.VITE_APP_FRAMEWORK === 'next') {
+        return postAuthenticated(
+          '/api/reconciliation',
+          { kind: 'donation', recordId: donationId, transactionId },
+          'No se pudo conciliar la donación.',
+        );
+      }
       // 1. Vincular la donación con la transacción
       const { data: donationData, error: donError } = await supabase
         .from('donaciones')
@@ -2373,8 +2394,8 @@ export const api = {
       if (error) throw error;
       return data as Ong | null;
     } else {
-      const ongs = JSON.parse(localStorage.getItem('cnbv_ongs') || '[]') as Ong[];
-      return ongs.find((o: any) => o.id === id) || null;
+      const ongs = await api.getOngs();
+      return ongs.find((ong) => ong.id === id) || null;
     }
   },
 

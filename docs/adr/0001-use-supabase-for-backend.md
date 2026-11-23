@@ -33,4 +33,8 @@ We will leverage:
   - Reduced administrative overhead for server maintenance.
 - **Cons**:
   - Vendor lock-in to Supabase SDK and PostgreSQL features.
-  - Local offline development requires Supabase CLI setup.
+  - Full local database and RLS integration tests require a local Supabase stack; browser simulation runs without it using localStorage.
+
+## Implementation note
+
+The current application also uploads some files to Google Cloud Storage via a Supabase Edge Function. ADR 0001 does not imply that every attachment uses Supabase Storage.
