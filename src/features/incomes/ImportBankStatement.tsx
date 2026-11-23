@@ -34,9 +34,22 @@ const parseRobustAmount = (amountStr: string): number => {
 };
 
 export const ImportBankStatement: React.FC = () => {
+  const navigate = useNavigate();
+  return (
+    <ImportBankStatementContent
+      navigate={(path) => {
+        if (typeof path === 'number') navigate(path);
+        else navigate(path);
+      }}
+    />
+  );
+};
+
+export const ImportBankStatementContent: React.FC<{
+  navigate: (path: string | number) => void;
+}> = ({ navigate }) => {
   const [loading, setLoading] = useState(true);
   const [importingFile, setImportingFile] = useState(false);
-  const navigate = useNavigate();
 
   const [tasas, setTasas] = useState<TasaBCV[]>([]);
   const [latestRate, setLatestRate] = useState<number | null>(null);

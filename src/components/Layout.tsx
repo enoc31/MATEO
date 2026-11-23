@@ -3,18 +3,32 @@ import { LogOut, Menu, Lightbulb, LayoutGrid, Building, Compass, RefreshCw } fro
 import { useAuth } from '../context/AuthContext';
 import { api, isSimulationMode } from '../services/api';
 import { InternalControlModal } from './InternalControlModal';
-import { ChurchImplementationGuideModal } from '../features/auth/ChurchImplementationGuideModal';
+import { ChurchImplementationGuideModalContent } from '../features/auth/ChurchImplementationGuideModal';
 import { getCaracasDateParts } from '../utils/formatters';
 import { checkAndSyncBCVRate, forceSyncBCVRate } from '../utils/bcvSync';
 import { useLocation, NavLink, useNavigate } from 'react-router-dom';
 import { getMenuItems, getMenuIcon } from './menuConfig';
 import { SidebarNav } from './SidebarNav';
+import { NativeNavLink } from './NativeNavLink';
 
 interface LayoutProps {
   children: React.ReactNode;
 }
 
 export const Layout: React.FC<LayoutProps> = ({ children }) => {
+  const location = useLocation();
+  const navigate = useNavigate();
+  return (
+    <LayoutContent pathname={location.pathname} navigate={navigate}>
+      {children}
+    </LayoutContent>
+  );
+};
+
+export const LayoutContent: React.FC<
+  LayoutProps & { pathname: string; navigate: (path: string) => void; nativeLinks?: boolean }
+> = ({ children, pathname, navigate, nativeLinks = false }) => {
+  const NavigationLink = nativeLinks ? NativeNavLink : NavLink;
   const { profile, logout, activeOng } = useAuth();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isPinned, setIsPinned] = useState(window.innerWidth >= 1024);
@@ -32,11 +46,9 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
   const [currentRate, setCurrentRate] = useState<number>(initialBCV.tasa);
   const [rateDate, setRateDate] = useState<string>(initialBCV.fecha);
   const [isSyncingRate, setIsSyncingRate] = useState(false);
-  const location = useLocation();
-  const navigate = useNavigate();
-  const currentPath = location.pathname.split('/')[2] || 'dashboard';
+  const currentPath = pathname.split('/')[2] || 'dashboard';
 
-  const isHome = location.pathname === '/app' || location.pathname === '/app/';
+  const isHome = pathname === '/app' || pathname === '/app/';
 
   // Accesibilidad: Bloqueo de scroll de fondo y soporte para tecla Escape en el drawer móvil
   React.useEffect(() => {
@@ -305,7 +317,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
                     <span>{item.label}</span>
                   </span>
                 ) : (
-                  <NavLink
+                  <NavigationLink
                     to={`/app/${item.id}`}
                     className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
                     style={{
@@ -317,7 +329,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
                   >
                     <span>{getMenuIcon(item.iconName)}</span>
                     <span>{item.label}</span>
-                  </NavLink>
+                  </NavigationLink>
                 )}
               </li>
             ))}
@@ -563,6 +575,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
         aria-hidden="true"
       ></div>
       <SidebarNav
+        nativeLinks={nativeLinks}
         visibleMenuItems={visibleMenuItems}
         currentPath={currentPath}
         isPinned={isPinned}
@@ -580,9 +593,10 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
       {/* Modal de Control Interno (COSO) */}
       <InternalControlModal isOpen={isCosoModalOpen} onClose={handleCloseCosoModal} />
       {/* Modal de Ruta Guiada de Implementación */}
-      <ChurchImplementationGuideModal
+      <ChurchImplementationGuideModalContent
         isOpen={isGuideModalOpen}
         onClose={() => setIsGuideModalOpen(false)}
+        navigate={navigate}
       />
     </div>
   );

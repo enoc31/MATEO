@@ -106,6 +106,10 @@ const faqs = [
 
 export function LandingPage() {
   const navigate = useNavigate();
+  return <LandingPageContent navigate={navigate} />;
+}
+
+export function LandingPageContent({ navigate }: { navigate: (path: string) => void }) {
   const [scrolled, setScrolled] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);

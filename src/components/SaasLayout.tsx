@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { NativeLink } from './NativeLink';
 import { LayoutDashboard, Building, Users, LogOut, Menu } from 'lucide-react';
 
 interface SaasLayoutProps {
@@ -8,8 +9,15 @@ interface SaasLayoutProps {
 }
 
 export const SaasLayout: React.FC<SaasLayoutProps> = ({ children }) => {
-  const { profile, logout } = useAuth();
   const location = useLocation();
+  return <SaasLayoutContent pathname={location.pathname}>{children}</SaasLayoutContent>;
+};
+
+export const SaasLayoutContent: React.FC<
+  SaasLayoutProps & { pathname: string; nativeLinks?: boolean }
+> = ({ children, pathname, nativeLinks = false }) => {
+  const { profile, logout } = useAuth();
+  const NavigationLink = nativeLinks ? NativeLink : NavLink;
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   if (!profile || profile.rol !== 'super_admin') {
@@ -127,9 +135,9 @@ export const SaasLayout: React.FC<SaasLayoutProps> = ({ children }) => {
           }}
         >
           {menuItems.map((item) => {
-            const isActive = location.pathname === item.path;
+            const isActive = pathname === item.path;
             return (
-              <NavLink
+              <NavigationLink
                 key={item.id}
                 to={item.path}
                 onClick={() => setIsMobileMenuOpen(false)}
@@ -162,7 +170,7 @@ export const SaasLayout: React.FC<SaasLayoutProps> = ({ children }) => {
               >
                 {item.icon}
                 {item.label}
-              </NavLink>
+              </NavigationLink>
             );
           })}
         </nav>

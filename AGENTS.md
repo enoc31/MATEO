@@ -55,3 +55,13 @@ Welcome! You are an AI assistant helping developers build, optimize, and maintai
   1. Register the new agent with its name, emoji, Role, and Key Functions in `scripts/sync-agents-canvas.cjs` (in `AGENTS_REGISTRY`).
   2. Execute `node scripts/sync-agents-canvas.cjs` to automatically synchronize and update the Slack Canvas tab **"Agentes y Funciones"** (Canvas ID: `F0CBW49L21K` in channel `#agents` / `C0CBV626CLB`).
   3. Inform the team in Slack or conversation summary about the updated documentation in the Canvas tab.
+
+<!-- BEGIN:nextjs-agent-rules -->
+
+## This is NOT the Next.js you know
+
+This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
+
+This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
+
+<!-- END:nextjs-agent-rules -->

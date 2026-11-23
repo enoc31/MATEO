@@ -33,7 +33,10 @@ import { getCaracasDateParts } from '../../utils/formatters';
 
 export const PublicContributionForm: React.FC = () => {
   const { ongId = '' } = useParams<{ ongId: string }>();
+  return <PublicContributionFormForOng ongId={ongId} />;
+};
 
+export const PublicContributionFormForOng: React.FC<{ ongId: string }> = ({ ongId }) => {
   const [ongInfo, setOngInfo] = useState<PublicOngInfo | null>(null);
   const [cuentas, setCuentas] = useState<CuentaReceptora[]>([]);
   const [loading, setLoading] = useState(true);

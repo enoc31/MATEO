@@ -4,9 +4,18 @@ import { Lock, CheckCircle2, AlertCircle, ArrowLeft } from 'lucide-react';
 import { supabase } from '../../supabaseClient';
 import { isSimulationMode } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
+import { NativeLink } from '../../components/NativeLink';
 
 export const UpdatePassword: React.FC = () => {
   const navigate = useNavigate();
+  return <UpdatePasswordForm navigate={navigate} />;
+};
+
+export const UpdatePasswordForm: React.FC<{
+  navigate: (path: string) => void;
+  nativeLinks?: boolean;
+}> = ({ navigate, nativeLinks = false }) => {
+  const PasswordLink = nativeLinks ? NativeLink : Link;
   const { setIsPasswordRecovery } = useAuth();
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -266,7 +275,7 @@ export const UpdatePassword: React.FC = () => {
             textAlign: 'center',
           }}
         >
-          <Link
+          <PasswordLink
             to="/login"
             style={{
               color: 'var(--primary)',
@@ -283,7 +292,7 @@ export const UpdatePassword: React.FC = () => {
             onMouseLeave={(e) => (e.currentTarget.style.textDecoration = 'none')}
           >
             <ArrowLeft size={16} /> Volver al Inicio de Sesión
-          </Link>
+          </PasswordLink>
         </div>
       </div>
     </div>

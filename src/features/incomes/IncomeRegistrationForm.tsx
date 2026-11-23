@@ -30,9 +30,22 @@ const FLAG_MAP: Record<string, string> = {
 };
 
 export const IncomeRegistrationForm: React.FC = () => {
+  const navigate = useNavigate();
+  return (
+    <IncomeRegistrationFormContent
+      navigate={(path) => {
+        if (typeof path === 'number') navigate(path);
+        else navigate(path);
+      }}
+    />
+  );
+};
+
+export const IncomeRegistrationFormContent: React.FC<{
+  navigate: (path: string | number) => void;
+}> = ({ navigate }) => {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
-  const navigate = useNavigate();
 
   // Data
   const [projects, setProjects] = useState<Project[]>([]);

@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { NavLink } from 'react-router-dom';
+import { NativeNavLink } from './NativeNavLink';
 import {
   ChevronDown,
   ChevronLeft,
@@ -13,6 +14,7 @@ import { getMenuIcon, type MenuItemConfig } from './menuConfig';
 import './SidebarNav.css';
 
 export interface SidebarNavProps {
+  nativeLinks?: boolean;
   visibleMenuItems: MenuItemConfig[];
   currentPath: string;
   isPinned: boolean;
@@ -39,6 +41,7 @@ const FINANCE_ITEM_IDS = new Set([
 ]);
 
 export const SidebarNav: React.FC<SidebarNavProps> = ({
+  nativeLinks = false,
   visibleMenuItems,
   currentPath,
   isPinned,
@@ -53,6 +56,7 @@ export const SidebarNav: React.FC<SidebarNavProps> = ({
   onOpenGuide,
   onLogout,
 }) => {
+  const NavigationLink = nativeLinks ? NativeNavLink : NavLink;
   const [financeOpen, setFinanceOpen] = useState<boolean>(FINANCE_ITEM_IDS.has(currentPath));
 
   const { dashboardItem, financeItems, communityItems } = useMemo(() => {
@@ -152,7 +156,7 @@ export const SidebarNav: React.FC<SidebarNavProps> = ({
 
             {dashboardItem && (
               <li className="sn-item-wrap">
-                <NavLink
+                <NavigationLink
                   to={`/app/${dashboardItem.id}`}
                   className={({ isActive }) => `sn-link ${isActive ? 'active' : ''}`}
                   onClick={onCloseMobileMenu}
@@ -160,7 +164,7 @@ export const SidebarNav: React.FC<SidebarNavProps> = ({
                 >
                   <span className="sn-item-icon">{getMenuIcon(dashboardItem.iconName)}</span>
                   <span className="sn-item-label">{dashboardItem.label}</span>
-                </NavLink>
+                </NavigationLink>
               </li>
             )}
 
@@ -192,13 +196,13 @@ export const SidebarNav: React.FC<SidebarNavProps> = ({
                             {item.label}
                           </span>
                         ) : (
-                          <NavLink
+                          <NavigationLink
                             to={`/app/${item.id}`}
                             className={({ isActive }) => `sn-sublink ${isActive ? 'active' : ''}`}
                             onClick={onCloseMobileMenu}
                           >
                             {item.label}
-                          </NavLink>
+                          </NavigationLink>
                         )}
                       </li>
                     ))}
@@ -218,14 +222,14 @@ export const SidebarNav: React.FC<SidebarNavProps> = ({
                         {item.label}
                       </span>
                     ) : (
-                      <NavLink
+                      <NavigationLink
                         key={item.id}
                         to={`/app/${item.id}`}
                         className={({ isActive }) => `sn-sublink ${isActive ? 'active' : ''}`}
                         onClick={onCloseMobileMenu}
                       >
                         {item.label}
-                      </NavLink>
+                      </NavigationLink>
                     ),
                   )}
                 </div>
@@ -250,7 +254,7 @@ export const SidebarNav: React.FC<SidebarNavProps> = ({
                       <span className="sn-item-label">{item.label}</span>
                     </span>
                   ) : (
-                    <NavLink
+                    <NavigationLink
                       to={`/app/${item.id}`}
                       className={({ isActive }) => `sn-link ${isActive ? 'active' : ''}`}
                       onClick={onCloseMobileMenu}
@@ -258,7 +262,7 @@ export const SidebarNav: React.FC<SidebarNavProps> = ({
                     >
                       <span className="sn-item-icon">{getMenuIcon(item.iconName)}</span>
                       <span className="sn-item-label">{item.label}</span>
-                    </NavLink>
+                    </NavigationLink>
                   )}
                 </li>
               ))}

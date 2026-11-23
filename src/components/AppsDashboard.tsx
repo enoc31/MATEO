@@ -5,8 +5,14 @@ import { getMenuItems, getMenuIcon } from './menuConfig';
 import { LogOut, Building } from 'lucide-react';
 
 export const AppsDashboard: React.FC = () => {
-  const { profile, logout, activeOng } = useAuth();
   const navigate = useNavigate();
+  return <AppsDashboardContent navigate={navigate} />;
+};
+
+export const AppsDashboardContent: React.FC<{ navigate: (path: string) => void }> = ({
+  navigate,
+}) => {
+  const { profile, logout, activeOng } = useAuth();
 
   if (!profile) return null;
 

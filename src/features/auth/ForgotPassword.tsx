@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { NativeLink } from '../../components/NativeLink';
 import { Mail, ArrowLeft, CheckCircle2, AlertCircle, ArrowRight } from 'lucide-react';
 import { supabase } from '../../supabaseClient';
 import { isSimulationMode } from '../../services/api';
 
-export const ForgotPassword: React.FC = () => {
+export const ForgotPassword: React.FC<{ nativeLinks?: boolean }> = ({ nativeLinks = false }) => {
+  const PasswordLink = nativeLinks ? NativeLink : Link;
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
@@ -176,7 +178,7 @@ export const ForgotPassword: React.FC = () => {
               <span>{message.text}</span>
               {isSimulationMode && message.type === 'success' && (
                 <div style={{ marginTop: '0.75rem' }}>
-                  <Link
+                  <PasswordLink
                     to="/update-password"
                     className="btn btn-primary"
                     style={{
@@ -190,7 +192,7 @@ export const ForgotPassword: React.FC = () => {
                     }}
                   >
                     Probar Cambio de Contraseña (Demo) <ArrowRight size={14} />
-                  </Link>
+                  </PasswordLink>
                 </div>
               )}
             </div>
@@ -245,7 +247,7 @@ export const ForgotPassword: React.FC = () => {
             textAlign: 'center',
           }}
         >
-          <Link
+          <PasswordLink
             to="/login"
             style={{
               color: 'var(--primary)',
@@ -262,7 +264,7 @@ export const ForgotPassword: React.FC = () => {
             onMouseLeave={(e) => (e.currentTarget.style.textDecoration = 'none')}
           >
             <ArrowLeft size={16} /> Volver al Inicio de Sesión
-          </Link>
+          </PasswordLink>
         </div>
       </div>
     </div>

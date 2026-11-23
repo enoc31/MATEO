@@ -526,7 +526,11 @@ interface PendingApprovalProps {
   userId?: string;
 }
 
-const PendingApproval: React.FC<PendingApprovalProps> = ({ logout, refreshProfile, userId }) => {
+export const PendingApproval: React.FC<PendingApprovalProps> = ({
+  logout,
+  refreshProfile,
+  userId,
+}) => {
   const [checking, setChecking] = useState(false);
   const [feedback, setFeedback] = useState<string | null>(null);
   const [isListening, setIsListening] = useState(false);
@@ -763,7 +767,7 @@ const PendingApproval: React.FC<PendingApprovalProps> = ({ logout, refreshProfil
 };
 
 // Componente para Control de Acceso / Rutas Protegidas
-const AccessDenied: React.FC = () => {
+export const AccessDenied: React.FC = () => {
   return (
     <div
       className="card text-center"

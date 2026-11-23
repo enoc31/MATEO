@@ -10,6 +10,10 @@ export default tseslint.config(
   {
     ignores: [
       'dist',
+      '.next',
+      'next-env.d.ts',
+      '.stryker-tmp',
+      'reports/mutation',
       'node_modules',
       'coverage',
       '.vercel',

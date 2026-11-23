@@ -31,13 +31,19 @@ const FLAG_MAP: Record<string, string> = {
 };
 
 export const IncomesManager: React.FC = () => {
+  const navigate = useNavigate();
+  return <IncomesManagerContent navigate={navigate} />;
+};
+
+export const IncomesManagerContent: React.FC<{ navigate: (path: string) => void }> = ({
+  navigate,
+}) => {
   const { profile } = useAuth();
   const [loading, setLoading] = useState(true);
 
   // Data
   const [projects, setProjects] = useState<Project[]>([]);
   const [donantes, setDonantes] = useState<Donante[]>([]);
-  const navigate = useNavigate();
   const [donations, setDonations] = useState<Donation[]>([]);
 
   // Filters & Pagination

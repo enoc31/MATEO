@@ -16,8 +16,12 @@ import { AccountsAndLinkTab } from './AccountsAndLinkTab';
 type FinanceTab = 'resumen' | 'verificar' | 'ingresos' | 'gastos' | 'cuentas';
 
 export const FinanceHub: React.FC = () => {
-  const { profile, activeOng } = useAuth();
   const navigate = useNavigate();
+  return <FinanceHubContent navigate={navigate} />;
+};
+
+export const FinanceHubContent: React.FC<{ navigate: (path: string) => void }> = ({ navigate }) => {
+  const { profile, activeOng } = useAuth();
 
   const userRole = profile?.rol || '';
   const canViewFinance = (FINANCE_VIEW_ROLES as readonly string[]).includes(userRole);

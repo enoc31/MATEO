@@ -216,6 +216,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const profileData = mockProfile as UserProfile;
         setProfile(profileData);
         setActiveOng({
+          id: profileData.ong_id || '11111111-1111-1111-1111-111111111111',
           nombre: 'Convención Nacional Bautista de Venezuela (Simulado)',
           logo_url: 'https://cnbv.org/wp-content/uploads/2020/09/logo-cnbv.jpg',
         });

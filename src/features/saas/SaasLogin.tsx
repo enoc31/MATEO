@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { NativeLink } from '../../components/NativeLink';
 import { supabase } from '../../supabaseClient';
 import { isSimulationMode } from '../../services/api';
 import { ShieldAlert, KeyRound, Mail, ArrowRight } from 'lucide-react';
 
-export const SaasLogin: React.FC = () => {
+export const SaasLogin: React.FC<{ nativeLinks?: boolean }> = ({ nativeLinks = false }) => {
+  const SaasLink = nativeLinks ? NativeLink : Link;
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -232,7 +234,7 @@ export const SaasLogin: React.FC = () => {
               >
                 Contraseña
               </label>
-              <Link
+              <SaasLink
                 to="/forgot-password"
                 style={{
                   fontSize: '0.75rem',
@@ -244,7 +246,7 @@ export const SaasLogin: React.FC = () => {
                 onMouseLeave={(e) => (e.currentTarget.style.textDecoration = 'none')}
               >
                 ¿Olvidaste tu contraseña?
-              </Link>
+              </SaasLink>
             </div>
             <div style={{ position: 'relative' }}>
               <KeyRound

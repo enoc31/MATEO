@@ -19,13 +19,15 @@ interface ChurchImplementationGuideModalProps {
 }
 
 export const ChurchImplementationGuideModal: React.FC<ChurchImplementationGuideModalProps> = ({
-  isOpen,
-  onClose,
-  churchName = 'Tu Iglesia',
-  completedSteps = [1],
+  ...props
 }) => {
   const navigate = useNavigate();
+  return <ChurchImplementationGuideModalContent {...props} navigate={navigate} />;
+};
 
+export const ChurchImplementationGuideModalContent: React.FC<
+  ChurchImplementationGuideModalProps & { navigate: (path: string) => void }
+> = ({ isOpen, onClose, churchName = 'Tu Iglesia', completedSteps = [1], navigate }) => {
   if (!isOpen) return null;
 
   const steps = [

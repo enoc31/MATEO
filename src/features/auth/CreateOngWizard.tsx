@@ -5,6 +5,7 @@ import { api, isSimulationMode } from '../../services/api';
 import { uploadToGCS } from '../../services/storage';
 import { supabase } from '../../supabaseClient';
 import { LocationSelector } from '../../components/LocationSelector';
+import { NativeLink } from '../../components/NativeLink';
 import { formatFullAddress } from '../../data/venezuelaLocations';
 import './CreateOngWizard.css';
 
@@ -21,6 +22,14 @@ const customWindow = window as CustomWindow;
 
 export const CreateOngWizard: React.FC = () => {
   const navigate = useNavigate();
+  return <CreateOngWizardForm navigate={navigate} />;
+};
+
+export const CreateOngWizardForm: React.FC<{
+  navigate: (path: string) => void;
+  nativeLinks?: boolean;
+}> = ({ navigate, nativeLinks = false }) => {
+  const WizardLink = nativeLinks ? NativeLink : Link;
 
   // Paso actual (1: ONG, 2: Admin, 3: Verificación, 4: Éxito)
   const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
@@ -490,9 +499,9 @@ export const CreateOngWizard: React.FC = () => {
                   Siguiente: Identificación Legal <ArrowRight size={20} />
                 </button>
 
-                <Link to="/login" className="cow-back-login-link">
+                <WizardLink to="/login" className="cow-back-login-link">
                   Volver al acceso
-                </Link>
+                </WizardLink>
               </div>
             </form>
           )}
