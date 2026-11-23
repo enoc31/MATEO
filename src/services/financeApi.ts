@@ -124,7 +124,7 @@ export interface InternalAporteInput {
   miembro_id?: string | null;
   donante_nombre: string;
   categoria_aporte: CategoriaAporte;
-  moneda: 'USD' | 'VES';
+  moneda: 'USD' | 'VES' | 'EUR' | 'COP';
   monto_original: number;
   tasa_bcv: number | null;
   monto_usd: number;

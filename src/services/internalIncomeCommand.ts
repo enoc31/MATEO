@@ -4,6 +4,8 @@ type IncomeRow = Omit<Donation, 'id'>;
 
 const categories = ['diezmo', 'ofrenda', 'primicia', 'misiones', 'pro_templo', 'otro'];
 const methods = ['transferencia', 'pago_movil', 'efectivo'];
+const currencies = ['USD', 'VES', 'EUR', 'COP'] as const;
+type SupportedCurrency = (typeof currencies)[number];
 
 /** Parse untrusted income input and derive the recorded currency amounts. */
 export function parseInternalIncome(input: unknown): IncomeRow {
@@ -35,8 +37,9 @@ export function parseInternalIncome(input: unknown): IncomeRow {
     (rate !== null &&
       rate !== undefined &&
       (typeof rate !== 'number' || !Number.isFinite(rate) || rate <= 0)) ||
-    (currency !== 'USD' && currency !== 'VES') ||
-    (currency === 'VES' && (typeof rate !== 'number' || rate <= 0)) ||
+    typeof currency !== 'string' ||
+    !currencies.includes(currency as SupportedCurrency) ||
+    (currency !== 'USD' && (typeof rate !== 'number' || rate <= 0)) ||
     !categories.includes(category) ||
     !methods.includes(method) ||
     !/^\d{4}-\d{2}-\d{2}$/.test(date) ||
@@ -45,11 +48,17 @@ export function parseInternalIncome(input: unknown): IncomeRow {
   )
     throw new Error('Datos inválidos');
 
-  const usd = currency === 'USD' ? amount : Number((amount / (rate as number)).toFixed(2));
-  const ves =
-    currency === 'VES'
+  const typedCurrency = currency as SupportedCurrency;
+  const usd =
+    typedCurrency === 'USD'
       ? amount
-      : typeof rate === 'number'
+      : typedCurrency === 'EUR'
+        ? Number((amount * (rate as number)).toFixed(2))
+        : Number((amount / (rate as number)).toFixed(2));
+  const ves =
+    typedCurrency === 'VES'
+      ? amount
+      : typedCurrency === 'USD' && typeof rate === 'number'
         ? Number((amount * rate).toFixed(2))
         : null;
   if (!Number.isFinite(usd) || usd <= 0 || (ves !== null && !Number.isFinite(ves)))
@@ -66,7 +75,7 @@ export function parseInternalIncome(input: unknown): IncomeRow {
     monto: usd,
     descripcion: description,
     fecha: date,
-    moneda: currency,
+    moneda: typedCurrency,
     medio_pago: method as Donation['medio_pago'],
     monto_original: amount,
     tasa_bcv: typeof rate === 'number' ? rate : null,

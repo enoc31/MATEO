@@ -23,7 +23,9 @@ describe('internal income command', () => {
       { monto_original: -1 },
       { monto_original: Infinity },
       { tasa_bcv: 0 },
-      { moneda: 'EUR' },
+      { moneda: 'GBP' },
+      { moneda: 'EUR', tasa_bcv: null },
+      { moneda: 'COP', tasa_bcv: null },
       { categoria_aporte: 'invalid' },
       { medio_pago: 'invalid' },
       { fecha: 'invalid' },
@@ -33,6 +35,28 @@ describe('internal income command', () => {
       { referencia: 123 },
     ])
       expect(() => parseInternalIncome({ ...valid, ...patch })).toThrow('Datos inválidos');
+  });
+
+  it('converts EUR and COP cash amounts to USD using their respective exchange rates', () => {
+    const eurResult = parseInternalIncome({
+      ...valid,
+      moneda: 'EUR',
+      monto_original: 100,
+      tasa_bcv: 1.08,
+    });
+    expect(eurResult.moneda).toBe('EUR');
+    expect(eurResult.monto_usd).toBe(108);
+    expect(eurResult.monto_ves).toBeNull();
+
+    const copResult = parseInternalIncome({
+      ...valid,
+      moneda: 'COP',
+      monto_original: 84000,
+      tasa_bcv: 4200,
+    });
+    expect(copResult.moneda).toBe('COP');
+    expect(copResult.monto_usd).toBe(20);
+    expect(copResult.monto_ves).toBeNull();
   });
 
   it('preserves optional information and supplies a default donor and description', () => {

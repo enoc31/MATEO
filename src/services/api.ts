@@ -91,7 +91,7 @@ export interface Donation {
   monto: number; // compatible con monto_usd
   descripcion: string;
   fecha: string;
-  moneda: 'USD' | 'VES';
+  moneda: 'USD' | 'VES' | 'EUR' | 'COP';
   medio_pago: 'efectivo' | 'transferencia' | 'pago_movil';
   monto_original: number;
   tasa_bcv: number | null;

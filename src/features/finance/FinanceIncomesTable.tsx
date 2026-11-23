@@ -12,6 +12,7 @@ import {
 import type { Donation } from '../../services/api';
 import { formatCategoriaAporte } from '../../utils/rolePermissions';
 import { formatAmount, formatDateForFrontEnd, formatUsd, formatVes } from '../../utils/formatters';
+import { formatCurrencyByCode, type CashCurrencyCode } from '../../utils/currencyDenominations';
 import '../../components/DataTable.css';
 
 type IncomeTab = 'todos' | 'diezmo' | 'ofrenda' | 'otros';
@@ -32,7 +33,7 @@ export const FinanceIncomesTable: React.FC<FinanceIncomesTableProps> = ({
   const [activeTab, setActiveTab] = useState<IncomeTab>('todos');
   const [searchTerm, setSearchTerm] = useState('');
   const [showFilters, setShowFilters] = useState(false);
-  const [currencyFilter, setCurrencyFilter] = useState<'todos' | 'USD' | 'VES'>('todos');
+  const [currencyFilter, setCurrencyFilter] = useState<'todos' | CashCurrencyCode>('todos');
   const [methodFilter, setMethodFilter] = useState<
     'todos' | 'pago_movil' | 'transferencia' | 'efectivo'
   >('todos');
@@ -220,13 +221,15 @@ export const FinanceIncomesTable: React.FC<FinanceIncomesTableProps> = ({
               className="mdt-filter-select"
               value={currencyFilter}
               onChange={(e) => {
-                setCurrencyFilter(e.target.value as 'todos' | 'USD' | 'VES');
+                setCurrencyFilter(e.target.value as 'todos' | CashCurrencyCode);
                 setCurrentPage(1);
               }}
             >
               <option value="todos">Todas</option>
               <option value="USD">USD ($)</option>
               <option value="VES">VES (Bs.)</option>
+              <option value="EUR">EUR (€)</option>
+              <option value="COP">COP ($)</option>
             </select>
 
             <label htmlFor="inc-method" className="mdt-secondary-text">
@@ -342,7 +345,9 @@ export const FinanceIncomesTable: React.FC<FinanceIncomesTableProps> = ({
                           <div className="mdt-primary-text mdt-nowrap">
                             {d.moneda === 'VES'
                               ? formatVes(d.monto_original || 0)
-                              : formatUsd(d.monto_original || d.monto)}
+                              : d.moneda === 'EUR' || d.moneda === 'COP'
+                                ? formatCurrencyByCode(d.monto_original || 0, d.moneda)
+                                : formatUsd(d.monto_original || d.monto)}
                           </div>
                         </td>
                         <td className="mdt-align-right mdt-nowrap">
@@ -370,9 +375,17 @@ export const FinanceIncomesTable: React.FC<FinanceIncomesTableProps> = ({
                                 </div>
                               </div>
                               <div>
-                                <div className="mdt-expanded-label">Tasa BCV aplicada</div>
+                                <div className="mdt-expanded-label">Tasa de cambio aplicada</div>
                                 <div className="mdt-expanded-value mdt-nowrap">
-                                  {d.tasa_bcv ? `${formatAmount(d.tasa_bcv, 4)} Bs/$` : 'N/A'}
+                                  {d.tasa_bcv
+                                    ? `${formatAmount(d.tasa_bcv, 4)} ${
+                                        d.moneda === 'EUR'
+                                          ? '$/€'
+                                          : d.moneda === 'COP'
+                                            ? 'COP/$'
+                                            : 'Bs/$'
+                                      }`
+                                    : 'N/A'}
                                 </div>
                               </div>
                               <div>
