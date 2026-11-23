@@ -1,4 +1,5 @@
 import { supabase } from '../supabaseClient';
+import { postAuthenticated } from './bffClient';
 import {
   api,
   isSimulationMode,
@@ -708,6 +709,13 @@ export const financeApi = {
   },
 
   registrarAporteInterno: async (input: InternalAporteInput): Promise<Donation> => {
+    if (!isSimulationMode && import.meta.env.VITE_APP_FRAMEWORK === 'next') {
+      return postAuthenticated<Donation>(
+        '/api/incomes/internal',
+        input,
+        'No se pudo registrar el ingreso.',
+      );
+    }
     const desc =
       input.descripcion?.trim() ||
       `${input.categoria_aporte.toUpperCase()} — Registro Interno${
