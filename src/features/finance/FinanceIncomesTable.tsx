@@ -4,6 +4,7 @@ import {
   ChevronDown,
   ChevronLeft,
   ChevronRight,
+  FileText,
   Filter,
   Landmark,
   Plus,
@@ -14,6 +15,7 @@ import type { Donation } from '../../services/api';
 import { formatCategoriaAporte } from '../../utils/rolePermissions';
 import { formatAmount, formatDateForFrontEnd, formatUsd, formatVes } from '../../utils/formatters';
 import { formatCurrencyByCode, type CashCurrencyCode } from '../../utils/currencyDenominations';
+import { generateCashIntakeActPdf, parseCashActDescription } from '../../utils/cashIntakeActPdf';
 import '../../components/DataTable.css';
 
 type IncomeTab = 'todos' | 'diezmo' | 'ofrenda' | 'otros';
@@ -24,6 +26,8 @@ export interface FinanceIncomesTableProps {
   onImportStatement: () => void;
   onRegisterInternal: () => void;
   onOpenCashCounter?: () => void;
+  organizationName?: string;
+  loggedUserName?: string;
 }
 
 export const FinanceIncomesTable: React.FC<FinanceIncomesTableProps> = ({
@@ -32,6 +36,8 @@ export const FinanceIncomesTable: React.FC<FinanceIncomesTableProps> = ({
   onImportStatement,
   onRegisterInternal,
   onOpenCashCounter,
+  organizationName,
+  loggedUserName,
 }) => {
   const [activeTab, setActiveTab] = useState<IncomeTab>('todos');
   const [searchTerm, setSearchTerm] = useState('');
@@ -339,6 +345,36 @@ export const FinanceIncomesTable: React.FC<FinanceIncomesTableProps> = ({
                             {formatCategoriaAporte(d.categoria_aporte)}
                           </span>
                           <div className="mdt-secondary-text">{methodLabel}</div>
+                          {d.medio_pago === 'efectivo' && (
+                            <button
+                              type="button"
+                              data-testid={`download-acta-btn-${d.id}`}
+                              onClick={() =>
+                                generateCashIntakeActPdf({
+                                  donation: d,
+                                  allDonations: donations,
+                                  organizationName,
+                                  loggedUserName,
+                                })
+                              }
+                              style={{
+                                marginTop: '0.25rem',
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '0.3rem',
+                                background: 'none',
+                                border: 'none',
+                                padding: 0,
+                                color: 'var(--primary)',
+                                fontWeight: 700,
+                                fontSize: '0.76rem',
+                                textDecoration: 'underline',
+                                cursor: 'pointer',
+                              }}
+                            >
+                              <FileText size={13} /> Acta de Ingreso (PDF)
+                            </button>
+                          )}
                         </td>
                         <td>
                           <span
@@ -403,6 +439,22 @@ export const FinanceIncomesTable: React.FC<FinanceIncomesTableProps> = ({
                                   {d.actividad_o_responsable || 'No especificado'}
                                 </div>
                               </div>
+                              {d.medio_pago === 'efectivo' &&
+                                (() => {
+                                  const cashMeta = parseCashActDescription(d.descripcion, d.moneda);
+                                  return (
+                                    <div>
+                                      <div className="mdt-expanded-label">
+                                        Comisión de Conteo / Acta
+                                      </div>
+                                      <div className="mdt-expanded-value">
+                                        {cashMeta.additionalCounters.length > 0
+                                          ? `Contadores adicionales: ${cashMeta.additionalCounters.join(', ')}`
+                                          : 'Sin contadores adicionales'}
+                                      </div>
+                                    </div>
+                                  );
+                                })()}
                             </div>
                           </td>
                         </tr>

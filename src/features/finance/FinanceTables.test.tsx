@@ -83,6 +83,10 @@ describe('Finance Figma Data Tables', () => {
     expect(screen.getByText('Bs. 15.000,00')).toBeInTheDocument();
     expect(screen.getByText('$16,33')).toBeInTheDocument();
 
+    // Acta de Ingreso (PDF) link appears only on cash income rows (don-1) and not on bank transfer rows (don-2)
+    expect(screen.getByTestId('download-acta-btn-don-1')).toBeInTheDocument();
+    expect(screen.queryByTestId('download-acta-btn-don-2')).not.toBeInTheDocument();
+
     fireEvent.click(screen.getByRole('tab', { name: 'Diezmos' }));
     expect(screen.getByText('Diego Martínez')).toBeInTheDocument();
     expect(screen.queryByText('Valentina Morales')).not.toBeInTheDocument();

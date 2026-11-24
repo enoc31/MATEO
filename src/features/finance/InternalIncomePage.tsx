@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Banknote, CheckCircle2, Landmark, Save } from 'lucide-react';
+import { ArrowLeft, Banknote, CheckCircle2, Landmark, Plus, Save, UserPlus, X } from 'lucide-react';
 import { api, type Beneficiary } from '../../services/api';
 import { financeApi, type MedioPagoAporte } from '../../services/financeApi';
 import { useAuth } from '../../context/AuthContext';
@@ -18,6 +18,7 @@ import {
   type MultiCurrencyBillCounts,
   type MultiCurrencyRatesToUsd,
 } from '../../utils/currencyDenominations';
+import { buildCashActDescription, createCashActSessionTag } from '../../utils/cashIntakeActPdf';
 import { CashDenominationCounter } from '../../components/CashDenominationCounter';
 
 /**
@@ -507,8 +508,13 @@ export const InternalIncomePageContent: React.FC<{
   const [categoria, setCategoria] = useState<CategoriaAporte>('ofrenda');
   const [fecha, setFecha] = useState(() => getCaracasDateParts().dateString);
   const [actividad, setActividad] = useState('');
+  const [additionalCounters, setAdditionalCounters] = useState<string[]>([]);
+  const [newCounterName, setNewCounterName] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [feedback, setFeedback] = useState<{ msg: string; type: 'success' | 'error' } | null>(null);
+
+  const loggedResponsibleName =
+    profile?.nombre_completo?.trim() || profile?.email || 'Tesorero / Administrador';
 
   // Estado de arqueo de billetes multimoneda (exclusivo para efectivo)
   const [activeCashCone, setActiveCashCone] = useState<CashCurrencyCode>('VES');
@@ -591,6 +597,28 @@ export const InternalIncomePageContent: React.FC<{
     setCashCounts(createEmptyMultiCurrencyCounts());
   };
 
+  const handleAddCounterPerson = (rawName: string) => {
+    const entries = rawName
+      .split(',')
+      .map((s) => s.trim())
+      .filter(Boolean);
+    if (entries.length === 0) return;
+    setAdditionalCounters((prev) => {
+      const next = [...prev];
+      for (const item of entries) {
+        if (!next.includes(item)) {
+          next.push(item);
+        }
+      }
+      return next;
+    });
+    setNewCounterName('');
+  };
+
+  const handleRemoveCounterPerson = (nameToRemove: string) => {
+    setAdditionalCounters((prev) => prev.filter((n) => n !== nameToRemove));
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setFeedback(null);
@@ -623,6 +651,13 @@ export const InternalIncomePageContent: React.FC<{
     setSubmitting(true);
     try {
       const cleanActivity = actividad.trim() || null;
+      const pendingTypedCounters = newCounterName
+        .split(',')
+        .map((s) => s.trim())
+        .filter(Boolean);
+      const finalCounters = Array.from(new Set([...additionalCounters, ...pendingTypedCounters]));
+      const sessionTag = createCashActSessionTag();
+
       for (const coneItem of sessionSummary.activeCones) {
         const appliedRate =
           coneItem.code === 'USD' ? (cashRates.VES > 0 ? cashRates.VES : null) : coneItem.rateToUsd;
@@ -634,9 +669,14 @@ export const InternalIncomePageContent: React.FC<{
               ? parseFloat((coneItem.totalAmountOriginal * cashRates.VES).toFixed(2))
               : null;
 
-        const desc = `${categoria.toUpperCase()} — Registro Interno${
-          cleanActivity ? ` (${cleanActivity})` : ''
-        } | ${coneItem.breakdownText}`;
+        const desc = buildCashActDescription({
+          categoria,
+          actividad: cleanActivity,
+          responsibleUser: loggedResponsibleName,
+          additionalCounters: finalCounters,
+          sessionTag,
+          coneSummary: coneItem,
+        });
 
         await financeApi.registrarAporteInterno({
           ong_id: resolvedOngId,
@@ -844,6 +884,150 @@ export const InternalIncomePageContent: React.FC<{
             value={actividad}
             onChange={(e) => setActividad(e.target.value)}
           />
+        </div>
+
+        {/* Comisión de Conteo para el Acta de Ingreso */}
+        <div
+          style={{
+            border: '1px solid #cbd5e1',
+            borderRadius: '10px',
+            backgroundColor: '#f8fafc',
+            padding: '1rem',
+            display: 'grid',
+            gap: '0.75rem',
+          }}
+        >
+          <div
+            style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              flexWrap: 'wrap',
+              gap: '0.5rem',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
+              <UserPlus size={18} color="var(--primary)" />
+              <strong style={{ fontSize: '0.9rem', color: '#0f172a' }}>
+                Comisión de Conteo (Para el Acta de Ingreso en PDF)
+              </strong>
+            </div>
+            <span style={{ fontSize: '0.8rem', color: '#475569' }}>
+              Responsable principal:{' '}
+              <strong style={{ color: 'var(--primary)' }}>{loggedResponsibleName}</strong>
+            </span>
+          </div>
+
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
+              gap: '0.75rem',
+              alignItems: 'end',
+            }}
+          >
+            <div>
+              <label htmlFor="int-page-counter-input" className="form-field-label">
+                Personas adicionales involucradas en el conteo
+              </label>
+              <div style={{ display: 'flex', gap: '0.45rem' }}>
+                <input
+                  id="int-page-counter-input"
+                  data-testid="additional-counter-input"
+                  type="text"
+                  className="form-input"
+                  placeholder="Ej: Pedro Gómez, María Rodríguez"
+                  value={newCounterName}
+                  onChange={(e) => setNewCounterName(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      handleAddCounterPerson(newCounterName);
+                    }
+                  }}
+                />
+                <button
+                  type="button"
+                  data-testid="add-counter-btn"
+                  className="btn btn-outline"
+                  onClick={() => handleAddCounterPerson(newCounterName)}
+                  style={{
+                    whiteSpace: 'nowrap',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '0.3rem',
+                  }}
+                >
+                  <Plus size={15} /> Agregar
+                </button>
+              </div>
+            </div>
+
+            {members.length > 0 && (
+              <div>
+                <label htmlFor="int-page-counter-member" className="form-field-label">
+                  O seleccionar miembro del directorio
+                </label>
+                <select
+                  id="int-page-counter-member"
+                  className="form-input"
+                  value=""
+                  onChange={(e) => {
+                    const selected = members.find((m) => m.id === e.target.value);
+                    if (selected) {
+                      handleAddCounterPerson(`${selected.nombre} ${selected.apellido}`.trim());
+                    }
+                  }}
+                >
+                  <option value="">+ Seleccionar miembro asistente al conteo...</option>
+                  {members.map((m) => (
+                    <option key={m.id} value={m.id}>
+                      {m.nombre} {m.apellido} ({m.cedula})
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+          </div>
+
+          {additionalCounters.length > 0 && (
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.45rem' }}>
+              {additionalCounters.map((person) => (
+                <span
+                  key={person}
+                  data-testid={`counter-chip-${person}`}
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '0.35rem',
+                    padding: '0.28rem 0.65rem',
+                    borderRadius: '999px',
+                    backgroundColor: '#e0f2fe',
+                    color: '#0369a1',
+                    fontSize: '0.8rem',
+                    fontWeight: 700,
+                  }}
+                >
+                  {person}
+                  <button
+                    type="button"
+                    aria-label={`Quitar a ${person} del conteo`}
+                    onClick={() => handleRemoveCounterPerson(person)}
+                    style={{
+                      background: 'none',
+                      border: 'none',
+                      color: '#0369a1',
+                      cursor: 'pointer',
+                      padding: 0,
+                      display: 'inline-flex',
+                    }}
+                  >
+                    <X size={13} />
+                  </button>
+                </span>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Pantalla completa de Arqueo de Billetes por Especie Monetaria */}
