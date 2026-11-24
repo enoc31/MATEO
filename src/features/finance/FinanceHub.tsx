@@ -364,6 +364,8 @@ export const FinanceHubContent: React.FC<{ navigate: (path: string) => void }> =
               onImportStatement={() => navigate('/app/importar-extracto')}
               onRegisterInternal={() => navigate('/app/registrar-aporte')}
               onOpenCashCounter={() => navigate('/app/arqueo-efectivo')}
+              organizationName={activeOng?.nombre || 'Iglesia'}
+              loggedUserName={profile?.nombre_completo || profile?.email}
             />
           )}
 

@@ -91,6 +91,14 @@ describe('InternalIncomePage', () => {
       expect(screen.getByTestId('rate-input-VES')).toHaveValue(50);
     });
 
+    // Add additional people involved in the cash count
+    fireEvent.change(screen.getByTestId('additional-counter-input'), {
+      target: { value: 'Pedro Gómez, María Rodríguez' },
+    });
+    fireEvent.click(screen.getByTestId('add-counter-btn'));
+    expect(screen.getByTestId('counter-chip-Pedro Gómez')).toBeInTheDocument();
+    expect(screen.getByTestId('counter-chip-María Rodríguez')).toBeInTheDocument();
+
     // Count 2 bills of Bs. 500 (= Bs. 1.000 -> $20 USD)
     fireEvent.change(screen.getByTestId('bill-input-VES-500'), { target: { value: '2' } });
 
@@ -104,6 +112,13 @@ describe('InternalIncomePage', () => {
     await waitFor(() => {
       expect(financeApi.registrarAporteInterno).toHaveBeenCalledTimes(2);
     });
+
+    expect(financeApi.registrarAporteInterno).toHaveBeenNthCalledWith(
+      1,
+      expect.objectContaining({
+        descripcion: expect.stringContaining('Conteo adicional: Pedro Gómez, María Rodríguez'),
+      }),
+    );
 
     expect(await screen.findByText(/2 conos monetarios/i)).toBeInTheDocument();
   });

@@ -7,6 +7,7 @@ import {
   Clock,
   Mailbox,
   DollarSign,
+  FileText,
   Landmark,
   Scale,
   ClipboardList,
@@ -14,6 +15,7 @@ import {
 import { api } from '../../services/api';
 import type { Project, Donation, Donante } from '../../services/api';
 import { formatDateForFrontEnd } from '../../utils/formatters';
+import { generateCashIntakeActPdf } from '../../utils/cashIntakeActPdf';
 import { useAuth } from '../../context/AuthContext';
 
 const formatCurrency = (amount: number) =>
@@ -38,7 +40,7 @@ export const IncomesManager: React.FC = () => {
 export const IncomesManagerContent: React.FC<{ navigate: (path: string) => void }> = ({
   navigate,
 }) => {
-  const { profile } = useAuth();
+  const { profile, activeOng } = useAuth();
   const [loading, setLoading] = useState(true);
 
   // Data
@@ -560,6 +562,37 @@ export const IncomesManagerContent: React.FC<{ navigate: (path: string) => void 
                               </span>
                             )}
                           </span>
+                          {d.medio_pago === 'efectivo' && (
+                            <button
+                              type="button"
+                              onClick={() =>
+                                generateCashIntakeActPdf({
+                                  donation: d,
+                                  allDonations: donations,
+                                  organizationName: activeOng?.nombre || 'Iglesia / Organización',
+                                  loggedUserName:
+                                    profile?.nombre_completo || profile?.email || 'Tesorero',
+                                })
+                              }
+                              style={{
+                                marginTop: '0.15rem',
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '0.25rem',
+                                background: 'none',
+                                border: 'none',
+                                padding: 0,
+                                color: 'var(--primary)',
+                                fontWeight: 700,
+                                fontSize: '0.72rem',
+                                textDecoration: 'underline',
+                                cursor: 'pointer',
+                                whiteSpace: 'nowrap',
+                              }}
+                            >
+                              <FileText size={12} /> Acta de Ingreso
+                            </button>
+                          )}
                         </div>
                       </td>
                       <td
