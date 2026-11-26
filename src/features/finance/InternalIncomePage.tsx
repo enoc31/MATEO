@@ -20,6 +20,7 @@ import {
 } from '../../utils/currencyDenominations';
 import { buildCashActDescription, createCashActSessionTag } from '../../utils/cashIntakeActPdf';
 import { CashDenominationCounter } from '../../components/CashDenominationCounter';
+import { MemberAutocomplete } from '../../components/MemberAutocomplete';
 
 /**
  * Pantalla dedicada 1 (Sin Modal):
@@ -45,7 +46,7 @@ export const InternalBankIncomePageContent: React.FC<{
 
   const [members, setMembers] = useState<Beneficiary[]>([]);
   const [miembroId, setMiembroId] = useState('');
-  const [donanteNombre, setDonanteNombre] = useState('Aporte Interno');
+  const [donanteNombre, setDonanteNombre] = useState('');
   const [categoria, setCategoria] = useState<CategoriaAporte>('ofrenda');
   const [moneda, setMoneda] = useState<'USD' | 'VES'>('USD');
   const [montoOriginal, setMontoOriginal] = useState('');
@@ -84,19 +85,27 @@ export const InternalBankIncomePageContent: React.FC<{
     void loadData();
   }, [fecha]);
 
-  const handleMemberSelect = (id: string) => {
-    setMiembroId(id);
-    if (id) {
-      const m = members.find((item) => item.id === id);
-      if (m) setDonanteNombre(`${m.nombre} ${m.apellido}`.trim());
+  const handleMemberSelect = (member: Beneficiary | null) => {
+    if (member) {
+      setMiembroId(member.id);
+      setDonanteNombre(`${member.nombre} ${member.apellido}`.trim());
     } else {
-      setDonanteNombre('Aporte Interno');
+      setMiembroId('');
+      setDonanteNombre('');
     }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setFeedback(null);
+
+    if (!miembroId) {
+      setFeedback({
+        msg: 'Debe seleccionar un miembro vinculado para registrar el aporte interno.',
+        type: 'error',
+      });
+      return;
+    }
 
     const numMonto = parseFloat(montoOriginal);
     if (isNaN(numMonto) || numMonto <= 0) {
@@ -126,7 +135,7 @@ export const InternalBankIncomePageContent: React.FC<{
     try {
       await financeApi.registrarAporteInterno({
         ong_id: resolvedOngId,
-        miembro_id: miembroId || null,
+        miembro_id: miembroId,
         donante_nombre: donanteNombre,
         categoria_aporte: categoria,
         moneda,
@@ -241,24 +250,14 @@ export const InternalBankIncomePageContent: React.FC<{
             gap: '1rem',
           }}
         >
-          <div>
-            <label htmlFor="int-bank-miembro" className="form-field-label">
-              Miembro vinculado (opcional)
-            </label>
-            <select
-              id="int-bank-miembro"
-              className="form-input"
-              value={miembroId}
-              onChange={(e) => handleMemberSelect(e.target.value)}
-            >
-              <option value="">General / Sin miembro específico</option>
-              {members.map((m) => (
-                <option key={m.id} value={m.id}>
-                  {m.nombre} {m.apellido} ({m.cedula})
-                </option>
-              ))}
-            </select>
-          </div>
+          <MemberAutocomplete
+            id="int-bank-miembro"
+            label="Miembro vinculado *"
+            members={members}
+            selectedMemberId={miembroId}
+            onSelect={handleMemberSelect}
+            required
+          />
 
           <div>
             <label htmlFor="int-bank-nombre" className="form-field-label">
@@ -503,7 +502,6 @@ export const InternalIncomePageContent: React.FC<{
   const resolvedOngId = activeOng?.id || profile?.ong_id || '11111111-1111-1111-1111-111111111111';
 
   const [members, setMembers] = useState<Beneficiary[]>([]);
-  const [miembroId, setMiembroId] = useState('');
   const [donanteNombre, setDonanteNombre] = useState('Conteo de Ofrenda en Culto');
   const [categoria, setCategoria] = useState<CategoriaAporte>('ofrenda');
   const [fecha, setFecha] = useState(() => getCaracasDateParts().dateString);
@@ -554,16 +552,6 @@ export const InternalIncomePageContent: React.FC<{
   }, [fecha]);
 
   const sessionSummary = calculateMultiCurrencySessionSummary(cashCounts, cashRates);
-
-  const handleMemberSelect = (id: string) => {
-    setMiembroId(id);
-    if (id) {
-      const m = members.find((item) => item.id === id);
-      if (m) setDonanteNombre(`${m.nombre} ${m.apellido}`.trim());
-    } else {
-      setDonanteNombre('Conteo de Ofrenda en Culto');
-    }
-  };
 
   const handleChangeCashCount = (
     currency: CashCurrencyCode,
@@ -623,6 +611,15 @@ export const InternalIncomePageContent: React.FC<{
     e.preventDefault();
     setFeedback(null);
 
+    const cleanActivity = actividad.trim();
+    if (!cleanActivity) {
+      setFeedback({
+        msg: 'Debe indicar la actividad, culto o servicio asociado al arqueo de efectivo.',
+        type: 'error',
+      });
+      return;
+    }
+
     if (sessionSummary.activeCones.length === 0) {
       setFeedback({
         msg: 'Debe ingresar la cantidad de billetes contados en al menos un cono monetario.',
@@ -650,7 +647,6 @@ export const InternalIncomePageContent: React.FC<{
 
     setSubmitting(true);
     try {
-      const cleanActivity = actividad.trim() || null;
       const pendingTypedCounters = newCounterName
         .split(',')
         .map((s) => s.trim())
@@ -680,7 +676,7 @@ export const InternalIncomePageContent: React.FC<{
 
         await financeApi.registrarAporteInterno({
           ong_id: resolvedOngId,
-          miembro_id: miembroId || null,
+          miembro_id: null,
           donante_nombre: donanteNombre,
           categoria_aporte: categoria,
           moneda: coneItem.code,
@@ -807,25 +803,6 @@ export const InternalIncomePageContent: React.FC<{
           }}
         >
           <div>
-            <label htmlFor="int-page-miembro" className="form-field-label">
-              Miembro vinculado (opcional)
-            </label>
-            <select
-              id="int-page-miembro"
-              className="form-input"
-              value={miembroId}
-              onChange={(e) => handleMemberSelect(e.target.value)}
-            >
-              <option value="">General / Conteo de Culto</option>
-              {members.map((m) => (
-                <option key={m.id} value={m.id}>
-                  {m.nombre} {m.apellido} ({m.cedula})
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div>
             <label htmlFor="int-page-nombre" className="form-field-label">
               Aportante / Concepto *
             </label>
@@ -874,7 +851,7 @@ export const InternalIncomePageContent: React.FC<{
 
         <div>
           <label htmlFor="int-page-actividad" className="form-field-label">
-            Culto / Servicio / Actividad / Responsable (opcional)
+            Culto / Servicio / Actividad asociada *
           </label>
           <input
             id="int-page-actividad"
@@ -883,6 +860,7 @@ export const InternalIncomePageContent: React.FC<{
             placeholder="Ej: Culto Dominical 10:00 AM"
             value={actividad}
             onChange={(e) => setActividad(e.target.value)}
+            required
           />
         </div>
 
