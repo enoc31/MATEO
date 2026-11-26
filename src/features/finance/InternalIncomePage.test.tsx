@@ -54,7 +54,19 @@ describe('InternalIncomePage', () => {
         tipo_organizacion: 'ekklesia',
       },
     } as ReturnType<typeof AuthContextModule.useAuth>);
-    vi.mocked(api.getBeneficiaries).mockResolvedValue([]);
+    vi.mocked(api.getBeneficiaries).mockResolvedValue([
+      {
+        id: 'mem-1',
+        jornada_id: '',
+        nombre: 'Carlos',
+        apellido: 'Pérez',
+        cedula: 'V-12345678',
+        sexo: 'M',
+        fecha_nacimiento: '1990-01-01',
+        url_firma: null,
+        created_at: '',
+      },
+    ]);
     vi.mocked(api.getTasasBCV).mockResolvedValue([]);
     vi.mocked(api.getTasaByDate).mockResolvedValue({
       id: 't-1',
@@ -86,9 +98,15 @@ describe('InternalIncomePage', () => {
 
     expect(await screen.findByTestId('internal-income-page')).toBeInTheDocument();
     expect(screen.getByTestId('cash-denomination-counter')).toBeInTheDocument();
+    expect(screen.queryByLabelText(/Miembro vinculado/i)).not.toBeInTheDocument();
 
     await waitFor(() => {
       expect(screen.getByTestId('rate-input-VES')).toHaveValue(50);
+    });
+
+    // Add associated activity (required for cash count)
+    fireEvent.change(screen.getByLabelText(/Culto \/ Servicio \/ Actividad asociada \*/i), {
+      target: { value: 'Culto Dominical 10:00 AM' },
     });
 
     // Add additional people involved in the cash count
@@ -116,6 +134,8 @@ describe('InternalIncomePage', () => {
     expect(financeApi.registrarAporteInterno).toHaveBeenNthCalledWith(
       1,
       expect.objectContaining({
+        miembro_id: null,
+        actividad_o_responsable: 'Culto Dominical 10:00 AM',
         descripcion: expect.stringContaining('Conteo adicional: Pedro Gómez, María Rodríguez'),
       }),
     );
@@ -123,12 +143,16 @@ describe('InternalIncomePage', () => {
     expect(await screen.findByText(/2 conos monetarios/i)).toBeInTheDocument();
   });
 
-  it('renders dedicated full-page InternalBankIncomePageContent for bank transfers and mobile payments without modals', async () => {
+  it('renders dedicated full-page InternalBankIncomePageContent requiring a linked member and without general option', async () => {
     const navigate = vi.fn();
     render(<InternalBankIncomePageContent navigate={navigate} />);
 
     expect(await screen.findByTestId('internal-bank-income-page')).toBeInTheDocument();
     expect(screen.queryByTestId('cash-denomination-counter')).not.toBeInTheDocument();
+    expect(screen.queryByText(/General \/ Sin miembro específico/i)).not.toBeInTheDocument();
+
+    const memberInput = await screen.findByLabelText(/Miembro vinculado \*/i);
+    expect(memberInput.tagName).toBe('INPUT');
 
     fireEvent.change(screen.getByLabelText(/Monto \(USD\)/i), {
       target: { value: '250' },
@@ -137,11 +161,28 @@ describe('InternalIncomePage', () => {
       target: { value: 'REF-5544' },
     });
 
+    // Submitting without a member must be blocked
+    const form = screen.getByRole('button', { name: /Guardar Aporte/i }).closest('form');
+    expect(form).not.toBeNull();
+    fireEvent.submit(form as HTMLFormElement);
+
+    expect(
+      await screen.findByText(
+        /Debe seleccionar un miembro vinculado para registrar el aporte interno/i,
+      ),
+    ).toBeInTheDocument();
+    expect(financeApi.registrarAporteInterno).not.toHaveBeenCalled();
+
+    // Searching and selecting a member enables successful submission
+    fireEvent.change(memberInput, { target: { value: 'Carlos' } });
+    fireEvent.click(await screen.findByRole('option', { name: /Carlos Pérez/i }));
     fireEvent.click(screen.getByRole('button', { name: /Guardar Aporte/i }));
 
     await waitFor(() => {
       expect(financeApi.registrarAporteInterno).toHaveBeenCalledWith(
         expect.objectContaining({
+          miembro_id: 'mem-1',
+          donante_nombre: 'Carlos Pérez',
           moneda: 'USD',
           medio_pago: 'transferencia',
           monto_original: 250,

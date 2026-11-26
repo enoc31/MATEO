@@ -9,6 +9,7 @@ import {
   type CategoriaAporte,
 } from '../../utils/rolePermissions';
 import { getCaracasDateParts } from '../../utils/formatters';
+import { MemberAutocomplete } from '../../components/MemberAutocomplete';
 
 interface InternalIncomeModalProps {
   isOpen: boolean;
@@ -29,7 +30,7 @@ export const InternalIncomeModal: React.FC<InternalIncomeModalProps> = ({
 }) => {
   const [members, setMembers] = useState<Beneficiary[]>([]);
   const [miembroId, setMiembroId] = useState('');
-  const [donanteNombre, setDonanteNombre] = useState('Aporte Interno');
+  const [donanteNombre, setDonanteNombre] = useState('');
   const [categoria, setCategoria] = useState<CategoriaAporte>('ofrenda');
   const [moneda, setMoneda] = useState<'USD' | 'VES'>('USD');
   const [montoOriginal, setMontoOriginal] = useState('');
@@ -70,18 +71,26 @@ export const InternalIncomeModal: React.FC<InternalIncomeModalProps> = ({
 
   if (!isOpen) return null;
 
-  const handleMemberSelect = (id: string) => {
-    setMiembroId(id);
-    if (id) {
-      const m = members.find((item) => item.id === id);
-      if (m) setDonanteNombre(`${m.nombre} ${m.apellido}`.trim());
+  const handleMemberSelect = (member: Beneficiary | null) => {
+    if (member) {
+      setMiembroId(member.id);
+      setDonanteNombre(`${member.nombre} ${member.apellido}`.trim());
     } else {
-      setDonanteNombre('Aporte Interno');
+      setMiembroId('');
+      setDonanteNombre('');
     }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!miembroId) {
+      onFeedback(
+        'Debe seleccionar un miembro vinculado para registrar el aporte interno.',
+        'error',
+      );
+      return;
+    }
+
     const numMonto = parseFloat(montoOriginal);
     if (isNaN(numMonto) || numMonto <= 0) {
       onFeedback('El monto debe ser mayor a 0.', 'error');
@@ -107,7 +116,7 @@ export const InternalIncomeModal: React.FC<InternalIncomeModalProps> = ({
     try {
       await financeApi.registrarAporteInterno({
         ong_id: ongId,
-        miembro_id: miembroId || null,
+        miembro_id: miembroId,
         donante_nombre: donanteNombre,
         categoria_aporte: categoria,
         moneda,
@@ -186,24 +195,14 @@ export const InternalIncomeModal: React.FC<InternalIncomeModalProps> = ({
             gap: '0.75rem',
           }}
         >
-          <div>
-            <label htmlFor="int-miembro" className="form-field-label">
-              Miembro vinculado (opcional)
-            </label>
-            <select
-              id="int-miembro"
-              className="form-input"
-              value={miembroId}
-              onChange={(e) => handleMemberSelect(e.target.value)}
-            >
-              <option value="">General / Sin miembro específico</option>
-              {members.map((m) => (
-                <option key={m.id} value={m.id}>
-                  {m.nombre} {m.apellido} ({m.cedula})
-                </option>
-              ))}
-            </select>
-          </div>
+          <MemberAutocomplete
+            id="int-miembro"
+            label="Miembro vinculado *"
+            members={members}
+            selectedMemberId={miembroId}
+            onSelect={handleMemberSelect}
+            required
+          />
 
           <div>
             <label htmlFor="int-nombre" className="form-field-label">

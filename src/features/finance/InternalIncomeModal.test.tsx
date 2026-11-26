@@ -32,7 +32,19 @@ vi.mock('../../services/financeApi', async (importOriginal) => {
 describe('InternalIncomeModal', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.mocked(api.getBeneficiaries).mockResolvedValue([]);
+    vi.mocked(api.getBeneficiaries).mockResolvedValue([
+      {
+        id: 'mem-1',
+        jornada_id: '',
+        nombre: 'Carlos',
+        apellido: 'Pérez',
+        cedula: 'V-12345678',
+        sexo: 'M',
+        fecha_nacimiento: '1990-01-01',
+        url_firma: null,
+        created_at: '',
+      },
+    ]);
     vi.mocked(api.getTasasBCV).mockResolvedValue([]);
     vi.mocked(api.getTasaByDate).mockResolvedValue({
       id: 't-1',
@@ -78,7 +90,13 @@ describe('InternalIncomeModal', () => {
       await screen.findByText(/Registrar Aporte Interno \(Transferencia \/ Pago Móvil\)/i),
     ).toBeInTheDocument();
     expect(screen.queryByTestId('cash-denomination-counter')).not.toBeInTheDocument();
+    expect(screen.queryByText(/General \/ Sin miembro específico/i)).not.toBeInTheDocument();
 
+    const memberInput = await screen.findByLabelText(/Miembro vinculado \*/i);
+    expect(memberInput.tagName).toBe('INPUT');
+
+    fireEvent.change(memberInput, { target: { value: 'Carlos' } });
+    fireEvent.click(await screen.findByRole('option', { name: /Carlos Pérez/i }));
     fireEvent.change(screen.getByLabelText(/Monto \(USD\)/i), {
       target: { value: '150' },
     });
@@ -91,6 +109,8 @@ describe('InternalIncomeModal', () => {
     await waitFor(() => {
       expect(financeApi.registrarAporteInterno).toHaveBeenCalledWith(
         expect.objectContaining({
+          miembro_id: 'mem-1',
+          donante_nombre: 'Carlos Pérez',
           moneda: 'USD',
           medio_pago: 'transferencia',
           monto_original: 150,
