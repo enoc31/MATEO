@@ -3,16 +3,9 @@ import React, { useState, useEffect, useRef } from 'react';
 import { api } from '../../services/api';
 import type { TasaBCV } from '../../services/api';
 import { formatDateForFrontEnd, getCaracasDateParts } from '../../utils/formatters';
-import { forceSyncBCVRate } from '../../utils/bcvSync';
+import { syncLiveBCVWithHistory } from '../../utils/bcvSync';
 import { useAuth } from '../../context/AuthContext';
 import Papa from 'papaparse';
-
-/** Shape of each element returned by the DolarVzla historical API. */
-interface DolarVzlaResponseItem {
-  date?: string;
-  usd?: number;
-  [key: string]: unknown;
-}
 
 export const TasasManager: React.FC = () => {
   const { profile } = useAuth();
@@ -22,7 +15,7 @@ export const TasasManager: React.FC = () => {
   const [syncingHistory, setSyncingHistory] = useState(false);
 
   // Formulario manual
-  const [fechaManual, setFechaManual] = useState(new Date().toISOString().split('T')[0]);
+  const [fechaManual, setFechaManual] = useState(() => getCaracasDateParts().dateString);
   const [tasaManual, setTasaManual] = useState('');
 
   // Edición en tabla
@@ -51,69 +44,23 @@ export const TasasManager: React.FC = () => {
     loadTasas();
   }, []);
 
-  // Sincronizar histórico desde API (con fallback en cascada a dolarapi / bcvSync)
+  // Sincronizar histórico y tasa vigente desde API (/api/tasas/live + fallback en cascada)
   const handleSyncHistory = async () => {
     setSyncingHistory(true);
     try {
-      let syncedCount = 0;
-      try {
-        const res = await fetch('https://rates.dolarvzla.com/bcv/2026/list.json');
-        if (res.ok) {
-          const data = await res.json();
-          const parsed: {
-            fecha: string;
-            tasa: number;
-            fuente: 'bcv_api' | 'manual' | 'historico_csv';
-          }[] = [];
-
-          if (Array.isArray(data)) {
-            (data as DolarVzlaResponseItem[]).forEach((item) => {
-              if (item && item.date && item.usd) {
-                parsed.push({
-                  fecha: item.date,
-                  tasa: item.usd,
-                  fuente: 'bcv_api',
-                });
-              }
-            });
-          } else if (data && typeof data === 'object') {
-            Object.values(data as Record<string, DolarVzlaResponseItem>).forEach((item) => {
-              if (item && item.date && item.usd) {
-                parsed.push({
-                  fecha: item.date,
-                  tasa: item.usd,
-                  fuente: 'bcv_api',
-                });
-              }
-            });
-          }
-
-          if (parsed.length > 0) {
-            const recentRates = parsed.sort((a, b) => b.fecha.localeCompare(a.fecha)).slice(0, 35);
-            await api.bulkUpsertTasasBCV(recentRates);
-            syncedCount = recentRates.length;
-          }
-        }
-      } catch (histErr) {
-        console.warn('No se pudo obtener histórico de dolarvzla, intentando API en vivo:', histErr);
-      }
-
-      // Siempre intentar sincronizar también la tasa vigente del día en vivo (ve.dolarapi.com)
-      const liveRate = await forceSyncBCVRate();
+      const result = await syncLiveBCVWithHistory();
       await loadTasas();
 
-      if (syncedCount > 0 || liveRate) {
+      if (result) {
         alert(
-          liveRate
-            ? `✅ Tasa BCV actualizada: ${liveRate.toFixed(4)} Bs/$${syncedCount > 0 ? ` (${syncedCount} registros históricos sincronizados)` : ''}.`
-            : `✅ Se sincronizaron ${syncedCount} tasas históricas correctamente.`,
+          `✅ Tasa BCV actualizada: ${result.latestRate.toFixed(4)} Bs/$ (${formatDateForFrontEnd(result.latestDate)}) — ${result.syncedCount} registros sincronizados.`,
         );
       } else {
-        alert('No se pudieron obtener tasas nuevas desde las APIs públicas.');
+        alert('No se pudieron obtener tasas nuevas desde las APIs públicas del BCV.');
       }
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err);
-      alert('Error obteniendo el histórico: ' + msg);
+      alert('Error al actualizar la tasa BCV: ' + msg);
     } finally {
       setSyncingHistory(false);
     }

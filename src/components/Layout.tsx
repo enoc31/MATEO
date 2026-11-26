@@ -124,21 +124,18 @@ export const LayoutContent: React.FC<
     setIsSyncingRate(true);
     try {
       const newRate = await forceSyncBCVRate();
-      if (newRate && newRate > 1) {
+      const { dateString } = getCaracasDateParts();
+      const tasaHoy = await api.getTasaByDate(dateString);
+      if (tasaHoy && tasaHoy.tasa > 1) {
+        setCurrentRate(tasaHoy.tasa);
+        setRateDate(tasaHoy.fecha);
+      } else if (newRate && newRate > 1) {
         setCurrentRate(newRate);
         const allRates = await api.getTasasBCV();
         if (allRates && allRates.length > 0) setRateDate(allRates[0].fecha);
-      } else {
-        // Volver a leer lo que hay en la BD/localStorage
-        const { dateString } = getCaracasDateParts();
-        const tasaHoy = await api.getTasaByDate(dateString);
-        if (tasaHoy && tasaHoy.tasa > 1) {
-          setCurrentRate(tasaHoy.tasa);
-          setRateDate(tasaHoy.fecha);
-        }
       }
-    } catch {
-      // silencioso: la tasa actual sigue siendo válida
+    } catch (err) {
+      console.error('Error refrescando tasa BCV desde el header:', err);
     } finally {
       setIsSyncingRate(false);
     }

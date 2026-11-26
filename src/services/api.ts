@@ -1717,34 +1717,69 @@ export const api = {
     }
   },
 
-  upsertTasaBCV: async (tasa: Omit<TasaBCV, 'id' | 'created_at'>): Promise<TasaBCV> => {
+  upsertTasaBCV: async (
+    tasa: Omit<TasaBCV, 'id' | 'created_at'> & { ong_id?: string },
+  ): Promise<TasaBCV> => {
     if (!isSimulationMode) {
-      try {
-        // 1. Buscar si ya existe registro para esta fecha
-        let query = supabase.from('tasas_bcv').select('id').eq('fecha', tasa.fecha);
-        if ('ong_id' in tasa && tasa.ong_id) {
-          query = query.eq('ong_id', tasa.ong_id);
+      let resolvedOngId = tasa.ong_id || null;
+      if (!resolvedOngId) {
+        const { data: userRes } = await supabase.auth.getUser();
+        const uid = userRes?.user?.id;
+        if (uid) {
+          const { data: prof } = await supabase
+            .from('usuarios_perfiles')
+            .select('ong_id')
+            .eq('id', uid)
+            .maybeSingle();
+          resolvedOngId = (prof as { ong_id?: string | null } | null)?.ong_id || null;
         }
-        const { data: existing } = await query.maybeSingle();
-
-        if (existing && existing.id) {
-          const { data, error } = await supabase
-            .from('tasas_bcv')
-            .update({ tasa: tasa.tasa, fuente: tasa.fuente || 'bcv_api' })
-            .eq('id', existing.id)
-            .select()
-            .single();
-          if (!error && data) return data as TasaBCV;
-        }
-
-        const { data, error } = await supabase.from('tasas_bcv').insert(tasa).select().single();
-        if (!error && data) return data as TasaBCV;
-      } catch (err) {
-        console.warn('Aviso al guardar en Supabase tasas_bcv, registrando local:', err);
       }
+
+      const payload = {
+        fecha: tasa.fecha,
+        tasa: tasa.tasa,
+        fuente: tasa.fuente || 'bcv_api',
+        ...(resolvedOngId ? { ong_id: resolvedOngId } : {}),
+      };
+
+      let { data, error } = await supabase
+        .from('tasas_bcv')
+        .upsert(payload, { onConflict: 'ong_id,fecha' })
+        .select()
+        .single();
+
+      const isConstraintMismatch =
+        error &&
+        (error.code === '42P10' ||
+          error.message
+            ?.toLowerCase()
+            .includes('no unique or exclusion constraint matching the on conflict'));
+
+      if (isConstraintMismatch) {
+        const fallback = await supabase
+          .from('tasas_bcv')
+          .upsert(
+            {
+              fecha: tasa.fecha,
+              tasa: tasa.tasa,
+              fuente: tasa.fuente || 'bcv_api',
+            },
+            { onConflict: 'fecha' },
+          )
+          .select()
+          .single();
+        data = fallback.data;
+        error = fallback.error;
+      }
+
+      if (error) {
+        console.error('Error al guardar en Supabase tasas_bcv:', error);
+        throw new Error(error.message || 'No se pudo guardar la tasa BCV en la base de datos.');
+      }
+      if (data) return data as TasaBCV;
     }
 
-    // Modo simulación o fallback seguro en localStorage
+    // Modo simulación en localStorage
     let tasas: TasaBCV[] = JSON.parse(localStorage.getItem('cnbv_tasas_bcv') || '[]');
     tasas = tasas.filter((t: TasaBCV) => t.tasa !== 773.3125);
 
@@ -1772,24 +1807,71 @@ export const api = {
       fuente?: 'bcv_api' | 'manual' | 'historico_csv';
     }>,
   ): Promise<TasaBCV[]> => {
-    const formatted = tasasInput.map((t) => ({
-      fecha: t.fecha,
-      tasa: t.tasa,
-      fuente: t.fuente || 'historico_csv',
-    }));
+    // Deduplicar por fecha para evitar errores de ON CONFLICT en el mismo lote
+    const byDate = new Map<
+      string,
+      { fecha: string; tasa: number; fuente: 'bcv_api' | 'manual' | 'historico_csv' }
+    >();
+    for (const t of tasasInput) {
+      if (!t.fecha || !Number.isFinite(t.tasa) || t.tasa <= 0) continue;
+      byDate.set(t.fecha, {
+        fecha: t.fecha,
+        tasa: t.tasa,
+        fuente: t.fuente || 'historico_csv',
+      });
+    }
+    const deduped = Array.from(byDate.values());
+    if (deduped.length === 0) return [];
 
     if (!isSimulationMode) {
-      try {
-        const { data, error } = await supabase.from('tasas_bcv').insert(formatted).select();
-        if (!error && data) return data as TasaBCV[];
-      } catch (err) {
-        console.warn('Aviso en bulkUpsertTasasBCV Supabase:', err);
+      let resolvedOngId: string | null = null;
+      const { data: userRes } = await supabase.auth.getUser();
+      const uid = userRes?.user?.id;
+      if (uid) {
+        const { data: prof } = await supabase
+          .from('usuarios_perfiles')
+          .select('ong_id')
+          .eq('id', uid)
+          .maybeSingle();
+        resolvedOngId = (prof as { ong_id?: string | null } | null)?.ong_id || null;
       }
+
+      const payload = deduped.map((t) => ({
+        ...t,
+        ...(resolvedOngId ? { ong_id: resolvedOngId } : {}),
+      }));
+
+      let { data, error } = await supabase
+        .from('tasas_bcv')
+        .upsert(payload, { onConflict: 'ong_id,fecha' })
+        .select();
+
+      const isConstraintMismatch =
+        error &&
+        (error.code === '42P10' ||
+          error.message
+            ?.toLowerCase()
+            .includes('no unique or exclusion constraint matching the on conflict'));
+
+      if (isConstraintMismatch) {
+        const fallback = await supabase
+          .from('tasas_bcv')
+          .upsert(deduped, { onConflict: 'fecha' })
+          .select();
+        data = fallback.data;
+        error = fallback.error;
+      }
+
+      if (error) {
+        console.error('Error en bulkUpsertTasasBCV Supabase:', error);
+        throw new Error(error.message || 'No se pudieron sincronizar las tasas BCV en Supabase.');
+      }
+      if (data) return data as TasaBCV[];
     }
 
     const tasas = JSON.parse(localStorage.getItem('cnbv_tasas_bcv') || '[]');
     const result: TasaBCV[] = [];
-    for (const t of formatted) {
+    for (const t of deduped) {
       const index = tasas.findIndex((x: TasaBCV) => x.fecha === t.fecha);
       const updatedTasa = {
         ...t,
