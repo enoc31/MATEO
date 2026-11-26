@@ -41,7 +41,7 @@ test.describe('Ingresos y Gastos (Ekklesia) & Portal Público de Aportes', () =>
     // 5. Iniciar sesión como Admin ONG y verificar en /app/finance -> Por Verificar
     await loginAs(page, 'Admin ONG');
     await page.goto('/app/finance');
-    await expect(page.getByRole('heading', { name: /Ingresos y Gastos/i })).toBeVisible();
+    await expect(page.getByRole('heading', { name: /^Ingresos$/i })).toBeVisible();
 
     await page.getByRole('tab', { name: /Por Verificar/i }).click();
     await expect(page.getByText('María Fernanda Pérez')).toBeVisible();
@@ -76,12 +76,13 @@ test.describe('Ingresos y Gastos (Ekklesia) & Portal Público de Aportes', () =>
     ).toBeVisible();
   });
 
-  test('el Coordinador en Ingresos y Gastos solo ve la pestaña de Gastos', async ({ page }) => {
+  test('el Coordinador accede al módulo separado de Gastos sin ver Ingresos', async ({ page }) => {
     await prepareSimulatedApp(page, { skipWelcomeFor: 'Coordinador' });
     await loginAs(page, 'Coordinador');
-    await page.goto('/app/finance');
+    await page.goto('/app/expenses');
 
-    await expect(page.getByRole('tab', { name: /^Gastos$/i })).toBeVisible();
+    await expect(page.getByRole('heading', { name: /^Gastos$/i })).toBeVisible();
+    await expect(page.getByRole('tab', { name: /Listado de Gastos/i })).toBeVisible();
     await expect(page.getByRole('tab', { name: /Por Verificar/i })).toHaveCount(0);
     await expect(page.getByRole('tab', { name: /Cuentas & Enlace/i })).toHaveCount(0);
   });

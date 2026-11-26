@@ -31,14 +31,40 @@ export interface SidebarNavProps {
 }
 
 const FINANCE_ITEM_IDS = new Set([
+  'finance',
+  'expenses',
+  'accounting',
+  'inventory',
+  'budgets',
   'incomes',
   'requisitions',
   'field-entry',
   'reconciliation',
   'audit',
-  'budgets',
   'tasas',
 ]);
+
+const TESORERIA_PATHS = new Set(['reconciliation', 'arqueo-efectivo']);
+const INGRESOS_GASTOS_PATHS = new Set(['finance', 'expenses', 'registrar-aporte']);
+const ALL_FINANCE_PATHS = new Set([
+  ...FINANCE_ITEM_IDS,
+  ...TESORERIA_PATHS,
+  ...INGRESOS_GASTOS_PATHS,
+  'importar-extracto',
+]);
+
+interface FinanceLeafItem {
+  id: string;
+  label: string;
+  to: string;
+  disabled?: boolean;
+}
+
+interface FinanceTreeGroup {
+  id: string;
+  label: string;
+  children: FinanceLeafItem[];
+}
 
 export const SidebarNav: React.FC<SidebarNavProps> = ({
   nativeLinks = false,
@@ -57,22 +83,123 @@ export const SidebarNav: React.FC<SidebarNavProps> = ({
   onLogout,
 }) => {
   const NavigationLink = nativeLinks ? NativeNavLink : NavLink;
-  const [financeOpen, setFinanceOpen] = useState<boolean>(FINANCE_ITEM_IDS.has(currentPath));
+  const isFinanceActive = ALL_FINANCE_PATHS.has(currentPath);
 
-  const { dashboardItem, financeItems, communityItems } = useMemo(() => {
+  const [financeOpen, setFinanceOpen] = useState<boolean>(isFinanceActive);
+  const [tesoreriaOpen, setTesoreriaOpen] = useState<boolean>(TESORERIA_PATHS.has(currentPath));
+  const [ingresosGastosOpen, setIngresosGastosOpen] = useState<boolean>(
+    INGRESOS_GASTOS_PATHS.has(currentPath),
+  );
+
+  const { dashboardItem, financeTree, legacyFinanceItems, communityItems } = useMemo(() => {
     const dashboard = visibleMenuItems.find((item) => item.id === 'dashboard');
-    const finance = visibleMenuItems.filter((item) => FINANCE_ITEM_IDS.has(item.id));
+    const byId = new Map(visibleMenuItems.map((item) => [item.id, item]));
+
+    const hasEkklesiaFinance =
+      byId.has('finance') ||
+      byId.has('expenses') ||
+      byId.has('accounting') ||
+      byId.has('inventory');
+
+    const treeNodes: (FinanceTreeGroup | FinanceLeafItem)[] = [];
+    const legacyItems: MenuItemConfig[] = [];
+
+    if (hasEkklesiaFinance) {
+      // 1. Tesorería -> Bancos, Efectivo
+      if (byId.has('finance') || byId.has('accounting')) {
+        treeNodes.push({
+          id: 'tesoreria',
+          label: 'Tesorería',
+          children: [
+            { id: 'bancos', label: 'Bancos', to: '/app/reconciliation' },
+            { id: 'efectivo', label: 'Efectivo', to: '/app/arqueo-efectivo' },
+          ],
+        });
+      }
+
+      // 2. Ingresos y Gastos -> Ingresos, Gastos
+      const igChildren: FinanceLeafItem[] = [];
+      const financeItem = byId.get('finance');
+      const expensesItem = byId.get('expenses');
+      if (financeItem) {
+        igChildren.push({
+          id: 'finance',
+          label: 'Ingresos',
+          to: '/app/finance',
+          disabled: financeItem.disabled,
+        });
+      }
+      if (expensesItem) {
+        igChildren.push({
+          id: 'expenses',
+          label: 'Gastos',
+          to: '/app/expenses',
+          disabled: expensesItem.disabled,
+        });
+      }
+      if (igChildren.length > 0) {
+        treeNodes.push({
+          id: 'ingresos-y-gastos',
+          label: 'Ingresos y Gastos',
+          children: igChildren,
+        });
+      }
+
+      // 3. Contabilidad, 4. Inventario, 5. Presupuesto, 6. Monedas y Tasas
+      for (const directId of ['accounting', 'inventory', 'budgets', 'tasas'] as const) {
+        const directItem = byId.get(directId);
+        if (directItem) {
+          treeNodes.push({
+            id: directItem.id,
+            label: directItem.label,
+            to: `/app/${directItem.id}`,
+            disabled: directItem.disabled,
+          });
+        }
+      }
+    } else {
+      // Menú heredado de ONG
+      for (const item of visibleMenuItems) {
+        if (FINANCE_ITEM_IDS.has(item.id)) {
+          legacyItems.push(item);
+        }
+      }
+    }
+
     const community = visibleMenuItems.filter(
       (item) => item.id !== 'dashboard' && !FINANCE_ITEM_IDS.has(item.id),
     );
+
     return {
       dashboardItem: dashboard,
-      financeItems: finance,
+      financeTree: treeNodes,
+      legacyFinanceItems: legacyItems,
       communityItems: community,
     };
   }, [visibleMenuItems]);
 
-  const isFinanceActive = FINANCE_ITEM_IDS.has(currentPath);
+  const hasFinanceSection = financeTree.length > 0 || legacyFinanceItems.length > 0;
+
+  const isGroupNode = (node: FinanceTreeGroup | FinanceLeafItem): node is FinanceTreeGroup =>
+    'children' in node;
+
+  const isSubgroupOpen = (groupId: string): boolean => {
+    if (groupId === 'tesoreria') return tesoreriaOpen;
+    if (groupId === 'ingresos-y-gastos') return ingresosGastosOpen;
+    return false;
+  };
+
+  const toggleSubgroup = (groupId: string) => {
+    if (groupId === 'tesoreria') setTesoreriaOpen((prev) => !prev);
+    if (groupId === 'ingresos-y-gastos') setIngresosGastosOpen((prev) => !prev);
+  };
+
+  const isSubgroupActive = (groupId: string): boolean => {
+    if (groupId === 'tesoreria') return TESORERIA_PATHS.has(currentPath);
+    if (groupId === 'ingresos-y-gastos') return INGRESOS_GASTOS_PATHS.has(currentPath);
+    return false;
+  };
+
   const initials = (userName || 'M')
     .split(' ')
     .filter(Boolean)
@@ -168,7 +295,7 @@ export const SidebarNav: React.FC<SidebarNavProps> = ({
               </li>
             )}
 
-            {financeItems.length > 0 && (
+            {hasFinanceSection && (
               <li className="sn-item-wrap">
                 <button
                   type="button"
@@ -179,7 +306,7 @@ export const SidebarNav: React.FC<SidebarNavProps> = ({
                   <span className="sn-item-icon">
                     <Wallet size={18} strokeWidth={1.8} />
                   </span>
-                  <span className="sn-item-label">Finanzas y Auditoría</span>
+                  <span className="sn-item-label">Finanzas</span>
                   <ChevronDown
                     size={15}
                     className={`sn-item-chevron ${financeOpen ? 'sn-item-chevron--open' : ''}`}
@@ -189,7 +316,73 @@ export const SidebarNav: React.FC<SidebarNavProps> = ({
                 {/* Submenú árbol cuando está expandido */}
                 {(isPinned || isMobileMenuOpen) && financeOpen && (
                   <ul className="sn-submenu">
-                    {financeItems.map((item) => (
+                    {financeTree.map((node) =>
+                      isGroupNode(node) ? (
+                        <li key={node.id}>
+                          <button
+                            type="button"
+                            className={`sn-sublink sn-subgroup-btn ${
+                              isSubgroupActive(node.id) ? 'sn-subgroup-btn--active' : ''
+                            }`}
+                            onClick={() => toggleSubgroup(node.id)}
+                            aria-expanded={isSubgroupOpen(node.id)}
+                          >
+                            <span>{node.label}</span>
+                            <ChevronDown
+                              size={13}
+                              className={`sn-item-chevron ${
+                                isSubgroupOpen(node.id) ? 'sn-item-chevron--open' : ''
+                              }`}
+                            />
+                          </button>
+
+                          {isSubgroupOpen(node.id) && (
+                            <ul className="sn-submenu sn-submenu--nested">
+                              {node.children.map((child) => (
+                                <li key={child.id}>
+                                  {child.disabled ? (
+                                    <span
+                                      className="sn-sublink sn-link--disabled"
+                                      aria-disabled="true"
+                                    >
+                                      {child.label}
+                                    </span>
+                                  ) : (
+                                    <NavigationLink
+                                      to={child.to}
+                                      className={({ isActive }) =>
+                                        `sn-sublink ${isActive ? 'active' : ''}`
+                                      }
+                                      onClick={onCloseMobileMenu}
+                                    >
+                                      {child.label}
+                                    </NavigationLink>
+                                  )}
+                                </li>
+                              ))}
+                            </ul>
+                          )}
+                        </li>
+                      ) : (
+                        <li key={node.id}>
+                          {node.disabled ? (
+                            <span className="sn-sublink sn-link--disabled" aria-disabled="true">
+                              {node.label}
+                            </span>
+                          ) : (
+                            <NavigationLink
+                              to={node.to}
+                              className={({ isActive }) => `sn-sublink ${isActive ? 'active' : ''}`}
+                              onClick={onCloseMobileMenu}
+                            >
+                              {node.label}
+                            </NavigationLink>
+                          )}
+                        </li>
+                      ),
+                    )}
+
+                    {legacyFinanceItems.map((item) => (
                       <li key={item.id}>
                         {item.disabled ? (
                           <span className="sn-sublink sn-link--disabled" aria-disabled="true">
@@ -210,9 +403,53 @@ export const SidebarNav: React.FC<SidebarNavProps> = ({
                 )}
 
                 {/* Popover flotante cuando está colapsado en escritorio */}
-                <div className="sn-popover" role="menu" aria-label="Finanzas y Auditoría">
-                  <div className="sn-popover-title">Finanzas y Auditoría</div>
-                  {financeItems.map((item) =>
+                <div className="sn-popover" role="menu" aria-label="Finanzas">
+                  <div className="sn-popover-title">Finanzas</div>
+                  {financeTree.map((node) =>
+                    isGroupNode(node) ? (
+                      <React.Fragment key={node.id}>
+                        <div className="sn-popover-group-label">{node.label}</div>
+                        {node.children.map((child) =>
+                          child.disabled ? (
+                            <span
+                              key={child.id}
+                              className="sn-sublink sn-link--disabled"
+                              aria-disabled="true"
+                            >
+                              {child.label}
+                            </span>
+                          ) : (
+                            <NavigationLink
+                              key={child.id}
+                              to={child.to}
+                              className={({ isActive }) => `sn-sublink ${isActive ? 'active' : ''}`}
+                              onClick={onCloseMobileMenu}
+                            >
+                              {child.label}
+                            </NavigationLink>
+                          ),
+                        )}
+                      </React.Fragment>
+                    ) : node.disabled ? (
+                      <span
+                        key={node.id}
+                        className="sn-sublink sn-link--disabled"
+                        aria-disabled="true"
+                      >
+                        {node.label}
+                      </span>
+                    ) : (
+                      <NavigationLink
+                        key={node.id}
+                        to={node.to}
+                        className={({ isActive }) => `sn-sublink ${isActive ? 'active' : ''}`}
+                        onClick={onCloseMobileMenu}
+                      >
+                        {node.label}
+                      </NavigationLink>
+                    ),
+                  )}
+                  {legacyFinanceItems.map((item) =>
                     item.disabled ? (
                       <span
                         key={item.id}

@@ -1,18 +1,16 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowRight, Banknote, Camera, ClipboardList, Clock, Plus, RefreshCw } from 'lucide-react';
-import { api, type BankTransaction, type Donation, type Requisition } from '../../services/api';
-import { requisitionsApi } from '../../services/api';
+import { ArrowRight, Banknote, Clock, Landmark, Plus, RefreshCw } from 'lucide-react';
+import { api, type BankTransaction, type Donation } from '../../services/api';
 import { financeApi, type CuentaReceptora, type ReporteAporte } from '../../services/financeApi';
 import { useAuth } from '../../context/AuthContext';
 import { FINANCE_MANAGE_ROLES, FINANCE_VIEW_ROLES } from '../../utils/rolePermissions';
 import { formatUsd, formatVes } from '../../utils/formatters';
 import { VerificationQueueTab } from './VerificationQueueTab';
 import { FinanceIncomesTable } from './FinanceIncomesTable';
-import { FinanceExpensesTable } from './FinanceExpensesTable';
 import { AccountsAndLinkTab } from './AccountsAndLinkTab';
 
-type FinanceTab = 'resumen' | 'verificar' | 'ingresos' | 'gastos' | 'cuentas';
+type FinanceTab = 'resumen' | 'verificar' | 'ingresos' | 'cuentas';
 
 export const FinanceHub: React.FC = () => {
   const navigate = useNavigate();
@@ -26,7 +24,7 @@ export const FinanceHubContent: React.FC<{ navigate: (path: string) => void }> =
   const canViewFinance = (FINANCE_VIEW_ROLES as readonly string[]).includes(userRole);
   const canManageFinance = (FINANCE_MANAGE_ROLES as readonly string[]).includes(userRole);
 
-  const [activeTab, setActiveTab] = useState<FinanceTab>(canViewFinance ? 'resumen' : 'gastos');
+  const [activeTab, setActiveTab] = useState<FinanceTab>('resumen');
   const [loading, setLoading] = useState(true);
   const [feedback, setFeedback] = useState<{ msg: string; type: 'success' | 'error' } | null>(null);
 
@@ -34,7 +32,6 @@ export const FinanceHubContent: React.FC<{ navigate: (path: string) => void }> =
   const [reportes, setReportes] = useState<ReporteAporte[]>([]);
   const [cuentas, setCuentas] = useState<CuentaReceptora[]>([]);
   const [bankTxs, setBankTxs] = useState<BankTransaction[]>([]);
-  const [requisitions, setRequisitions] = useState<Requisition[]>([]);
 
   const showFeedback = (msg: string, type: 'success' | 'error' = 'success') => {
     setFeedback({ msg, type });
@@ -42,30 +39,26 @@ export const FinanceHubContent: React.FC<{ navigate: (path: string) => void }> =
   };
 
   const loadAll = useCallback(async () => {
+    if (!canViewFinance) {
+      setLoading(false);
+      return;
+    }
     setLoading(true);
     try {
       const targetOngId = activeOng?.id || profile?.ong_id;
-      if (canViewFinance) {
-        const [donList, repList, ctaList, txList, reqList] = await Promise.all([
-          api.getDonations(),
-          financeApi.getReportesAportes(targetOngId),
-          financeApi.getCuentasReceptoras(targetOngId),
-          api.getBankTransactions(),
-          requisitionsApi.getRequisitions(),
-        ]);
-        setDonations(donList);
-        setReportes(repList);
-        setCuentas(ctaList);
-        setBankTxs(txList.filter((t) => t.monto > 0 && t.estado === 'pendiente'));
-        setRequisitions(reqList);
-      } else {
-        // HU-21: coordinador / lider_ministerio solo consulta sus gastos sin exponer ingresos
-        const reqList = await requisitionsApi.getRequisitions();
-        setRequisitions(reqList);
-      }
+      const [donList, repList, ctaList, txList] = await Promise.all([
+        api.getDonations(),
+        financeApi.getReportesAportes(targetOngId),
+        financeApi.getCuentasReceptoras(targetOngId),
+        api.getBankTransactions(),
+      ]);
+      setDonations(donList);
+      setReportes(repList);
+      setCuentas(ctaList);
+      setBankTxs(txList.filter((t) => t.monto > 0 && t.estado === 'pendiente'));
     } catch (err) {
-      console.error('Error cargando módulo Ingresos y Gastos:', err);
-      showFeedback('Error al cargar la información financiera.', 'error');
+      console.error('Error cargando módulo Ingresos:', err);
+      showFeedback('Error al cargar la información de ingresos.', 'error');
     } finally {
       setLoading(false);
     }
@@ -78,9 +71,7 @@ export const FinanceHubContent: React.FC<{ navigate: (path: string) => void }> =
   const pendingReportsCount = reportes.filter((r) => r.estado === 'pendiente').length;
   const totalIngresosUsd = donations.reduce((s, d) => s + (d.monto_usd || d.monto || 0), 0);
   const totalIngresosVes = donations.reduce((s, d) => s + (d.monto_ves || 0), 0);
-  const approvedReqsTotal = requisitions
-    .filter((r) => r.estado === 'aprobada_ejecucion')
-    .reduce((s, r) => s + (r.monto_solicitado || 0), 0);
+  const activeAccountsCount = cuentas.filter((c) => c.activa !== false).length;
 
   const visibleTabs: { id: FinanceTab; label: string; badge?: number }[] = [
     ...(canViewFinance
@@ -90,7 +81,6 @@ export const FinanceHubContent: React.FC<{ navigate: (path: string) => void }> =
           { id: 'ingresos' as const, label: 'Ingresos' },
         ]
       : []),
-    { id: 'gastos' as const, label: 'Gastos' },
     ...(canManageFinance ? [{ id: 'cuentas' as const, label: 'Cuentas & Enlace' }] : []),
   ];
 
@@ -120,10 +110,10 @@ export const FinanceHubContent: React.FC<{ navigate: (path: string) => void }> =
               gap: '0.5rem',
             }}
           >
-            Ingresos y Gastos
+            Ingresos
           </h1>
           <p style={{ margin: '0.2rem 0 0', color: '#64748b', fontSize: '0.88rem' }}>
-            Gestión unificada de diezmos, ofrendas, reportes externos y gastos ministeriales.
+            Gestión unificada de diezmos, ofrendas, arqueos de efectivo y reportes externos.
           </p>
         </div>
 
@@ -169,7 +159,7 @@ export const FinanceHubContent: React.FC<{ navigate: (path: string) => void }> =
       {/* Pestañas */}
       <div
         role="tablist"
-        aria-label="Secciones de Ingresos y Gastos"
+        aria-label="Secciones de Ingresos"
         style={{
           display: 'flex',
           gap: '0.5rem',
@@ -218,9 +208,13 @@ export const FinanceHubContent: React.FC<{ navigate: (path: string) => void }> =
         <div className="card" style={{ padding: '2.5rem', textAlign: 'center', color: '#64748b' }}>
           Cargando información del módulo...
         </div>
+      ) : !canViewFinance ? (
+        <div className="card" style={{ padding: '2rem', textAlign: 'center', color: '#64748b' }}>
+          No tienes permisos para consultar el módulo de Ingresos.
+        </div>
       ) : (
         <>
-          {activeTab === 'resumen' && canViewFinance && (
+          {activeTab === 'resumen' && (
             <div style={{ display: 'grid', gap: '1rem' }}>
               <div
                 style={{
@@ -271,23 +265,7 @@ export const FinanceHubContent: React.FC<{ navigate: (path: string) => void }> =
 
                 <div className="card" style={{ padding: '1.15rem' }}>
                   <div style={{ fontSize: '0.78rem', color: '#64748b', fontWeight: 700 }}>
-                    GASTOS AUTORIZADOS
-                  </div>
-                  <div
-                    style={{
-                      fontSize: '1.5rem',
-                      fontWeight: 800,
-                      color: '#1e293b',
-                      marginTop: '0.25rem',
-                    }}
-                  >
-                    {formatUsd(approvedReqsTotal)}
-                  </div>
-                </div>
-
-                <div className="card" style={{ padding: '1.15rem' }}>
-                  <div style={{ fontSize: '0.78rem', color: '#64748b', fontWeight: 700 }}>
-                    BALANCE NETO REFERENCIAL
+                    TOTAL APORTES REGISTRADOS
                   </div>
                   <div
                     style={{
@@ -297,7 +275,26 @@ export const FinanceHubContent: React.FC<{ navigate: (path: string) => void }> =
                       marginTop: '0.25rem',
                     }}
                   >
-                    {formatUsd(totalIngresosUsd - approvedReqsTotal)}
+                    {donations.length}
+                  </div>
+                </div>
+
+                <div className="card" style={{ padding: '1.15rem' }}>
+                  <div style={{ fontSize: '0.78rem', color: '#64748b', fontWeight: 700 }}>
+                    CUENTAS RECEPTORAS ACTIVAS
+                  </div>
+                  <div
+                    style={{
+                      fontSize: '1.5rem',
+                      fontWeight: 800,
+                      color: '#1e293b',
+                      marginTop: '0.25rem',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.4rem',
+                    }}
+                  >
+                    <Landmark size={20} /> {activeAccountsCount}
                   </div>
                 </div>
               </div>
@@ -340,7 +337,7 @@ export const FinanceHubContent: React.FC<{ navigate: (path: string) => void }> =
             </div>
           )}
 
-          {activeTab === 'verificar' && canViewFinance && (
+          {activeTab === 'verificar' && (
             <VerificationQueueTab
               reportes={reportes}
               donations={donations}
@@ -352,7 +349,7 @@ export const FinanceHubContent: React.FC<{ navigate: (path: string) => void }> =
             />
           )}
 
-          {activeTab === 'ingresos' && canViewFinance && (
+          {activeTab === 'ingresos' && (
             <FinanceIncomesTable
               donations={donations}
               canManage={canManageFinance}
@@ -362,79 +359,6 @@ export const FinanceHubContent: React.FC<{ navigate: (path: string) => void }> =
               organizationName={activeOng?.nombre || 'Iglesia'}
               loggedUserName={profile?.nombre_completo || profile?.email}
             />
-          )}
-
-          {activeTab === 'gastos' && (
-            <div style={{ display: 'grid', gap: '1rem' }}>
-              <div
-                style={{
-                  display: 'grid',
-                  gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
-                  gap: '1rem',
-                }}
-              >
-                <div
-                  className="card"
-                  style={{ padding: '1.25rem', display: 'grid', gap: '0.65rem' }}
-                >
-                  <div
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '0.5rem',
-                      color: 'var(--primary)',
-                    }}
-                  >
-                    <ClipboardList size={20} />
-                    <strong>Solicitudes de Gasto</strong>
-                  </div>
-                  <p style={{ margin: 0, fontSize: '0.85rem', color: '#475569' }}>
-                    Crea solicitudes presupuestarias o revisa aprobaciones según tu rol.
-                  </p>
-                  <button
-                    type="button"
-                    className="btn btn-primary"
-                    onClick={() => navigate('/app/requisitions')}
-                    style={{ justifySelf: 'start' }}
-                  >
-                    Ir a Solicitudes <ArrowRight size={15} />
-                  </button>
-                </div>
-
-                <div
-                  className="card"
-                  style={{ padding: '1.25rem', display: 'grid', gap: '0.65rem' }}
-                >
-                  <div
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '0.5rem',
-                      color: 'var(--primary)',
-                    }}
-                  >
-                    <Camera size={20} />
-                    <strong>Comprobantes y Rendición</strong>
-                  </div>
-                  <p style={{ margin: 0, fontSize: '0.85rem', color: '#475569' }}>
-                    Carga facturas y recibos de gastos ejecutados para auditoría.
-                  </p>
-                  <button
-                    type="button"
-                    className="btn btn-outline"
-                    onClick={() => navigate('/app/field-entry')}
-                    style={{ justifySelf: 'start' }}
-                  >
-                    Ir a Comprobantes <ArrowRight size={15} />
-                  </button>
-                </div>
-              </div>
-
-              <FinanceExpensesTable
-                requisitions={requisitions}
-                onNavigateRequisitions={() => navigate('/app/requisitions')}
-              />
-            </div>
           )}
 
           {activeTab === 'cuentas' && canManageFinance && (

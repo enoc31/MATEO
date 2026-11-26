@@ -211,14 +211,30 @@ const modules: Record<
       'tesorero',
       'pastor',
       'auditor_iglesia',
-      'lider_ministerio',
-      'coordinador',
       'director',
       'auditor',
     ],
     component: lazy(() =>
       import('../../../features/finance/FinanceHub').then((m) => ({
         default: m.FinanceHubContent,
+      })),
+    ),
+  },
+  expenses: {
+    roles: [
+      'administrador',
+      'admin_iglesia',
+      'tesorero',
+      'pastor',
+      'auditor_iglesia',
+      'lider_ministerio',
+      'coordinador',
+      'director',
+      'auditor',
+    ],
+    component: lazy(() =>
+      import('../../../features/expenses/ExpensesHub').then((m) => ({
+        default: m.ExpensesHubContent,
       })),
     ),
   },
