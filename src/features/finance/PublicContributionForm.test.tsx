@@ -126,10 +126,15 @@ describe('PublicContributionForm', () => {
     await screen.findByRole('heading', { name: 'Iglesia Gracia y Paz' });
     await screen.findByText(/100\.0000 Bs\/\$/i);
 
-    fireEvent.change(screen.getByLabelText(/Buscar por Cédula/i), {
-      target: { value: '20123456' },
+    fireEvent.change(screen.getByLabelText(/Tipo de documento/i), {
+      target: { value: 'E' },
     });
+    fireEvent.change(screen.getByLabelText(/Buscar por Cédula/i), {
+      target: { value: 'E-20.123.456' },
+    });
+    expect(screen.getByLabelText(/Buscar por Cédula/i)).toHaveValue('20123456');
     fireEvent.click(screen.getByRole('button', { name: /Buscar/i }));
+    expect(financeApi.buscarMiembroParaAporte).toHaveBeenCalledWith('ong-1', 'E-20123456');
     expect(await screen.findByText(/M\*\*\*\* G\*\*\*\*/)).toBeInTheDocument();
 
     fireEvent.change(screen.getByLabelText(/Monto \(VES\)/i), { target: { value: '1000' } });

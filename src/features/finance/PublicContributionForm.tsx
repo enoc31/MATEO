@@ -44,6 +44,7 @@ export const PublicContributionFormForOng: React.FC<{ ongId: string }> = ({ ongI
 
   // Identificación del aportante
   const [esAnonimo, setEsAnonimo] = useState(false);
+  const [tipoDocumento, setTipoDocumento] = useState<'V' | 'E' | 'J'>('V');
   const [cedulaBusqueda, setCedulaBusqueda] = useState('');
   const [buscandoCedula, setBuscandoCedula] = useState(false);
   const [lookupResult, setLookupResult] = useState<MemberLookupResult | null>(null);
@@ -128,14 +129,14 @@ export const PublicContributionFormForOng: React.FC<{ ongId: string }> = ({ ongI
 
   const handleSearchCedula = async () => {
     setFormError(null);
-    const clean = cedulaBusqueda.replace(/[^0-9A-Za-z]/g, '');
-    if (clean.length < 4) {
+    const digits = cedulaBusqueda.replace(/\D/g, '');
+    if (digits.length < 4) {
       setFormError('Ingresa al menos 4 dígitos de tu cédula para buscar.');
       return;
     }
     setBuscandoCedula(true);
     try {
-      const res = await financeApi.buscarMiembroParaAporte(ongId, clean);
+      const res = await financeApi.buscarMiembroParaAporte(ongId, `${tipoDocumento}-${digits}`);
       setLookupResult(res);
     } catch (err) {
       console.error('Error buscando miembro por cédula:', err);
@@ -245,7 +246,11 @@ export const PublicContributionFormForOng: React.FC<{ ongId: string }> = ({ ongI
         es_anonimo: esAnonimo,
         nombre_aportante: esAnonimo ? null : nombreAportante.trim() || null,
         telefono_aportante: esAnonimo ? null : telefonoAportante.trim() || null,
-        cedula_aportante: esAnonimo ? null : cedulaBusqueda.trim() || null,
+        cedula_aportante: esAnonimo
+          ? null
+          : cedulaBusqueda.replace(/\D/g, '')
+            ? `${tipoDocumento}-${cedulaBusqueda.replace(/\D/g, '')}`
+            : null,
         categoria_aporte: categoria,
         moneda,
         monto_original: parsedMonto,
@@ -571,21 +576,39 @@ export const PublicContributionFormForOng: React.FC<{ ongId: string }> = ({ ongI
               <>
                 <div className="pcf-field">
                   <label htmlFor="aportante-cedula" className="pcf-label">
-                    Ingresa tu cédula para buscar tu registro
+                    Ingresa solo los dígitos de tu cédula para buscar tu registro
                   </label>
                   <div className="pcf-search-row">
-                    <input
-                      id="aportante-cedula"
-                      aria-label="Buscar por Cédula"
-                      type="text"
-                      className="pcf-input"
-                      placeholder="Escribe tu cédula"
-                      value={cedulaBusqueda}
-                      onChange={(e) => {
-                        setCedulaBusqueda(e.target.value);
-                        setLookupResult(null);
-                      }}
-                    />
+                    <div className="pcf-doc-group">
+                      <select
+                        id="aportante-tipo-doc"
+                        aria-label="Tipo de documento"
+                        className="pcf-doc-select"
+                        value={tipoDocumento}
+                        onChange={(e) => {
+                          setTipoDocumento(e.target.value as 'V' | 'E' | 'J');
+                          setLookupResult(null);
+                        }}
+                      >
+                        <option value="V">V</option>
+                        <option value="E">E</option>
+                        <option value="J">J</option>
+                      </select>
+                      <input
+                        id="aportante-cedula"
+                        aria-label="Buscar por Cédula"
+                        type="text"
+                        inputMode="numeric"
+                        pattern="[0-9]*"
+                        className="pcf-input"
+                        placeholder="Ej. 12345678"
+                        value={cedulaBusqueda}
+                        onChange={(e) => {
+                          setCedulaBusqueda(e.target.value.replace(/\D/g, ''));
+                          setLookupResult(null);
+                        }}
+                      />
+                    </div>
                     <button
                       type="button"
                       className="pcf-search-btn"
@@ -596,6 +619,10 @@ export const PublicContributionFormForOng: React.FC<{ ongId: string }> = ({ ongI
                       {buscandoCedula ? 'Buscando...' : 'Buscar'}
                     </button>
                   </div>
+                  <span className="pcf-field-hint">
+                    Selecciona V, E o J e ingresa únicamente los dígitos de la cédula (sin letras,
+                    puntos ni guiones). Ejemplo: <strong>12345678</strong>
+                  </span>
                 </div>
 
                 {lookupResult?.encontrado && (
