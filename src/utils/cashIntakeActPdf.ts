@@ -53,7 +53,8 @@ export function buildCashActDescription(params: {
   responsibleUser?: string | null;
   additionalCounters?: string[];
   sessionTag?: string | null;
-  coneSummary: ConeCountSummary;
+  coneSummary?: ConeCountSummary;
+  combinedBreakdownText?: string | null;
 }): string {
   const parts: string[] = [];
   const cleanAct = params.actividad?.trim();
@@ -74,8 +75,10 @@ export function buildCashActDescription(params: {
     parts.push(`Lote: ${params.sessionTag.trim()}`);
   }
 
-  if (params.coneSummary.breakdownText) {
-    parts.push(params.coneSummary.breakdownText);
+  const breakdown =
+    params.combinedBreakdownText?.trim() || params.coneSummary?.breakdownText?.trim();
+  if (breakdown) {
+    parts.push(breakdown);
   }
 
   return parts.join(' | ');
@@ -234,6 +237,10 @@ export function generateCashIntakeActPdf({
     align: 'right',
   });
 
+  const uniqueCategories = Array.from(
+    new Set(sessionDonations.map((item) => formatCategoriaAporte(item.categoria_aporte))),
+  );
+
   // Bloque 1: Datos Generales y Responsables del Conteo
   autoTable(doc, {
     startY: 36,
@@ -251,7 +258,10 @@ export function generateCashIntakeActPdf({
     head: [['Datos del Aporte y Comisión de Conteo', 'Detalle']],
     body: [
       ['Concepto / Aportante', donation.donante || 'Conteo de Ofrenda en Culto'],
-      ['Categoría del Aporte', formatCategoriaAporte(donation.categoria_aporte)],
+      [
+        uniqueCategories.length > 1 ? 'Categorías del Arqueo' : 'Categoría del Aporte',
+        uniqueCategories.join(', '),
+      ],
       ['Culto / Servicio / Actividad', activityLabel],
       ['Administrador / Tesorero Responsable', responsibleName],
       [
@@ -274,17 +284,18 @@ export function generateCashIntakeActPdf({
   const denominationRows: string[][] = [];
   for (const item of sessionDonations) {
     const meta = parseCashActDescription(item.descripcion, item.moneda);
-    const coneName = CURRENCY_CONES[item.moneda]?.coneLabel || item.moneda;
-    if (meta.denominationLines.length > 0) {
-      for (const line of meta.denominationLines) {
-        denominationRows.push([
-          CURRENCY_CONES[line.currency]?.coneLabel || line.currency,
-          line.denominationLabel,
-          String(line.count),
-          line.subtotalLabel,
-        ]);
-      }
-    } else {
+    for (const line of meta.denominationLines) {
+      denominationRows.push([
+        CURRENCY_CONES[line.currency]?.coneLabel || line.currency,
+        line.denominationLabel,
+        String(line.count),
+        line.subtotalLabel,
+      ]);
+    }
+  }
+  if (denominationRows.length === 0) {
+    for (const item of sessionDonations) {
+      const coneName = CURRENCY_CONES[item.moneda]?.coneLabel || item.moneda;
       denominationRows.push([
         coneName,
         'Efectivo (Monto global sin desglose de piezas)',
@@ -326,10 +337,8 @@ export function generateCashIntakeActPdf({
     (doc as unknown as { lastAutoTable?: { finalY?: number } }).lastAutoTable?.finalY ||
     afterGeneralY + 45;
 
-  // Bloque 3: Total en Cada Tipo de Moneda y Equivalente USD
-  const totalsByCurrencyRows: string[][] = sessionDonations.map((item) => {
-    const meta = parseCashActDescription(item.descripcion, item.moneda);
-    const totalBillsInCone = meta.denominationLines.reduce((acc, l) => acc + l.count, 0);
+  // Bloque 3: Distribución por Categoría, Aportante / Miembro y Equivalente USD
+  const allocationRows: string[][] = sessionDonations.map((item) => {
     const coneLabel = CURRENCY_CONES[item.moneda]?.coneLabel || item.moneda;
     const rateLabel =
       item.moneda === 'USD'
@@ -341,8 +350,9 @@ export function generateCashIntakeActPdf({
           : 'N/A';
 
     return [
+      formatCategoriaAporte(item.categoria_aporte),
+      item.donante || 'Conteo de Ofrenda en Culto',
       coneLabel,
-      totalBillsInCone > 0 ? `${totalBillsInCone} billetes` : 'N/A',
       formatCurrencyByCode(item.monto_original || item.monto, item.moneda),
       rateLabel,
       formatUsd(item.monto_usd || item.monto),
@@ -357,7 +367,7 @@ export function generateCashIntakeActPdf({
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(10.5);
   doc.setTextColor(15, 23, 42);
-  doc.text('2. Total por Cada Tipo de Moneda y Equivalencia Contable', 14, afterDenomY + 9);
+  doc.text('2. Distribución por Categoría, Miembro y Equivalencia Contable', 14, afterDenomY + 9);
 
   autoTable(doc, {
     startY: afterDenomY + 12,
@@ -366,31 +376,39 @@ export function generateCashIntakeActPdf({
       fillColor: [5, 150, 105],
       textColor: 255,
       fontStyle: 'bold',
-      fontSize: 8.8,
+      fontSize: 8.5,
     },
     bodyStyles: {
-      fontSize: 8.8,
+      fontSize: 8.4,
       textColor: [30, 41, 59],
     },
     footStyles: {
       fillColor: [236, 253, 245],
       textColor: [6, 95, 70],
       fontStyle: 'bold',
-      fontSize: 9.5,
+      fontSize: 9.2,
     },
     head: [
-      ['Moneda / Cono', 'Total Piezas', 'Total Moneda Origen', 'Tasa de Cambio', 'Equivalente USD'],
+      ['Categoría', 'Aportante / Miembro', 'Moneda', 'Monto Origen', 'Tasa', 'Equivalente USD'],
     ],
-    body: totalsByCurrencyRows,
+    body: allocationRows,
     foot: [
-      ['TOTAL CONSOLIDADO DEL ACTA (USD)', '', '', '', `${formatUsd(totalConsolidatedUsd)} USD`],
+      [
+        'TOTAL CONSOLIDADO DEL ACTA (USD)',
+        '',
+        '',
+        '',
+        '',
+        `${formatUsd(totalConsolidatedUsd)} USD`,
+      ],
     ],
     columnStyles: {
-      0: { cellWidth: 44, fontStyle: 'bold' },
-      1: { cellWidth: 28, halign: 'center' },
-      2: { cellWidth: 38, halign: 'right', fontStyle: 'bold' },
-      3: { cellWidth: 36, halign: 'right' },
-      4: { cellWidth: 34, halign: 'right', fontStyle: 'bold' },
+      0: { cellWidth: 26, fontStyle: 'bold' },
+      1: { cellWidth: 36 },
+      2: { cellWidth: 28 },
+      3: { cellWidth: 32, halign: 'right', fontStyle: 'bold' },
+      4: { cellWidth: 28, halign: 'right' },
+      5: { cellWidth: 28, halign: 'right', fontStyle: 'bold' },
     },
   });
 
