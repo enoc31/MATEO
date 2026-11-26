@@ -1,6 +1,6 @@
 import React from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { InternalBankIncomePageContent, InternalIncomePageContent } from './InternalIncomePage';
 import * as AuthContextModule from '../../context/AuthContext';
 import { api } from '../../services/api';
@@ -120,10 +120,39 @@ describe('InternalIncomePage', () => {
     // Count 2 bills of Bs. 500 (= Bs. 1.000 -> $20 USD)
     fireEvent.change(screen.getByTestId('bill-input-VES-500'), { target: { value: '2' } });
 
-    // Switch to EUR and count 1 bill of €100 at rate 1.1 (= $110 USD)
+    // Switch to EUR and count 1 bill of €100 at rate 1.1 (= $110 USD). Total = $130 USD
     fireEvent.click(screen.getByTestId('cone-tab-EUR'));
     fireEvent.change(screen.getByTestId('rate-input-EUR'), { target: { value: '1.1' } });
     fireEvent.change(screen.getByTestId('bill-input-EUR-100'), { target: { value: '1' } });
+
+    // Allocate partial amount first (Bs. 1000 = $20 USD) -> must block submit because $20 != $130
+    fireEvent.change(screen.getByTestId('allocation-amount-0'), { target: { value: '1000' } });
+    expect(screen.getByTestId('allocation-balance-status')).toHaveTextContent(
+      /Falta asignar \$110,00 USD/i,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: /Guardar Arqueo en Efectivo/i }));
+    expect(
+      await screen.findByText(/debe cuadrar exactamente con el total contado/i),
+    ).toBeInTheDocument();
+    expect(financeApi.registrarAporteInterno).not.toHaveBeenCalled();
+
+    // Add second category (diezmo) in EUR for €100 ($110 USD) assigned to member Carlos Pérez
+    fireEvent.click(screen.getByTestId('add-allocation-btn'));
+    fireEvent.change(screen.getByTestId('allocation-category-1'), { target: { value: 'diezmo' } });
+    fireEvent.change(screen.getByTestId('allocation-currency-1'), { target: { value: 'EUR' } });
+    fireEvent.click(screen.getByTestId('allocation-fill-remaining-1'));
+    expect(screen.getByTestId('allocation-amount-1')).toHaveValue(100);
+    expect(screen.getByTestId('allocation-balance-status')).toHaveTextContent(/Cuadrado/i);
+
+    const secondAllocationRow = screen.getByTestId('allocation-row-1');
+    const allocMemberInput = within(secondAllocationRow).getByLabelText(
+      /Miembro de la comunidad asignado/i,
+    );
+    fireEvent.change(allocMemberInput, { target: { value: 'Carlos' } });
+    fireEvent.click(
+      await within(secondAllocationRow).findByRole('option', { name: /Carlos Pérez/i }),
+    );
 
     fireEvent.click(screen.getByRole('button', { name: /Guardar Arqueo en Efectivo/i }));
 
@@ -135,12 +164,29 @@ describe('InternalIncomePage', () => {
       1,
       expect.objectContaining({
         miembro_id: null,
+        categoria_aporte: 'ofrenda',
+        moneda: 'VES',
+        monto_original: 1000,
+        monto_usd: 20,
         actividad_o_responsable: 'Culto Dominical 10:00 AM',
         descripcion: expect.stringContaining('Conteo adicional: Pedro Gómez, María Rodríguez'),
       }),
     );
 
-    expect(await screen.findByText(/2 conos monetarios/i)).toBeInTheDocument();
+    expect(financeApi.registrarAporteInterno).toHaveBeenNthCalledWith(
+      2,
+      expect.objectContaining({
+        miembro_id: 'mem-1',
+        donante_nombre: 'Carlos Pérez',
+        categoria_aporte: 'diezmo',
+        moneda: 'EUR',
+        monto_original: 100,
+        monto_usd: 110,
+        actividad_o_responsable: 'Culto Dominical 10:00 AM',
+      }),
+    );
+
+    expect(await screen.findByText(/2 categorías asignadas/i)).toBeInTheDocument();
   });
 
   it('renders dedicated full-page InternalBankIncomePageContent requiring a linked member and without general option', async () => {

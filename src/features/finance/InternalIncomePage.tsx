@@ -12,6 +12,8 @@ import {
 import { formatUsd, getCaracasDateParts } from '../../utils/formatters';
 import {
   calculateMultiCurrencySessionSummary,
+  convertCashAmountToUsd,
+  convertUsdToCashAmount,
   createDefaultMultiCurrencyRates,
   createEmptyMultiCurrencyCounts,
   type CashCurrencyCode,
@@ -20,6 +22,10 @@ import {
 } from '../../utils/currencyDenominations';
 import { buildCashActDescription, createCashActSessionTag } from '../../utils/cashIntakeActPdf';
 import { CashDenominationCounter } from '../../components/CashDenominationCounter';
+import {
+  CashCategoryAllocator,
+  type CashCategoryAllocationItem,
+} from '../../components/CashCategoryAllocator';
 import { MemberAutocomplete } from '../../components/MemberAutocomplete';
 
 /**
@@ -503,11 +509,13 @@ export const InternalIncomePageContent: React.FC<{
 
   const [members, setMembers] = useState<Beneficiary[]>([]);
   const [donanteNombre, setDonanteNombre] = useState('Conteo de Ofrenda en Culto');
-  const [categoria, setCategoria] = useState<CategoriaAporte>('ofrenda');
   const [fecha, setFecha] = useState(() => getCaracasDateParts().dateString);
   const [actividad, setActividad] = useState('');
   const [additionalCounters, setAdditionalCounters] = useState<string[]>([]);
   const [newCounterName, setNewCounterName] = useState('');
+  const [allocations, setAllocations] = useState<CashCategoryAllocationItem[]>([
+    { id: 'alloc-1', categoria: 'ofrenda', moneda: 'VES', monto: '', member: null },
+  ]);
   const [submitting, setSubmitting] = useState(false);
   const [feedback, setFeedback] = useState<{ msg: string; type: 'success' | 'error' } | null>(null);
 
@@ -552,6 +560,67 @@ export const InternalIncomePageContent: React.FC<{
   }, [fecha]);
 
   const sessionSummary = calculateMultiCurrencySessionSummary(cashCounts, cashRates);
+  const activeConeCodesKey = sessionSummary.activeCones.map((c) => c.code).join(',');
+
+  useEffect(() => {
+    if (!activeConeCodesKey) return;
+    const validCodes = activeConeCodesKey.split(',') as CashCurrencyCode[];
+    setAllocations((prev) =>
+      prev.map((item) =>
+        !validCodes.includes(item.moneda) && !item.monto
+          ? { ...item, moneda: validCodes[0] }
+          : item,
+      ),
+    );
+  }, [activeConeCodesKey]);
+
+  const handleAddAllocation = () => {
+    const defaultCurrency: CashCurrencyCode = sessionSummary.activeCones[0]?.code || activeCashCone;
+    setAllocations((prev) => [
+      ...prev,
+      {
+        id: `alloc-${Date.now()}-${prev.length + 1}`,
+        categoria: 'diezmo',
+        moneda: defaultCurrency,
+        monto: '',
+        member: null,
+      },
+    ]);
+  };
+
+  const handleUpdateAllocation = (id: string, patch: Partial<CashCategoryAllocationItem>) => {
+    setAllocations((prev) => prev.map((item) => (item.id === id ? { ...item, ...patch } : item)));
+  };
+
+  const handleRemoveAllocation = (id: string) => {
+    setAllocations((prev) => (prev.length > 1 ? prev.filter((item) => item.id !== id) : prev));
+  };
+
+  const handleAssignRemaining = (targetId: string) => {
+    const targetRow = allocations.find((a) => a.id === targetId);
+    if (!targetRow) return;
+
+    const otherAllocatedUsd = allocations.reduce((sum, item) => {
+      if (item.id === targetId) return sum;
+      const parsed = parseFloat(item.monto);
+      if (!Number.isFinite(parsed) || parsed <= 0) return sum;
+      return sum + convertCashAmountToUsd(parsed, item.moneda, cashRates[item.moneda]);
+    }, 0);
+
+    const remainingUsd = Number(
+      (sessionSummary.totalConsolidatedUsd - otherAllocatedUsd).toFixed(2),
+    );
+    if (remainingUsd <= 0) return;
+
+    const amountInTargetCurrency = convertUsdToCashAmount(
+      remainingUsd,
+      targetRow.moneda,
+      cashRates[targetRow.moneda],
+    );
+    if (amountInTargetCurrency > 0) {
+      handleUpdateAllocation(targetId, { monto: String(amountInTargetCurrency) });
+    }
+  };
 
   const handleChangeCashCount = (
     currency: CashCurrencyCode,
@@ -645,6 +714,66 @@ export const InternalIncomePageContent: React.FC<{
       }
     }
 
+    const parsedAllocations: {
+      categoria: CategoriaAporte;
+      moneda: CashCurrencyCode;
+      montoOriginal: number;
+      appliedRate: number | null;
+      montoUsd: number;
+      montoVes: number | null;
+      member: Beneficiary | null;
+    }[] = [];
+
+    for (let i = 0; i < allocations.length; i += 1) {
+      const alloc = allocations[i];
+      const numAmount = parseFloat(alloc.monto);
+      if (!Number.isFinite(numAmount) || numAmount <= 0) {
+        setFeedback({
+          msg: `Debe ingresar un monto mayor a 0 en la categoría #${i + 1}.`,
+          type: 'error',
+        });
+        return;
+      }
+      const rateForCurrency = cashRates[alloc.moneda];
+      if (alloc.moneda !== 'USD' && (!rateForCurrency || rateForCurrency <= 0)) {
+        setFeedback({
+          msg: `Debe indicar una tasa de cambio válida para ${alloc.moneda}.`,
+          type: 'error',
+        });
+        return;
+      }
+      const montoUsd = convertCashAmountToUsd(numAmount, alloc.moneda, rateForCurrency);
+      const appliedRate =
+        alloc.moneda === 'USD' ? (cashRates.VES > 0 ? cashRates.VES : null) : rateForCurrency;
+      const montoVes =
+        alloc.moneda === 'VES'
+          ? numAmount
+          : alloc.moneda === 'USD' && cashRates.VES > 0
+            ? parseFloat((numAmount * cashRates.VES).toFixed(2))
+            : null;
+
+      parsedAllocations.push({
+        categoria: alloc.categoria,
+        moneda: alloc.moneda,
+        montoOriginal: numAmount,
+        appliedRate,
+        montoUsd,
+        montoVes,
+        member: alloc.member,
+      });
+    }
+
+    const totalAllocatedUsd = Number(
+      parsedAllocations.reduce((sum, item) => sum + item.montoUsd, 0).toFixed(2),
+    );
+    if (Math.abs(totalAllocatedUsd - sessionSummary.totalConsolidatedUsd) > 0.01) {
+      setFeedback({
+        msg: `La suma de las categorías asignadas (${formatUsd(totalAllocatedUsd)} USD) debe cuadrar exactamente con el total contado en billetes (${formatUsd(sessionSummary.totalConsolidatedUsd)} USD).`,
+        type: 'error',
+      });
+      return;
+    }
+
     setSubmitting(true);
     try {
       const pendingTypedCounters = newCounterName
@@ -653,37 +782,34 @@ export const InternalIncomePageContent: React.FC<{
         .filter(Boolean);
       const finalCounters = Array.from(new Set([...additionalCounters, ...pendingTypedCounters]));
       const sessionTag = createCashActSessionTag();
+      const combinedBreakdownText = sessionSummary.activeCones
+        .map((c) => c.breakdownText)
+        .filter(Boolean)
+        .join(' | ');
 
-      for (const coneItem of sessionSummary.activeCones) {
-        const appliedRate =
-          coneItem.code === 'USD' ? (cashRates.VES > 0 ? cashRates.VES : null) : coneItem.rateToUsd;
-
-        const montoVes =
-          coneItem.code === 'VES'
-            ? coneItem.totalAmountOriginal
-            : coneItem.code === 'USD' && cashRates.VES > 0
-              ? parseFloat((coneItem.totalAmountOriginal * cashRates.VES).toFixed(2))
-              : null;
-
+      for (let idx = 0; idx < parsedAllocations.length; idx += 1) {
+        const alloc = parsedAllocations[idx];
         const desc = buildCashActDescription({
-          categoria,
+          categoria: alloc.categoria,
           actividad: cleanActivity,
           responsibleUser: loggedResponsibleName,
           additionalCounters: finalCounters,
           sessionTag,
-          coneSummary: coneItem,
+          combinedBreakdownText: idx === 0 ? combinedBreakdownText : null,
         });
 
         await financeApi.registrarAporteInterno({
           ong_id: resolvedOngId,
-          miembro_id: null,
-          donante_nombre: donanteNombre,
-          categoria_aporte: categoria,
-          moneda: coneItem.code,
-          monto_original: coneItem.totalAmountOriginal,
-          tasa_bcv: appliedRate,
-          monto_usd: coneItem.equivalentUsd,
-          monto_ves: montoVes,
+          miembro_id: alloc.member?.id || null,
+          donante_nombre: alloc.member
+            ? `${alloc.member.nombre} ${alloc.member.apellido}`.trim()
+            : donanteNombre,
+          categoria_aporte: alloc.categoria,
+          moneda: alloc.moneda,
+          monto_original: alloc.montoOriginal,
+          tasa_bcv: alloc.appliedRate,
+          monto_usd: alloc.montoUsd,
+          monto_ves: alloc.montoVes,
           medio_pago: 'efectivo',
           referencia: null,
           banco_emisor: null,
@@ -696,9 +822,12 @@ export const InternalIncomePageContent: React.FC<{
       }
 
       handleClearAllCash();
+      setAllocations([
+        { id: 'alloc-1', categoria: 'ofrenda', moneda: activeCashCone, monto: '', member: null },
+      ]);
       const successMsg =
-        sessionSummary.activeCones.length > 1
-          ? `Arqueo en efectivo registrado exitosamente (${sessionSummary.activeCones.length} conos monetarios).`
+        parsedAllocations.length > 1
+          ? `Arqueo en efectivo registrado exitosamente (${parsedAllocations.length} categorías asignadas).`
           : 'Arqueo en efectivo registrado exitosamente.';
       setFeedback({ msg: successMsg, type: 'success' });
       setTimeout(() => {
@@ -804,7 +933,7 @@ export const InternalIncomePageContent: React.FC<{
         >
           <div>
             <label htmlFor="int-page-nombre" className="form-field-label">
-              Aportante / Concepto *
+              Concepto general del conteo *
             </label>
             <input
               id="int-page-nombre"
@@ -814,24 +943,6 @@ export const InternalIncomePageContent: React.FC<{
               onChange={(e) => setDonanteNombre(e.target.value)}
               required
             />
-          </div>
-
-          <div>
-            <label htmlFor="int-page-cat" className="form-field-label">
-              Categoría *
-            </label>
-            <select
-              id="int-page-cat"
-              className="form-input"
-              value={categoria}
-              onChange={(e) => setCategoria(e.target.value as CategoriaAporte)}
-            >
-              {CATEGORIAS_APORTE.map((c) => (
-                <option key={c.value} value={c.value}>
-                  {c.label}
-                </option>
-              ))}
-            </select>
           </div>
 
           <div>
@@ -1018,6 +1129,19 @@ export const InternalIncomePageContent: React.FC<{
           onChangeRate={handleChangeCashRate}
           onClearCurrency={handleClearCashCurrency}
           onClearAll={handleClearAllCash}
+        />
+
+        {/* Distribución del total contado por categorías y miembros opcionales */}
+        <CashCategoryAllocator
+          allocations={allocations}
+          activeCones={sessionSummary.activeCones}
+          rates={cashRates}
+          totalCountedUsd={sessionSummary.totalConsolidatedUsd}
+          members={members}
+          onAddAllocation={handleAddAllocation}
+          onUpdateAllocation={handleUpdateAllocation}
+          onRemoveAllocation={handleRemoveAllocation}
+          onAssignRemaining={handleAssignRemaining}
         />
 
         {/* Barra de acción inferior */}

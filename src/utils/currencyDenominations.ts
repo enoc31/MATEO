@@ -366,6 +366,38 @@ export interface ConeCountSummary {
   activeItems: { denomination: number; count: number; subtotal: number }[];
 }
 
+export function convertCashAmountToUsd(
+  amount: number,
+  code: CashCurrencyCode,
+  rateToUsd: number,
+): number {
+  if (!Number.isFinite(amount) || amount <= 0) return 0;
+  const cone = CURRENCY_CONES[code];
+  if (cone.usdConversionMode === 'identity') {
+    return Number(amount.toFixed(2));
+  }
+  if (cone.usdConversionMode === 'divide') {
+    return rateToUsd > 0 ? Number((amount / rateToUsd).toFixed(2)) : 0;
+  }
+  return rateToUsd > 0 ? Number((amount * rateToUsd).toFixed(2)) : 0;
+}
+
+export function convertUsdToCashAmount(
+  usdAmount: number,
+  code: CashCurrencyCode,
+  rateToUsd: number,
+): number {
+  if (!Number.isFinite(usdAmount) || usdAmount <= 0) return 0;
+  const cone = CURRENCY_CONES[code];
+  if (cone.usdConversionMode === 'identity') {
+    return Number(usdAmount.toFixed(2));
+  }
+  if (cone.usdConversionMode === 'divide') {
+    return rateToUsd > 0 ? Number((usdAmount * rateToUsd).toFixed(2)) : 0;
+  }
+  return rateToUsd > 0 ? Number((usdAmount / rateToUsd).toFixed(2)) : 0;
+}
+
 export function calculateConeSummary(
   code: CashCurrencyCode,
   counts: CurrencyBillCounts | undefined,
