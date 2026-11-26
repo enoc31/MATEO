@@ -4,7 +4,6 @@ import { formatAmount, formatUsd } from '../../utils/formatters';
 import {
   Check,
   CheckCircle2,
-  Copy,
   CreditCard,
   DollarSign,
   Landmark,
@@ -13,7 +12,6 @@ import {
   Smartphone,
   Upload,
   UserCheck,
-  UserX,
 } from 'lucide-react';
 import {
   financeApi,
@@ -30,6 +28,7 @@ import {
   type CategoriaAporte,
 } from '../../utils/rolePermissions';
 import { getCaracasDateParts } from '../../utils/formatters';
+import './PublicContributionForm.css';
 
 export const PublicContributionForm: React.FC = () => {
   const { ongId = '' } = useParams<{ ongId: string }>();
@@ -416,161 +415,102 @@ export const PublicContributionFormForOng: React.FC<{ ongId: string }> = ({ ongI
   }
 
   return (
-    <div
-      style={{ minHeight: '100vh', backgroundColor: '#f1f5f9', padding: '1.25rem 0.75rem 3rem' }}
-    >
-      <div style={{ maxWidth: '640px', margin: '0 auto', display: 'grid', gap: '1.25rem' }}>
-        {/* Header de la Iglesia */}
-        <header
-          className="card"
-          style={{
-            padding: '1.5rem',
-            textAlign: 'center',
-            borderRadius: '16px',
-            backgroundColor: '#ffffff',
-          }}
-        >
+    <div className="pcf-page">
+      <div className="pcf-top-accent" aria-hidden="true" />
+
+      <div className="pcf-container">
+        {/* Identidad de la organización (Figma node 239:7) */}
+        <header className="pcf-org-card">
           <img
             src={ongInfo?.logo_url || '/mateo_logo.png'}
             alt={ongInfo?.nombre || 'Iglesia'}
-            style={{
-              height: '58px',
-              width: '58px',
-              objectFit: 'contain',
-              borderRadius: '12px',
-              margin: '0 auto 0.75rem',
-              display: 'block',
-            }}
+            className="pcf-org-logo"
           />
-          <h1 style={{ fontSize: '1.35rem', fontWeight: 800, color: 'var(--primary)', margin: 0 }}>
-            {ongInfo?.nombre}
-          </h1>
-          <p style={{ margin: '0.35rem 0 0', fontSize: '0.88rem', color: '#64748b' }}>
-            Portal de Reporte de Diezmos y Ofrendas
-          </p>
+          <div className="pcf-org-info">
+            <h1 className="pcf-org-title">{ongInfo?.nombre}</h1>
+            <p className="pcf-org-subtitle">Reporte de aportes a la organización</p>
+          </div>
         </header>
 
-        {/* Cuentas receptoras activas (HU-5) */}
+        {/* Datos bancarios y pago móvil (Figma node 239:8) */}
         {cuentas.length > 0 && (
           <section
-            className="card"
+            style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}
             aria-label="Datos bancarios receptores"
-            style={{ padding: '1.25rem', borderRadius: '16px' }}
           >
-            <h2
-              style={{
-                fontSize: '1rem',
-                fontWeight: 700,
-                color: '#1e293b',
-                margin: '0 0 0.75rem 0',
-              }}
-            >
-              Datos Bancarios y Pago Móvil de la Iglesia
-            </h2>
-            <div style={{ display: 'grid', gap: '0.75rem' }}>
-              {cuentas.map((cta) => {
-                const accountVal = cta.tipo === 'pago_movil' ? cta.telefono : cta.numero_cuenta;
+            <div className="pcf-section-head">
+              <h2 className="pcf-bank-heading">Datos bancarios y pago móvil</h2>
+              <p className="pcf-bank-subheading">
+                Consulta los datos de la iglesia antes de realizar tu aporte.
+              </p>
+            </div>
+
+            <div className="pcf-accounts-grid">
+              {cuentas.map((cta, idx) => {
+                const isPagoMovil = cta.tipo === 'pago_movil';
+                const transferNum = cuentas
+                  .slice(0, idx + 1)
+                  .filter((c) => c.tipo !== 'pago_movil').length;
+                const cardHeading = isPagoMovil
+                  ? 'Pago móvil'
+                  : `Transferencia · ${String(transferNum).padStart(2, '0')}`;
+                const accountVal = isPagoMovil ? cta.telefono : cta.numero_cuenta;
+
                 return (
-                  <div
-                    key={cta.id}
-                    style={{
-                      border: '1px solid #e2e8f0',
-                      borderRadius: '12px',
-                      padding: '0.9rem',
-                      backgroundColor: '#f8fafc',
-                      display: 'grid',
-                      gap: '0.4rem',
-                      fontSize: '0.85rem',
-                    }}
-                  >
-                    <div
-                      style={{
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        alignItems: 'center',
-                        flexWrap: 'wrap',
-                        gap: '0.5rem',
-                      }}
-                    >
-                      <strong style={{ color: 'var(--primary)' }}>
-                        {cta.tipo === 'pago_movil' ? 'Pago Móvil' : 'Transferencia'} · {cta.banco}
-                      </strong>
-                      <span
-                        style={{
-                          fontSize: '0.72rem',
-                          fontWeight: 700,
-                          padding: '0.15rem 0.5rem',
-                          borderRadius: '999px',
-                          backgroundColor: '#e0f2fe',
-                          color: '#0369a1',
-                        }}
-                      >
-                        {cta.tipo_fondo}
-                      </span>
+                  <div key={cta.id} className="pcf-bank-card">
+                    <div className="pcf-bank-card-header">
+                      <h3 className="pcf-bank-card-title">{cardHeading}</h3>
+                      {cta.tipo_fondo && (
+                        <span className="pcf-bank-fund-pill">{cta.tipo_fondo}</span>
+                      )}
                     </div>
 
-                    <div>
-                      <strong>Titular:</strong> {cta.titular}
+                    <p className="pcf-bank-receptor">Banco receptor: {cta.banco}</p>
+
+                    <div className="pcf-bank-field">
+                      <span className="pcf-bank-label">TITULAR</span>
+                      <span className="pcf-bank-value">{cta.titular}</span>
                     </div>
 
-                    <div
-                      style={{
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        alignItems: 'center',
-                        gap: '0.5rem',
-                      }}
-                    >
-                      <span>
-                        <strong>RIF/Cédula:</strong> {cta.rif_cedula}
-                      </span>
+                    <div className="pcf-bank-row">
+                      <div className="pcf-bank-field">
+                        <span className="pcf-bank-label">RIF / Cédula</span>
+                        <span className="pcf-bank-value">{cta.rif_cedula}</span>
+                      </div>
                       <button
                         type="button"
-                        className="btn btn-outline"
+                        className="pcf-copy-btn"
                         onClick={() => void handleCopy(`rif-${cta.id}`, cta.rif_cedula)}
-                        style={{ padding: '0.2rem 0.55rem', fontSize: '0.75rem' }}
                       >
                         {copiedKey === `rif-${cta.id}` ? (
-                          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                          <>
                             <Check size={12} /> Copiado
-                          </span>
+                          </>
                         ) : (
-                          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-                            <Copy size={12} /> Copiar RIF
-                          </span>
+                          'Copiar'
                         )}
                       </button>
                     </div>
 
                     {accountVal && (
-                      <div
-                        style={{
-                          display: 'flex',
-                          justifyContent: 'space-between',
-                          alignItems: 'center',
-                          gap: '0.5rem',
-                        }}
-                      >
-                        <span>
-                          <strong>
-                            {cta.tipo === 'pago_movil' ? 'Teléfono:' : 'Nro. Cuenta:'}
-                          </strong>{' '}
-                          {accountVal}
-                        </span>
+                      <div className="pcf-bank-row">
+                        <div className="pcf-bank-field">
+                          <span className="pcf-bank-label">
+                            {isPagoMovil ? 'Teléfono receptor' : 'Número de cuenta'}
+                          </span>
+                          <span className="pcf-bank-value">{accountVal}</span>
+                        </div>
                         <button
                           type="button"
-                          className="btn btn-outline"
+                          className="pcf-copy-btn"
                           onClick={() => void handleCopy(`acc-${cta.id}`, accountVal)}
-                          style={{ padding: '0.2rem 0.55rem', fontSize: '0.75rem' }}
                         >
                           {copiedKey === `acc-${cta.id}` ? (
-                            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                            <>
                               <Check size={12} /> Copiado
-                            </span>
+                            </>
                           ) : (
-                            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-                              <Copy size={12} /> Copiar
-                            </span>
+                            'Copiar'
                           )}
                         </button>
                       </div>
@@ -582,23 +522,24 @@ export const PublicContributionFormForOng: React.FC<{ ongId: string }> = ({ ongI
           </section>
         )}
 
-        {/* Formulario */}
+        {/* Introducción al reporte (Figma node 239:9) */}
+        <div className="pcf-section-head">
+          <h2 className="pcf-report-title">Reportar un aporte</h2>
+          <p className="pcf-report-subtitle">Completa tus datos y registra el pago realizado.</p>
+        </div>
+
         <form
           onSubmit={handleSubmit}
-          className="card"
-          style={{ padding: '1.5rem', borderRadius: '16px', display: 'grid', gap: '1.25rem' }}
+          style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}
         >
-          <h2 style={{ fontSize: '1.1rem', fontWeight: 800, color: '#1e293b', margin: 0 }}>
-            Reportar mi Aporte
-          </h2>
-
           {formError && (
             <div
               role="alert"
               style={{
-                padding: '0.8rem 1rem',
-                borderRadius: '10px',
+                padding: '0.85rem 1rem',
+                borderRadius: '8px',
                 backgroundColor: '#fee2e2',
+                border: '1px solid #fecaca',
                 color: '#b91c1c',
                 fontWeight: 600,
                 fontSize: '0.88rem',
@@ -608,93 +549,64 @@ export const PublicContributionFormForOng: React.FC<{ ongId: string }> = ({ ongI
             </div>
           )}
 
-          {/* Identificación del aportante (HU-6, HU-7, HU-8) */}
-          <div
-            style={{
-              border: '1px solid #e2e8f0',
-              borderRadius: '12px',
-              padding: '1rem',
-              display: 'grid',
-              gap: '0.85rem',
-            }}
-          >
-            <div
-              style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                flexWrap: 'wrap',
-                gap: '0.5rem',
-              }}
-            >
-              <strong style={{ fontSize: '0.92rem', color: '#1e293b' }}>
-                1. Identificación del Aportante
-              </strong>
-              <label
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '0.4rem',
-                  fontSize: '0.85rem',
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                }}
-              >
+          {/* 1. Identificación del aportante (Figma node 239:10) */}
+          <section className="pcf-card">
+            <div className="pcf-card-header">
+              <h3 className="pcf-card-title">1. Identificación del aportante</h3>
+              <label className="pcf-anon-label">
                 <input
                   type="checkbox"
+                  className="pcf-anon-checkbox"
                   checked={esAnonimo}
                   onChange={(e) => {
                     setEsAnonimo(e.target.checked);
                     setFormError(null);
                   }}
                 />
-                <UserX size={15} /> Aporte Anónimo / Visitante
+                Aporte anónimo / visitante
               </label>
             </div>
 
             {!esAnonimo && (
               <>
-                <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'flex-end' }}>
-                  <div style={{ flex: 1 }}>
-                    <label
-                      htmlFor="aportante-cedula"
-                      className="form-field-label"
-                      style={{ display: 'block', marginBottom: '0.25rem' }}
-                    >
-                      Buscar por Cédula (opcional si eres miembro)
-                    </label>
+                <div className="pcf-field">
+                  <label htmlFor="aportante-cedula" className="pcf-label">
+                    Ingresa tu cédula para buscar tu registro
+                  </label>
+                  <div className="pcf-search-row">
                     <input
                       id="aportante-cedula"
+                      aria-label="Buscar por Cédula"
                       type="text"
-                      className="form-input"
-                      placeholder="Ej: 12345678"
+                      className="pcf-input"
+                      placeholder="Escribe tu cédula"
                       value={cedulaBusqueda}
                       onChange={(e) => {
                         setCedulaBusqueda(e.target.value);
                         setLookupResult(null);
                       }}
                     />
+                    <button
+                      type="button"
+                      className="pcf-search-btn"
+                      onClick={() => void handleSearchCedula()}
+                      disabled={buscandoCedula}
+                    >
+                      <Search size={18} />
+                      {buscandoCedula ? 'Buscando...' : 'Buscar'}
+                    </button>
                   </div>
-                  <button
-                    type="button"
-                    className="btn btn-outline"
-                    onClick={() => void handleSearchCedula()}
-                    disabled={buscandoCedula}
-                    style={{ height: '42px', whiteSpace: 'nowrap' }}
-                  >
-                    <Search size={15} /> {buscandoCedula ? 'Buscando...' : 'Buscar'}
-                  </button>
                 </div>
 
                 {lookupResult?.encontrado && (
                   <div
                     style={{
-                      padding: '0.65rem 0.85rem',
+                      padding: '0.75rem 1rem',
                       borderRadius: '8px',
                       backgroundColor: '#ecfdf5',
                       border: '1px solid #a7f3d0',
                       color: '#065f46',
-                      fontSize: '0.85rem',
+                      fontSize: '0.88rem',
                       display: 'flex',
                       alignItems: 'center',
                       gap: '0.5rem',
@@ -710,12 +622,12 @@ export const PublicContributionFormForOng: React.FC<{ ongId: string }> = ({ ongI
                 {lookupResult && !lookupResult.encontrado && (
                   <div
                     style={{
-                      padding: '0.65rem 0.85rem',
+                      padding: '0.75rem 1rem',
                       borderRadius: '8px',
                       backgroundColor: '#fffbeb',
                       border: '1px solid #fde68a',
                       color: '#92400e',
-                      fontSize: '0.82rem',
+                      fontSize: '0.85rem',
                     }}
                   >
                     No encontramos tu cédula registrada. Ingresa tu nombre y teléfono abajo para
@@ -724,35 +636,29 @@ export const PublicContributionFormForOng: React.FC<{ ongId: string }> = ({ ongI
                 )}
 
                 {(!lookupResult || !lookupResult.encontrado) && (
-                  <div
-                    style={{
-                      display: 'grid',
-                      gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-                      gap: '0.75rem',
-                    }}
-                  >
-                    <div>
-                      <label htmlFor="aportante-nombre" className="form-field-label">
+                  <div className="pcf-two-col">
+                    <div className="pcf-field">
+                      <label htmlFor="aportante-nombre" className="pcf-label">
                         Nombre completo *
                       </label>
                       <input
                         id="aportante-nombre"
                         type="text"
-                        className="form-input"
+                        className="pcf-input"
                         placeholder="Tu nombre y apellido"
                         value={nombreAportante}
                         onChange={(e) => setNombreAportante(e.target.value)}
                       />
                     </div>
-                    <div>
-                      <label htmlFor="aportante-telefono" className="form-field-label">
+                    <div className="pcf-field">
+                      <label htmlFor="aportante-telefono" className="pcf-label">
                         Teléfono de contacto
                       </label>
                       <input
                         id="aportante-telefono"
                         type="tel"
-                        className="form-input"
-                        placeholder="0414-0000000"
+                        className="pcf-input"
+                        placeholder="Tu número de teléfono"
                         value={telefonoAportante}
                         onChange={(e) => setTelefonoAportante(e.target.value)}
                       />
@@ -761,28 +667,20 @@ export const PublicContributionFormForOng: React.FC<{ ongId: string }> = ({ ongI
                 )}
               </>
             )}
-          </div>
+          </section>
 
-          {/* Categoría, Moneda y Monto (HU-9, HU-10) */}
-          <div style={{ display: 'grid', gap: '0.9rem' }}>
-            <strong style={{ fontSize: '0.92rem', color: '#1e293b' }}>
-              2. Detalles del Aporte
-            </strong>
+          {/* 2. Detalles del aporte (Figma node 239:11) */}
+          <section className="pcf-card">
+            <h3 className="pcf-card-title">2. Detalles del aporte</h3>
 
-            <div
-              style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
-                gap: '0.75rem',
-              }}
-            >
-              <div>
-                <label htmlFor="aporte-categoria" className="form-field-label">
+            <div className="pcf-two-col">
+              <div className="pcf-field">
+                <label htmlFor="aporte-categoria" className="pcf-label">
                   Categoría *
                 </label>
                 <select
                   id="aporte-categoria"
-                  className="form-input"
+                  className="pcf-input"
                   value={categoria}
                   onChange={(e) => setCategoria(e.target.value as CategoriaAporte)}
                 >
@@ -794,16 +692,15 @@ export const PublicContributionFormForOng: React.FC<{ ongId: string }> = ({ ongI
                 </select>
               </div>
 
-              <div>
-                <label className="form-field-label">Moneda *</label>
-                <div style={{ display: 'flex', gap: '0.4rem' }}>
+              <div className="pcf-field">
+                <span className="pcf-label">Moneda *</span>
+                <div className="pcf-segmented-row">
                   {(['VES', 'USD'] as const).map((m) => (
                     <button
                       key={m}
                       type="button"
                       onClick={() => setMoneda(m)}
-                      className={`btn ${moneda === m ? 'btn-primary' : 'btn-outline'}`}
-                      style={{ flex: 1, padding: '0.55rem' }}
+                      className={`pcf-seg-btn ${moneda === m ? 'pcf-seg-btn--active' : ''}`}
                     >
                       {m}
                     </button>
@@ -812,15 +709,9 @@ export const PublicContributionFormForOng: React.FC<{ ongId: string }> = ({ ongI
               </div>
             </div>
 
-            <div
-              style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
-                gap: '0.75rem',
-              }}
-            >
-              <div>
-                <label htmlFor="aporte-monto" className="form-field-label">
+            <div className="pcf-two-col">
+              <div className="pcf-field">
+                <label htmlFor="aporte-monto" className="pcf-label">
                   Monto ({moneda}) *
                 </label>
                 <input
@@ -828,21 +719,22 @@ export const PublicContributionFormForOng: React.FC<{ ongId: string }> = ({ ongI
                   type="number"
                   step="0.01"
                   min="0.01"
-                  className="form-input"
-                  placeholder="0.00"
+                  className="pcf-input"
+                  placeholder="0,00"
                   value={montoOriginal}
                   onChange={(e) => setMontoOriginal(e.target.value)}
                   required
                 />
               </div>
-              <div>
-                <label htmlFor="aporte-fecha" className="form-field-label">
+
+              <div className="pcf-field">
+                <label htmlFor="aporte-fecha" className="pcf-label">
                   Fecha del pago *
                 </label>
                 <input
                   id="aporte-fecha"
                   type="date"
-                  className="form-input"
+                  className="pcf-input"
                   value={fechaPago}
                   onChange={(e) => setFechaPago(e.target.value)}
                   required
@@ -851,40 +743,31 @@ export const PublicContributionFormForOng: React.FC<{ ongId: string }> = ({ ongI
             </div>
 
             {moneda === 'VES' && (
-              <div
-                style={{
-                  padding: '0.75rem 1rem',
-                  borderRadius: '10px',
-                  backgroundColor: '#eff6ff',
-                  border: '1px solid #bfdbfe',
-                  fontSize: '0.85rem',
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  flexWrap: 'wrap',
-                  gap: '0.5rem',
-                }}
-              >
-                <span>
-                  Tasa BCV vigente:{' '}
-                  <strong>{tasaBcv ? `${tasaBcv.toFixed(4)} Bs/$` : 'N/D'}</strong>
-                </span>
-                <span>
-                  Equivalente en USD: <strong>{formatUsd(equivalentUsd)}</strong>
-                </span>
+              <div className="pcf-rate-box">
+                <div className="pcf-rate-item">
+                  <span className="pcf-rate-label">Tasa BCV vigente</span>
+                  <span className="pcf-rate-value">
+                    {tasaBcv ? `${tasaBcv.toFixed(4)} Bs/$` : 'N/D'}
+                  </span>
+                </div>
+                <div className="pcf-rate-item">
+                  <span className="pcf-rate-label">Equivalente en USD</span>
+                  <span className="pcf-rate-value">{formatUsd(equivalentUsd)}</span>
+                </div>
               </div>
             )}
-          </div>
+          </section>
 
-          {/* Método de Pago (HU-11, HU-12, HU-13) */}
-          <div style={{ display: 'grid', gap: '0.9rem' }}>
-            <strong style={{ fontSize: '0.92rem', color: '#1e293b' }}>3. Método de Pago</strong>
+          {/* 3. Método de pago (Figma node 239:12) */}
+          <section className="pcf-card">
+            <h3 className="pcf-card-title">3. Método de pago</h3>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.5rem' }}>
+            <div className="pcf-methods-row">
               {(
                 [
-                  { id: 'pago_movil', label: 'Pago Móvil', icon: <Smartphone size={15} /> },
-                  { id: 'transferencia', label: 'Transferencia', icon: <Landmark size={15} /> },
-                  { id: 'efectivo', label: 'Efectivo', icon: <DollarSign size={15} /> },
+                  { id: 'pago_movil', label: 'Pago móvil', icon: <Smartphone size={18} /> },
+                  { id: 'transferencia', label: 'Transferencia', icon: <Landmark size={18} /> },
+                  { id: 'efectivo', label: 'Efectivo', icon: <DollarSign size={18} /> },
                 ] as const
               ).map((mp) => (
                 <button
@@ -895,15 +778,7 @@ export const PublicContributionFormForOng: React.FC<{ ongId: string }> = ({ ongI
                     setCuentaReceptoraId('');
                     setFormError(null);
                   }}
-                  className={`btn ${medioPago === mp.id ? 'btn-primary' : 'btn-outline'}`}
-                  style={{
-                    padding: '0.6rem 0.4rem',
-                    fontSize: '0.82rem',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: '0.35rem',
-                  }}
+                  className={`pcf-seg-btn ${medioPago === mp.id ? 'pcf-seg-btn--active' : ''}`}
                 >
                   {mp.icon}
                   {mp.label}
@@ -912,13 +787,13 @@ export const PublicContributionFormForOng: React.FC<{ ongId: string }> = ({ ongI
             </div>
 
             {medioPago !== 'efectivo' && matchingAccounts.length > 0 && (
-              <div>
-                <label htmlFor="aporte-cuenta-receptora" className="form-field-label">
-                  Cuenta de la iglesia a la que transferiste (opcional)
+              <div className="pcf-field">
+                <label htmlFor="aporte-cuenta-receptora" className="pcf-label">
+                  Cuenta de la iglesia donde realizaste el aporte
                 </label>
                 <select
                   id="aporte-cuenta-receptora"
-                  className="form-input"
+                  className="pcf-input"
                   value={cuentaReceptoraId}
                   onChange={(e) => setCuentaReceptoraId(e.target.value)}
                 >
@@ -933,78 +808,81 @@ export const PublicContributionFormForOng: React.FC<{ ongId: string }> = ({ ongI
             )}
 
             {medioPago !== 'efectivo' && (
-              <div
-                style={{
-                  display: 'grid',
-                  gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-                  gap: '0.75rem',
-                }}
-              >
-                <div>
-                  <label htmlFor="aporte-banco-emisor" className="form-field-label">
-                    Banco Emisor *
-                  </label>
-                  <select
-                    id="aporte-banco-emisor"
-                    className="form-input"
-                    value={bancoEmisor}
-                    onChange={(e) => setBancoEmisor(e.target.value)}
-                  >
-                    <option value="">Selecciona tu banco...</option>
-                    {BANCOS_VENEZUELA.map((b) => (
-                      <option key={b} value={b}>
-                        {b}
-                      </option>
-                    ))}
-                  </select>
+              <>
+                <div className="pcf-two-col">
+                  <div className="pcf-field">
+                    <label htmlFor="aporte-banco-emisor" className="pcf-label">
+                      Banco emisor *
+                    </label>
+                    <select
+                      id="aporte-banco-emisor"
+                      className="pcf-input"
+                      value={bancoEmisor}
+                      onChange={(e) => setBancoEmisor(e.target.value)}
+                    >
+                      <option value="">Selecciona un banco</option>
+                      {BANCOS_VENEZUELA.map((b) => (
+                        <option key={b} value={b}>
+                          {b}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {medioPago === 'pago_movil' ? (
+                    <div className="pcf-field">
+                      <label htmlFor="aporte-tel-emisor" className="pcf-label">
+                        Teléfono emisor *
+                      </label>
+                      <input
+                        id="aporte-tel-emisor"
+                        type="tel"
+                        className="pcf-input"
+                        placeholder="Tu número de teléfono"
+                        value={telefonoEmisor}
+                        onChange={(e) => setTelefonoEmisor(e.target.value)}
+                      />
+                    </div>
+                  ) : (
+                    <div className="pcf-field">
+                      <label htmlFor="aporte-referencia" className="pcf-label">
+                        Número de referencia {sinReferenciaMismoBanco ? '(Opcional)' : '*'}
+                      </label>
+                      <input
+                        id="aporte-referencia"
+                        type="text"
+                        className="pcf-input"
+                        placeholder="Escribe la referencia del pago"
+                        value={referencia}
+                        onChange={(e) => setReferencia(e.target.value)}
+                      />
+                    </div>
+                  )}
                 </div>
 
                 {medioPago === 'pago_movil' && (
-                  <div>
-                    <label htmlFor="aporte-tel-emisor" className="form-field-label">
-                      Teléfono Emisor *
+                  <div className="pcf-field">
+                    <label htmlFor="aporte-referencia" className="pcf-label">
+                      Número de referencia *
                     </label>
                     <input
-                      id="aporte-tel-emisor"
-                      type="tel"
-                      className="form-input"
-                      placeholder="0412-0000000"
-                      value={telefonoEmisor}
-                      onChange={(e) => setTelefonoEmisor(e.target.value)}
+                      id="aporte-referencia"
+                      type="text"
+                      className="pcf-input"
+                      placeholder="Escribe la referencia del pago"
+                      value={referencia}
+                      onChange={(e) => setReferencia(e.target.value)}
                     />
                   </div>
                 )}
-
-                <div>
-                  <label htmlFor="aporte-referencia" className="form-field-label">
-                    Número de Referencia{' '}
-                    {medioPago === 'transferencia' && sinReferenciaMismoBanco ? '(Opcional)' : '*'}
-                  </label>
-                  <input
-                    id="aporte-referencia"
-                    type="text"
-                    className="form-input"
-                    placeholder="Ej: 12345678"
-                    value={referencia}
-                    onChange={(e) => setReferencia(e.target.value)}
-                  />
-                </div>
-              </div>
+              </>
             )}
 
             {medioPago === 'transferencia' && (
-              <label
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '0.45rem',
-                  fontSize: '0.82rem',
-                  color: '#475569',
-                  cursor: 'pointer',
-                }}
-              >
+              <label className="pcf-anon-label">
                 <input
                   type="checkbox"
+                  className="pcf-anon-checkbox"
                   checked={sinReferenciaMismoBanco}
                   onChange={(e) => setSinReferenciaMismoBanco(e.target.checked)}
                 />
@@ -1014,14 +892,14 @@ export const PublicContributionFormForOng: React.FC<{ ongId: string }> = ({ ongI
             )}
 
             {medioPago === 'efectivo' && (
-              <div>
-                <label htmlFor="aporte-actividad" className="form-field-label">
-                  Culto, Servicio, Actividad o Responsable / Tesorero que recibió *
+              <div className="pcf-field">
+                <label htmlFor="aporte-actividad" className="pcf-label">
+                  Culto, servicio, actividad o responsable / tesorero que recibió *
                 </label>
                 <input
                   id="aporte-actividad"
                   type="text"
-                  className="form-input"
+                  className="pcf-input"
                   placeholder="Ej: Culto Dominical 10:00 AM / Entregado al Tesorero"
                   value={actividadOResponsable}
                   onChange={(e) => setActividadOResponsable(e.target.value)}
@@ -1030,31 +908,20 @@ export const PublicContributionFormForOng: React.FC<{ ongId: string }> = ({ ongI
             )}
 
             {medioPago !== 'efectivo' && (
-              <div>
-                <label htmlFor="aporte-comprobante" className="form-field-label">
-                  Comprobante / Captura de pantalla (Imagen o PDF, opcional)
-                </label>
-                <label
-                  htmlFor="aporte-comprobante"
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.5rem',
-                    padding: '0.75rem',
-                    borderRadius: '10px',
-                    border: '1px dashed #94a3b8',
-                    backgroundColor: '#f8fafc',
-                    cursor: 'pointer',
-                    fontSize: '0.85rem',
-                    color: '#334155',
-                  }}
-                >
-                  <Upload size={16} />
-                  <span>
-                    {comprobanteFile
-                      ? `Archivo seleccionado: ${comprobanteFile.name}`
-                      : 'Adjuntar captura o PDF del comprobante'}
-                  </span>
+              <div className="pcf-field">
+                <span className="pcf-label">Comprobante (opcional)</span>
+                <label htmlFor="aporte-comprobante" className="pcf-dropzone">
+                  <Upload size={22} color="var(--primary, #1b5cb6)" />
+                  <div className="pcf-dropzone-text">
+                    <span className="pcf-dropzone-title">
+                      {comprobanteFile
+                        ? `Archivo seleccionado: ${comprobanteFile.name}`
+                        : 'Adjuntar comprobante'}
+                    </span>
+                    <span className="pcf-dropzone-sub">
+                      Selecciona o arrastra una imagen del pago.
+                    </span>
+                  </div>
                 </label>
                 <input
                   id="aporte-comprobante"
@@ -1065,26 +932,16 @@ export const PublicContributionFormForOng: React.FC<{ ongId: string }> = ({ ongI
                 />
               </div>
             )}
-          </div>
+          </section>
 
-          <button
-            type="submit"
-            className="btn btn-primary"
-            disabled={submitting}
-            style={{
-              width: '100%',
-              padding: '0.9rem',
-              fontWeight: 700,
-              fontSize: '1rem',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '0.5rem',
-            }}
-          >
+          <p className="pcf-required-note">* Campos obligatorios</p>
+
+          <button type="submit" className="pcf-submit-btn" disabled={submitting}>
             <Send size={18} />
-            {submitting ? 'Enviando reporte...' : 'Enviar Reporte de Aporte'}
+            {submitting ? 'Enviando reporte...' : 'Enviar reporte de aporte'}
           </button>
+
+          <p className="pcf-footer-note">Revisa la información antes de enviar.</p>
         </form>
       </div>
     </div>

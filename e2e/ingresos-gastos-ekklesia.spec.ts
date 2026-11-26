@@ -11,26 +11,26 @@ test.describe('Ingresos y Gastos (Ekklesia) & Portal Público de Aportes', () =>
 
     // 1. Abrir enlace público sin autenticación
     await page.goto(`/aportar/${DEMO_ONG_ID}`);
-    await expect(page.getByText('Portal de Reporte de Diezmos y Ofrendas')).toBeVisible();
+    await expect(page.getByText(/Reporte de aportes a la organización/i)).toBeVisible();
     await expect(
-      page.getByRole('heading', { name: 'Datos Bancarios y Pago Móvil de la Iglesia' }),
+      page.getByRole('heading', { name: /Datos bancarios y pago móvil/i }),
     ).toBeVisible();
 
     // 2. Llenar datos de Pago Móvil en VES sin referencia para validar campo obligatorio
-    await page.getByLabel('Nombre completo').fill('María Fernanda Pérez');
-    await page.getByLabel(/Monto \(VES\) \*/).fill('1500');
-    await expect(page.getByText(/Equivalente en USD:/)).toBeVisible();
+    await page.getByLabel(/Nombre completo/i).fill('María Fernanda Pérez');
+    await page.getByLabel(/Monto \(VES\) \*/i).fill('1500');
+    await expect(page.getByText(/Equivalente en USD/)).toBeVisible();
 
-    await page.getByLabel('Banco Emisor *').selectOption('Banesco');
-    await page.getByLabel('Teléfono Emisor *').fill('04141234567');
-    await page.getByRole('button', { name: 'Enviar Reporte de Aporte' }).click();
+    await page.getByLabel(/Banco emisor \*/i).selectOption('Banesco');
+    await page.getByLabel(/Teléfono emisor \*/i).fill('04141234567');
+    await page.getByRole('button', { name: /Enviar reporte de aporte/i }).click();
     await expect(
       page.getByText('El número de referencia es obligatorio para Pago Móvil.'),
     ).toBeVisible();
 
     // 3. Completar referencia y enviar
-    await page.getByLabel('Número de Referencia *').fill('88776655');
-    await page.getByRole('button', { name: 'Enviar Reporte de Aporte' }).click();
+    await page.getByLabel(/Número de referencia \*/i).fill('88776655');
+    await page.getByRole('button', { name: /Enviar reporte de aporte/i }).click();
 
     // 4. Pantalla de confirmación con código APO-
     await expect(
@@ -67,10 +67,10 @@ test.describe('Ingresos y Gastos (Ekklesia) & Portal Público de Aportes', () =>
     await page.getByLabel(/Monto \(USD\) \*/).fill('25');
 
     await page.getByRole('button', { name: 'Transferencia' }).click();
-    await page.getByLabel('Banco Emisor *').selectOption('BBVA Provincial');
+    await page.getByLabel(/Banco emisor \*/i).selectOption('BBVA Provincial');
     await page.getByLabel(/Transferencia del mismo banco/i).check();
 
-    await page.getByRole('button', { name: 'Enviar Reporte de Aporte' }).click();
+    await page.getByRole('button', { name: /Enviar reporte de aporte/i }).click();
     await expect(
       page.getByRole('heading', { name: '¡Reporte Recibido por Tesorería!' }),
     ).toBeVisible();
