@@ -124,6 +124,7 @@ describe('PublicContributionForm', () => {
 
     renderPage();
     await screen.findByRole('heading', { name: 'Iglesia Gracia y Paz' });
+    await screen.findByText(/100\.0000 Bs\/\$/i);
 
     fireEvent.change(screen.getByLabelText(/Buscar por Cédula/i), {
       target: { value: '20123456' },
