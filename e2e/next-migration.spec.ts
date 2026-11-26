@@ -113,7 +113,8 @@ test.describe('Next.js migration contracts', () => {
       ['audit', /Auditoría y Conformidad de Gastos/],
       ['incomes', /Registro de Diezmos y Ofrendas/],
       ['budgets', /Presupuestos Modelo UNDG/],
-      ['finance', /Ingresos y Gastos/],
+      ['finance', /^Ingresos$/],
+      ['expenses', /^Gastos$/],
     ];
     for (const [path, title] of routes) {
       await page.goto(`/app/${path}`);

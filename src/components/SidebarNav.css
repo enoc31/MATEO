@@ -341,6 +341,35 @@
   font-weight: 600;
 }
 
+.sn-subgroup-btn {
+  width: 100%;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  justify-content: space-between;
+  font-family: inherit;
+  text-align: left;
+}
+
+.sn-subgroup-btn--active {
+  color: var(--primary, #1b5cb6);
+  font-weight: 600;
+}
+
+.sn-submenu--nested {
+  margin: 0.15rem 0 0.25rem 0.65rem;
+  padding-left: 0.75rem;
+}
+
+.sn-popover-group-label {
+  padding: 0.3rem 0.65rem 0.1rem;
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #64748b;
+}
+
 /* Popover flotante cuando el sidebar está colapsado (estilo Figma Small) */
 .sn-popover {
   position: absolute;

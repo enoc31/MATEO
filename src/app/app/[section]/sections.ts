@@ -12,6 +12,7 @@ export const migratedSections = [
   'incomes',
   'budgets',
   'finance',
+  'expenses',
   'audit-detail',
   'nuevo-ingreso',
   'registrar-aporte',

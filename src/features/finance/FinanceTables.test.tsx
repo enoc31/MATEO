@@ -1,9 +1,8 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { FinanceIncomesTable } from './FinanceIncomesTable';
-import { FinanceExpensesTable } from './FinanceExpensesTable';
 import { VerificationQueueTab } from './VerificationQueueTab';
-import type { Donation, Requisition } from '../../services/api';
+import type { Donation } from '../../services/api';
 import type { ReporteAporte } from '../../services/financeApi';
 
 const sampleDonations: Donation[] = [
@@ -43,31 +42,6 @@ const sampleDonations: Donation[] = [
   },
 ];
 
-const sampleRequisitions: Requisition[] = [
-  {
-    id: 'req-1',
-    codigo: 'SOL-001',
-    solicitante_id: 'user-1',
-    solicitante_nombre: 'Pedro Páez',
-    proyecto_id: 'proj-1',
-    proyecto_nombre: 'Ayuda Social',
-    partida_id: 'part-1',
-    partida_nombre: 'Alimentos',
-    monto_solicitado: 1250.5,
-    motivo: 'Compra de víveres',
-    estado: 'aprobada_ejecucion',
-    validador_1_id: null,
-    validado_1_at: null,
-    validador_2_id: null,
-    validado_2_at: null,
-    rechazado_por: null,
-    rechazado_at: null,
-    motivo_rechazo: null,
-    created_at: '2026-11-21T00:00:00Z',
-    updated_at: '2026-11-21T00:00:00Z',
-  },
-];
-
 describe('Finance Figma Data Tables', () => {
   it('renders FinanceIncomesTable with formatted VES/USD amounts, tabs, and expandable detail', () => {
     render(
@@ -95,21 +69,6 @@ describe('Finance Figma Data Tables', () => {
       screen.getByRole('button', { name: /Ver detalle de aporte de Diego Martínez/i }),
     );
     expect(screen.getByText('Diezmo dominical')).toBeInTheDocument();
-  });
-
-  it('renders FinanceExpensesTable with formatted amount and status pill', () => {
-    const onNavigate = vi.fn();
-    render(
-      <FinanceExpensesTable
-        requisitions={sampleRequisitions}
-        onNavigateRequisitions={onNavigate}
-      />,
-    );
-
-    expect(screen.getByText(/SOL-001 · Compra de víveres/i)).toBeInTheDocument();
-    expect(screen.getAllByText('$1.250,50').length).toBeGreaterThanOrEqual(2);
-    fireEvent.click(screen.getByRole('button', { name: 'Ver más' }));
-    expect(onNavigate).toHaveBeenCalledTimes(1);
   });
 
   it('renders VerificationQueueTab with a Ver comprobante link on every pending report and opens viewer modal', () => {

@@ -15,9 +15,10 @@ describe('menuConfig — menú de Mateo Ekklesia', () => {
     expect(menu).toContain('Calendario');
   });
 
-  it('incluye los módulos agrupadores Ingresos y Gastos y Contabilidad', () => {
+  it('incluye los módulos separados Ingresos, Gastos y Contabilidad', () => {
     const menu = labels('ekklesia');
-    expect(menu).toContain('Ingresos y Gastos');
+    expect(menu).toContain('Ingresos');
+    expect(menu).toContain('Gastos');
     expect(menu).toContain('Contabilidad');
   });
 
@@ -44,7 +45,14 @@ describe('menuConfig — menú de Mateo Ekklesia', () => {
 
   it('deja habilitados los módulos que ya funcionan', () => {
     const items = getMenuItems('ekklesia');
-    for (const id of ['dashboard', 'organization', 'miembros', 'finance', 'accounting']) {
+    for (const id of [
+      'dashboard',
+      'organization',
+      'miembros',
+      'finance',
+      'expenses',
+      'accounting',
+    ]) {
       expect(items.find((item) => item.id === id)?.disabled).toBeFalsy();
     }
   });

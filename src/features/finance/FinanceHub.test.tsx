@@ -3,7 +3,7 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { FinanceHub } from './FinanceHub';
 import * as AuthContextModule from '../../context/AuthContext';
-import { api, requisitionsApi } from '../../services/api';
+import { api } from '../../services/api';
 import { financeApi } from '../../services/financeApi';
 
 vi.mock('../../context/AuthContext', () => ({
@@ -18,10 +18,6 @@ vi.mock('../../services/api', async (importOriginal) => {
       ...actual.api,
       getDonations: vi.fn(),
       getBankTransactions: vi.fn(),
-    },
-    requisitionsApi: {
-      ...actual.requisitionsApi,
-      getRequisitions: vi.fn(),
     },
   };
 });
@@ -43,7 +39,6 @@ describe('FinanceHub', () => {
     vi.clearAllMocks();
     vi.mocked(api.getDonations).mockResolvedValue([]);
     vi.mocked(api.getBankTransactions).mockResolvedValue([]);
-    vi.mocked(requisitionsApi.getRequisitions).mockResolvedValue([]);
     vi.mocked(financeApi.getCuentasReceptoras).mockResolvedValue([]);
     vi.mocked(financeApi.getReportesAportes).mockResolvedValue([
       {
@@ -80,7 +75,7 @@ describe('FinanceHub', () => {
     ]);
   });
 
-  it('shows all 5 tabs and pending count badge for tesorero', async () => {
+  it('shows all 4 Ingresos tabs and pending count badge for tesorero without Gastos tab', async () => {
     vi.mocked(AuthContextModule.useAuth).mockReturnValue({
       profile: {
         id: 'u-1',
@@ -108,13 +103,15 @@ describe('FinanceHub', () => {
     expect(await screen.findByRole('tab', { name: /Resumen/i })).toBeInTheDocument();
     expect(screen.getByRole('tab', { name: /Por Verificar/i })).toBeInTheDocument();
     expect(screen.getByTestId('pending-reports-badge')).toHaveTextContent('1');
+    expect(screen.getByRole('tab', { name: /Ingresos/i })).toBeInTheDocument();
     expect(screen.getByRole('tab', { name: /Cuentas & Enlace/i })).toBeInTheDocument();
+    expect(screen.queryByRole('tab', { name: /Gastos/i })).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('tab', { name: /Por Verificar/i }));
     expect(await screen.findByText('APO-ABC123')).toBeInTheDocument();
   });
 
-  it('restricts lider_ministerio to only Gastos tab without exposing incomes (HU-21)', async () => {
+  it('does not expose income tabs to lider_ministerio (HU-21)', async () => {
     vi.mocked(AuthContextModule.useAuth).mockReturnValue({
       profile: {
         id: 'u-2',
@@ -139,7 +136,9 @@ describe('FinanceHub', () => {
       </MemoryRouter>,
     );
 
-    expect(await screen.findByRole('tab', { name: /Gastos/i })).toBeInTheDocument();
+    expect(
+      await screen.findByText(/No tienes permisos para consultar el módulo de Ingresos/i),
+    ).toBeInTheDocument();
     expect(screen.queryByRole('tab', { name: /Resumen/i })).not.toBeInTheDocument();
     expect(screen.queryByRole('tab', { name: /Ingresos/i })).not.toBeInTheDocument();
     expect(screen.queryByRole('tab', { name: /Por Verificar/i })).not.toBeInTheDocument();

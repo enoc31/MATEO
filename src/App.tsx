@@ -128,6 +128,11 @@ const FinanceHub = lazy(() =>
     default: module.FinanceHub,
   })),
 );
+const ExpensesHub = lazy(() =>
+  import('./features/expenses/ExpensesHub').then((module) => ({
+    default: module.ExpensesHub,
+  })),
+);
 const PublicContributionForm = lazy(() =>
   import('./features/finance/PublicContributionForm').then((module) => ({
     default: module.PublicContributionForm,
@@ -452,12 +457,29 @@ const MainAppContent: React.FC = () => {
                 'tesorero',
                 'pastor',
                 'auditor_iglesia',
+                'director',
+                'auditor',
+              ]}
+              element={<FinanceHub />}
+            />
+          }
+        />
+        <Route
+          path="expenses"
+          element={
+            <ProtectedRoute
+              allowedRoles={[
+                'administrador',
+                'admin_iglesia',
+                'tesorero',
+                'pastor',
+                'auditor_iglesia',
                 'lider_ministerio',
                 'coordinador',
                 'director',
                 'auditor',
               ]}
-              element={<FinanceHub />}
+              element={<ExpensesHub />}
             />
           }
         />

@@ -216,7 +216,7 @@ export const InternalBankIncomePageContent: React.FC<{
           onClick={() => navigate('/app/finance')}
           style={{ display: 'inline-flex', alignItems: 'center', gap: '0.45rem', fontWeight: 700 }}
         >
-          <ArrowLeft size={16} /> Volver a Ingresos y Gastos
+          <ArrowLeft size={16} /> Volver a Ingresos
         </button>
       </div>
 
@@ -890,7 +890,7 @@ export const InternalIncomePageContent: React.FC<{
           onClick={() => navigate('/app/finance')}
           style={{ display: 'inline-flex', alignItems: 'center', gap: '0.45rem', fontWeight: 700 }}
         >
-          <ArrowLeft size={16} /> Volver a Ingresos y Gastos
+          <ArrowLeft size={16} /> Volver a Ingresos
         </button>
       </div>
 

@@ -14,7 +14,7 @@ import '../../components/DataTable.css';
 
 type ExpenseTab = 'todas' | 'pendientes' | 'aprobadas' | 'rechazadas';
 
-export interface FinanceExpensesTableProps {
+export interface ExpensesTableProps {
   requisitions: Requisition[];
   onNavigateRequisitions: () => void;
 }
@@ -37,7 +37,7 @@ function formatStatusLabel(estado: string): string {
   return estado.replace(/_/g, ' ');
 }
 
-export const FinanceExpensesTable: React.FC<FinanceExpensesTableProps> = ({
+export const ExpensesTable: React.FC<ExpensesTableProps> = ({
   requisitions,
   onNavigateRequisitions,
 }) => {

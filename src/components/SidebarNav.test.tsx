@@ -2,7 +2,7 @@ import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { SidebarNav } from './SidebarNav';
-import type { MenuItemConfig } from './menuConfig';
+import { getMenuItems, type MenuItemConfig } from './menuConfig';
 
 const sampleItems: MenuItemConfig[] = [
   {
@@ -58,7 +58,7 @@ describe('SidebarNav', () => {
     expect(screen.getByText('Abrir Guía')).toBeInTheDocument();
   });
 
-  it('toggles collapse button and expandable finance submenu', () => {
+  it('toggles collapse button and expandable Finanzas submenu', () => {
     const onTogglePin = vi.fn();
     render(
       <MemoryRouter>
@@ -69,10 +69,42 @@ describe('SidebarNav', () => {
     fireEvent.click(screen.getByRole('button', { name: /Contraer barra lateral/i }));
     expect(onTogglePin).toHaveBeenCalledTimes(1);
 
-    const financeToggle = screen.getByRole('button', { name: /Finanzas y Auditoría/i });
+    const financeToggle = screen.getByRole('button', { name: /^Finanzas$/i });
     expect(financeToggle).toHaveAttribute('aria-expanded', 'false');
     fireEvent.click(financeToggle);
     expect(financeToggle).toHaveAttribute('aria-expanded', 'true');
     expect(screen.getAllByText('Donaciones e Ingresos').length).toBeGreaterThanOrEqual(1);
+  });
+
+  it('renders Ekklesia hierarchical Finanzas tree with Tesorería, Ingresos y Gastos, Contabilidad, Inventario, and Presupuesto', () => {
+    const ekklesiaItems = getMenuItems('ekklesia');
+    render(
+      <MemoryRouter>
+        <SidebarNav {...defaultProps} visibleMenuItems={ekklesiaItems} currentPath="dashboard" />
+      </MemoryRouter>,
+    );
+
+    const financeToggle = screen.getByRole('button', { name: /^Finanzas$/i });
+    fireEvent.click(financeToggle);
+
+    // Top-level Finanzas items
+    const tesoreriaToggle = screen.getByRole('button', { name: /Tesorería/i });
+    const igToggle = screen.getByRole('button', { name: /Ingresos y Gastos/i });
+    expect(tesoreriaToggle).toBeInTheDocument();
+    expect(igToggle).toBeInTheDocument();
+    expect(screen.getAllByText('Contabilidad').length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText('Inventario').length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText('Presupuesto').length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText('Monedas y Tasas').length).toBeGreaterThanOrEqual(1);
+
+    // Expand Tesorería -> Bancos, Efectivo
+    fireEvent.click(tesoreriaToggle);
+    expect(screen.getAllByText('Bancos').length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText('Efectivo').length).toBeGreaterThanOrEqual(1);
+
+    // Expand Ingresos y Gastos -> Ingresos, Gastos
+    fireEvent.click(igToggle);
+    expect(screen.getAllByText('Ingresos').length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText('Gastos').length).toBeGreaterThanOrEqual(1);
   });
 });

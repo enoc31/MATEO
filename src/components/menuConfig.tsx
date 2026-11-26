@@ -123,8 +123,9 @@ const getOngMenuItems = (): MenuItemConfig[] => [
 ];
 
 /**
- * Menú de Mateo Ekklesia. Agrupa los módulos heredados de la ONG según lo acordado:
- * - Ingresos y Gastos: diezmos y ofrendas + solicitudes de gasto + comprobantes.
+ * Menú de Mateo Ekklesia. Organiza los módulos según lo acordado:
+ * - Ingresos: diezmos, ofrendas, arqueo de efectivo y reportes externos.
+ * - Gastos: solicitudes de gasto, aprobaciones y comprobantes.
  * - Contabilidad: conciliación bancaria + estados financieros.
  * - Presupuesto: por ministerio, con el catálogo dentro.
  */
@@ -191,9 +192,24 @@ const getEkklesiaMenuItems = (): MenuItemConfig[] => [
   },
   {
     id: 'finance',
-    label: 'Ingresos y Gastos',
+    label: 'Ingresos',
     iconName: 'Wallet',
     color: '#10B981',
+    roles: [
+      'administrador',
+      'admin_iglesia',
+      'tesorero',
+      'pastor',
+      'auditor_iglesia',
+      'director',
+      'auditor',
+    ],
+  },
+  {
+    id: 'expenses',
+    label: 'Gastos',
+    iconName: 'ClipboardList',
+    color: '#F97316',
     roles: [
       'administrador',
       'admin_iglesia',
@@ -263,7 +279,7 @@ const getEkklesiaMenuItems = (): MenuItemConfig[] => [
   },
   {
     id: 'tasas',
-    label: 'Tasas BCV',
+    label: 'Monedas y Tasas',
     iconName: 'ArrowRightLeft',
     color: '#64748B',
     roles: ['administrador', 'admin_iglesia', 'tesorero', 'director'],

@@ -42,8 +42,11 @@ describe('AppsDashboard — módulos deshabilitados de Ekklesia', () => {
         <AppsDashboard />
       </MemoryRouter>,
     );
-    fireEvent.click(screen.getByText('Ingresos y Gastos').closest('button') as HTMLElement);
+    fireEvent.click(screen.getByText('Ingresos').closest('button') as HTMLElement);
     expect(mockNavigate).toHaveBeenCalledWith('/app/finance');
+
+    fireEvent.click(screen.getByText('Gastos').closest('button') as HTMLElement);
+    expect(mockNavigate).toHaveBeenCalledWith('/app/expenses');
   });
 
   it('no muestra la etiqueta "En desarrollo"', () => {
