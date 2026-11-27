@@ -2,11 +2,16 @@ import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { Save, X } from 'lucide-react';
 import { api, type Beneficiary } from '../../services/api';
-import { financeApi, type MedioPagoAporte } from '../../services/financeApi';
+import {
+  financeApi,
+  toActiveIncomeCategoryOptions,
+  type MedioPagoAporte,
+} from '../../services/financeApi';
 import {
   BANCOS_VENEZUELA,
   CATEGORIAS_APORTE,
   type CategoriaAporte,
+  type IncomeCategoryOption,
 } from '../../utils/rolePermissions';
 import { getCaracasDateParts } from '../../utils/formatters';
 import { MemberAutocomplete } from '../../components/MemberAutocomplete';
@@ -29,6 +34,7 @@ export const InternalIncomeModal: React.FC<InternalIncomeModalProps> = ({
   onFeedback,
 }) => {
   const [members, setMembers] = useState<Beneficiary[]>([]);
+  const [categoryOptions, setCategoryOptions] = useState<IncomeCategoryOption[]>(CATEGORIAS_APORTE);
   const [miembroId, setMiembroId] = useState('');
   const [donanteNombre, setDonanteNombre] = useState('');
   const [categoria, setCategoria] = useState<CategoriaAporte>('ofrenda');
@@ -47,11 +53,19 @@ export const InternalIncomeModal: React.FC<InternalIncomeModalProps> = ({
     if (!isOpen) return;
     const loadData = async () => {
       try {
-        const [memList, rateByDate] = await Promise.all([
+        const [memList, rateByDate, catList] = await Promise.all([
           api.getBeneficiaries(),
           api.getTasaByDate(fecha),
+          typeof financeApi.getCategoriasIngreso === 'function'
+            ? financeApi.getCategoriasIngreso(ongId)
+            : Promise.resolve([]),
         ]);
         setMembers(memList);
+        const activeCats = toActiveIncomeCategoryOptions(catList);
+        setCategoryOptions(activeCats);
+        setCategoria((prev) =>
+          activeCats.some((c) => c.value === prev) ? prev : activeCats[0]?.value || 'ofrenda',
+        );
         let resolvedRate = rateByDate && rateByDate.tasa > 1 ? rateByDate.tasa : null;
         if (!resolvedRate) {
           const allRates = await api.getTasasBCV();
@@ -67,7 +81,7 @@ export const InternalIncomeModal: React.FC<InternalIncomeModalProps> = ({
       }
     };
     void loadData();
-  }, [isOpen, fecha]);
+  }, [isOpen, fecha, ongId]);
 
   if (!isOpen) return null;
 
@@ -188,13 +202,7 @@ export const InternalIncomeModal: React.FC<InternalIncomeModalProps> = ({
           </button>
         </div>
 
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
-            gap: '0.75rem',
-          }}
-        >
+        <div>
           <MemberAutocomplete
             id="int-miembro"
             label="Miembro vinculado *"
@@ -203,20 +211,6 @@ export const InternalIncomeModal: React.FC<InternalIncomeModalProps> = ({
             onSelect={handleMemberSelect}
             required
           />
-
-          <div>
-            <label htmlFor="int-nombre" className="form-field-label">
-              Aportante / Concepto *
-            </label>
-            <input
-              id="int-nombre"
-              type="text"
-              className="form-input"
-              value={donanteNombre}
-              onChange={(e) => setDonanteNombre(e.target.value)}
-              required
-            />
-          </div>
         </div>
 
         <div
@@ -236,7 +230,7 @@ export const InternalIncomeModal: React.FC<InternalIncomeModalProps> = ({
               value={categoria}
               onChange={(e) => setCategoria(e.target.value as CategoriaAporte)}
             >
-              {CATEGORIAS_APORTE.map((c) => (
+              {categoryOptions.map((c) => (
                 <option key={c.value} value={c.value}>
                   {c.label}
                 </option>

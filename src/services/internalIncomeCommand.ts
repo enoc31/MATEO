@@ -2,10 +2,14 @@ import type { Donation } from './api';
 
 type IncomeRow = Omit<Donation, 'id'>;
 
-const categories = ['diezmo', 'ofrenda', 'primicia', 'misiones', 'pro_templo', 'otro'];
 const methods = ['transferencia', 'pago_movil', 'efectivo'];
 const currencies = ['USD', 'VES', 'EUR', 'COP'] as const;
 type SupportedCurrency = (typeof currencies)[number];
+
+function isValidCategory(category: string): boolean {
+  const trimmed = category.trim();
+  return trimmed.length >= 1 && trimmed.length <= 80;
+}
 
 /** Parse untrusted income input and derive the recorded currency amounts. */
 export function parseInternalIncome(input: unknown): IncomeRow {
@@ -26,7 +30,7 @@ export function parseInternalIncome(input: unknown): IncomeRow {
   const amount = value.monto_original;
   const rate = value.tasa_bcv;
   const currency = value.moneda;
-  const category = text('categoria_aporte');
+  const category = text('categoria_aporte').trim();
   const method = text('medio_pago');
   const date = text('fecha');
   const parsedDate = new Date(`${date}T00:00:00.000Z`);
@@ -40,7 +44,7 @@ export function parseInternalIncome(input: unknown): IncomeRow {
     typeof currency !== 'string' ||
     !currencies.includes(currency as SupportedCurrency) ||
     (currency !== 'USD' && (typeof rate !== 'number' || rate <= 0)) ||
-    !categories.includes(category) ||
+    !isValidCategory(category) ||
     !methods.includes(method) ||
     !/^\d{4}-\d{2}-\d{2}$/.test(date) ||
     !Number.isFinite(parsedDate.getTime()) ||

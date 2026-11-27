@@ -4,6 +4,7 @@ import {
   generateConfirmationCode,
   getRoleLabel,
   maskPersonName,
+  slugifyCategoriaAporte,
 } from './rolePermissions';
 
 describe('rolePermissions helpers', () => {
@@ -24,8 +25,13 @@ describe('rolePermissions helpers', () => {
     expect(getRoleLabel('coordinador', 'ong')).toBe('Coordinador');
   });
 
-  it('formats contribution categories cleanly', () => {
+  it('formats contribution categories cleanly including custom categories', () => {
     expect(formatCategoriaAporte('diezmo')).toBe('Diezmo');
     expect(formatCategoriaAporte('pro_templo')).toBe('Pro-Templo');
+    expect(
+      formatCategoriaAporte('fondo_juvenil', [{ value: 'fondo_juvenil', label: 'Fondo Juvenil' }]),
+    ).toBe('Fondo Juvenil');
+    expect(formatCategoriaAporte('retiro_anual')).toBe('Retiro Anual');
+    expect(slugifyCategoriaAporte('Construcción Templo 2026')).toBe('construccion_templo_2026');
   });
 });

@@ -1,4 +1,5 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
+import autoTable from 'jspdf-autotable';
 import {
   buildCashActDescription,
   generateCashIntakeActPdf,
@@ -7,6 +8,14 @@ import {
   type CashActDonationItem,
 } from './cashIntakeActPdf';
 import { calculateConeSummary } from './currencyDenominations';
+
+vi.mock('jspdf-autotable', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('jspdf-autotable')>();
+  return {
+    ...actual,
+    default: vi.fn(actual.default),
+  };
+});
 
 describe('cashIntakeActPdf', () => {
   it('builds and parses cash act description with responsible user, additional counters, session tag, and bill breakdown', () => {
@@ -97,5 +106,75 @@ describe('cashIntakeActPdf', () => {
       loggedUserName: 'Tesorero Central',
     });
     expect(typeof doc.save).toBe('function');
+  });
+
+  it('omits donor names from the Acta PDF and displays only categories', () => {
+    const autoTableMock = vi.mocked(autoTable);
+    autoTableMock.mockClear();
+
+    const usdSummary = calculateConeSummary('USD', { 50: 3 }, 1);
+    const d1: CashActDonationItem = {
+      id: 'don-priv-1',
+      donante: 'Carlos Pérez',
+      monto: 50,
+      descripcion: buildCashActDescription({
+        categoria: 'diezmo',
+        actividad: 'Culto Dominical',
+        responsibleUser: 'Tesorero Central',
+        additionalCounters: ['Testigo Ana'],
+        sessionTag: 'LOTE-PRIV-1',
+        coneSummary: usdSummary,
+      }),
+      fecha: '2026-11-23',
+      moneda: 'USD',
+      medio_pago: 'efectivo',
+      monto_original: 50,
+      tasa_bcv: 50,
+      monto_usd: 50,
+      monto_ves: 2500,
+      categoria_aporte: 'diezmo',
+    };
+
+    const d2: CashActDonationItem = {
+      id: 'don-priv-2',
+      donante: 'María Gómez',
+      monto: 100,
+      descripcion: buildCashActDescription({
+        categoria: 'diezmo',
+        actividad: 'Culto Dominical',
+        responsibleUser: 'Tesorero Central',
+        additionalCounters: ['Testigo Ana'],
+        sessionTag: 'LOTE-PRIV-1',
+      }),
+      fecha: '2026-11-23',
+      moneda: 'USD',
+      medio_pago: 'efectivo',
+      monto_original: 100,
+      tasa_bcv: 50,
+      monto_usd: 100,
+      monto_ves: 5000,
+      categoria_aporte: 'diezmo',
+    };
+
+    generateCashIntakeActPdf({
+      donation: d1,
+      allDonations: [d1, d2],
+      organizationName: 'Iglesia Central',
+      loggedUserName: 'Tesorero Central',
+    });
+
+    const tableCalls = autoTableMock.mock.calls.map(([, options]) => options);
+    const serialized = JSON.stringify(tableCalls);
+
+    expect(serialized).not.toContain('Carlos Pérez');
+    expect(serialized).not.toContain('María Gómez');
+    expect(serialized).not.toContain('Aportante / Miembro');
+    expect(serialized).not.toContain('Concepto / Aportante');
+    expect(serialized).toContain('Diezmo');
+    // Aggregated total for Diezmo in USD ($50 + $100 = $150)
+    expect(tableCalls[2]?.body).toHaveLength(1);
+    expect(tableCalls[2]?.head).toEqual([
+      ['Categoría', 'Moneda', 'Monto Origen', 'Tasa', 'Equivalente USD'],
+    ]);
   });
 });

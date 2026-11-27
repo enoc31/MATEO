@@ -2,15 +2,23 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowRight, Banknote, Clock, Landmark, Plus, RefreshCw } from 'lucide-react';
 import { api, type BankTransaction, type Donation } from '../../services/api';
-import { financeApi, type CuentaReceptora, type ReporteAporte } from '../../services/financeApi';
+import {
+  financeApi,
+  toActiveIncomeCategoryOptions,
+  toAllIncomeCategoryOptions,
+  type CategoriaIngreso,
+  type CuentaReceptora,
+  type ReporteAporte,
+} from '../../services/financeApi';
 import { useAuth } from '../../context/AuthContext';
 import { FINANCE_MANAGE_ROLES, FINANCE_VIEW_ROLES } from '../../utils/rolePermissions';
 import { formatUsd, formatVes } from '../../utils/formatters';
 import { VerificationQueueTab } from './VerificationQueueTab';
 import { FinanceIncomesTable } from './FinanceIncomesTable';
 import { AccountsAndLinkTab } from './AccountsAndLinkTab';
+import { IncomeCategoriesTab } from './IncomeCategoriesTab';
 
-type FinanceTab = 'resumen' | 'verificar' | 'ingresos' | 'cuentas';
+type FinanceTab = 'resumen' | 'verificar' | 'ingresos' | 'categorias' | 'cuentas';
 
 export const FinanceHub: React.FC = () => {
   const navigate = useNavigate();
@@ -32,6 +40,7 @@ export const FinanceHubContent: React.FC<{ navigate: (path: string) => void }> =
   const [reportes, setReportes] = useState<ReporteAporte[]>([]);
   const [cuentas, setCuentas] = useState<CuentaReceptora[]>([]);
   const [bankTxs, setBankTxs] = useState<BankTransaction[]>([]);
+  const [categoriasIngreso, setCategoriasIngreso] = useState<CategoriaIngreso[]>([]);
 
   const showFeedback = (msg: string, type: 'success' | 'error' = 'success') => {
     setFeedback({ msg, type });
@@ -46,16 +55,20 @@ export const FinanceHubContent: React.FC<{ navigate: (path: string) => void }> =
     setLoading(true);
     try {
       const targetOngId = activeOng?.id || profile?.ong_id;
-      const [donList, repList, ctaList, txList] = await Promise.all([
+      const [donList, repList, ctaList, txList, catList] = await Promise.all([
         api.getDonations(),
         financeApi.getReportesAportes(targetOngId),
         financeApi.getCuentasReceptoras(targetOngId),
         api.getBankTransactions(),
+        typeof financeApi.getCategoriasIngreso === 'function'
+          ? financeApi.getCategoriasIngreso(targetOngId)
+          : Promise.resolve([]),
       ]);
       setDonations(donList);
       setReportes(repList);
       setCuentas(ctaList);
       setBankTxs(txList.filter((t) => t.monto > 0 && t.estado === 'pendiente'));
+      setCategoriasIngreso(catList);
     } catch (err) {
       console.error('Error cargando módulo Ingresos:', err);
       showFeedback('Error al cargar la información de ingresos.', 'error');
@@ -63,6 +76,21 @@ export const FinanceHubContent: React.FC<{ navigate: (path: string) => void }> =
       setLoading(false);
     }
   }, [activeOng?.id, profile?.ong_id, canViewFinance]);
+
+  const handleUpdateDonationCategory = async (donationId: string, newCategory: string) => {
+    try {
+      await financeApi.updateDonationCategoria(donationId, newCategory);
+      setDonations((prev) =>
+        prev.map((d) => (d.id === donationId ? { ...d, categoria_aporte: newCategory } : d)),
+      );
+      showFeedback('Categoría del ingreso actualizada correctamente.', 'success');
+    } catch (err) {
+      console.error('Error actualizando categoría del ingreso:', err);
+      const msg =
+        err instanceof Error ? err.message : 'No se pudo actualizar la categoría del ingreso.';
+      showFeedback(msg, 'error');
+    }
+  };
 
   useEffect(() => {
     void loadAll();
@@ -81,8 +109,16 @@ export const FinanceHubContent: React.FC<{ navigate: (path: string) => void }> =
           { id: 'ingresos' as const, label: 'Ingresos' },
         ]
       : []),
-    ...(canManageFinance ? [{ id: 'cuentas' as const, label: 'Cuentas & Enlace' }] : []),
+    ...(canManageFinance
+      ? [
+          { id: 'categorias' as const, label: 'Categorías' },
+          { id: 'cuentas' as const, label: 'Cuentas & Enlace' },
+        ]
+      : []),
   ];
+
+  const allCategoryOptions = toAllIncomeCategoryOptions(categoriasIngreso);
+  const activeCategoryOptions = toActiveIncomeCategoryOptions(categoriasIngreso);
 
   const resolvedOngId = activeOng?.id || profile?.ong_id || '11111111-1111-1111-1111-111111111111';
 
@@ -358,6 +394,18 @@ export const FinanceHubContent: React.FC<{ navigate: (path: string) => void }> =
               onOpenCashCounter={() => navigate('/app/arqueo-efectivo')}
               organizationName={activeOng?.nombre || 'Iglesia'}
               loggedUserName={profile?.nombre_completo || profile?.email}
+              categories={allCategoryOptions}
+              activeCategories={activeCategoryOptions}
+              onUpdateCategory={canManageFinance ? handleUpdateDonationCategory : undefined}
+            />
+          )}
+
+          {activeTab === 'categorias' && canManageFinance && (
+            <IncomeCategoriesTab
+              ongId={resolvedOngId}
+              categories={categoriasIngreso}
+              onRefresh={loadAll}
+              onFeedback={showFeedback}
             />
           )}
 

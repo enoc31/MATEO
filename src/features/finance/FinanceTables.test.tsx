@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { FinanceIncomesTable } from './FinanceIncomesTable';
 import { VerificationQueueTab } from './VerificationQueueTab';
 import type { Donation } from '../../services/api';
@@ -69,6 +69,34 @@ describe('Finance Figma Data Tables', () => {
       screen.getByRole('button', { name: /Ver detalle de aporte de Diego Martínez/i }),
     );
     expect(screen.getByText('Diezmo dominical')).toBeInTheDocument();
+  });
+
+  it('allows admin/treasurer to recategorize an existing income to a custom category', async () => {
+    const onUpdateCategory = vi.fn().mockResolvedValue(undefined);
+    const customCategories = [
+      { value: 'diezmo', label: 'Diezmo' },
+      { value: 'fondo_juvenil', label: 'Fondo Juvenil' },
+    ];
+
+    render(
+      <FinanceIncomesTable
+        donations={sampleDonations}
+        canManage={true}
+        onImportStatement={vi.fn()}
+        onRegisterInternal={vi.fn()}
+        categories={customCategories}
+        activeCategories={customCategories}
+        onUpdateCategory={onUpdateCategory}
+      />,
+    );
+
+    fireEvent.click(screen.getByTestId('recategorize-btn-don-1'));
+    const select = screen.getByTestId('recategorize-select-don-1');
+    fireEvent.change(select, { target: { value: 'fondo_juvenil' } });
+
+    await waitFor(() => {
+      expect(onUpdateCategory).toHaveBeenCalledWith('don-1', 'fondo_juvenil');
+    });
   });
 
   it('renders VerificationQueueTab with a Ver comprobante link on every pending report and opens viewer modal', () => {

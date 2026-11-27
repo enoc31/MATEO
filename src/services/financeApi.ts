@@ -11,9 +11,12 @@ import {
 import { uploadToGCS } from './storage';
 import { compressImage } from '../utils/imageCompression';
 import {
+  CATEGORIAS_APORTE,
   generateConfirmationCode,
   maskPersonName,
+  slugifyCategoriaAporte,
   type CategoriaAporte,
+  type IncomeCategoryOption,
 } from '../utils/rolePermissions';
 
 export type TipoCuentaReceptora = 'transferencia' | 'pago_movil';
@@ -32,6 +35,28 @@ export interface CuentaReceptora {
   tipo_fondo: string;
   activa: boolean;
   created_at?: string;
+}
+
+export interface CategoriaIngreso {
+  id: string;
+  ong_id: string;
+  slug: string;
+  nombre: string;
+  descripcion: string | null;
+  activa: boolean;
+  orden: number;
+  created_at?: string;
+  isDefault?: boolean;
+}
+
+export interface SaveCategoriaIngresoInput {
+  id?: string;
+  ong_id?: string;
+  slug?: string;
+  nombre: string;
+  descripcion?: string | null;
+  activa?: boolean;
+  orden?: number;
 }
 
 export interface ReporteAporte {
@@ -143,6 +168,68 @@ export interface InternalAporteInput {
 
 const CUENTAS_STORAGE_KEY = 'cnbv_cuentas_receptoras';
 const REPORTES_STORAGE_KEY = 'cnbv_reportes_aportes';
+const CATEGORIAS_INGRESO_STORAGE_KEY = 'cnbv_categorias_ingreso';
+
+function buildDefaultCategorias(ongId: string): CategoriaIngreso[] {
+  return CATEGORIAS_APORTE.map((cat, idx) => ({
+    id: `default-${cat.value}`,
+    ong_id: ongId,
+    slug: cat.value,
+    nombre: cat.label,
+    descripcion: null,
+    activa: true,
+    orden: idx,
+    isDefault: true,
+  }));
+}
+
+function mergeWithDefaultCategorias(
+  ongId: string,
+  customRows: CategoriaIngreso[],
+): CategoriaIngreso[] {
+  const bySlug = new Map<string, CategoriaIngreso>();
+  const defaultSlugs = new Set(CATEGORIAS_APORTE.map((c) => c.value));
+
+  for (const def of buildDefaultCategorias(ongId)) {
+    bySlug.set(def.slug, def);
+  }
+
+  for (const row of customRows) {
+    bySlug.set(row.slug, {
+      ...row,
+      isDefault: defaultSlugs.has(row.slug),
+    });
+  }
+
+  return Array.from(bySlug.values()).sort((a, b) => {
+    if (a.orden !== b.orden) return a.orden - b.orden;
+    return a.nombre.localeCompare(b.nombre, 'es');
+  });
+}
+
+function getStoredCategoriasIngreso(): CategoriaIngreso[] {
+  const raw = localStorage.getItem(CATEGORIAS_INGRESO_STORAGE_KEY);
+  if (!raw) return [];
+  try {
+    return JSON.parse(raw) as CategoriaIngreso[];
+  } catch {
+    return [];
+  }
+}
+
+export function toActiveIncomeCategoryOptions(
+  categories: CategoriaIngreso[],
+): IncomeCategoryOption[] {
+  const active = categories
+    .filter((c) => c.activa)
+    .map((c) => ({ value: c.slug, label: c.nombre }));
+  return active.length > 0 ? active : CATEGORIAS_APORTE;
+}
+
+export function toAllIncomeCategoryOptions(categories: CategoriaIngreso[]): IncomeCategoryOption[] {
+  const all = categories.map((c) => ({ value: c.slug, label: c.nombre }));
+  return all.length > 0 ? all : CATEGORIAS_APORTE;
+}
 
 const INITIAL_CUENTAS: CuentaReceptora[] = [
   {
@@ -744,5 +831,190 @@ export const financeApi = {
       cuenta_receptora_id: input.cuenta_receptora_id ?? null,
       actividad_o_responsable: input.actividad_o_responsable ?? null,
     });
+  },
+
+  getCategoriasIngreso: async (ongId?: string): Promise<CategoriaIngreso[]> => {
+    const resolvedOngId = ongId || '11111111-1111-1111-1111-111111111111';
+    if (!isSimulationMode) {
+      let query = supabase
+        .from('categorias_ingreso')
+        .select('*')
+        .order('orden', { ascending: true })
+        .order('nombre', { ascending: true });
+      if (ongId) {
+        query = query.eq('ong_id', ongId);
+      }
+      const { data, error } = await query;
+      if (error) {
+        console.warn('Error consultando categorias_ingreso, usando catálogo base:', error.message);
+        return buildDefaultCategorias(resolvedOngId);
+      }
+      return mergeWithDefaultCategorias(resolvedOngId, (data || []) as CategoriaIngreso[]);
+    }
+
+    const stored = getStoredCategoriasIngreso().filter(
+      (c) => !ongId || c.ong_id === ongId || c.ong_id.startsWith('11111111'),
+    );
+    return mergeWithDefaultCategorias(resolvedOngId, stored);
+  },
+
+  getPublicCategoriasIngreso: async (ongId: string): Promise<IncomeCategoryOption[]> => {
+    try {
+      const all = await financeApi.getCategoriasIngreso(ongId);
+      return toActiveIncomeCategoryOptions(all);
+    } catch (err) {
+      console.warn('Error cargando categorías públicas de ingreso:', err);
+      return CATEGORIAS_APORTE;
+    }
+  },
+
+  saveCategoriaIngreso: async (input: SaveCategoriaIngresoInput): Promise<CategoriaIngreso> => {
+    const cleanNombre = input.nombre.trim();
+    if (!cleanNombre || cleanNombre.length > 80) {
+      throw new Error('El nombre de la categoría debe tener entre 1 y 80 caracteres.');
+    }
+    const cleanDesc = input.descripcion?.trim() || null;
+    const resolvedOngId = input.ong_id || '11111111-1111-1111-1111-111111111111';
+    const slug = (input.slug?.trim() || slugifyCategoriaAporte(cleanNombre)).slice(0, 60);
+    const activa = input.activa ?? true;
+    const orden = input.orden ?? 100;
+    const isPersistedId = Boolean(input.id && !input.id.startsWith('default-'));
+
+    if (!isSimulationMode) {
+      if (isPersistedId && input.id) {
+        const { data, error } = await supabase
+          .from('categorias_ingreso')
+          .update({
+            nombre: cleanNombre,
+            descripcion: cleanDesc,
+            activa,
+            orden,
+          })
+          .eq('id', input.id)
+          .select()
+          .single();
+        if (error) throw error;
+        return data as CategoriaIngreso;
+      }
+
+      const payload = {
+        ong_id: resolvedOngId,
+        slug,
+        nombre: cleanNombre,
+        descripcion: cleanDesc,
+        activa,
+        orden,
+      };
+      const { data, error } = await supabase
+        .from('categorias_ingreso')
+        .upsert([payload], { onConflict: 'ong_id,slug' })
+        .select()
+        .single();
+      if (error) throw error;
+      return data as CategoriaIngreso;
+    }
+
+    const stored = getStoredCategoriasIngreso();
+    const existingIdx = stored.findIndex(
+      (c) =>
+        (isPersistedId && c.id === input.id) || (c.ong_id === resolvedOngId && c.slug === slug),
+    );
+    const saved: CategoriaIngreso =
+      existingIdx !== -1
+        ? {
+            ...stored[existingIdx],
+            nombre: cleanNombre,
+            descripcion: cleanDesc,
+            activa,
+            orden,
+          }
+        : {
+            id: `cat-ing-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+            ong_id: resolvedOngId,
+            slug,
+            nombre: cleanNombre,
+            descripcion: cleanDesc,
+            activa,
+            orden,
+            created_at: new Date().toISOString(),
+          };
+    if (existingIdx !== -1) {
+      stored[existingIdx] = saved;
+    } else {
+      stored.push(saved);
+    }
+    localStorage.setItem(CATEGORIAS_INGRESO_STORAGE_KEY, JSON.stringify(stored));
+    return saved;
+  },
+
+  deleteCategoriaIngreso: async (id: string): Promise<void> => {
+    if (id.startsWith('default-')) {
+      throw new Error('Las categorías base no se eliminan; puedes desactivarlas o renombrarlas.');
+    }
+
+    if (!isSimulationMode) {
+      const { error } = await supabase.from('categorias_ingreso').delete().eq('id', id);
+      if (error) throw error;
+      return;
+    }
+
+    const remaining = getStoredCategoriasIngreso().filter((c) => c.id !== id);
+    localStorage.setItem(CATEGORIAS_INGRESO_STORAGE_KEY, JSON.stringify(remaining));
+  },
+
+  updateDonationCategoria: async (
+    donationId: string,
+    categoriaAporte: CategoriaAporte,
+  ): Promise<Donation> => {
+    const cleanCat = categoriaAporte.trim();
+    if (!cleanCat || cleanCat.length > 80) {
+      throw new Error('Debe seleccionar una categoría válida.');
+    }
+
+    if (!isSimulationMode) {
+      const { data, error } = await supabase
+        .from('donaciones')
+        .update({ categoria_aporte: cleanCat })
+        .eq('id', donationId)
+        .select()
+        .single();
+      if (error) throw error;
+      return data as Donation;
+    }
+
+    const donations = JSON.parse(localStorage.getItem('cnbv_donations') || '[]') as Donation[];
+    const idx = donations.findIndex((d) => d.id === donationId);
+    if (idx === -1) throw new Error('Ingreso no encontrado');
+    donations[idx] = { ...donations[idx], categoria_aporte: cleanCat };
+    localStorage.setItem('cnbv_donations', JSON.stringify(donations));
+    return donations[idx];
+  },
+
+  updateReporteCategoria: async (
+    reporteId: string,
+    categoriaAporte: CategoriaAporte,
+  ): Promise<ReporteAporte> => {
+    const cleanCat = categoriaAporte.trim();
+    if (!cleanCat || cleanCat.length > 80) {
+      throw new Error('Debe seleccionar una categoría válida.');
+    }
+
+    if (!isSimulationMode) {
+      const { data, error } = await supabase
+        .from('reportes_aportes')
+        .update({ categoria_aporte: cleanCat })
+        .eq('id', reporteId)
+        .select()
+        .single();
+      if (error) throw error;
+      return data as ReporteAporte;
+    }
+
+    const reportes = getStoredReportes();
+    const idx = reportes.findIndex((r) => r.id === reporteId);
+    if (idx === -1) throw new Error('Reporte de aporte no encontrado');
+    reportes[idx] = { ...reportes[idx], categoria_aporte: cleanCat };
+    localStorage.setItem(REPORTES_STORAGE_KEY, JSON.stringify(reportes));
+    return reportes[idx];
   },
 };

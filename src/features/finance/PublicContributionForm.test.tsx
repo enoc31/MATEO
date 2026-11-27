@@ -13,6 +13,7 @@ vi.mock('../../services/financeApi', async (importOriginal) => {
       ...actual.financeApi,
       getPublicOngInfo: vi.fn(),
       getPublicCuentasReceptoras: vi.fn(),
+      getPublicCategoriasIngreso: vi.fn(),
       buscarMiembroParaAporte: vi.fn(),
       submitReporteAporte: vi.fn(),
     },
@@ -54,6 +55,11 @@ describe('PublicContributionForm', () => {
         activa: true,
       },
     ]);
+    vi.mocked(financeApi.getPublicCategoriasIngreso).mockResolvedValue([
+      { value: 'diezmo', label: 'Diezmo' },
+      { value: 'ofrenda', label: 'Ofrenda' },
+      { value: 'fondo_juvenil', label: 'Fondo Juvenil' },
+    ]);
     vi.mocked(api.getTasaByDate).mockResolvedValue({
       id: 't1',
       fecha: '2026-11-21',
@@ -79,6 +85,9 @@ describe('PublicContributionForm', () => {
       await screen.findByRole('heading', { name: 'Iglesia Gracia y Paz' }),
     ).toBeInTheDocument();
     expect(screen.getByText(/0414-1234567/)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Pago móvil/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Transferencia/i })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Efectivo/i })).not.toBeInTheDocument();
 
     fireEvent.change(screen.getByLabelText(/Monto \(VES\)/i), { target: { value: '500' } });
     expect(await screen.findByText('$5,00')).toBeInTheDocument();
