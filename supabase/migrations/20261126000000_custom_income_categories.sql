@@ -16,7 +16,7 @@ CREATE TABLE IF NOT EXISTS public.categorias_ingreso (
   nombre TEXT NOT NULL,
   descripcion TEXT,
   activa BOOLEAN NOT NULL DEFAULT TRUE,
-  orden INTEGER NOT NULL DEFAULT 0,
+  orden BIGINT NOT NULL DEFAULT 0,
   created_at TIMESTAMPTZ NOT NULL DEFAULT TIMEZONE('utc'::text, NOW()),
   CONSTRAINT categorias_ingreso_ong_slug_key UNIQUE (ong_id, slug),
   CONSTRAINT categorias_ingreso_nombre_len CHECK (char_length(btrim(nombre)) BETWEEN 1 AND 80),
