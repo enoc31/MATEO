@@ -30,6 +30,7 @@ vi.mock('../../services/financeApi', async (importOriginal) => {
     financeApi: {
       ...actual.financeApi,
       registrarAporteInterno: vi.fn(),
+      getCategoriasIngreso: vi.fn(),
     },
   };
 });
@@ -75,6 +76,7 @@ describe('InternalIncomePage', () => {
       fuente: 'bcv_api',
       created_at: '',
     });
+    vi.mocked(financeApi.getCategoriasIngreso).mockResolvedValue([]);
     vi.mocked(financeApi.registrarAporteInterno).mockResolvedValue({
       id: 'don-1',
       proyecto_id: null,
@@ -99,6 +101,7 @@ describe('InternalIncomePage', () => {
     expect(await screen.findByTestId('internal-income-page')).toBeInTheDocument();
     expect(screen.getByTestId('cash-denomination-counter')).toBeInTheDocument();
     expect(screen.queryByLabelText(/Miembro vinculado/i)).not.toBeInTheDocument();
+    expect(screen.queryByLabelText(/Concepto/i)).not.toBeInTheDocument();
 
     await waitFor(() => {
       expect(screen.getByTestId('rate-input-VES')).toHaveValue(50);
@@ -196,6 +199,7 @@ describe('InternalIncomePage', () => {
     expect(await screen.findByTestId('internal-bank-income-page')).toBeInTheDocument();
     expect(screen.queryByTestId('cash-denomination-counter')).not.toBeInTheDocument();
     expect(screen.queryByText(/General \/ Sin miembro específico/i)).not.toBeInTheDocument();
+    expect(screen.queryByLabelText(/Concepto/i)).not.toBeInTheDocument();
 
     const memberInput = await screen.findByLabelText(/Miembro vinculado \*/i);
     expect(memberInput.tagName).toBe('INPUT');

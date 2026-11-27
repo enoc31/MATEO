@@ -7,7 +7,7 @@ import {
   type ConeCountSummary,
 } from './currencyDenominations';
 import { formatAmount, formatDateForFrontEnd, formatUsd } from './formatters';
-import { formatCategoriaAporte } from './rolePermissions';
+import { formatCategoriaAporte, type IncomeCategoryOption } from './rolePermissions';
 
 export interface CashActDonationItem {
   id: string;
@@ -186,6 +186,7 @@ export interface GenerateCashIntakeActPdfParams {
   allDonations?: CashActDonationItem[];
   organizationName?: string;
   loggedUserName?: string;
+  categories?: IncomeCategoryOption[];
 }
 
 /**
@@ -196,6 +197,7 @@ export function generateCashIntakeActPdf({
   allDonations = [],
   organizationName = 'Iglesia / Organización',
   loggedUserName = 'Tesorero / Administrador',
+  categories,
 }: GenerateCashIntakeActPdfParams): jsPDF {
   const sessionDonations = resolveSessionCashDonations(donation, allDonations);
   const primaryMeta = parseCashActDescription(donation.descripcion, donation.moneda);
@@ -238,7 +240,9 @@ export function generateCashIntakeActPdf({
   });
 
   const uniqueCategories = Array.from(
-    new Set(sessionDonations.map((item) => formatCategoriaAporte(item.categoria_aporte))),
+    new Set(
+      sessionDonations.map((item) => formatCategoriaAporte(item.categoria_aporte, categories)),
+    ),
   );
 
   // Bloque 1: Datos Generales y Responsables del Conteo
@@ -257,7 +261,6 @@ export function generateCashIntakeActPdf({
     },
     head: [['Datos del Aporte y Comisión de Conteo', 'Detalle']],
     body: [
-      ['Concepto / Aportante', donation.donante || 'Conteo de Ofrenda en Culto'],
       [
         uniqueCategories.length > 1 ? 'Categorías del Arqueo' : 'Categoría del Aporte',
         uniqueCategories.join(', '),
@@ -337,8 +340,21 @@ export function generateCashIntakeActPdf({
     (doc as unknown as { lastAutoTable?: { finalY?: number } }).lastAutoTable?.finalY ||
     afterGeneralY + 45;
 
-  // Bloque 3: Distribución por Categoría, Aportante / Miembro y Equivalente USD
-  const allocationRows: string[][] = sessionDonations.map((item) => {
+  // Bloque 3: Distribución por Categoría y Equivalente USD (sin nombres de donantes)
+  const groupedAllocations = new Map<
+    string,
+    {
+      categoriaLabel: string;
+      moneda: CashCurrencyCode;
+      coneLabel: string;
+      rateLabel: string;
+      montoOriginal: number;
+      montoUsd: number;
+    }
+  >();
+
+  for (const item of sessionDonations) {
+    const categoriaLabel = formatCategoriaAporte(item.categoria_aporte, categories);
     const coneLabel = CURRENCY_CONES[item.moneda]?.coneLabel || item.moneda;
     const rateLabel =
       item.moneda === 'USD'
@@ -349,15 +365,33 @@ export function generateCashIntakeActPdf({
             }`
           : 'N/A';
 
-    return [
-      formatCategoriaAporte(item.categoria_aporte),
-      item.donante || 'Conteo de Ofrenda en Culto',
-      coneLabel,
-      formatCurrencyByCode(item.monto_original || item.monto, item.moneda),
-      rateLabel,
-      formatUsd(item.monto_usd || item.monto),
-    ];
-  });
+    const key = `${categoriaLabel}::${item.moneda}::${rateLabel}`;
+    const existing = groupedAllocations.get(key);
+    const itemOriginal = item.monto_original || item.monto || 0;
+    const itemUsd = item.monto_usd || item.monto || 0;
+
+    if (existing) {
+      existing.montoOriginal = Number((existing.montoOriginal + itemOriginal).toFixed(2));
+      existing.montoUsd = Number((existing.montoUsd + itemUsd).toFixed(2));
+    } else {
+      groupedAllocations.set(key, {
+        categoriaLabel,
+        moneda: item.moneda,
+        coneLabel,
+        rateLabel,
+        montoOriginal: itemOriginal,
+        montoUsd: itemUsd,
+      });
+    }
+  }
+
+  const allocationRows: string[][] = Array.from(groupedAllocations.values()).map((entry) => [
+    entry.categoriaLabel,
+    entry.coneLabel,
+    formatCurrencyByCode(entry.montoOriginal, entry.moneda),
+    entry.rateLabel,
+    formatUsd(entry.montoUsd),
+  ]);
 
   const totalConsolidatedUsd = sessionDonations.reduce(
     (sum, item) => sum + (item.monto_usd || item.monto || 0),
@@ -367,7 +401,7 @@ export function generateCashIntakeActPdf({
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(10.5);
   doc.setTextColor(15, 23, 42);
-  doc.text('2. Distribución por Categoría, Miembro y Equivalencia Contable', 14, afterDenomY + 9);
+  doc.text('2. Distribución por Categoría y Equivalencia Contable', 14, afterDenomY + 9);
 
   autoTable(doc, {
     startY: afterDenomY + 12,
@@ -388,27 +422,17 @@ export function generateCashIntakeActPdf({
       fontStyle: 'bold',
       fontSize: 9.2,
     },
-    head: [
-      ['Categoría', 'Aportante / Miembro', 'Moneda', 'Monto Origen', 'Tasa', 'Equivalente USD'],
-    ],
+    head: [['Categoría', 'Moneda', 'Monto Origen', 'Tasa', 'Equivalente USD']],
     body: allocationRows,
     foot: [
-      [
-        'TOTAL CONSOLIDADO DEL ACTA (USD)',
-        '',
-        '',
-        '',
-        '',
-        `${formatUsd(totalConsolidatedUsd)} USD`,
-      ],
+      ['TOTAL CONSOLIDADO DEL ACTA (USD)', '', '', '', `${formatUsd(totalConsolidatedUsd)} USD`],
     ],
     columnStyles: {
-      0: { cellWidth: 26, fontStyle: 'bold' },
-      1: { cellWidth: 36 },
-      2: { cellWidth: 28 },
-      3: { cellWidth: 32, halign: 'right', fontStyle: 'bold' },
-      4: { cellWidth: 28, halign: 'right' },
-      5: { cellWidth: 28, halign: 'right', fontStyle: 'bold' },
+      0: { cellWidth: 42, fontStyle: 'bold' },
+      1: { cellWidth: 38 },
+      2: { cellWidth: 36, halign: 'right', fontStyle: 'bold' },
+      3: { cellWidth: 32, halign: 'right' },
+      4: { cellWidth: 32, halign: 'right', fontStyle: 'bold' },
     },
   });
 

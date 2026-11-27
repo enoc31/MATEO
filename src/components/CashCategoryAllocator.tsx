@@ -1,7 +1,11 @@
 import React from 'react';
 import { CheckCircle2, Layers, Plus, Trash2, Wand2 } from 'lucide-react';
 import type { Beneficiary } from '../services/api';
-import { CATEGORIAS_APORTE, type CategoriaAporte } from '../utils/rolePermissions';
+import {
+  CATEGORIAS_APORTE,
+  type CategoriaAporte,
+  type IncomeCategoryOption,
+} from '../utils/rolePermissions';
 import {
   CASH_CURRENCY_CODES,
   CURRENCY_CONES,
@@ -28,6 +32,7 @@ interface CashCategoryAllocatorProps {
   rates: MultiCurrencyRatesToUsd;
   totalCountedUsd: number;
   members: Beneficiary[];
+  categories?: IncomeCategoryOption[];
   onAddAllocation: () => void;
   onUpdateAllocation: (id: string, patch: Partial<CashCategoryAllocationItem>) => void;
   onRemoveAllocation: (id: string) => void;
@@ -40,6 +45,7 @@ export const CashCategoryAllocator: React.FC<CashCategoryAllocatorProps> = ({
   rates,
   totalCountedUsd,
   members,
+  categories = CATEGORIAS_APORTE,
   onAddAllocation,
   onUpdateAllocation,
   onRemoveAllocation,
@@ -192,7 +198,7 @@ export const CashCategoryAllocator: React.FC<CashCategoryAllocatorProps> = ({
                           })
                         }
                       >
-                        {CATEGORIAS_APORTE.map((c) => (
+                        {categories.map((c) => (
                           <option key={c.value} value={c.value}>
                             {c.label}
                           </option>

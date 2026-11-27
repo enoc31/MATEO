@@ -30,6 +30,7 @@ vi.mock('../../services/financeApi', async (importOriginal) => {
       ...actual.financeApi,
       getReportesAportes: vi.fn(),
       getCuentasReceptoras: vi.fn(),
+      getCategoriasIngreso: vi.fn(),
     },
   };
 });
@@ -40,6 +41,7 @@ describe('FinanceHub', () => {
     vi.mocked(api.getDonations).mockResolvedValue([]);
     vi.mocked(api.getBankTransactions).mockResolvedValue([]);
     vi.mocked(financeApi.getCuentasReceptoras).mockResolvedValue([]);
+    vi.mocked(financeApi.getCategoriasIngreso).mockResolvedValue([]);
     vi.mocked(financeApi.getReportesAportes).mockResolvedValue([
       {
         id: 'rep-1',

@@ -7,12 +7,17 @@ import {
   FileText,
   Filter,
   Landmark,
+  Pencil,
   Plus,
   Search,
   Wallet,
 } from 'lucide-react';
 import type { Donation } from '../../services/api';
-import { formatCategoriaAporte } from '../../utils/rolePermissions';
+import {
+  CATEGORIAS_APORTE,
+  formatCategoriaAporte,
+  type IncomeCategoryOption,
+} from '../../utils/rolePermissions';
 import { formatAmount, formatDateForFrontEnd, formatUsd, formatVes } from '../../utils/formatters';
 import { formatCurrencyByCode, type CashCurrencyCode } from '../../utils/currencyDenominations';
 import { generateCashIntakeActPdf, parseCashActDescription } from '../../utils/cashIntakeActPdf';
@@ -28,6 +33,9 @@ export interface FinanceIncomesTableProps {
   onOpenCashCounter?: () => void;
   organizationName?: string;
   loggedUserName?: string;
+  categories?: IncomeCategoryOption[];
+  activeCategories?: IncomeCategoryOption[];
+  onUpdateCategory?: (donationId: string, newCategory: string) => Promise<void>;
 }
 
 export const FinanceIncomesTable: React.FC<FinanceIncomesTableProps> = ({
@@ -38,18 +46,27 @@ export const FinanceIncomesTable: React.FC<FinanceIncomesTableProps> = ({
   onOpenCashCounter,
   organizationName,
   loggedUserName,
+  categories = CATEGORIAS_APORTE,
+  activeCategories,
+  onUpdateCategory,
 }) => {
   const [activeTab, setActiveTab] = useState<IncomeTab>('todos');
   const [searchTerm, setSearchTerm] = useState('');
   const [showFilters, setShowFilters] = useState(false);
+  const [categoryFilter, setCategoryFilter] = useState<string>('todos');
   const [currencyFilter, setCurrencyFilter] = useState<'todos' | CashCurrencyCode>('todos');
   const [methodFilter, setMethodFilter] = useState<
     'todos' | 'pago_movil' | 'transferencia' | 'efectivo'
   >('todos');
+  const [editingCatId, setEditingCatId] = useState<string | null>(null);
+  const [savingCatId, setSavingCatId] = useState<string | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
   const [pageSize, setPageSize] = useState(10);
   const [currentPage, setCurrentPage] = useState(1);
+
+  const selectableCategories =
+    activeCategories && activeCategories.length > 0 ? activeCategories : categories;
 
   const filteredDonations = useMemo(() => {
     const q = searchTerm.trim().toLowerCase();
@@ -62,10 +79,19 @@ export const FinanceIncomesTable: React.FC<FinanceIncomesTableProps> = ({
       ) {
         return false;
       }
+      if (categoryFilter !== 'todos' && (d.categoria_aporte || 'ofrenda') !== categoryFilter) {
+        return false;
+      }
       if (currencyFilter !== 'todos' && (d.moneda || 'USD') !== currencyFilter) return false;
       if (methodFilter !== 'todos' && (d.medio_pago || 'efectivo') !== methodFilter) return false;
       if (q) {
-        const hay = [d.donante, d.referencia, d.descripcion, d.actividad_o_responsable]
+        const hay = [
+          d.donante,
+          d.referencia,
+          d.descripcion,
+          d.actividad_o_responsable,
+          formatCategoriaAporte(d.categoria_aporte, categories),
+        ]
           .filter(Boolean)
           .join(' ')
           .toLowerCase();
@@ -73,7 +99,18 @@ export const FinanceIncomesTable: React.FC<FinanceIncomesTableProps> = ({
       }
       return true;
     });
-  }, [donations, activeTab, currencyFilter, methodFilter, searchTerm]);
+  }, [donations, activeTab, categoryFilter, currencyFilter, methodFilter, searchTerm, categories]);
+
+  const handleCategoryChange = async (donationId: string, newCategory: string) => {
+    if (!onUpdateCategory) return;
+    setSavingCatId(donationId);
+    try {
+      await onUpdateCategory(donationId, newCategory);
+      setEditingCatId(null);
+    } finally {
+      setSavingCatId(null);
+    }
+  };
 
   const totalUsd = useMemo(
     () => filteredDonations.reduce((acc, d) => acc + (d.monto_usd || d.monto || 0), 0),
@@ -228,6 +265,26 @@ export const FinanceIncomesTable: React.FC<FinanceIncomesTableProps> = ({
 
         {showFilters && (
           <div className="mdt-filter-drawer">
+            <label htmlFor="inc-category" className="mdt-secondary-text">
+              Categoría:
+            </label>
+            <select
+              id="inc-category"
+              className="mdt-filter-select"
+              value={categoryFilter}
+              onChange={(e) => {
+                setCategoryFilter(e.target.value);
+                setCurrentPage(1);
+              }}
+            >
+              <option value="todos">Todas</option>
+              {categories.map((cat) => (
+                <option key={cat.value} value={cat.value}>
+                  {cat.label}
+                </option>
+              ))}
+            </select>
+
             <label htmlFor="inc-currency" className="mdt-secondary-text">
               Moneda:
             </label>
@@ -340,10 +397,75 @@ export const FinanceIncomesTable: React.FC<FinanceIncomesTableProps> = ({
                           </div>
                         </td>
                         <td>
-                          <span className="mdt-pill mdt-pill--role">
-                            <span className="mdt-pill-dot" />
-                            {formatCategoriaAporte(d.categoria_aporte)}
-                          </span>
+                          {editingCatId === d.id && canManage && onUpdateCategory ? (
+                            <div
+                              style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '0.35rem',
+                                marginBottom: '0.2rem',
+                              }}
+                            >
+                              <select
+                                aria-label={`Cambiar categoría de ${d.donante}`}
+                                data-testid={`recategorize-select-${d.id}`}
+                                className="mdt-filter-select"
+                                value={d.categoria_aporte || 'ofrenda'}
+                                disabled={savingCatId === d.id}
+                                onChange={(e) => void handleCategoryChange(d.id, e.target.value)}
+                                onBlur={() => {
+                                  if (savingCatId !== d.id) setEditingCatId(null);
+                                }}
+                                autoFocus
+                              >
+                                {!selectableCategories.some(
+                                  (c) => c.value === (d.categoria_aporte || 'ofrenda'),
+                                ) && (
+                                  <option value={d.categoria_aporte || 'ofrenda'}>
+                                    {formatCategoriaAporte(d.categoria_aporte, categories)}
+                                  </option>
+                                )}
+                                {selectableCategories.map((cat) => (
+                                  <option key={cat.value} value={cat.value}>
+                                    {cat.label}
+                                  </option>
+                                ))}
+                              </select>
+                            </div>
+                          ) : (
+                            <div
+                              style={{
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '0.35rem',
+                              }}
+                            >
+                              <span className="mdt-pill mdt-pill--role">
+                                <span className="mdt-pill-dot" />
+                                {formatCategoriaAporte(d.categoria_aporte, categories)}
+                              </span>
+                              {canManage && onUpdateCategory && (
+                                <button
+                                  type="button"
+                                  data-testid={`recategorize-btn-${d.id}`}
+                                  aria-label={`Recategorizar aporte de ${d.donante}`}
+                                  title="Cambiar categoría"
+                                  onClick={() => setEditingCatId(d.id)}
+                                  style={{
+                                    background: 'none',
+                                    border: 'none',
+                                    padding: '0.15rem',
+                                    color: '#64748b',
+                                    cursor: 'pointer',
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                  }}
+                                >
+                                  <Pencil size={12} />
+                                </button>
+                              )}
+                            </div>
+                          )}
                           <div className="mdt-secondary-text">{methodLabel}</div>
                           {d.medio_pago === 'efectivo' && (
                             <button
@@ -355,6 +477,7 @@ export const FinanceIncomesTable: React.FC<FinanceIncomesTableProps> = ({
                                   allDonations: donations,
                                   organizationName,
                                   loggedUserName,
+                                  categories,
                                 })
                               }
                               style={{

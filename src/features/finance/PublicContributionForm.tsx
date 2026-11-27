@@ -5,7 +5,6 @@ import {
   Check,
   CheckCircle2,
   CreditCard,
-  DollarSign,
   Landmark,
   Search,
   Send,
@@ -26,6 +25,7 @@ import {
   CATEGORIAS_APORTE,
   formatCategoriaAporte,
   type CategoriaAporte,
+  type IncomeCategoryOption,
 } from '../../utils/rolePermissions';
 import { getCaracasDateParts } from '../../utils/formatters';
 import './PublicContributionForm.css';
@@ -38,6 +38,7 @@ export const PublicContributionForm: React.FC = () => {
 export const PublicContributionFormForOng: React.FC<{ ongId: string }> = ({ ongId }) => {
   const [ongInfo, setOngInfo] = useState<PublicOngInfo | null>(null);
   const [cuentas, setCuentas] = useState<CuentaReceptora[]>([]);
+  const [categoryOptions, setCategoryOptions] = useState<IncomeCategoryOption[]>(CATEGORIAS_APORTE);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
@@ -55,7 +56,7 @@ export const PublicContributionFormForOng: React.FC<{ ongId: string }> = ({ ongI
   const [categoria, setCategoria] = useState<CategoriaAporte>('diezmo');
   const [moneda, setMoneda] = useState<'USD' | 'VES'>('VES');
   const [montoOriginal, setMontoOriginal] = useState('');
-  const [medioPago, setMedioPago] = useState<MedioPagoAporte>('pago_movil');
+  const [medioPago, setMedioPago] = useState<Exclude<MedioPagoAporte, 'efectivo'>>('pago_movil');
   const [cuentaReceptoraId, setCuentaReceptoraId] = useState<string>('');
   const [fechaPago, setFechaPago] = useState(() => getCaracasDateParts().dateString);
   const [tasaBcv, setTasaBcv] = useState<number | null>(null);
@@ -65,7 +66,6 @@ export const PublicContributionFormForOng: React.FC<{ ongId: string }> = ({ ongI
   const [referencia, setReferencia] = useState('');
   const [sinReferenciaMismoBanco, setSinReferenciaMismoBanco] = useState(false);
   const [telefonoEmisor, setTelefonoEmisor] = useState('');
-  const [actividadOResponsable, setActividadOResponsable] = useState('');
   const [comprobanteFile, setComprobanteFile] = useState<File | null>(null);
 
   // Envío y confirmación
@@ -83,9 +83,12 @@ export const PublicContributionFormForOng: React.FC<{ ongId: string }> = ({ ongI
       setLoading(true);
       setLoadError(null);
       try {
-        const [info, cuentasList] = await Promise.all([
+        const [info, cuentasList, catOptions] = await Promise.all([
           financeApi.getPublicOngInfo(ongId),
           financeApi.getPublicCuentasReceptoras(ongId),
+          typeof financeApi.getPublicCategoriasIngreso === 'function'
+            ? financeApi.getPublicCategoriasIngreso(ongId)
+            : Promise.resolve(CATEGORIAS_APORTE),
         ]);
         if (!info) {
           setLoadError('No se encontró la iglesia asociada a este enlace.');
@@ -93,6 +96,12 @@ export const PublicContributionFormForOng: React.FC<{ ongId: string }> = ({ ongI
           setOngInfo(info);
         }
         setCuentas(cuentasList);
+        if (catOptions && catOptions.length > 0) {
+          setCategoryOptions(catOptions);
+          setCategoria((prev) =>
+            catOptions.some((c) => c.value === prev) ? prev : catOptions[0].value,
+          );
+        }
       } catch (err) {
         console.error('Error cargando formulario público:', err);
         setLoadError('No pudimos cargar los datos de la iglesia. Intenta recargar la página.');
@@ -161,14 +170,13 @@ export const PublicContributionFormForOng: React.FC<{ ongId: string }> = ({ ongI
         ? parseFloat((parsedMonto * tasaBcv).toFixed(2))
         : null;
 
-  const matchingAccounts = cuentas.filter((c) => medioPago !== 'efectivo' && c.tipo === medioPago);
+  const matchingAccounts = cuentas.filter((c) => c.tipo === medioPago);
 
   const handleResetForNew = () => {
     setSubmittedReport(null);
     setMontoOriginal('');
     setReferencia('');
     setSinReferenciaMismoBanco(false);
-    setActividadOResponsable('');
     setComprobanteFile(null);
     setFormError(null);
   };
@@ -225,13 +233,6 @@ export const PublicContributionFormForOng: React.FC<{ ongId: string }> = ({ ongI
       }
     }
 
-    if (medioPago === 'efectivo' && !actividadOResponsable.trim()) {
-      setFormError(
-        'Indica el culto, servicio, actividad o nombre del tesorero/responsable que recibió el efectivo.',
-      );
-      return;
-    }
-
     setSubmitting(true);
     try {
       let comprobanteUrl: string | null = null;
@@ -258,13 +259,12 @@ export const PublicContributionFormForOng: React.FC<{ ongId: string }> = ({ ongI
         monto_usd: equivalentUsd > 0 ? equivalentUsd : parsedMonto,
         monto_ves: equivalentVes,
         medio_pago: medioPago,
-        referencia: medioPago === 'efectivo' ? null : referencia.trim() || null,
+        referencia: referencia.trim() || null,
         sin_referencia_mismo_banco: medioPago === 'transferencia' ? sinReferenciaMismoBanco : false,
-        banco_emisor: medioPago === 'efectivo' ? null : bancoEmisor || null,
+        banco_emisor: bancoEmisor || null,
         telefono_emisor: medioPago === 'pago_movil' ? telefonoEmisor.trim() || null : null,
         fecha_pago: fechaPago,
-        actividad_o_responsable:
-          medioPago === 'efectivo' ? actividadOResponsable.trim() || null : null,
+        actividad_o_responsable: null,
         comprobante_url: comprobanteUrl,
       });
 
@@ -380,7 +380,8 @@ export const PublicContributionFormForOng: React.FC<{ ongId: string }> = ({ ongI
             }}
           >
             <div>
-              <strong>Categoría:</strong> {formatCategoriaAporte(submittedReport.categoria_aporte)}
+              <strong>Categoría:</strong>{' '}
+              {formatCategoriaAporte(submittedReport.categoria_aporte, categoryOptions)}
             </div>
             <div>
               <strong>Monto:</strong> {formatAmount(submittedReport.monto_original)}{' '}
@@ -711,7 +712,7 @@ export const PublicContributionFormForOng: React.FC<{ ongId: string }> = ({ ongI
                   value={categoria}
                   onChange={(e) => setCategoria(e.target.value as CategoriaAporte)}
                 >
-                  {CATEGORIAS_APORTE.map((cat) => (
+                  {categoryOptions.map((cat) => (
                     <option key={cat.value} value={cat.value}>
                       {cat.label}
                     </option>
@@ -794,7 +795,6 @@ export const PublicContributionFormForOng: React.FC<{ ongId: string }> = ({ ongI
                 [
                   { id: 'pago_movil', label: 'Pago móvil', icon: <Smartphone size={18} /> },
                   { id: 'transferencia', label: 'Transferencia', icon: <Landmark size={18} /> },
-                  { id: 'efectivo', label: 'Efectivo', icon: <DollarSign size={18} /> },
                 ] as const
               ).map((mp) => (
                 <button
@@ -813,7 +813,7 @@ export const PublicContributionFormForOng: React.FC<{ ongId: string }> = ({ ongI
               ))}
             </div>
 
-            {medioPago !== 'efectivo' && matchingAccounts.length > 0 && (
+            {matchingAccounts.length > 0 && (
               <div className="pcf-field">
                 <label htmlFor="aporte-cuenta-receptora" className="pcf-label">
                   Cuenta de la iglesia donde realizaste el aporte
@@ -834,75 +834,71 @@ export const PublicContributionFormForOng: React.FC<{ ongId: string }> = ({ ongI
               </div>
             )}
 
-            {medioPago !== 'efectivo' && (
-              <>
-                <div className="pcf-two-col">
-                  <div className="pcf-field">
-                    <label htmlFor="aporte-banco-emisor" className="pcf-label">
-                      Banco emisor *
-                    </label>
-                    <select
-                      id="aporte-banco-emisor"
-                      className="pcf-input"
-                      value={bancoEmisor}
-                      onChange={(e) => setBancoEmisor(e.target.value)}
-                    >
-                      <option value="">Selecciona un banco</option>
-                      {BANCOS_VENEZUELA.map((b) => (
-                        <option key={b} value={b}>
-                          {b}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
+            <div className="pcf-two-col">
+              <div className="pcf-field">
+                <label htmlFor="aporte-banco-emisor" className="pcf-label">
+                  Banco emisor *
+                </label>
+                <select
+                  id="aporte-banco-emisor"
+                  className="pcf-input"
+                  value={bancoEmisor}
+                  onChange={(e) => setBancoEmisor(e.target.value)}
+                >
+                  <option value="">Selecciona un banco</option>
+                  {BANCOS_VENEZUELA.map((b) => (
+                    <option key={b} value={b}>
+                      {b}
+                    </option>
+                  ))}
+                </select>
+              </div>
 
-                  {medioPago === 'pago_movil' ? (
-                    <div className="pcf-field">
-                      <label htmlFor="aporte-tel-emisor" className="pcf-label">
-                        Teléfono emisor *
-                      </label>
-                      <input
-                        id="aporte-tel-emisor"
-                        type="tel"
-                        className="pcf-input"
-                        placeholder="Tu número de teléfono"
-                        value={telefonoEmisor}
-                        onChange={(e) => setTelefonoEmisor(e.target.value)}
-                      />
-                    </div>
-                  ) : (
-                    <div className="pcf-field">
-                      <label htmlFor="aporte-referencia" className="pcf-label">
-                        Número de referencia {sinReferenciaMismoBanco ? '(Opcional)' : '*'}
-                      </label>
-                      <input
-                        id="aporte-referencia"
-                        type="text"
-                        className="pcf-input"
-                        placeholder="Escribe la referencia del pago"
-                        value={referencia}
-                        onChange={(e) => setReferencia(e.target.value)}
-                      />
-                    </div>
-                  )}
+              {medioPago === 'pago_movil' ? (
+                <div className="pcf-field">
+                  <label htmlFor="aporte-tel-emisor" className="pcf-label">
+                    Teléfono emisor *
+                  </label>
+                  <input
+                    id="aporte-tel-emisor"
+                    type="tel"
+                    className="pcf-input"
+                    placeholder="Tu número de teléfono"
+                    value={telefonoEmisor}
+                    onChange={(e) => setTelefonoEmisor(e.target.value)}
+                  />
                 </div>
+              ) : (
+                <div className="pcf-field">
+                  <label htmlFor="aporte-referencia" className="pcf-label">
+                    Número de referencia {sinReferenciaMismoBanco ? '(Opcional)' : '*'}
+                  </label>
+                  <input
+                    id="aporte-referencia"
+                    type="text"
+                    className="pcf-input"
+                    placeholder="Escribe la referencia del pago"
+                    value={referencia}
+                    onChange={(e) => setReferencia(e.target.value)}
+                  />
+                </div>
+              )}
+            </div>
 
-                {medioPago === 'pago_movil' && (
-                  <div className="pcf-field">
-                    <label htmlFor="aporte-referencia" className="pcf-label">
-                      Número de referencia *
-                    </label>
-                    <input
-                      id="aporte-referencia"
-                      type="text"
-                      className="pcf-input"
-                      placeholder="Escribe la referencia del pago"
-                      value={referencia}
-                      onChange={(e) => setReferencia(e.target.value)}
-                    />
-                  </div>
-                )}
-              </>
+            {medioPago === 'pago_movil' && (
+              <div className="pcf-field">
+                <label htmlFor="aporte-referencia" className="pcf-label">
+                  Número de referencia *
+                </label>
+                <input
+                  id="aporte-referencia"
+                  type="text"
+                  className="pcf-input"
+                  placeholder="Escribe la referencia del pago"
+                  value={referencia}
+                  onChange={(e) => setReferencia(e.target.value)}
+                />
+              </div>
             )}
 
             {medioPago === 'transferencia' && (
@@ -918,47 +914,29 @@ export const PublicContributionFormForOng: React.FC<{ ongId: string }> = ({ ongI
               </label>
             )}
 
-            {medioPago === 'efectivo' && (
-              <div className="pcf-field">
-                <label htmlFor="aporte-actividad" className="pcf-label">
-                  Culto, servicio, actividad o responsable / tesorero que recibió *
-                </label>
-                <input
-                  id="aporte-actividad"
-                  type="text"
-                  className="pcf-input"
-                  placeholder="Ej: Culto Dominical 10:00 AM / Entregado al Tesorero"
-                  value={actividadOResponsable}
-                  onChange={(e) => setActividadOResponsable(e.target.value)}
-                />
-              </div>
-            )}
-
-            {medioPago !== 'efectivo' && (
-              <div className="pcf-field">
-                <span className="pcf-label">Comprobante (opcional)</span>
-                <label htmlFor="aporte-comprobante" className="pcf-dropzone">
-                  <Upload size={22} color="var(--primary, #1b5cb6)" />
-                  <div className="pcf-dropzone-text">
-                    <span className="pcf-dropzone-title">
-                      {comprobanteFile
-                        ? `Archivo seleccionado: ${comprobanteFile.name}`
-                        : 'Adjuntar comprobante'}
-                    </span>
-                    <span className="pcf-dropzone-sub">
-                      Selecciona o arrastra una imagen del pago.
-                    </span>
-                  </div>
-                </label>
-                <input
-                  id="aporte-comprobante"
-                  type="file"
-                  accept="image/*,application/pdf"
-                  style={{ display: 'none' }}
-                  onChange={(e) => setComprobanteFile(e.target.files?.[0] || null)}
-                />
-              </div>
-            )}
+            <div className="pcf-field">
+              <span className="pcf-label">Comprobante (opcional)</span>
+              <label htmlFor="aporte-comprobante" className="pcf-dropzone">
+                <Upload size={22} color="var(--primary, #1b5cb6)" />
+                <div className="pcf-dropzone-text">
+                  <span className="pcf-dropzone-title">
+                    {comprobanteFile
+                      ? `Archivo seleccionado: ${comprobanteFile.name}`
+                      : 'Adjuntar comprobante'}
+                  </span>
+                  <span className="pcf-dropzone-sub">
+                    Selecciona o arrastra una imagen del pago.
+                  </span>
+                </div>
+              </label>
+              <input
+                id="aporte-comprobante"
+                type="file"
+                accept="image/*,application/pdf"
+                style={{ display: 'none' }}
+                onChange={(e) => setComprobanteFile(e.target.files?.[0] || null)}
+              />
+            </div>
           </section>
 
           <p className="pcf-required-note">* Campos obligatorios</p>

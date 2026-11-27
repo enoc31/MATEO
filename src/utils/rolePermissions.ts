@@ -1,7 +1,14 @@
-export type CategoriaAporte =
+export type DefaultCategoriaAporte =
   'diezmo' | 'ofrenda' | 'primicia' | 'misiones' | 'pro_templo' | 'otro';
 
-export const CATEGORIAS_APORTE: { value: CategoriaAporte; label: string }[] = [
+export type CategoriaAporte = DefaultCategoriaAporte | (string & {});
+
+export interface IncomeCategoryOption {
+  value: CategoriaAporte;
+  label: string;
+}
+
+export const CATEGORIAS_APORTE: IncomeCategoryOption[] = [
   { value: 'diezmo', label: 'Diezmo' },
   { value: 'ofrenda', label: 'Ofrenda' },
   { value: 'primicia', label: 'Primicia' },
@@ -9,6 +16,17 @@ export const CATEGORIAS_APORTE: { value: CategoriaAporte; label: string }[] = [
   { value: 'pro_templo', label: 'Pro-Templo' },
   { value: 'otro', label: 'Otro' },
 ];
+
+export function slugifyCategoriaAporte(nombre: string): string {
+  const normalized = nombre
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '_')
+    .replace(/^_+|_+$/g, '')
+    .slice(0, 60);
+  return normalized || 'categoria';
+}
 
 export const BANCOS_VENEZUELA: string[] = [
   'Banco de Venezuela',
@@ -192,7 +210,21 @@ export function generateConfirmationCode(): string {
   return `APO-${suffix}`;
 }
 
-export function formatCategoriaAporte(categoria?: string | null): string {
+export function formatCategoriaAporte(
+  categoria?: string | null,
+  customCategories?: IncomeCategoryOption[],
+): string {
+  if (!categoria) return 'Ofrenda';
+  const customFound = customCategories?.find((c) => c.value === categoria);
+  if (customFound) return customFound.label;
   const found = CATEGORIAS_APORTE.find((c) => c.value === categoria);
-  return found ? found.label : categoria || 'Ofrenda';
+  if (found) return found.label;
+  if (categoria.includes('_')) {
+    return categoria
+      .split('_')
+      .filter(Boolean)
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ');
+  }
+  return categoria;
 }

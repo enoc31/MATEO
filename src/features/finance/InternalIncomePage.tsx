@@ -2,12 +2,17 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Banknote, CheckCircle2, Landmark, Plus, Save, UserPlus, X } from 'lucide-react';
 import { api, type Beneficiary } from '../../services/api';
-import { financeApi, type MedioPagoAporte } from '../../services/financeApi';
+import {
+  financeApi,
+  toActiveIncomeCategoryOptions,
+  type MedioPagoAporte,
+} from '../../services/financeApi';
 import { useAuth } from '../../context/AuthContext';
 import {
   BANCOS_VENEZUELA,
   CATEGORIAS_APORTE,
   type CategoriaAporte,
+  type IncomeCategoryOption,
 } from '../../utils/rolePermissions';
 import { formatUsd, getCaracasDateParts } from '../../utils/formatters';
 import {
@@ -51,6 +56,7 @@ export const InternalBankIncomePageContent: React.FC<{
   const resolvedOngId = activeOng?.id || profile?.ong_id || '11111111-1111-1111-1111-111111111111';
 
   const [members, setMembers] = useState<Beneficiary[]>([]);
+  const [categoryOptions, setCategoryOptions] = useState<IncomeCategoryOption[]>(CATEGORIAS_APORTE);
   const [miembroId, setMiembroId] = useState('');
   const [donanteNombre, setDonanteNombre] = useState('');
   const [categoria, setCategoria] = useState<CategoriaAporte>('ofrenda');
@@ -69,11 +75,19 @@ export const InternalBankIncomePageContent: React.FC<{
   useEffect(() => {
     const loadData = async () => {
       try {
-        const [memList, rateByDate] = await Promise.all([
+        const [memList, rateByDate, catList] = await Promise.all([
           api.getBeneficiaries(),
           api.getTasaByDate(fecha),
+          typeof financeApi.getCategoriasIngreso === 'function'
+            ? financeApi.getCategoriasIngreso(resolvedOngId)
+            : Promise.resolve([]),
         ]);
         setMembers(memList);
+        const activeCats = toActiveIncomeCategoryOptions(catList);
+        setCategoryOptions(activeCats);
+        setCategoria((prev) =>
+          activeCats.some((c) => c.value === prev) ? prev : activeCats[0]?.value || 'ofrenda',
+        );
         let resolvedRate = rateByDate && rateByDate.tasa > 1 ? rateByDate.tasa : null;
         if (!resolvedRate) {
           const allRates = await api.getTasasBCV();
@@ -89,7 +103,7 @@ export const InternalBankIncomePageContent: React.FC<{
       }
     };
     void loadData();
-  }, [fecha]);
+  }, [fecha, resolvedOngId]);
 
   const handleMemberSelect = (member: Beneficiary | null) => {
     if (member) {
@@ -249,13 +263,7 @@ export const InternalBankIncomePageContent: React.FC<{
           gap: '1.15rem',
         }}
       >
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
-            gap: '1rem',
-          }}
-        >
+        <div>
           <MemberAutocomplete
             id="int-bank-miembro"
             label="Miembro vinculado *"
@@ -264,20 +272,6 @@ export const InternalBankIncomePageContent: React.FC<{
             onSelect={handleMemberSelect}
             required
           />
-
-          <div>
-            <label htmlFor="int-bank-nombre" className="form-field-label">
-              Aportante / Concepto *
-            </label>
-            <input
-              id="int-bank-nombre"
-              type="text"
-              className="form-input"
-              value={donanteNombre}
-              onChange={(e) => setDonanteNombre(e.target.value)}
-              required
-            />
-          </div>
         </div>
 
         <div
@@ -297,7 +291,7 @@ export const InternalBankIncomePageContent: React.FC<{
               value={categoria}
               onChange={(e) => setCategoria(e.target.value as CategoriaAporte)}
             >
-              {CATEGORIAS_APORTE.map((c) => (
+              {categoryOptions.map((c) => (
                 <option key={c.value} value={c.value}>
                   {c.label}
                 </option>
@@ -508,7 +502,8 @@ export const InternalIncomePageContent: React.FC<{
   const resolvedOngId = activeOng?.id || profile?.ong_id || '11111111-1111-1111-1111-111111111111';
 
   const [members, setMembers] = useState<Beneficiary[]>([]);
-  const [donanteNombre, setDonanteNombre] = useState('Conteo de Ofrenda en Culto');
+  const [categoryOptions, setCategoryOptions] = useState<IncomeCategoryOption[]>(CATEGORIAS_APORTE);
+  const defaultCashCountLabel = 'Conteo de Ofrenda en Culto';
   const [fecha, setFecha] = useState(() => getCaracasDateParts().dateString);
   const [actividad, setActividad] = useState('');
   const [additionalCounters, setAdditionalCounters] = useState<string[]>([]);
@@ -534,11 +529,23 @@ export const InternalIncomePageContent: React.FC<{
   useEffect(() => {
     const loadData = async () => {
       try {
-        const [memList, rateByDate] = await Promise.all([
+        const [memList, rateByDate, catList] = await Promise.all([
           api.getBeneficiaries(),
           api.getTasaByDate(fecha),
+          typeof financeApi.getCategoriasIngreso === 'function'
+            ? financeApi.getCategoriasIngreso(resolvedOngId)
+            : Promise.resolve([]),
         ]);
         setMembers(memList);
+        const activeCats = toActiveIncomeCategoryOptions(catList);
+        setCategoryOptions(activeCats);
+        setAllocations((prev) =>
+          prev.map((item) =>
+            activeCats.some((c) => c.value === item.categoria)
+              ? item
+              : { ...item, categoria: activeCats[0]?.value || 'ofrenda' },
+          ),
+        );
         let resolvedRate = rateByDate && rateByDate.tasa > 1 ? rateByDate.tasa : null;
         if (!resolvedRate) {
           const allRates = await api.getTasasBCV();
@@ -557,7 +564,7 @@ export const InternalIncomePageContent: React.FC<{
       }
     };
     void loadData();
-  }, [fecha]);
+  }, [fecha, resolvedOngId]);
 
   const sessionSummary = calculateMultiCurrencySessionSummary(cashCounts, cashRates);
   const activeConeCodesKey = sessionSummary.activeCones.map((c) => c.code).join(',');
@@ -803,7 +810,7 @@ export const InternalIncomePageContent: React.FC<{
           miembro_id: alloc.member?.id || null,
           donante_nombre: alloc.member
             ? `${alloc.member.nombre} ${alloc.member.apellido}`.trim()
-            : donanteNombre,
+            : defaultCashCountLabel,
           categoria_aporte: alloc.categoria,
           moneda: alloc.moneda,
           monto_original: alloc.montoOriginal,
@@ -932,20 +939,6 @@ export const InternalIncomePageContent: React.FC<{
           }}
         >
           <div>
-            <label htmlFor="int-page-nombre" className="form-field-label">
-              Concepto general del conteo *
-            </label>
-            <input
-              id="int-page-nombre"
-              type="text"
-              className="form-input"
-              value={donanteNombre}
-              onChange={(e) => setDonanteNombre(e.target.value)}
-              required
-            />
-          </div>
-
-          <div>
             <label htmlFor="int-page-fecha" className="form-field-label">
               Fecha del Conteo *
             </label>
@@ -958,21 +951,21 @@ export const InternalIncomePageContent: React.FC<{
               required
             />
           </div>
-        </div>
 
-        <div>
-          <label htmlFor="int-page-actividad" className="form-field-label">
-            Culto / Servicio / Actividad asociada *
-          </label>
-          <input
-            id="int-page-actividad"
-            type="text"
-            className="form-input"
-            placeholder="Ej: Culto Dominical 10:00 AM"
-            value={actividad}
-            onChange={(e) => setActividad(e.target.value)}
-            required
-          />
+          <div>
+            <label htmlFor="int-page-actividad" className="form-field-label">
+              Culto / Servicio / Actividad asociada *
+            </label>
+            <input
+              id="int-page-actividad"
+              type="text"
+              className="form-input"
+              placeholder="Ej: Culto Dominical 10:00 AM"
+              value={actividad}
+              onChange={(e) => setActividad(e.target.value)}
+              required
+            />
+          </div>
         </div>
 
         {/* Comisión de Conteo para el Acta de Ingreso */}
@@ -1138,6 +1131,7 @@ export const InternalIncomePageContent: React.FC<{
           rates={cashRates}
           totalCountedUsd={sessionSummary.totalConsolidatedUsd}
           members={members}
+          categories={categoryOptions}
           onAddAllocation={handleAddAllocation}
           onUpdateAllocation={handleUpdateAllocation}
           onRemoveAllocation={handleRemoveAllocation}

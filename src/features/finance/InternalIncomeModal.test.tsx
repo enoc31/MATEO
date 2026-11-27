@@ -25,6 +25,7 @@ vi.mock('../../services/financeApi', async (importOriginal) => {
     financeApi: {
       ...actual.financeApi,
       registrarAporteInterno: vi.fn(),
+      getCategoriasIngreso: vi.fn(),
     },
   };
 });
@@ -53,6 +54,7 @@ describe('InternalIncomeModal', () => {
       fuente: 'bcv_api',
       created_at: '',
     });
+    vi.mocked(financeApi.getCategoriasIngreso).mockResolvedValue([]);
     vi.mocked(financeApi.registrarAporteInterno).mockResolvedValue({
       id: 'don-1',
       proyecto_id: null,
@@ -91,6 +93,7 @@ describe('InternalIncomeModal', () => {
     ).toBeInTheDocument();
     expect(screen.queryByTestId('cash-denomination-counter')).not.toBeInTheDocument();
     expect(screen.queryByText(/General \/ Sin miembro específico/i)).not.toBeInTheDocument();
+    expect(screen.queryByLabelText(/Concepto/i)).not.toBeInTheDocument();
 
     const memberInput = await screen.findByLabelText(/Miembro vinculado \*/i);
     expect(memberInput.tagName).toBe('INPUT');

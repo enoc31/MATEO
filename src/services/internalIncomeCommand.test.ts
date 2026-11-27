@@ -26,7 +26,9 @@ describe('internal income command', () => {
       { moneda: 'GBP' },
       { moneda: 'EUR', tasa_bcv: null },
       { moneda: 'COP', tasa_bcv: null },
-      { categoria_aporte: 'invalid' },
+      { categoria_aporte: '' },
+      { categoria_aporte: '   ' },
+      { categoria_aporte: 'a'.repeat(81) },
       { medio_pago: 'invalid' },
       { fecha: 'invalid' },
       { fecha: '2026-02-30' },
@@ -74,8 +76,17 @@ describe('internal income command', () => {
     expect(result.cuenta_receptora_id).toBeNull();
   });
 
-  it('accepts each supported category and payment method', () => {
-    for (const category of ['diezmo', 'ofrenda', 'primicia', 'misiones', 'pro_templo', 'otro']) {
+  it('accepts each supported category, custom categories, and payment method', () => {
+    for (const category of [
+      'diezmo',
+      'ofrenda',
+      'primicia',
+      'misiones',
+      'pro_templo',
+      'otro',
+      'fondo_juvenil',
+      'campamento_2026',
+    ]) {
       expect(parseInternalIncome({ ...valid, categoria_aporte: category }).categoria_aporte).toBe(
         category,
       );
